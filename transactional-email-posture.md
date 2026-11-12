@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against SPF RFC 7208, DKIM RFC 6376, DKIM cryptography RFC 8301, DMARC RFC 9989, DMARC aggregate reporting RFC 9990, DMARC failure reporting RFC 9991, Submission TLS RFC 8314, and SMTP submission roles RFC 6409, plus 7 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 31 claims, all reasoned from cited sources.
+Written against SPF RFC 7208, DKIM RFC 6376, DKIM cryptography RFC 8301, DMARC RFC 9989, DMARC aggregate reporting RFC 9990, DMARC failure reporting RFC 9991, Submission TLS RFC 8314, and SMTP submission roles RFC 6409, plus 8 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 31 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -109,7 +109,7 @@ BIMI is optional display metadata that shows a brand logo in supporting clients;
 
 ## Verify
 
-REASONED: following block; DNS publication, submission TLS and plaintext AUTH refusal, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete and RFC 8997 section 3. No controlled DNS zone or SMTP endpoint is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the block before its name guard and its whole-block exit status were added; openssl s_client -help exited 0 and listed -starttls, -verify_hostname, -verify_return_error and -min_protocol. The form before this change, with the name guard and the whole-block exit status, lowercased the three names with `tr` before refusing a reserved one; the gate suite's bash -n and ShellCheck 0.11.0 passes covered it, and no stub run of it is recorded. The current form refuses a reserved name under bash's `nocasematch` option instead of through `tr`, and refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. It is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by dig and openssl stub runs on 2026-11-01 with no network. In bash, the block refused `example.com`, `EXAMPLE.NET`, `App.Example.COM`, `api.EXAMPLE.org` and seven other reserved spellings as the mail domain, the bounce domain or the submission host with 2 and no dig or openssl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`. Names outside the reserved names reached all seven lookups and both TLS probes, and under dash the block refused every set of names with 2 and the bash message before any lookup. Published records should match the configured policies; exposed submission accepts plaintext AUTH, while fixed submission refuses it and supports validated TLS before authorized AUTH. These live outcomes remain unobserved. Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state. The DNS/TLS inspection, and the message alignment and relay discrimination checks at the end of this paragraph, also follow the guide's cited RFC 9989, RFC 8601 and RFC 2505, with RFC 8314. The four RFCs are RFC 8314: Cleartext Considered Obsolete, RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), RFC 8601: Message Header Field for Indicating Message Authentication Status and RFC 2505: Anti-Spam Recommendations for SMTP MTAs. No controlled sender or recipient is available either. Live outcomes remain unobserved: exposed submission accepts plaintext AUTH or unauthorized relay and lacks aligned enforcement; fixed submission validates TLS, shows receiver-trusted alignment and enforcing policy, rejects external relay with 5xx and preserves authorized submission and local delivery. After running the block, prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
+REASONED: following block; DNS publication, submission TLS and plaintext AUTH refusal, per the guide's cited BIND 9.18.39 dig manual, BIND v9.20.24 `dig` manual and source, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete and RFC 8997 section 3. No controlled DNS zone or SMTP endpoint is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics on the block before its name guard and its whole-block exit status were added; openssl s_client -help exited 0 and listed -starttls, -verify_hostname, -verify_return_error and -min_protocol. The form before this change, with the name guard and the whole-block exit status, lowercased the three names with `tr` before refusing a reserved one; the gate suite's bash -n and ShellCheck 0.11.0 passes covered it, and no stub run of it is recorded. The next form refused a reserved name under bash's `nocasematch` option instead of through `tr`, and refused with 2, saying the block needs bash, when `shopt` fails, as it does in dash. It was covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by dig and openssl stub runs on 2026-11-01 with no network. In bash, the block refused `example.com`, `EXAMPLE.NET`, `App.Example.COM`, `api.EXAMPLE.org` and seven other reserved spellings as the mail domain, the bounce domain or the submission host with 2 and no dig or openssl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`. Names outside the reserved names reached all seven lookups and both TLS probes, and under dash the block refused every set of names with 2 and the bash message before any lookup. The current form keeps those guards and reads each lookup's reply instead of `dig`'s exit status alone, because `dig`'s manual gives exit 0 for any DNS response received, NXDOMAIN included, and none of its nonzero statuses is for a SERVFAIL reply. It also refuses a mail domain or bounce domain that starts with `+`, and a DKIM selector that starts with `+`, `@` or `%`, which `dig` would read as a query option, a server or the end of its arguments. The current form passed bash -n and ShellCheck 0.11.0. On 2026-11-12, from 07:22:56Z to 07:22:58Z UTC, an earlier form that differed from it only in comment text ran in bash with real `dig` 9.20.24 through the host's local stub resolver, with `openssl` stubbed so that no TLS connection was made: `gmail.com` with selector `20230601` exited 0, with NOERROR and answers for six lookups, NOERROR/NODATA for the DKIM CNAME and NXDOMAIN for BIMI; `ns1.google.com` as the mail and bounce domain exited 0, with NOERROR/NODATA and NXDOMAIN lines; a nonexistent mail domain under `gmail.com` exited 3, whether the bounce domain existed or not; `dnssec-failed.org` exited 3 with eight SERVFAIL replies, each with `dig` exit 0; and `gmail.com` with selector `ixfr=1` exited 3, `dig` printing "Couldn't parse serial number" and exiting 1 for both DKIM lookups. Stub replies gave 3 for no `ra`, upper-case `RA`, two headers, a `TYPE16` line, a lower-case status, REFUSED and `dig` exit 9, and the guards refused a leading `+` mail or bounce domain and a selector starting with `+`, `@` or `%` with 2 and no `dig` call. On 2026-11-12, from 08:15:52Z to 08:15:54Z UTC, a form that differed from the current one only by one comment clause, removed since, reran a reduced set in bash with real `dig` 9.20.24 through the same resolver and `openssl` stubbed: `gmail.com` with selector `20230601` exited 0, and `dnssec-failed.org` exited 3 with eight SERVFAIL replies, each with `dig` exit 0; the guards refused the mail domain `+short`, the bounce domain `+domain=` and the selectors `@8.8.8.8`, `%x` and `+short` with 2 and no `dig` call. Each lookup runs `dig -r +noall +comments +answer NAME. TYPE`: with `-r`, `dig` reads no options from `~/.digrc`, so no `+search` set there applies, and `dig`'s manual says the search list is not used by default. The first lookup is `TXT` at the mail domain itself, read only for whether that name exists: the mail domain need not publish TXT, so a NOERROR reply there, with records or none, leaves the status unchanged, and the block does not classify those records. A NOERROR reply with records, a NOERROR reply with none (NODATA) and an NXDOMAIN reply each print what was seen and leave the status unchanged, because a record that is not published, such as BIMI, is a state for you to judge, not a failed lookup. NXDOMAIN at the mail domain or at the bounce domain exits 3 instead: a domain that does not exist has no records to read, and may mean a wrong name on the `set --` line; without the mail-domain lookup, a mail domain that does not exist would leave only NXDOMAIN lines under it and the block at 0. SERVFAIL, any other status, more than one reply header, no header or flags line, a reply without the `ra` flag (recursion available), an answer line in a form the block does not read, a nonzero `dig` exit and no reply (exit 9) are inconclusive (3). Published records should match the configured policies; exposed submission accepts plaintext AUTH, while fixed submission refuses it and supports validated TLS before authorized AUTH. These live outcomes remain unobserved. Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state. The DNS/TLS inspection, and the message alignment and relay discrimination checks at the end of this paragraph, also follow the guide's cited RFC 9989, RFC 8601 and RFC 2505, with RFC 8314. The four RFCs are RFC 8314: Cleartext Considered Obsolete, RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), RFC 8601: Message Header Field for Indicating Message Authentication Status and RFC 2505: Anti-Spam Recommendations for SMTP MTAs. No controlled sender or recipient is available either. Live outcomes remain unobserved: exposed submission accepts plaintext AUTH or unauthorized relay and lacks aligned enforcement; fixed submission validates TLS, shows receiver-trusted alignment and enforcing policy, rejects external relay with 5xx and preserves authorized submission and local delivery. After running the block, prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
 
 ```bash
 # Inspect the published records. Substitute your own names inside the quotes on the set -- line below,
@@ -124,13 +124,13 @@ REASONED: following block; DNS publication, submission TLS and plaintext AUTH re
   shift
   [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values: mail domain, bounce domain, DKIM selector and submission host; not probing"; exit 2; }
   case "$1" in
-    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your mail domain (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|-*|+*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your mail domain (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$2" in
-    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your bounce (Return-Path) domain, the name that carries its SPF record, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|-*|+*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your bounce (Return-Path) domain, the name that carries its SPF record, with no scheme, user name, port, path, query, fragment, percent sign or trailing dot, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$3" in
-    ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your DKIM selector, the s= tag of a real signature, inside the quotes on the set -- line above; not probing"; exit 2 ;;
+    ""|*REPLACE_WITH_*|-*|[+@%]*|*/*|*:*|*.|*[[:space:][:cntrl:]]*) echo "substitute your DKIM selector, the s= tag of a real signature, inside the quotes on the set -- line above; not probing"; exit 2 ;;
   esac
   case "$4" in
     ""|*REPLACE_WITH_*|-*|*/*|*:*|*.|*[@?%]*|*'#'*|*[[:space:][:cntrl:]]*) echo "substitute your submission host name (no scheme, user name, port, path, query, fragment, percent sign or trailing dot) inside the quotes on the set -- line above; not probing"; exit 2 ;;
@@ -140,15 +140,64 @@ REASONED: following block; DNS publication, submission TLS and plaintext AUTH re
     *'|example.com|'*|*'|example.net|'*|*'|example.org|'*|*'.example.com|'*|*'.example.net|'*|*'.example.org|'*) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own names on the set -- line above; not probing"; exit 2 ;;
   esac
   shopt -u nocasematch   # every match below compares letter case exactly again
+  { unset -n IFS q k n w o t c y f g v seen && unset -v IFS q k n w o t c y f g v seen; } 2>/dev/null || { echo "IFS or a name this block uses (q k n w o t c y f g v seen) is readonly in this shell: run the block in a fresh bash; not probing"; exit 2; }   # with IFS unset, read splits on any run of spaces and tabs, as dig's columns need
   set -- "$1" "$2" "$3" "$4" 0          # the 5th value is the block's status so far: 3 (inconclusive) outranks 0
-  dig +noall +answer TXT "$2" || set -- "$1" "$2" "$3" "$4" 3
-  dig +noall +answer TXT "$3._domainkey.$1" || set -- "$1" "$2" "$3" "$4" 3
-  dig +noall +answer CNAME "$3._domainkey.$1" || set -- "$1" "$2" "$3" "$4" 3
-  dig +noall +answer TXT "_dmarc.$1" || set -- "$1" "$2" "$3" "$4" 3
-  dig +noall +answer TXT "_mta-sts.$1" || set -- "$1" "$2" "$3" "$4" 3
-  dig +noall +answer TXT "_smtp._tls.$1" || set -- "$1" "$2" "$3" "$4" 3
-  dig +noall +answer TXT "default._bimi.$1" || set -- "$1" "$2" "$3" "$4" 3
-  [ "$5" = 0 ] || echo "a dig lookup above failed, so the DNS reading is inconclusive"
+  for q in "TXT $1. MAIL" "TXT $2. SPF" "TXT $3._domainkey.$1. DKIM" "CNAME $3._domainkey.$1. DKIM" "TXT _dmarc.$1. DMARC" "TXT _mta-sts.$1. MTA-STS" "TXT _smtp._tls.$1. TLS-RPT" "TXT default._bimi.$1. BIMI"; do   # one lookup each: the record type, the name with a trailing dot and what the lookup is for; MAIL, first, asks only whether the mail domain itself exists, before the six lookups under it
+    read -r k n w <<< "$q"              # the guards above refuse spaces, tabs and control characters in every name, so each entry splits into exactly these 3 words
+    set -- "$1" "$2" "$3" "$4" "$5" "$(if dig -r +noall +comments +answer "$n" "$k"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # -r: dig reads no options from ~/.digrc, which its manual calls useful for scripts that need predictable behavior, so no +search set there applies, and its manual says the search list is not used by default; dig tries each non-option argument as a type, then a class, before it takes it as the name, while a name starting ixfr= (such as selector ixfr=1) is read as an IXFR serial that fails to parse, so dig exits before any query and this block gives 3
+    set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"   # the four names, the status, dig's output, then dig's exit status
+    printf '%s\n' "-- $w: dig -r +noall +comments +answer $n $k, exit $7:" "$6"
+    case "$7" in
+      0) ;;
+      9) echo "$w: no reply for $n (dig exit 9, which dig's manual gives for no reply from server); inconclusive"; set -- "$1" "$2" "$3" "$4" 3; continue ;;
+      *) echo "$w: dig exit $7 for $n is not 0, the status dig's manual gives for a DNS response received, so this block reads no reply; inconclusive"; set -- "$1" "$2" "$3" "$4" 3; continue ;;
+    esac
+    seen=" "
+    while read -r o t c y f g v; do     # dig's header and flags lines, then answer lines: name, TTL, class, type, then the record data
+      case "$o $t $c $f" in
+        ';; ->>HEADER<<- opcode: status:') seen="${seen}header:$g "; continue ;;   # g is the status and its comma, as dig prints the header
+      esac
+      case "$o $t" in
+        ';; flags:'*)                   # the reply's flag words end at the first ";", and dig prints ra among them when the reply says recursion is available
+          v=" $c $y $f $g $v"
+          case "${v%%;*} " in *' ra '*) seen="${seen}flags:ra " ;; *) seen="${seen}flags:nora " ;; esac
+          continue ;;
+      esac
+      case "$o" in ''|';'*) continue ;; esac   # blank lines and dig's other comment lines
+      case "$t" in ''|*[!0123456789]*) seen="${seen}unread "; continue ;; esac   # an answer line's TTL is digits only
+      case "$c $y" in
+        "IN $k") seen="${seen}rr " ;;
+        'IN CNAME') ;;                  # an alias line: the name points to another name, whose records follow; printed above, not classified
+        *) seen="${seen}unread " ;;     # any other class or type, including a generic TYPEnnn or CLASSnnn form, is not read
+      esac
+    done <<< "$6"
+    case "$seen" in
+      *' header:'*' header:'*) echo "$w: dig printed more than one reply header for $n; this block reads a single reply only; inconclusive"; set -- "$1" "$2" "$3" "$4" 3; continue ;;
+      *' header:'*) ;;
+      *) echo "$w: dig printed no reply header for $n, so this block cannot read the reply; inconclusive"; set -- "$1" "$2" "$3" "$4" 3; continue ;;
+    esac
+    case "$seen" in
+      *' flags:'*' flags:'*) echo "$w: dig printed more than one flags line for $n; this block reads a single reply only; inconclusive"; set -- "$1" "$2" "$3" "$4" 3; continue ;;
+      *' flags:ra '*) ;;
+      *' flags:nora '*) echo "$w: the reply for $n lacks the ra flag, so recursion was not available and the reply may not hold the records; this block reads only a recursive resolver's reply; inconclusive"; set -- "$1" "$2" "$3" "$4" 3; continue ;;
+      *) echo "$w: dig printed no flags line for $n, so whether recursion was available is unknown; inconclusive"; set -- "$1" "$2" "$3" "$4" 3; continue ;;
+    esac
+    g="${seen#* header:}"; g="${g%% *}"   # the reply status with the comma dig prints after it; a status without that comma matches none of the names below
+    case "$g$seen" in
+      *' unread '*) echo "$w: status ${g%,}, but an answer line for $n is in a form this block does not read; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+      'NOERROR, '*' rr '*) echo "$w: NOERROR with answers: the $k lines above are not classified, so judge them yourself" ;;
+      'NOERROR, '*) echo "$w: NOERROR/NODATA: no $k record at $n or at any name an alias line above points to" ;;
+      'NXDOMAIN, '*)
+        case "$w" in
+          MAIL) echo "$w: NXDOMAIN: the mail domain $n does not exist (or, after an alias line above, the name it points to does not), so the lookups under it read nothing of yours: check the mail domain on the set -- line; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+          SPF) echo "$w: NXDOMAIN: the bounce domain $n does not exist, so this block read no SPF record for it: check the bounce domain on the set -- line; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+          *) echo "$w: NXDOMAIN: $n does not exist (or, after an alias line above, the name it points to does not), so it has no $k record" ;;
+        esac ;;
+      'SERVFAIL, '*) echo "$w: SERVFAIL: the resolver could not answer for $n, so this lookup read no records; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+      *) echo "$w: status ${g%,} for $n, which this block does not read; inconclusive"; set -- "$1" "$2" "$3" "$4" 3 ;;
+    esac
+  done
+  [ "$5" = 0 ] || echo "a lookup above failed, found that the mail or bounce domain does not exist, or gave a reply this block does not read as an answer, so the DNS reading is inconclusive"
 
   # Submission must complete TLS with a validated certificate before AUTH. -verify_return_error
   # matters because s_client otherwise continues past a verification failure. This confirms TLS is
@@ -195,6 +244,14 @@ REASONED: following block; DNS publication, submission TLS and plaintext AUTH re
 - BIMI Group: implementation and sender requirements: https://bimigroup.org/how-and-why-to-implement-bimi-selectors/
 - RFC 8997 section 3 (checked October 2026; TLS 1.2 floor for email submission and access): https://www.rfc-editor.org/rfc/rfc8997.html#section-3
 - BIND 9.18.39 `dig` manual (checked October 2026; TXT/CNAME queries and `+noall +answer` display controls): https://bind9.readthedocs.io/en/v9.18.39/manpages.html
+- BIND v9.20.24 `dig` `-r` reads no options from `${HOME}/.digrc` (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L160-L163
+- BIND v9.20.24 `dig` `+comments` header display (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L308-L312
+- BIND v9.20.24 `dig` search list off by default (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L598-L606
+- BIND v9.20.24 `dig` return codes, with exit 0 on NXDOMAIN (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L788-L806
+- BIND v9.20.24 `dig` reply header line format (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L864-L884
+- BIND v9.20.24 `dig` reply flags line, including `ra`, and its recursion-not-available warning (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L885-L924
+- BIND v9.20.24 `dig` command-line argument dispatch: a leading `%` ends parsing, `@` names a server and `+` is a query option (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L3090-L3123
+- BIND v9.20.24 `dig` reads a non-option argument as an `ixfr=` serial, a type, then a class, before it takes it as the name (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L3148-L3237
 - OpenSSL 3.0 `s_client` (checked October 2026; SMTP STARTTLS, TLS connections, hostname verification, and verification errors): https://docs.openssl.org/3.0/man1/openssl-s_client/
 - OpenSSL 3.0 protocol configuration (checked October 2026; `-min_protocol TLSv1.2`): https://docs.openssl.org/3.0/man3/SSL_CONF_cmd/
 
@@ -228,6 +285,7 @@ Components (recorded basis):
 - submission-update: Submission TLS update (RFC 8997)
 - bind: BIND dig manual (9.18.39)
 - openssl: OpenSSL command documentation (3.0)
+- bind-dig: BIND dig manual and source (v9.20.24)
 
 Claims (full source mapping in the JSON block below):
 
@@ -258,7 +316,7 @@ Claims (full source mapping in the JSON block below):
 - sts-refresh (REASONED; sts): Update the MTA-STS TXT id whenever the policy changes.
 - tls-reports (REASONED; rpt): TLS-RPT _smtp._tls TXT with TLSRPTv1 and rua supplies reports, never enforcement.
 - bimi (REASONED; bimi): BIMI is optional logo display metadata requiring DMARC enforcement, not authentication or guaranteed rendering; deploy it last.
-- verify-dns (REASONED; spf, dkim, dmarc, sts, rpt, bimi, bind): Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. No DNS control was available.
+- verify-dns (REASONED; spf, dkim, dmarc, sts, rpt, bimi, bind, bind-dig): Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. Each reply's status and ra flag are read: NOERROR, NODATA and NXDOMAIN print unclassified, but NXDOMAIN at the mail or bounce domain, SERVFAIL, other statuses, no ra and no reply are inconclusive. No DNS control was available.
 - verify-tls (REASONED; submission, submission-update, openssl): 587 STARTTLS and 465 implicit-TLS probes require validated TLS 1.2 or newer; TLS availability does not establish AUTH gating. Plaintext or stripped-STARTTLS AUTH must be refused; transport/TLS failures are inconclusive. No SMTP endpoint or container runtime was available.
 - verify-alignment (REASONED; results, dmarc): Send a benign message to a controlled recipient and inspect receiver-trusted Authentication-Results, not a supplied header; require passing aligned SPF or DKIM and p=reject with subdomain coverage and no testing or legacy sampling.
 - verify-relay (REASONED; relay, roles): In an operator-controlled environment, external MAIL FROM and non-local RCPT TO should receive 5xx; compare with authorized submission and ordinary local delivery. These expected outcomes remain unobserved.
@@ -268,7 +326,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "0c9afe559fced06e08a4ecc11d575dc4b0554047fda2d4389dea62fdc9ac229f",
+  "body_sha256": "39c7721ec89613ef2831c0c0980bf6d193b4fdbba9ba2b3dafb722c50f5ce303",
   "components": {
     "spf": {
       "name": "SPF",
@@ -382,6 +440,20 @@ Claims (full source mapping in the JSON block below):
         "s00aaf106164f": "https://docs.openssl.org/3.0/man1/openssl-s_client/",
         "s2a2127a2c79b": "https://docs.openssl.org/3.0/man3/SSL_CONF_cmd/"
       }
+    },
+    "bind-dig": {
+      "name": "BIND dig manual and source",
+      "basis": "v9.20.24",
+      "sources": {
+        "s5d98e69756c9": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L160-L163",
+        "sda67db889c0e": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L308-L312",
+        "s9cd3fcf628fb": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L598-L606",
+        "s4a49b2a8a61e": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L788-L806",
+        "sac989d3132f5": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L864-L884",
+        "sf70f634493d1": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L885-L924",
+        "s22625818a6a8": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L3090-L3123",
+        "sf3a5d3d72a10": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L3148-L3237"
+      }
     }
   },
   "claims": {
@@ -412,7 +484,7 @@ Claims (full source mapping in the JSON block below):
     "sts-refresh": {"text": "Update the MTA-STS TXT id whenever the policy changes.", "components": ["sts"], "sources": ["sts:s39819f3ea93a"], "status": "REASONED"},
     "tls-reports": {"text": "TLS-RPT _smtp._tls TXT with TLSRPTv1 and rua supplies reports, never enforcement.", "components": ["rpt"], "sources": ["rpt:se80da0f5e0c8"], "status": "REASONED"},
     "bimi": {"text": "BIMI is optional logo display metadata requiring DMARC enforcement, not authentication or guaranteed rendering; deploy it last.", "components": ["bimi"], "sources": ["bimi:sd18b1e0134bd"], "status": "REASONED"},
-    "verify-dns": {"text": "Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. No DNS control was available.", "components": ["spf", "dkim", "dmarc", "sts", "rpt", "bimi", "bind"], "sources": ["spf:sea6ac206b034", "dkim:s13ee1bc66dfc", "dmarc:s5da292ff1b92", "sts:s39819f3ea93a", "rpt:se80da0f5e0c8", "bimi:sd18b1e0134bd", "bind:s54cff06bb882"], "status": "REASONED", "verify": [1]},
+    "verify-dns": {"text": "Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. Each reply's status and ra flag are read: NOERROR, NODATA and NXDOMAIN print unclassified, but NXDOMAIN at the mail or bounce domain, SERVFAIL, other statuses, no ra and no reply are inconclusive. No DNS control was available.", "components": ["spf", "dkim", "dmarc", "sts", "rpt", "bimi", "bind", "bind-dig"], "sources": ["spf:sea6ac206b034", "dkim:s13ee1bc66dfc", "dmarc:s5da292ff1b92", "sts:s39819f3ea93a", "rpt:se80da0f5e0c8", "bimi:sd18b1e0134bd", "bind:s54cff06bb882", "bind-dig:s5d98e69756c9", "bind-dig:sda67db889c0e", "bind-dig:s9cd3fcf628fb", "bind-dig:s4a49b2a8a61e", "bind-dig:sac989d3132f5", "bind-dig:sf70f634493d1", "bind-dig:s22625818a6a8", "bind-dig:sf3a5d3d72a10"], "status": "REASONED", "verify": [1]},
     "verify-tls": {"text": "587 STARTTLS and 465 implicit-TLS probes require validated TLS 1.2 or newer; TLS availability does not establish AUTH gating. Plaintext or stripped-STARTTLS AUTH must be refused; transport/TLS failures are inconclusive. No SMTP endpoint or container runtime was available.", "components": ["submission", "submission-update", "openssl"], "sources": ["submission:sd78efc15555c", "submission-update:sb5ca35fe0d1b", "openssl:s00aaf106164f", "openssl:s2a2127a2c79b"], "status": "REASONED", "verify": [1]},
     "verify-alignment": {"text": "Send a benign message to a controlled recipient and inspect receiver-trusted Authentication-Results, not a supplied header; require passing aligned SPF or DKIM and p=reject with subdomain coverage and no testing or legacy sampling.", "components": ["results", "dmarc"], "sources": ["results:s46f8392d93fd", "dmarc:s5da292ff1b92"], "status": "REASONED"},
     "verify-relay": {"text": "In an operator-controlled environment, external MAIL FROM and non-local RCPT TO should receive 5xx; compare with authorized submission and ordinary local delivery. These expected outcomes remain unobserved.", "components": ["relay", "roles"], "sources": ["relay:s1b9349dd99bc", "roles:s3f9972faf8ff"], "status": "REASONED"}
