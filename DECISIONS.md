@@ -1161,13 +1161,14 @@ decisions of 2026-11-11 at the end of this section were taken under a later rule
   and the check adds little cost to a sweep that runs anyway (20261111T231152Z.from-lab_infra.589eda3fe03e.msg).
   Since both voters agreed, grc's vote was not needed; it is recorded, for option 2
   (20261111T231116Z.from-grc.b867ceb2400c.msg). The vote request and the lab_infra and grc votes cited D-1096, and
-  guardrails disputed that citation, pointing to the unattended rule of 2026-10-31. The outcome is option 2. Its effect so far: none in this repository.
-  The definition is generated for the whole corpus, so the change is a later corpus-wide pull request,
-  with the consistency check at the O3 sweep. That change is tracked in the maintainer-side orchestrator's private
-  backlog, not in a `TODO.md` row of this repository. Like the entry above, this decision is not a maintainer
-  ruling and awaits the maintainer's ratification, and none is recorded yet. The revert path is the maintainer's
-  review: a different ruling changes or drops the definition change and the consistency check before they land, or
-  replaces them after.
+  guardrails disputed that citation, pointing to the unattended rule of 2026-10-31. The outcome is option 2. The maintainer ruled on
+  2026-11-12, attended and through AskUserQuestion, and ratified option 2 with the exact wording "REASONED records
+  source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form." and the
+  matching clause in CONTRIBUTING.md rule 5. Pull request #1290 applies that ruling: it changes the definition that
+  `tools/version_basis.py` renders, generated for the whole corpus, and rule 5. The consistency check of REASONED
+  claim texts at the O3 sweep is still to come, and is tracked in the maintainer-side orchestrator's private
+  backlog, not in a `TODO.md` row of this repository. The revert path is the maintainer's review: a different ruling
+  changes or drops the definition change and the consistency check, or replaces them.
 
 ## Profile: predicting these rulings
 
