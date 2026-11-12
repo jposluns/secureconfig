@@ -1057,7 +1057,7 @@ def render(data, guide=None, historical=False):
     lines = [START] + ([note(guide, historical), ''] if guide is not None else [])
     lines += ['**Version basis**', '', advice, '',
              dates + 'DEMONSTRATED refers to historical evidence in this guide; '
-             'REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.', '',
+             'REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.', '',
              'Components (recorded basis):', '']
     for name, component in data['components'].items():
         lines.append(f"- {name}: {cell(component['name'])} ({cell(component['basis'])})")
