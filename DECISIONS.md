@@ -1137,12 +1137,14 @@ decisions of 2026-11-11 at the end of this section were taken under a later rule
   (20261111T213018Z.from-grc.5dc0348daa33.msg). The outcome is option 2. The record first gave this as a majority of
   three voters; on 2026-11-12 it was corrected to the rule's own method, a tie that grc broke, with the same
   outcome. Its effect so far: the guardrail seed went to guardrails at 2026-11-11T21:30:33Z, and guardrails decides
-  whether a lint labelled as defence in depth ships. The CONTRIBUTING.md sentence is not yet in this repository; a
-  later pull request adds it, and row 40 closes when that merges. This decision is not a maintainer ruling and
+  whether a lint labelled as defence in depth ships. Pull request #1287 added the CONTRIBUTING.md sentence and merged
+  at 2026-11-12T12:15:42Z, and its CHANGELOG entry records that row 40 closes on that merge. The sentence as merged
+  covers a gate's help text as well as its docstring, which goes beyond the option text above. This decision is not a
+  maintainer ruling and
   awaits the maintainer's ratification, and none is recorded yet; the operating mode returned to attended-autonomous
-  at 2026-11-12T00:30Z. The revert path is the maintainer's review: a different ruling stops or replaces the
-  CONTRIBUTING.md sentence, so row 40 stays open or closes on that ruling's terms, and guardrails is asked to
-  withdraw the seed and any lint built from it.
+  at 2026-11-12T00:30Z. The revert path is the maintainer's review: a different ruling changes or removes the
+  CONTRIBUTING.md sentence that #1287 added, so row 40 reopens or stays closed on that ruling's terms, and guardrails
+  is asked to withdraw the seed and any lint built from it.
 - **Proxy decision of 2026-11-11 on the REASONED definition (#1282), for the maintainer's later review (#1288).**
   Decided at 2026-11-11T23:11:52Z, when the last vote arrived, under the unattended decision rule of 2026-10-31 that
   the entry above states. The question, raised at 2026-11-11T23:10:53Z, was how REASONED claim texts that record
