@@ -145,7 +145,7 @@ REASONED: certificate inventory, HTTPS access and served-certificate hostname, t
 )
 ```
 
-REASONED: following block; the CAA check for the CAA records section above, per RFC 8659 sections 3, 4.1.1 and 4.3, the Let's Encrypt CAA page and the BIND v9.20.24 `dig` manual and source cited in Sources. No deployment was run, so no live result for a reader's deployment is recorded. The final block passed `bash -n` and ShellCheck 0.11.0, and on 2026-11-11 it ran with real `dig` 9.20.24 through a local systemd-resolved resolver against public domains: a Let's Encrypt set, a CNAME whose target has CAA lines and one that falls back to its parent, another CA only, no CAA set, NXDOMAIN, SERVFAIL, and no reply from a closed local port. Each exited with its expected status, as did the reserved-name refusal. The iodef-only and issuewild-only cases ran only against a fake `dig`. Run it on any host whose resolver answers as public DNS does. It runs `dig +noall +comments +answer NAME. CAA` for your host name and then for each parent name up to the top-level domain, stopping at the first reply that holds CAA lines, which is the set a CA checks; `dig` follows an alias, and the block never reads `+short` output, which is empty alike for no records, NXDOMAIN and SERVFAIL. Exposed: no name up to the top-level domain has a CAA set, or the set has no `issue` property (`iodef` or `issuewild` only, and a CA ignores `issuewild` for a name that is not a wildcard), so any public CA may issue for your host name; it prints FINDING and exits 1. Fixed: an `issue` property's value names `letsencrypt.org`, alone or before `;` parameters; it prints PASS and exits 0. A set whose `issue` properties name only other CAs also exits 0, printed as NOT LET'S ENCRYPT and not classified: it is not the exposure, but it does not authorize Let's Encrypt, so issuance and renewal from Let's Encrypt fail; on another CA, check that the set names that CA. The wildcard line reports `issuewild`, which controls wildcard issuance when present, and is not classified. The block exits 3 when `dig` exits nonzero, when the reply status is not NOERROR (`dig` exits 0 on NXDOMAIN and SERVFAIL), when a reply has no single header, when a CAA line's flags or value is in a form it does not read, when a critical property has a tag it does not classify, and when the set has only unclassified tags; it exits 2 when a guard refuses or `dig` is missing. It reads your own resolver, so a split-horizon or filtering resolver, a cached answer or an option in `~/.digrc` can make it differ from what a CA sees. It takes your host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, needs no sudo, and assumes a clean shell.
+REASONED: following block; the CAA check for the CAA records section above, per RFC 8659 sections 3, 4.1, 4.1.1, 4.2 and 4.3, the Let's Encrypt CAA page and the BIND v9.20.24 `dig` manual and source cited in Sources. No deployment was run, so no live result for a reader's deployment is recorded. The final block passed `bash -n` and ShellCheck 0.11.0, and on 2026-11-12 it ran with real `dig` 9.20.24 through the host's systemd-resolved resolver against public domains: two Let's Encrypt sets, a CNAME whose target has CAA lines and one that falls back to its parent, another CA only, no CAA set at two names, NXDOMAIN and SERVFAIL. The no-reply case did not use that resolver: it ran the real `dig` through a wrapper that added `+time=1 +tries=1` and sent the query to a closed port on 127.0.0.1. Each exited with its expected status, as did the reserved-name refusal. A fake `dig` supplied the iodef-only and issuewild-only cases, three replies without the `ra` flag (one holding only a CNAME) and one with `ra` and `ad`, `issue`, `issuewild` and `iodef` tags in upper and mixed case, spaces, tabs and parameters around the CA name, a CA name in mixed case, an `issue ";"` beside `issuewild`, `iodef` with an unknown tag, and a critical unknown tag beside a Let's Encrypt `issue`. Run it on any host whose resolver offers recursion and answers as public DNS does. It runs `dig -r +noall +comments +answer NAME. CAA` for your host name and then for each parent name up to the top-level domain, stopping at the first reply that holds CAA lines, which is the set a CA checks. With `-r`, `dig` reads no options from `~/.digrc`, so a setting there cannot change the output the block reads. The recursive resolver follows an alias (CNAME), so the block exits 3 for any reply whose flags lack `ra` (recursion available), before it classifies that reply or climbs past it; it never reads `+short` output, which is empty alike for no records, NXDOMAIN and SERVFAIL. Exposed: no name up to the top-level domain has a CAA set, or the set has no `issue` property and has either `issuewild` (a CA ignores `issuewild` for a name that is not a wildcard) or only `iodef`, so any public CA may issue for your host name; it prints FINDING and exits 1. Fixed: an `issue` property, its tag in any letter case, whose value names `letsencrypt.org`, alone or before `;` parameters, with any spaces or tabs around it; it prints PASS and exits 0. The block compares the CA name itself exactly, so a value such as `LetsEncrypt.org` counts as another CA. A set whose `issue` properties name only other CAs also exits 0, printed as NOT LET'S ENCRYPT and not classified: it is not the exposure, but it does not authorize Let's Encrypt, so issuance and renewal from Let's Encrypt fail; on another CA, check that the set names that CA. The wildcard line reports `issuewild`, which controls wildcard issuance when present, and is not classified. The block exits 3 when `dig` exits nonzero, when a reply has no single header, when the reply status is not NOERROR (the `dig` manual gives exit 0 for NXDOMAIN, and `dig` 9.20.24 exited 0 on SERVFAIL when observed on 2026-11-11), when a reply has no flags line or no `ra` flag, when a CAA line's flags or value is in a form it does not read, when a critical property has a tag it does not classify, and when the set has no `issue` or `issuewild` property but has a tag other than `iodef` that it does not classify; it exits 2 when a guard refuses or `dig` is missing. It reads your own resolver, so a split-horizon or filtering resolver or a cached answer can make it differ from what a CA sees. It takes your host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, needs no sudo, and assumes a clean shell.
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers it
@@ -167,19 +167,25 @@ REASONED: following block; the CAA check for the CAA records section above, per 
   case "$1" in
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
-  shopt -u nocasematch   # every match below compares letter case exactly again
+  shopt -u nocasematch   # letter case counts again in every match below, except the CAA tag match, which turns this option on for its one case statement
   command -v dig >/dev/null 2>&1 || { echo "dig is not on PATH: install BIND's dig, or run this where it is installed; not probing"; exit 2; }
   { unset -n IFS o t c y f g v seen && unset -v IFS o t c y f g v seen; } 2>/dev/null || { echo "IFS or a name this block uses (o t c y f g v seen) is readonly in this shell: run the block in a fresh bash; not probing"; exit 2; }   # with IFS unset, read splits on any run of spaces and tabs, as dig's columns need
   set -- "$1" "$1" 0                    # the 2nd value is the name looked up now, starting at your host; the 3rd is the block's status
   while :; do
-    set -- "$1" "$2" "$3" "$(if dig +noall +comments +answer "$2." CAA; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # the trailing dot makes the name absolute, so no search list applies
+    set -- "$1" "$2" "$3" "$(if dig -r +noall +comments +answer "$2." CAA; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # -r: dig reads no options from ~/.digrc, which its manual calls useful for scripts that need predictable behavior; dig's search list is off by default, and no option here turns it on
     set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # the host, the name, the status, dig's output, then dig's exit status
-    printf '%s\n' "-- dig +noall +comments +answer $2. CAA, exit $5:" "$4"
-    [ "$5" = 0 ] || { echo "dig exit $5: no DNS response was received for $2., so whether a CAA set exists is unknown; inconclusive"; set -- "$1" "$2" 3; break; }
+    printf '%s\n' "-- dig -r +noall +comments +answer $2. CAA, exit $5:" "$4"
+    [ "$5" = 0 ] || { echo "dig exit $5 for $2. is not 0, the status dig's manual gives for a DNS response received, so this block reads no reply; inconclusive"; set -- "$1" "$2" 3; break; }
     seen=" "
-    while read -r o t c y f g v; do     # dig's header line, then answer lines: name, TTL, class, type, CAA flags, tag, value
+    while read -r o t c y f g v; do     # dig's header and flags lines, then answer lines: name, TTL, class, type, CAA flags, tag, value
       case "$o $t $c $f" in
         ';; ->>HEADER<<- opcode: status:') seen="${seen}header:$g "; continue ;;   # g is the status and its comma, as dig prints the header
+      esac
+      case "$o $t" in
+        ';; flags:'*)                   # the reply's flag words end at the first ";", and dig prints ra among them when the reply says recursion is available
+          v=" $c $y $f $g $v"
+          case "${v%%;*} " in *' ra '*) seen="${seen}ra " ;; *) seen="${seen}nora " ;; esac
+          continue ;;
       esac
       case "$c $y" in
         'IN CAA') seen="${seen}caa " ;;
@@ -187,9 +193,12 @@ REASONED: following block; the CAA check for the CAA records section above, per 
       esac
       case "$f" in 0|128) ;; *) seen="${seen}badflags " ;; esac
       case "$v" in
-        '"'*'"') v="${v#?}"; v="${v%?}"; v="${v%%;*}" ;;   # the CA identifier: the quoted value up to any ";" parameters
+        '"'*'"') v="${v#?}"; v="${v%?}"; v="${v%%;*}"; read -r v <<< "$v" ;;   # the CA identifier: the quoted value up to any ";" parameters, without the spaces and tabs (WSP) RFC 8659 section 4.2 allows around it, which read drops because IFS is unset
         *) seen="${seen}badvalue "; v="" ;;
       esac
+      shopt -s nocasematch              # RFC 8659 section 4.1: tags match in any letter case, so this case writes each tag it knows in lower case
+      case "$g" in issue) g=issue ;; issuewild) g=issuewild ;; iodef) g=iodef ;; esac
+      shopt -u nocasematch              # the CA identifier below is compared exactly, letter case included
       case "$g" in
         issue) if [ "$v" = letsencrypt.org ]; then seen="${seen}issue-le "; else seen="${seen}issue-other "; fi ;;
         issuewild) if [ "$v" = letsencrypt.org ]; then seen="${seen}wild-le "; else seen="${seen}wild-other "; fi ;;
@@ -200,8 +209,13 @@ REASONED: following block; the CAA check for the CAA records section above, per 
     case "$seen" in
       *' header:'*' header:'*) echo "dig printed more than one reply header for $2.; this block reads a single reply only; inconclusive"; set -- "$1" "$2" 3; break ;;
       *' header:NOERROR, '*) ;;
-      *' header:'*) echo "the reply status for $2. is not NOERROR (dig exits 0 on NXDOMAIN and SERVFAIL too), so whether a CAA set exists is unknown; inconclusive"; set -- "$1" "$2" 3; break ;;
-      *) echo "dig printed no reply header for $2. (an option in ~/.digrc can change its output); inconclusive"; set -- "$1" "$2" 3; break ;;
+      *' header:'*) echo "the reply status for $2. is not NOERROR, and this block does not classify any other status (dig's manual gives exit 0 for NXDOMAIN, and dig 9.20.24 exited 0 on SERVFAIL when observed on 2026-11-11); inconclusive"; set -- "$1" "$2" 3; break ;;
+      *) echo "dig printed no reply header for $2., so this block cannot read the reply; inconclusive"; set -- "$1" "$2" 3; break ;;
+    esac
+    case "$seen" in
+      *' nora '*) echo "the reply for $2. lacks the ra flag, so recursion was not available and an alias (CNAME) in it may come without its target's records; this block reads only a recursive resolver's reply; inconclusive"; set -- "$1" "$2" 3; break ;;
+      *' ra '*) ;;
+      *) echo "dig printed no flags line for $2., so whether recursion was available is unknown; inconclusive"; set -- "$1" "$2" 3; break ;;
     esac
     case "$seen" in
       *' caa '*) ;;
@@ -217,7 +231,7 @@ REASONED: following block; the CAA check for the CAA records section above, per 
       *' issue-le '*) echo "PASS: an issue property names letsencrypt.org, so the set authorizes Let's Encrypt for $1 and restricts which CAs may issue"; set -- "$1" "$2" 0 ;;
       *' issue-other '*) echo "NOT LET'S ENCRYPT: the set restricts issuance, but no issue property names letsencrypt.org, so it does not authorize Let's Encrypt to issue or renew for $1; if you use another CA, check that the set names that CA; not classified"; set -- "$1" "$2" 0 ;;
       *' wild-'*) echo "FINDING: the set has issuewild but no issue property, and a CA ignores issuewild for a name that is not a wildcard, so CAA does not restrict issuance for $1"; set -- "$1" "$2" 1 ;;
-      *' other '*) echo "the set has no issue or issuewild property, only tags this block does not classify; inconclusive"; set -- "$1" "$2" 3 ;;
+      *' other '*) echo "the set has no issue or issuewild property, and it has a tag other than iodef that this block does not classify; inconclusive"; set -- "$1" "$2" 3 ;;
       *) echo "FINDING: the set has no issue or issuewild property (iodef only), so CAA does not restrict issuance for $1"; set -- "$1" "$2" 1 ;;
     esac
     case "$seen" in
@@ -246,15 +260,17 @@ REASONED: following block; the CAA check for the CAA records section above, per 
 - Let's Encrypt OCSP end of life (announcement dated 2025-08-06, checked September 2026): https://letsencrypt.org/2025/08/06/ocsp-service-has-reached-end-of-life
 - Let's Encrypt CAA requirements (rolling documentation, checked November 2026): https://letsencrypt.org/docs/caa/
 - RFC 8659 CAA relevant record set, its climb toward the root and alias chasing, section 3 (checked November 2026): https://www.rfc-editor.org/rfc/rfc8659#section-3
+- RFC 8659 CAA tags match case-insensitively, section 4.1 (checked November 2026): https://www.rfc-editor.org/rfc/rfc8659#section-4.1
 - RFC 8659 CAA canonical presentation format, section 4.1.1 (checked November 2026): https://www.rfc-editor.org/rfc/rfc8659#section-4.1.1
+- RFC 8659 CAA issue value grammar, with optional whitespace (WSP) around the issuer domain name, section 4.2 (checked November 2026): https://www.rfc-editor.org/rfc/rfc8659#section-4.2
 - RFC 8659 CAA issuewild ignored for a name that is not a wildcard, section 4.3 (checked November 2026): https://www.rfc-editor.org/rfc/rfc8659#section-4.3
 - BIND v9.20.24 `dig` return codes, with exit 0 on NXDOMAIN (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L788-L806
 - BIND v9.20.24 `dig` `+noall` and `+answer` display options (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L255-L262
 - BIND v9.20.24 `dig` `+comments` header display (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L308-L312
 - BIND v9.20.24 `dig` search list off by default (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L598-L606
-- BIND v9.20.24 `dig` default 5-second timeout (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L667-L670
-- BIND v9.20.24 `dig` default 3 tries (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L717-L721
+- BIND v9.20.24 `dig` `-r` reads no options from `${HOME}/.digrc` (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L160-L163
 - BIND v9.20.24 `dig` reply header line format (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L864-L884
+- BIND v9.20.24 `dig` reply flags line, including `ra`, and its recursion-not-available warning (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L885-L924
 - BIND v9.20.24 `dig` `+short` prints every answer record, aliases included (checked November 2026): https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L586-L630
 - Caddy v2.11.4 automatic certificate acquisition and renewal (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L63
 - Caddy v2.11.4 ACME TLS-ALPN challenge settings (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L280-L296
@@ -344,11 +360,11 @@ Claims (full source mapping in the JSON block below):
 - acme-default (REASONED; acme): acme.sh registers with ZeroSSL by default.
 - acme-install (REASONED; acme): acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell.
 - server-automation (REASONED; le, caddy, traefik): This guide advises Caddy or Traefik for built-in issuance and renewal without an external client; it assesses them as the lowest-effort correct option for new deployments.
-- origin-certificates (REASONED; le, cloudflare-origin-ca): At the guide's October 2026 check, Cloudflare listed Origin CA certificates on its Free plan, which can change; it says they only encrypt traffic between Cloudflare and the origin, and that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled. This guide requires them only for origins reached only through Cloudflare-proxied records.
+- origin-certificates (REASONED; le, cloudflare-origin-ca): At the guide's October 2026 check, Cloudflare listed Origin CA certificates on its Free plan, which can change; it says they only encrypt traffic between Cloudflare and the origin, and that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled. This guide restricts their use to origins that receive traffic only through Cloudflare-proxied records.
 - verify-inventory (REASONED; certbot): certbot certificates lists issued certificates and their expiry dates.
 - verify-https (REASONED; le, curl-source): Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k.
 - verify-certificate (REASONED; le, openssl-cli): The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates.
-- verify-caa (REASONED; le, bind-dig, rfc8659): Look up CAA with dig +noall +comments +answer for your host, then each parent up to the top-level domain, stopping at the first reply with CAA lines. Exposed, exit 1: no set, or no issue (iodef or issuewild only). Fixed, exit 0: an issue value naming letsencrypt.org. Other CAs only: exit 0, flagged. dig exit nonzero, a non-NOERROR status or an unread form: exit 3. Not run against a deployment.
+- verify-caa (REASONED; le, bind-dig, rfc8659): Look up CAA with dig -r +noall +comments +answer for your host, then each parent up to the top-level domain, stopping at the first reply with CAA lines. Exposed, exit 1: no set, or only iodef or issuewild. Fixed, exit 0: an issue naming letsencrypt.org. Other CAs only: exit 0, not classified. Exit 3: dig exit nonzero, status not NOERROR, no ra flag or an unread form. Not run against a deployment.
 - authentication (REASONED; le): A certificate alone is insufficient protection; continue with server controls and authentication.
 - dns-automation (REASONED; certbot, certbot-v230): For automated DNS-01 issuance and renewal, this guide advises using a provider DNS plugin and least-privilege API credentials; Certbot also documents manual TXT entry and authentication hooks that automate the challenge.
 - dns-manual (REASONED; certbot, certbot-v230): certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; the Certbot v2.3.0 guide says certificates created with --manual do not support automatic renewal without a --manual-auth-hook that automates the challenge.
@@ -358,7 +374,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-11",
   "documentation_checked": "2026-09",
-  "body_sha256": "e18581ca877204d0c0c906a895620e4ac844a4f704fcd06c126205982f4ef33d",
+  "body_sha256": "012eebeb046a0346cd6b8c85f17c5036bf52976b70fe04f9a2a7af4d70727aaf",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -488,9 +504,9 @@ Claims (full source mapping in the JSON block below):
         "s2d161ece08ff": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L255-L262",
         "sda67db889c0e": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L308-L312",
         "s9cd3fcf628fb": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L598-L606",
-        "sce1899c44675": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L667-L670",
-        "s64067396872f": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L717-L721",
+        "s5d98e69756c9": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.rst#L160-L163",
         "sac989d3132f5": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L864-L884",
+        "sf70f634493d1": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L885-L924",
         "sfc53128fa456": "https://gitlab.isc.org/isc-projects/bind9/-/blob/v9.20.24/bin/dig/dig.c#L586-L630"
       }
     },
@@ -499,7 +515,9 @@ Claims (full source mapping in the JSON block below):
       "basis": "RFC 8659",
       "sources": {
         "s8aedfb08aff2": "https://www.rfc-editor.org/rfc/rfc8659#section-3",
+        "s25ad17065812": "https://www.rfc-editor.org/rfc/rfc8659#section-4.1",
         "se86efc2c3dd3": "https://www.rfc-editor.org/rfc/rfc8659#section-4.1.1",
+        "s547d1c56334d": "https://www.rfc-editor.org/rfc/rfc8659#section-4.2",
         "s27775a13cb28": "https://www.rfc-editor.org/rfc/rfc8659#section-4.3"
       }
     }
@@ -529,11 +547,11 @@ Claims (full source mapping in the JSON block below):
     "acme-default": {"text": "acme.sh registers with ZeroSSL by default.", "components": ["acme"], "sources": ["acme:sa635c50fc1f9"], "status": "REASONED"},
     "acme-install": {"text": "acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell.", "components": ["acme"], "sources": ["acme:sa635c50fc1f9"], "status": "REASONED"},
     "server-automation": {"text": "This guide advises Caddy or Traefik for built-in issuance and renewal without an external client; it assesses them as the lowest-effort correct option for new deployments.", "components": ["le", "caddy", "traefik"], "sources": ["le:s9ff2d787c618", "caddy:s9683cb8d689f", "traefik:s418a6b1ad09b"], "status": "REASONED"},
-    "origin-certificates": {"text": "At the guide's October 2026 check, Cloudflare listed Origin CA certificates on its Free plan, which can change; it says they only encrypt traffic between Cloudflare and the origin, and that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled. This guide requires them only for origins reached only through Cloudflare-proxied records.", "components": ["le", "cloudflare-origin-ca"], "sources": ["le:s9ff2d787c618", "cloudflare-origin-ca:s1e15de5c9f36"], "status": "REASONED"},
+    "origin-certificates": {"text": "At the guide's October 2026 check, Cloudflare listed Origin CA certificates on its Free plan, which can change; it says they only encrypt traffic between Cloudflare and the origin, and that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled. This guide restricts their use to origins that receive traffic only through Cloudflare-proxied records.", "components": ["le", "cloudflare-origin-ca"], "sources": ["le:s9ff2d787c618", "cloudflare-origin-ca:s1e15de5c9f36"], "status": "REASONED"},
     "verify-inventory": {"text": "certbot certificates lists issued certificates and their expiry dates.", "components": ["certbot"], "sources": ["certbot:s44faaf4eb7d7"], "status": "REASONED", "verify": [1]},
     "verify-https": {"text": "Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k.", "components": ["le", "curl-source"], "sources": ["le:s9ff2d787c618", "curl-source:s76f69702c9d5", "curl-source:s60820cd231e1"], "status": "REASONED", "verify": [1]},
     "verify-certificate": {"text": "The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates.", "components": ["le", "openssl-cli"], "sources": ["le:s9ff2d787c618", "openssl-cli:s00aaf106164f", "openssl-cli:s0856f4a58574"], "status": "REASONED", "verify": [1]},
-    "verify-caa": {"text": "Look up CAA with dig +noall +comments +answer for your host, then each parent up to the top-level domain, stopping at the first reply with CAA lines. Exposed, exit 1: no set, or no issue (iodef or issuewild only). Fixed, exit 0: an issue value naming letsencrypt.org. Other CAs only: exit 0, flagged. dig exit nonzero, a non-NOERROR status or an unread form: exit 3. Not run against a deployment.", "components": ["le", "bind-dig", "rfc8659"], "sources": ["le:saf908bcd2143", "bind-dig:s4a49b2a8a61e", "bind-dig:s2d161ece08ff", "bind-dig:sda67db889c0e", "bind-dig:s9cd3fcf628fb", "bind-dig:sce1899c44675", "bind-dig:s64067396872f", "bind-dig:sac989d3132f5", "bind-dig:sfc53128fa456", "rfc8659:s8aedfb08aff2", "rfc8659:se86efc2c3dd3", "rfc8659:s27775a13cb28"], "status": "REASONED", "verify": [2]},
+    "verify-caa": {"text": "Look up CAA with dig -r +noall +comments +answer for your host, then each parent up to the top-level domain, stopping at the first reply with CAA lines. Exposed, exit 1: no set, or only iodef or issuewild. Fixed, exit 0: an issue naming letsencrypt.org. Other CAs only: exit 0, not classified. Exit 3: dig exit nonzero, status not NOERROR, no ra flag or an unread form. Not run against a deployment.", "components": ["le", "bind-dig", "rfc8659"], "sources": ["le:saf908bcd2143", "bind-dig:s4a49b2a8a61e", "bind-dig:s2d161ece08ff", "bind-dig:sda67db889c0e", "bind-dig:s9cd3fcf628fb", "bind-dig:s5d98e69756c9", "bind-dig:sac989d3132f5", "bind-dig:sf70f634493d1", "bind-dig:sfc53128fa456", "rfc8659:s8aedfb08aff2", "rfc8659:s25ad17065812", "rfc8659:se86efc2c3dd3", "rfc8659:s547d1c56334d", "rfc8659:s27775a13cb28"], "status": "REASONED", "verify": [2]},
     "authentication": {"text": "A certificate alone is insufficient protection; continue with server controls and authentication.", "components": ["le"], "sources": ["le:s9ff2d787c618"], "status": "REASONED"},
     "dns-automation": {"text": "For automated DNS-01 issuance and renewal, this guide advises using a provider DNS plugin and least-privilege API credentials; Certbot also documents manual TXT entry and authentication hooks that automate the challenge.", "components": ["certbot", "certbot-v230"], "sources": ["certbot:s875be163b4c1", "certbot:s7b60a00cadf3", "certbot-v230:s55ec19f37395", "certbot-v230:s5bf4ff9fbe76"], "status": "REASONED"},
     "dns-manual": {"text": "certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; the Certbot v2.3.0 guide says certificates created with --manual do not support automatic renewal without a --manual-auth-hook that automates the challenge.", "components": ["certbot", "certbot-v230"], "sources": ["certbot:s7b60a00cadf3", "certbot-v230:s5bf4ff9fbe76"], "status": "REASONED"}
