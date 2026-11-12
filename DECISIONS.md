@@ -17,6 +17,22 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-11 on the demonstration-form remedy, GQS O5 (#1282).** The orchestrator's store
+  records this ruling as resolved by the Architect, the maintainer in this project's records, on 2026-11-11
+  while the fleet's operating mode was attended-autonomous, and #1288 enters it here. The store does not record the
+  channel or the time, and
+  no reasoning was recorded beyond its terms. The ruling settles O5, the demonstration-form remedy question raised
+  in GQS (guide quality scorecard) Phase B gating. Its terms, paraphrased: a DEMONSTRATED Verify fence whose
+  shipped form, or whose current binary, was not re-run against a service is downgraded to REASONED, with the
+  limitation stated; such a fence is re-demonstrated later as a separate hardening pass, not part of the downgrade.
+  Its effect (applied by #1282 to `low-code-builders.md`): four fence declarations and the claims
+  `windmill-default-login`, `verify-tcp-outcomes`, `verify-tcp-inputs` and `nocodb-key-logic` became REASONED, and
+  the Verify introduction no longer overclaims demonstration. `windmill-loopback` and `windmill-sandbox-run`, which
+  record observed binary behaviour, stay DEMONSTRATED. #1282 changed the sample-token unit's declaration from
+  REASONED to DEMONSTRATED after re-running its current form, and `verify-sample-tokens` is now DEMONSTRATED. `CONTRIBUTING.md` accepts a labelled REASONED unit as
+  an end state with no demonstration backlog row, so no row tracks the hardening pass. The revert path is a later
+  maintainer ruling that replaces the remedy; units downgraded under it stay REASONED until a later change
+  re-demonstrates them.
 - **Maintainer ruling of 2026-11-05 on `pocketbase.md` TODO 1.414 (#1234).** The maintainer ruled through
   AskUserQuestion at 2026-11-05T23:27Z, and the orchestrator recorded the ruling in its store as: "move pocketbase.md
   to v0.41.1 and cite the forge (ganigeorgiev.com) tagged pages, reading source from the Go module proxy zip that
@@ -994,7 +1010,9 @@ These are not maintainer rulings, and the settled status of the rulings above do
 that blocks progress is taken by majority of three predictions of what the maintainer would decide: one each from
 lab_infra and guardrails, given the context through inbox-send, and the orchestrator's own. Each such decision is
 recorded with its question, the three predictions and its outcome, for the maintainer's later review. In the
-predictions quoted below, words in square brackets replace a pronoun in the quoted reasoning.
+predictions quoted below, words in square brackets replace a pronoun in the quoted reasoning. The two proxy
+decisions of 2026-11-11 at the end of this section were taken under a later rule, the unattended decision rule of
+2026-10-31, which the first of them states.
 
 - **Proxy decision of 2026-10-27 on TODO 1.383 closure, for the maintainer's later review (#1002).** Decided at
   2026-10-27T23:11:19Z under that directive. The outcome, as the record reads:
@@ -1094,6 +1112,62 @@ predictions quoted below, words in square brackets replace a pronoun in the quot
   as the unit is left for the maintainer's review. No guide changes here; fences that do not yet follow this are
   recoded in later pull requests. The revert path is the maintainer's review: a different ruling replaces the rule 6
   sentences on the fence as the unit, and any fence recoded under this decision is recoded again.
+- **Proxy decision of 2026-11-11 on a gate's docstring versus its code, open-findings row 40, for the maintainer's
+  later review (#1288).** Decided at 2026-11-11T21:30:21Z, when the last vote arrived, under the unattended
+  decision rule of 2026-10-31, not under the directive described above. The maintainer set that rule at about 13:04Z
+  on 2026-10-31 in an attended session with guardrails, and confirmed it to secureconfig directly through
+  AskUserQuestion at 2026-10-31T13:22Z; it replaced the two-of-three majority rule of 2026-10-30. Under it, while the
+  maintainer is away, secureconfig presents a decision that blocks progress with its options, marks one as its
+  predicted option, what the maintainer would decide, and one as best for the project, and casts no vote itself.
+  lab_infra and guardrails vote, with grc copied. An option both voters pick is taken. When one picks the predicted
+  option and the other the option best for the project, grc breaks the tie. Any other split, or a voter declining
+  the question as out of its scope, parks the step for the maintainer. Votes cover only actions that are reversible
+  and not outward-facing, "never a merge or the acceptance of a residual", and each option, vote and outcome is
+  recorded for the maintainer's review. The question, raised at
+  2026-11-11T21:29:31Z, was how to settle open-findings row 40, on a gate's docstring versus its code. The options,
+  paraphrased rather than quoted: option 1, marked as the predicted option, closes row 40 as fixed and adds one
+  CONTRIBUTING.md sentence saying that a gate's docstring states only what its code does, checked in QA briefs.
+  Option 2, marked as best for the project, is option 1 plus a guardrail seed to guardrails for a lint that flags a
+  docstring claim with no matching code path. The votes, as recorded: guardrails voted for option 2, with reasoning
+  that, in paraphrase, the maintainer takes the better-assured way when the extra effort is small, and the sentence
+  alone relies on review (20261111T212953Z.from-guardrails.a055896122d7.msg). lab_infra voted for option 1, with
+  reasoning that, in paraphrase, its own QA rule QLC-08 already treats gate documentation that overstates what the
+  gate checks as a false statement to fix before merge, and a docstring-versus-code lint is a lexical heuristic, so
+  defence in depth only (20261111T213021Z.from-lab_infra.b35d744a239e.msg). grc voted for option 2, breaking the tie
+  between the predicted option and the option best for the project
+  (20261111T213018Z.from-grc.5dc0348daa33.msg). The vote request and the lab_infra and grc votes cited D-1096, and
+  guardrails disputed that citation, pointing to the unattended rule of 2026-10-31. The outcome is option 2. The record first gave this as a majority of
+  three voters; on 2026-11-12 it was corrected to the rule's own method, a tie that grc broke, with the same
+  outcome. Its effect so far: the guardrail seed went to guardrails at 2026-11-11T21:30:33Z, and guardrails decides
+  whether a lint labelled as defence in depth ships. Pull request #1287 added the CONTRIBUTING.md sentence and merged
+  at 2026-11-12T12:15:42Z, and its CHANGELOG entry records that row 40 closes on that merge. The sentence as merged
+  covers a gate's help text as well as its docstring, which goes beyond the option text above. This decision is not a
+  maintainer ruling and
+  awaits the maintainer's ratification, and none is recorded yet; the operating mode returned to attended-autonomous
+  at 2026-11-12T00:30Z and went back to unattended at 00:55Z. The revert path is the maintainer's review: a different ruling changes or removes the
+  CONTRIBUTING.md sentence that #1287 added, so row 40 reopens or stays closed on that ruling's terms, and guardrails
+  is asked to withdraw the seed and any lint built from it.
+- **Proxy decision of 2026-11-11 on the REASONED definition (#1282), for the maintainer's later review (#1288).**
+  Decided at 2026-11-11T23:11:52Z, when the last vote arrived, under the unattended decision rule of 2026-10-31 that
+  the entry above states. The question, raised at 2026-11-11T23:10:53Z, was how REASONED claim texts that record
+  past runs fit the generated REASONED definition. The options, paraphrased rather than quoted: option 1, marked as
+  the predicted option, keeps the past-run records in the REASONED claim texts and widens the REASONED definition
+  that `tools/version_basis.py` renders to say that REASONED records source reasoning and any earlier-form run it
+  rests on. Option 2, marked as best for the project, is option 1 plus a corpus-wide consistency check of REASONED
+  claim texts at the O3 Sources-heading sweep. The votes, as recorded: guardrails voted for option 2, with reasoning
+  that, in paraphrase, a check folded into a sweep already planned costs little and catches other claims with the
+  same mismatch (20261111T231100Z.from-guardrails.76eb17a0e15a.msg). lab_infra voted for option 2, with reasoning
+  that, in paraphrase, option 1 makes the claim texts true against the widened definition and keeps the O5 history,
+  and the check adds little cost to a sweep that runs anyway (20261111T231152Z.from-lab_infra.589eda3fe03e.msg).
+  Since both voters agreed, grc's vote was not needed; it is recorded, for option 2
+  (20261111T231116Z.from-grc.b867ceb2400c.msg). The vote request and the lab_infra and grc votes cited D-1096, and
+  guardrails disputed that citation, pointing to the unattended rule of 2026-10-31. The outcome is option 2. Its effect so far: none in this repository.
+  The definition is generated for the whole corpus, so the change is a later corpus-wide pull request,
+  with the consistency check at the O3 sweep. That change is tracked in the maintainer-side orchestrator's private
+  backlog, not in a `TODO.md` row of this repository. Like the entry above, this decision is not a maintainer
+  ruling and awaits the maintainer's ratification, and none is recorded yet. The revert path is the maintainer's
+  review: a different ruling changes or drops the definition change and the consistency check before they land, or
+  replaces them after.
 
 ## Profile: predicting these rulings
 
