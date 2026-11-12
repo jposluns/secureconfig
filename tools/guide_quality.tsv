@@ -17,7 +17,7 @@ common-mistakes.md	K	PARTIAL(M1)	n/a	?	n/a	n/a	n/a	?	?	n/a	?	SOLID	b4a2210884259
 connection-poolers.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	d8331d53ffa0efedcdc7f3e28b77816137fcb59d5c4a6257408e19213547adb7	2026-11-10	tool	current
 container-hardening.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	1aebec7da57b179cd121a6e4a50acab780d17b39af6f7438353687adf082b3c0	2026-11-10	tool	current
 cors.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	fbd626460a42276389a3b92e19db79c3f6b6e8e35270a5ac65dfe39d39872ee8	2026-11-10	tool	current
-deployment-lifecycle.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	27faf94b933259be394e81a22e1312540d77f5f9ac2c5c6af961c812b70eaa51	2026-11-10	tool	current
+deployment-lifecycle.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	3cb896c908fe4f602806b275a4acebfdb38e223b3c2ca1c31c6932039d47bb60	2026-11-10	tool	current
 devops-uis.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	9d3fc3d3fd27a2f52538bf4e3cd4b88eb9b7ee738c9656611fd4dd0e76966079	2026-11-10	tool	current
 docker.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	f40702b6f597c06a0367b442aae713ad9ac6641527781245184947d9f7cc3837	2026-11-10	tool	current
 dotnet.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	491cc1c3bc0a7bf2272de9ea1c5c47d04f5cd7a8202aedafa9b844145ff851f0	2026-11-10	tool	current
@@ -48,7 +48,7 @@ kubernetes.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	08dbbdd50a94f03ed62e67c53f59
 lighttpd.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	b408b44fee9507e7328eb4a7d86dc8f89df051aa27999d49be595a175d7c2be0	2026-11-10	tool	current
 litellm.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	7387fed7b27ae09d4fe2e2aee7e98347ae2f6366ea0b63f192b2562863424a15	2026-11-10	tool	current
 llm-observability.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	fedfe69f91436b52bb1b513ae54fb4099e5dd17eed91691b4f6f6bea16ebe19b	2026-11-10	tool	current
-low-code-builders.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	48acb3488b6322b63c6a5c88fbb35dc2b246522e1e4ca000c5e535084a825a57	2026-11-10	tool	current
+low-code-builders.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	c29f5c030f725664a65c053366b1d9259098fdee1b39e3c529904b95f9e6f4f8	2026-11-10	tool	current
 machine-auth.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	6a24abc10fe1b9b6d87d73822faa2e92dc51935b99b58b9d4e79b45552abf14e	2026-11-10	tool	current
 mcp-clients.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	cc910598b718d48835c0e1ae7c32a916940e0f59156a8d4733ae02ad0066c5d1	2026-11-10	tool	current
 mcp-servers.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	581d8af4352565f05f8821de257a81cf4df59b44433db76859b2c67bb70a729b	2026-11-10	tool	current
@@ -99,7 +99,7 @@ surrealdb.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	e955c8567ffc256dc05bbd2c57e3e
 tailscale.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	d732d5b8d86a5b322517082d8b97dc0d66bd13ba623f0841e82da4153625cf59	2026-11-10	tool	current
 time-series-metrics-stores.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	c749c01383af1105c7ad079f301722bf9f7d8a683a24113641a18aa31aa647e3	2026-11-10	tool	current
 traefik.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	89a96f8706a6e33822fac81892bf0592e94745a585b0283d0f47ed0f5cb7c781	2026-11-10	tool	current
-transactional-email-posture.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	0c9afe559fced06e08a4ecc11d575dc4b0554047fda2d4389dea62fdc9ac229f	2026-11-10	tool	current
+transactional-email-posture.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	39c7721ec89613ef2831c0c0980bf6d193b4fdbba9ba2b3dafb722c50f5ce303	2026-11-10	tool	current
 tunnels.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	db108054b842d14f8b129304d9d9dd62ce456194515019c018d20685957d112a	2026-11-10	tool	current
 vault.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	022349ca91831b2529cafa503eb58de4b7a08164ad52413b60e1c236738edbc9	2026-11-10	tool	current
 vector-databases.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	04d1e9bf9356da7fe59f9e13c5de39812ac94cccb41efb77ac84d82b6f8e40ab	2026-11-10	tool	current

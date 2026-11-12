@@ -25,7 +25,7 @@ connection-poolers.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H
 container-hardening.md	M1	PARTIAL	no		3 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
 container-hardening.md	D3	PARTIAL	no		32 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 deployment-lifecycle.md	M1	PARTIAL	no		8 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
-deployment-lifecycle.md	D3	PARTIAL	no		41 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+deployment-lifecycle.md	D3	PARTIAL	no		47 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 devops-uis.md	D3	PARTIAL	no		10 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 docker.md	M1	PARTIAL	no		7 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
 docker.md	D3	PARTIAL	no		48 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
@@ -74,7 +74,7 @@ litellm.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to
 llm-observability.md	M1	PARTIAL	no		5 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
 llm-observability.md	D3	PARTIAL	no		31 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 low-code-builders.md	M1	PARTIAL	no		5 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
-low-code-builders.md	D3	PARTIAL	no		32 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+low-code-builders.md	D3	PARTIAL	no		77 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 low-code-builders.md	G1	PARTIAL	no		11 sentence(s) repeated, max 6 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 machine-auth.md	D3	PARTIAL	no		39 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 mcp-clients.md	M1	PARTIAL	no		2 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
@@ -169,7 +169,7 @@ tailscale.md	D3	PARTIAL	no		7 item(s) dated later than the heading; meaning unst
 time-series-metrics-stores.md	D3	PARTIAL	no		1 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 traefik.md	D3	PARTIAL	no		18 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 traefik.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
-transactional-email-posture.md	D3	PARTIAL	no		4 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+transactional-email-posture.md	D3	PARTIAL	no		12 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 tunnels.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
 tunnels.md	D3	PARTIAL	no		33 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 vault.md	M1	PARTIAL	no		18 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
