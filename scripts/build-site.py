@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the secureconfig.ai pages on the shared site template (baseline 1.11.3).
+"""Build the secureconfig.ai pages on the shared site template (baseline 1.12.4).
 
 Usage:
   python3 -I -B scripts/build-site.py                 write the pages under site/
@@ -57,8 +57,8 @@ assets/site.css:
 an extra page (a .html or .htm file in any case, as the CSP gate names one) at any base, and any
 other file except, at base `/` only, the published files the root holds beside the pages
 (PUBLISHED: llms.txt, llms-full.txt, robots.txt, sitemap.xml, _headers, .well-known/security.txt,
-favicon.svg, apple-touch-icon.png and images/secureconfig-card.png). A new published file is
-added to PUBLISHED before it ships.
+favicon.svg, favicon.ico, apple-touch-icon.png and images/secureconfig-card.png). A new published
+file is added to PUBLISHED before it ships.
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error
 or a source the build cannot read as it needs.
@@ -88,8 +88,9 @@ COPIED = "assets/baseline/"  # the copied template files, which this build does 
 SITE_CSS = "assets/site.css"  # the optional per-site constants file (baseline README), hand-written
 # The files the root holds beside the pages and the copied template files; a root --check refuses
 # every other file, so a stray file cannot ship unnoticed.
-PUBLISHED = (".well-known/security.txt", "_headers", "apple-touch-icon.png", "favicon.svg",
-             "images/secureconfig-card.png", "llms-full.txt", "llms.txt", "robots.txt", "sitemap.xml")
+PUBLISHED = (".well-known/security.txt", "_headers", "apple-touch-icon.png", "favicon.ico",
+             "favicon.svg", "images/secureconfig-card.png", "llms-full.txt", "llms.txt", "robots.txt",
+             "sitemap.xml")
 # The unlisted n8n advisory (the maintainer's instruction of 2026-11-07: a dated name) and its
 # plain-text copy. tools/check_draft.py admits the page as noindex with no canonical by this exact
 # path, and the overflow page list in tools/run_all_checks.sh names it.

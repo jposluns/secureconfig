@@ -5,7 +5,7 @@ license: CC0-1.0
 compatibility: Every guide is bundled, so no network access is needed to use this skill. scripts/update-guides.sh and scripts/check-updates.py --check-online need network, and only when you choose to run them. Commands in the guides are run by you against the user's own systems.
 metadata:
   source: https://github.com/jposluns/secureconfig
-  version: "1.0.1288"
+  version: "1.0.1289"
 ---
 
 # Secure deployment configuration

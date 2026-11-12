@@ -23,29 +23,31 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = Path("site") / "assets" / "baseline"
 PIN = Path(".baseline") / "pin.toml"
-VERSION = "1.11.3"
+VERSION = "1.12.4"
 UPSTREAM = f"https://posluns.ca/baseline/{VERSION}/"
 # The archive's digest in https://posluns.ca/baseline/SHA256SUMS, and the digest of the version's
-# SHA256SUMS in https://posluns.dev/hashes.txt (its "baseline 1.11.3" row, verified 2026-11-07).
-ARCHIVE_SHA256 = "d6841242fc50cefa20d7521de7e329c51e6e578ed240282c65da2949a7d07c43"
-SUMS_SHA256 = "6904755931757a109fcf3c2240624e9fc27f344af4e1cc41633b2de9009d810b"
+# SHA256SUMS in https://posluns.dev/hashes.txt (its "baseline 1.12.4" row, verified 2026-11-12).
+ARCHIVE_SHA256 = "62898739e59aa7dc772805b737633a99823eba4c4a4d53b233e3a2b6dcf1f719"
+SUMS_SHA256 = "0510e973cd0d2b5210925f87e20690fd7d96998ea8a627ab0ee5e0627d67facb"
 # Pin keys are paths relative to the site root (site/), as the baseline README shows them.
 KEY_PREFIX = "assets/baseline/"
 # The runtime and licence files the site publishes. The reference pages, tools/measure.js,
 # gen_palettes.py, site-palette.example.css, the documentation and the scripts no page loads
 # (select.js, search.js, matrix.js) are not copied. Every page loads scheme.js (baseline 1.6.0).
+# From baseline 1.12.2 the logos copied are those the pages load and the one the card builder
+# reads (its favicon), so secureconfig-mono.svg and secureconfig-card.svg are not copied, and no
+# .ico file is: the site builds its own favicon.ico with the card builder.
 RUNTIME = (
     "LICENSE", "NOTICE.md",
     "baseline.css", "palettes.css", "fonts.css", "copy.js", "rail.js", "scheme.js",
-    "fonts/dancing-script-LICENSE.txt", "fonts/dancing-script-latin-wght-normal.woff2",
+    "fonts/dancing-script-LICENSE.txt", "fonts/dancing-script-wght-normal.ttf",
     "fonts/jetbrains-mono-LICENSE.txt", "fonts/jetbrains-mono-latin-wght-italic.woff2",
     "fonts/jetbrains-mono-latin-wght-normal.woff2",
     "fonts/newsreader-LICENSE.txt", "fonts/newsreader-latin-wght-italic.woff2",
     "fonts/newsreader-latin-wght-normal.woff2",
     "fonts/public-sans-LICENSE.txt", "fonts/public-sans-latin-wght-italic.woff2",
     "fonts/public-sans-latin-wght-normal.woff2",
-    "logos/secureconfig.svg", "logos/secureconfig-mono.svg", "logos/secureconfig-favicon.svg",
-    "logos/secureconfig-card.svg", "logos/secureconfig-touch.png",
+    "logos/secureconfig.svg", "logos/secureconfig-favicon.svg", "logos/secureconfig-touch.png",
     "logos/opfiles.svg", "logos/auditthis.svg", "logos/cleanlanguage.svg", "logos/aiqt.svg",
     "logos/grclibrary.svg", "logos/vendorreplies.png",
     "marks/NOTICE.md", "marks/github-invertocat-black.svg", "marks/github-invertocat-white.svg",
@@ -53,15 +55,23 @@ RUNTIME = (
 )
 # The build tools the site copies and pins but never serves, package path to repository path; the
 # pin keys them by the repository path, as the baseline README shows (SPECIFICATION section 4):
-# the palette gate (baseline 1.6.0) and the overflow check (baseline 1.8.0). The card builder
-# (baseline 1.9.0, tools/build_card.js and tools/card-fonts/) is not copied: no gate here runs it.
+# the palette gate (baseline 1.6.0), the overflow check (baseline 1.8.0), and the card builder
+# with the Inter fonts it reads from beside itself (baseline 1.9.0), which from baseline 1.12.2
+# builds site/favicon.ico from .baseline/site-card.toml, the site's own data file, not copied or
+# pinned. The builder runs locally, never in the deploy build, and no gate runs it.
 BUILD_TOOLS = {"tools/check_palette.py": ".baseline/check_palette.py",
-               "tools/check_overflow.js": ".baseline/check_overflow.js"}
+               "tools/check_overflow.js": ".baseline/check_overflow.js",
+               "tools/build_card.js": ".baseline/build_card.js",
+               "tools/card-fonts/Inter-Bold.otf": ".baseline/card-fonts/Inter-Bold.otf",
+               "tools/card-fonts/Inter-ExtraBold.otf": ".baseline/card-fonts/Inter-ExtraBold.otf",
+               "tools/card-fonts/Inter-Regular.otf": ".baseline/card-fonts/Inter-Regular.otf",
+               "tools/card-fonts/inter-LICENSE.txt": ".baseline/card-fonts/inter-LICENSE.txt"}
 HEADER = """\
 # Shared site template baseline pin, read by tools/check_baseline_pin.py.
 #
-# The files under site/assets/baseline/, .baseline/check_palette.py and .baseline/check_overflow.js
-# are copied byte for byte from the baseline package at the upstream URL below by
+# The files under site/assets/baseline/, .baseline/check_palette.py, .baseline/check_overflow.js,
+# .baseline/build_card.js and the files under .baseline/card-fonts/ are copied byte for byte from
+# the baseline package at the upstream URL below by
 # scripts/copy-baseline.py, which checked each one against the package's SHA256SUMS. Never edit a
 # copied file. A new baseline version is 1 pull request that reruns the copy script and commits
 # the copied files and this pin together.

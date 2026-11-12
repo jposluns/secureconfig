@@ -1,27 +1,28 @@
 # Shared site template baseline pin, read by tools/check_baseline_pin.py.
 #
-# The files under site/assets/baseline/, .baseline/check_palette.py and .baseline/check_overflow.js
-# are copied byte for byte from the baseline package at the upstream URL below by
+# The files under site/assets/baseline/, .baseline/check_palette.py, .baseline/check_overflow.js,
+# .baseline/build_card.js and the files under .baseline/card-fonts/ are copied byte for byte from
+# the baseline package at the upstream URL below by
 # scripts/copy-baseline.py, which checked each one against the package's SHA256SUMS. Never edit a
 # copied file. A new baseline version is 1 pull request that reruns the copy script and commits
 # the copied files and this pin together.
 
-version = "1.11.3"
-upstream = "https://posluns.ca/baseline/1.11.3/"
-archive_sha256 = "d6841242fc50cefa20d7521de7e329c51e6e578ed240282c65da2949a7d07c43"
-sha256sums_sha256 = "6904755931757a109fcf3c2240624e9fc27f344af4e1cc41633b2de9009d810b"
-copied = "2026-11-07"
+version = "1.12.4"
+upstream = "https://posluns.ca/baseline/1.12.4/"
+archive_sha256 = "62898739e59aa7dc772805b737633a99823eba4c4a4d53b233e3a2b6dcf1f719"
+sha256sums_sha256 = "0510e973cd0d2b5210925f87e20690fd7d96998ea8a627ab0ee5e0627d67facb"
+copied = "2026-11-12"
 
 # Paths under assets/baseline/ are relative to site/; the build tools' paths are
 # relative to the repository root.
 [files]
 "assets/baseline/LICENSE" = "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
-"assets/baseline/NOTICE.md" = "a84715f2a3d6ee761ca2cbd8a8656fa204f45b6f0df120dfb3ae557eef472dc8"
-"assets/baseline/baseline.css" = "13c4b95dcc7b37b575eb01e4a64c5a8ffad5c8632264ef50825f970d9f8f6600"
+"assets/baseline/NOTICE.md" = "e96ece3d82f1e1e09fcf55877bde2590ceb06fa29ef9ddedad42c1922e0cad17"
+"assets/baseline/baseline.css" = "8512af10fedc1a0875f724929d54bd7a7067025804b9d929d23b1db2bd66c3d1"
 "assets/baseline/copy.js" = "9bf99b50471889b768c795af5a4f84f526cecf7622a1f1265ca3d088b31339a4"
-"assets/baseline/fonts.css" = "a309a8ff4026a67fb5d10dea2c02e5b9ea2c1b32d4b18d7892015e038397396a"
+"assets/baseline/fonts.css" = "b9573d444f52dc81cae6e2620aedfe819976858bd7224bfa721ec00b8880dfad"
 "assets/baseline/fonts/dancing-script-LICENSE.txt" = "c02c0002d3bbd41a16933c162888c400469c7029f1362ca9d60d5ed20ea7d157"
-"assets/baseline/fonts/dancing-script-latin-wght-normal.woff2" = "51acdc0e009e1d84cca6b654c4218275d8ee33dd243f3df25f7412a824a78d99"
+"assets/baseline/fonts/dancing-script-wght-normal.ttf" = "21808625578fe8d8cd10cb684be546dca077b27cd03a53a2f1ec11dc743c924c"
 "assets/baseline/fonts/jetbrains-mono-LICENSE.txt" = "403581b69dac5cff4079205e01c6b467e56af449ecbd7247693ddb1baafa005b"
 "assets/baseline/fonts/jetbrains-mono-latin-wght-italic.woff2" = "a8afa085e9ca5e53434e2ee918ba6b65c7dd4dda56509976b36591478c99d62e"
 "assets/baseline/fonts/jetbrains-mono-latin-wght-normal.woff2" = "18be452724bfdc236c074ca94a249a7f41a86752c7d04ab258ce9ed5651f6a7e"
@@ -36,9 +37,7 @@ copied = "2026-11-07"
 "assets/baseline/logos/cleanlanguage.svg" = "285c37c1d77bc24206e31c3eb99837a79ba79f6c16b4ccbd7470f1fbfc58f985"
 "assets/baseline/logos/grclibrary.svg" = "8ad4d338a68ce7afc781c02be91ee7e87ce464d44d0ed56eb10d5cddf80b45f8"
 "assets/baseline/logos/opfiles.svg" = "f294e493b3ad949b72e8f25500a507fa8f47e41f58247904f44b0434637d4f0c"
-"assets/baseline/logos/secureconfig-card.svg" = "21f74d06b216d72d1e8d483a444d3e439847ede8e523427c147ba2ba59cd553e"
 "assets/baseline/logos/secureconfig-favicon.svg" = "526ca1f3606625306c4876bf8fe6ba5af86e87f622729cf003ef60949e26ccbd"
-"assets/baseline/logos/secureconfig-mono.svg" = "5fd490079642b41ab12863bc1692e5481a737cc4f8f764319dd31f13a2037b86"
 "assets/baseline/logos/secureconfig-touch.png" = "5897da9f6f9a556358584faee1d33b210a96de56b7ef6177d32a5bd940f0c0c7"
 "assets/baseline/logos/secureconfig.svg" = "a74c1604acb4032e763afe0cf0a9ed9b4e5f4bdb76790d24a3de16a48eda5c1b"
 "assets/baseline/logos/vendorreplies.png" = "24c965ca0568376ea505b80aee61faf03428acb968cbca8f364236feb9cf990e"
@@ -47,8 +46,13 @@ copied = "2026-11-07"
 "assets/baseline/marks/github-invertocat-white.svg" = "ccd84c89b1056345608fc3489357f8acc7397e49a3cdc2d418b6c8016911d47b"
 "assets/baseline/marks/linkedin-in-bug.png" = "3c0149f26168b5fe0f43e68664abe40341a6443b3cd435d18a73e12f64f8b600"
 "assets/baseline/marks/orcid-id.svg" = "195be086656233fc1a0089086d9190d28dc6abce39c2290612d1893233e1f166"
-"assets/baseline/palettes.css" = "111a22c4314fd5f30b6813568eb67d3521f3df196b9835b831df7632bc3a526a"
+"assets/baseline/palettes.css" = "d3e4326a5c694df7479241ce1a22dc70a2624c5d4457f30cf9ee67d233b5ac55"
 "assets/baseline/rail.js" = "36535faf2df8637e694ff2a57af982b9c67c9f410f80d4dfceb193c4f2d601ca"
 "assets/baseline/scheme.js" = "39d035d986f53c987cbe92516b9a5fd499af5c7fcdda701ea896c63c45ef1634"
+".baseline/build_card.js" = "c32145c1569e2e85f21b70ad902949b39f2152730b4f725ab00bb02059929c4f"
+".baseline/card-fonts/Inter-Bold.otf" = "00fd6f4691ee8884a33b46bf45851b341927c37c30064f558e1befb242971c49"
+".baseline/card-fonts/Inter-ExtraBold.otf" = "2012ceaf1470372c415f95c00495a1ad1ebdcd1cd6a6225808f011d459a9b12a"
+".baseline/card-fonts/Inter-Regular.otf" = "be6d709dcb730ddaf050cbdae6fe89bd56d5d14dc66885639bbf6f06bd03521b"
+".baseline/card-fonts/inter-LICENSE.txt" = "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
 ".baseline/check_overflow.js" = "8e50e8f311516ae4ed7ed653ce24d4c727530e081f44ba9f55af32e9c0d4ba01"
 ".baseline/check_palette.py" = "00ed3de3eed31bdc2e0cebfaca3f8c9a7a407c32bf0f39ee212cd2d22acbdea0"
