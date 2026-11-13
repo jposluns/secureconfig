@@ -11,19 +11,28 @@ file in the case's fixture folder, honours -o FILE, ignores -fsS and --max-time 
 any other URL, and appends every URL it is asked for to a log. Each case checks that log, so a
 fetch the shim did not make fails the case. The script's RAW constant is unchanged; there is no
 override for it. This process also replaces the socket connect functions with one that raises.
+Every case runs with LC_ALL=C except the LOCALE cases.
 
   - SHIM: an unknown URL exits 22, -o writes the fixture, and both are logged;
   - GOOD: a newer N.N.N with a matching manifest replaces the references, re-pins plugin.json and
-    says so, fetching VERSION, the manifest and each guide through the shim, in that order;
+    says so, fetching VERSION, the manifest and each guide through the shim, in that order; a
+    VERSION with no trailing newline and one ending in CR LF update the same way;
   - SAME: the published version equal to the installed one is "nothing to do", nothing changed;
   - BAD PUBLISHED: 1.0, 1.0.5.6, v1.0.5, 1.0.5-rc1, a terminal escape, a word, a second line, a
-    trailing dot, a sign, non-ASCII digits, a huge run of digits and a huge garbage line are each
-    refused with exit 1 and a message that does not echo the value, nothing written and nothing
-    fetched after VERSION; an empty or blank VERSION keeps its own message, and a VERSION the
-    shim does not have is refused too;
+    trailing dot, a sign, non-ASCII digits, a huge run of digits, a huge garbage line, a second
+    line that stripping whitespace would join into 1.0.56, a trailing blank with and without a
+    newline, a leading blank, a blank inside, two trailing newlines, a lone trailing CR, a CR
+    inside, and an embedded and a trailing NUL byte are each refused with exit 1 and a message
+    that does not echo the value, nothing written and nothing fetched after VERSION; an empty or
+    blank VERSION keeps its own message, and a VERSION the shim does not have is refused too;
   - BAD LOCAL: a plugin.json version of "x", none, a number, null, a list, an escape, a second
     line or two parts, and a plugin.json that is not an object, are refused before any fetch,
     with exit 1 and a message that does not echo the value, nothing written;
+  - LOCALE: up to two UTF-8 locales from a fixed list, each used only if a bash probe run under it
+    shows [0-9] matching an Arabic-Indic digit (no usable locale is a PREREQ failure, and the
+    probe under LC_ALL=C is its negative control); under each, Arabic-Indic, superscript and
+    fullwidth digits in VERSION are refused as in BAD PUBLISHED, an Arabic-Indic plugin.json
+    version is refused as in BAD LOCAL, and a GOOD update still succeeds;
   - ISOLATION: every python3 in the script text carries -I; with a json.py planted in the working
     directory the update succeeds and the plant never runs, and a plain python3 -c 'import json'
     in that same directory does run it (the negative control);
@@ -59,6 +68,11 @@ BAD_PUBLISHED_MESSAGE = b'the published version is not of the form N.N.N'
 EMPTY_PUBLISHED_MESSAGE = b'could not read the published version; nothing changed'
 BAD_LOCAL_MESSAGE = b'plugin.json records no version of the form N.N.N'
 MARKER = 'json-was-imported'
+# The LOCALE cases run under at most two of these, one per language and territory.
+LOCALE_CANDIDATES = ('en_US.UTF-8', 'en_US.utf8', 'de_DE.UTF-8', 'de_DE.utf8',
+                     'fr_FR.UTF-8', 'fr_FR.utf8', 'en_IN.UTF-8', 'en_IN.utf8')
+# True in a locale where a [0-9] range in bash's [[ =~ ]] matches U+0661 ARABIC-INDIC DIGIT ONE.
+LOCALE_PROBE = "[[ $'\u0661' =~ ^[0-9]$ ]]".encode('utf-8')
 
 # The shim is written per case with its log and fixture folder as literals, so it reads no
 # environment variable and the script needs none.
@@ -132,12 +146,41 @@ def check(condition, message):
 
 BASE_PATH = os.environ.get('PATH') or os.defpath
 BASH = shutil.which('bash', path=BASE_PATH)
-for tool in ('bash', 'python3', 'sha256sum', 'tr', 'mktemp', 'cp', 'mv', 'rm', 'mkdir', 'cat'):
+for tool in ('bash', 'python3', 'sha256sum', 'tr', 'wc', 'mktemp', 'cp', 'mv', 'rm', 'mkdir',
+             'cat'):
     if not shutil.which(tool, path=BASE_PATH):
         print(f'  FAIL  PREREQ: {tool} is not on PATH, so update-guides.sh cannot be exercised')
         sys.exit(1)
 if not SCRIPT.is_file():
     print(f'  FAIL  PREREQ: {SCRIPT} is missing')
+    sys.exit(1)
+
+
+def locale_is_usable(name):
+    """True if bash, run under LC_ALL=name, matches [0-9] against an Arabic-Indic digit."""
+    try:
+        done = subprocess.run([BASH, '-c', LOCALE_PROBE], env={'PATH': BASE_PATH, 'LC_ALL': name},
+                              stdin=subprocess.DEVNULL, capture_output=True, timeout=60)
+    except subprocess.TimeoutExpired:
+        return False
+    return done.returncode == 0
+
+
+# This follows the file's own prerequisite convention, as for a missing tool above: when no
+# candidate locale makes [0-9] match a non-ASCII digit, the LOCALE cases would prove nothing, so
+# the run fails loudly instead of skipping them.
+UTF8_LOCALES = []
+for name in LOCALE_CANDIDATES:
+    if len(UTF8_LOCALES) == 2:
+        break
+    if any(name.split('.')[0] == chosen.split('.')[0] for chosen in UTF8_LOCALES):
+        continue
+    if locale_is_usable(name):
+        UTF8_LOCALES.append(name)
+if not UTF8_LOCALES:
+    print('  FAIL  PREREQ: no UTF-8 locale among ' + ', '.join(LOCALE_CANDIDATES) + ' makes '
+          "bash's [0-9] match an Arabic-Indic digit, so the LOCALE cases cannot be exercised; "
+          'install one of them (for example en_US.UTF-8)')
     sys.exit(1)
 
 
@@ -224,6 +267,10 @@ def show(data, limit=200):
     return repr(text if len(text) <= limit else text[:limit] + '...')
 
 
+def prefixed(label, locale):
+    return label if locale == 'C' else f'LOCALE {locale}: {label}'
+
+
 # ---------------------------------------------------------------- SHIM
 
 with tempfile.TemporaryDirectory() as tmp:
@@ -262,10 +309,17 @@ def check_updated(t, rc, out, err, label):
     check(not list(t.tmp.iterdir()), f'{label}: the work folder should be removed')
 
 
-with tempfile.TemporaryDirectory() as tmp:
-    t = build(Path(tmp))
-    rc, out, err = run(t)
-    check_updated(t, rc, out, err, 'GOOD')
+def check_good(desc, version=PUBLISHED.encode() + b'\n', locale='C'):
+    with tempfile.TemporaryDirectory() as tmp:
+        t = build(Path(tmp), version=version)
+        t.env['LC_ALL'] = locale
+        rc, out, err = run(t)
+        check_updated(t, rc, out, err, prefixed(desc, locale))
+
+
+check_good('GOOD')
+check_good('GOOD: no trailing newline', version=PUBLISHED.encode())
+check_good('GOOD: a CR LF line end', version=PUBLISHED.encode() + b'\r\n')
 
 # ---------------------------------------------------------------- SAME
 
@@ -280,6 +334,32 @@ with tempfile.TemporaryDirectory() as tmp:
 
 # ---------------------------------------------------------------- BAD PUBLISHED
 
+
+def check_bad_published(desc, raw, locale='C'):
+    """VERSION holding raw is refused: exit 1, the message on stderr only, the value not echoed,
+    nothing changed and nothing fetched after VERSION."""
+    with tempfile.TemporaryDirectory() as tmp:
+        t = build(Path(tmp), version=raw)
+        t.env['LC_ALL'] = locale
+        before = state(t)
+        rc, out, err = run(t)
+        both = out + b'\n' + err
+        label = prefixed(f'BAD PUBLISHED: {desc}', locale)
+        check(rc == 1, f'{label}: should exit 1: {rc}')
+        check(BAD_PUBLISHED_MESSAGE in err and not out,
+              f'{label}: should say so on stderr only: {show(out)} {show(err)}')
+        # The value as stripping every whitespace byte and dropping every NUL would leave it (an
+        # earlier form of the script read "1.0.5\n6\n" as 1.0.56), and each blank-separated
+        # piece without its NUL bytes; none of them may appear in the output.
+        stripped = bytes(b for b in raw if b not in b' \t\n\r\v\f\x00')
+        tokens = [stripped] + [piece.replace(b'\x00', b'') for piece in raw.split()]
+        check(not any(echoes(token, both) for token in tokens)
+              and b'\x1b' not in both and b'\x07' not in both and b'\x00' not in both,
+              f'{label}: the raw value should not be echoed: {show(err)}')
+        check(state(t) == before, f'{label}: nothing should change')
+        check(fetched(t) == [RAW + 'VERSION'], f'{label}: nothing after VERSION should be fetched')
+
+
 for desc, raw in (
         ('two parts', b'1.0\n'),
         ('four parts', b'1.0.5.6\n'),
@@ -292,22 +372,18 @@ for desc, raw in (
         ('a sign', b'+1.0.5\n'),
         ('non-ASCII digits', '١.٠.٥\n'.encode()),
         ('a huge run of digits', b'9' * 200000 + b'\n'),
-        ('a huge garbage line', b'garbage\x07' * 25000 + b'\n')):
-    with tempfile.TemporaryDirectory() as tmp:
-        t = build(Path(tmp), version=raw)
-        before = state(t)
-        rc, out, err = run(t)
-        both = out + b'\n' + err
-        label = f'BAD PUBLISHED: {desc}'
-        check(rc == 1, f'{label}: should exit 1: {rc}')
-        check(BAD_PUBLISHED_MESSAGE in err and not out,
-              f'{label}: should say so on stderr only: {show(out)} {show(err)}')
-        stripped = bytes(b for b in raw if b not in b' \t\n\r\v\f')
-        check(not any(echoes(token, both) for token in [stripped] + raw.split())
-              and b'\x1b' not in both and b'\x07' not in both,
-              f'{label}: the raw value should not be echoed: {show(err)}')
-        check(state(t) == before, f'{label}: nothing should change')
-        check(fetched(t) == [RAW + 'VERSION'], f'{label}: nothing after VERSION should be fetched')
+        ('a huge garbage line', b'garbage\x07' * 25000 + b'\n'),
+        ('a second line that stripping would join into 1.0.56', b'1.0.5\n6\n'),
+        ('a trailing blank before the newline', b'1.0.5 \n'),
+        ('a trailing blank and no newline', b'1.0.5 '),
+        ('a leading blank', b' 1.0.5\n'),
+        ('a blank inside', b'1.0 .5\n'),
+        ('two trailing newlines', b'1.0.5\n\n'),
+        ('a lone trailing CR', b'1.0.5\r'),
+        ('a CR inside', b'1.0\r.5\n'),
+        ('an embedded NUL', b'1.0.\x005\n'),
+        ('a trailing NUL', b'1.0.5\x00')):
+    check_bad_published(desc, raw)
 
 for desc, raw in (('empty', b''), ('a newline', b'\n'), ('blanks', b'  \t\n\n')):
     with tempfile.TemporaryDirectory() as tmp:
@@ -329,6 +405,26 @@ with tempfile.TemporaryDirectory() as tmp:
 
 # ---------------------------------------------------------------- BAD LOCAL
 
+
+def check_bad_local(desc, text, tokens, locale='C'):
+    """plugin.json holding text is refused before any fetch: exit 1, the message on stderr only,
+    no token echoed, nothing written."""
+    with tempfile.TemporaryDirectory() as tmp:
+        t = build(Path(tmp), plugin_text=text)
+        t.env['LC_ALL'] = locale
+        before = state(t)
+        rc, out, err = run(t)
+        both = out + b'\n' + err
+        label = prefixed(f'BAD LOCAL: {desc}', locale)
+        check(rc == 1, f'{label}: should exit 1: {rc}')
+        check(BAD_LOCAL_MESSAGE in err and not out,
+              f'{label}: should say so on stderr only: {show(out)} {show(err)}')
+        check(not any(echoes(token, both) for token in tokens) and b'\x1b' not in both,
+              f'{label}: the local value should not be echoed: {show(err)}')
+        check(state(t) == before, f'{label}: nothing should be written')
+        check(fetched(t) == [], f'{label}: nothing should be fetched: {fetched(t)!r}')
+
+
 for desc, text, tokens in (
         ('"x"', '{"name": "secureconfig", "version": "x"}\n', [b'x']),
         ('no version key', '{"name": "secureconfig"}\n', []),
@@ -339,19 +435,31 @@ for desc, text, tokens in (
         ('a second line', '{"name": "secureconfig", "version": "1.0.4\\n1.0.6"}\n', [b'1.0.4', b'1.0.6']),
         ('two parts', '{"name": "secureconfig", "version": "1.0"}\n', [b'1.0']),
         ('not an object', '["1.0.4"]\n', [b'1.0.4'])):
-    with tempfile.TemporaryDirectory() as tmp:
-        t = build(Path(tmp), plugin_text=text)
-        before = state(t)
-        rc, out, err = run(t)
-        both = out + b'\n' + err
-        label = f'BAD LOCAL: {desc}'
-        check(rc == 1, f'{label}: should exit 1: {rc}')
-        check(BAD_LOCAL_MESSAGE in err and not out,
-              f'{label}: should say so on stderr only: {show(out)} {show(err)}')
-        check(not any(echoes(token, both) for token in tokens) and b'\x1b' not in both,
-              f'{label}: the local value should not be echoed: {show(err)}')
-        check(state(t) == before, f'{label}: nothing should be written')
-        check(fetched(t) == [], f'{label}: nothing should be fetched: {fetched(t)!r}')
+    check_bad_local(desc, text, tokens)
+
+# ---------------------------------------------------------------- LOCALE
+
+# Negative control for the probe: under LC_ALL=C, [0-9] does not match an Arabic-Indic digit, so a
+# probe that passed there would be broken, not the locale useful.
+check(not locale_is_usable('C'),
+      'LOCALE: negative control: the probe should be false under LC_ALL=C, or it proves nothing')
+
+ARABIC_INDIC = '\u0661.\u0660.\u0665'  # ARABIC-INDIC DIGIT ONE, ZERO, FIVE
+for locale in UTF8_LOCALES:
+    for desc, raw in (
+            ('Arabic-Indic digits', (ARABIC_INDIC + '\n').encode()),
+            # U+00B9 SUPERSCRIPT ONE, then U+2075 SUPERSCRIPT FIVE
+            ('a superscript first digit', '\u00b9.0.5\n'.encode()),
+            ('a superscript last digit', '1.0.\u2075\n'.encode()),
+            # U+FF11, U+FF10, U+FF15: FULLWIDTH DIGIT ONE, ZERO, FIVE
+            ('fullwidth digits', '\uff11.\uff10.\uff15\n'.encode())):
+        check_bad_published(desc, raw, locale)
+    # python3 already empties a version that is not ASCII, so this case shows that the refusal
+    # before any fetch holds under this locale; it does not reach version_re with the digits.
+    check_bad_local('Arabic-Indic digits',
+                    '{"name": "secureconfig", "version": "' + ARABIC_INDIC + '"}\n',
+                    [ARABIC_INDIC.encode()], locale)
+    check_good('GOOD', locale=locale)
 
 # ---------------------------------------------------------------- ISOLATION
 
@@ -399,5 +507,6 @@ if failures:
         print(f'  FAIL  {failure}')
     sys.exit(1)
 print(f'  ok    {cases} cases for update-guides.sh, offline on a curl shim: the shim itself, an '
-      'update, nothing to do, refused published and local versions, python3 -I against a planted '
+      'update, nothing to do, refused published and local versions, non-ASCII digits refused '
+      'and an update under ' + ' and '.join(UTF8_LOCALES) + ', python3 -I against a planted '
       'json.py with its negative control, and refused manifests')
