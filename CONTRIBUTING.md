@@ -493,8 +493,8 @@ link to `CHANGELOG.md` at the tag.
    working tree is clean.
 2. Choose the target: the last first-parent merge on `main` so far of a UTC date. That date
    may be today's: the maintainer ruled on 2026-11-12 that a release can be cut on the day of
-   its target, which then covers that date only up to the target commit, and the release body
-   and notes say so. A merge that lands on that date after the target is covered by the next
+   its target. Such a release covers that date only up to the target commit, and the release
+   body and notes say so. A merge that lands on that date after the target is covered by the next
    release, whose check counts the merges after the previous target on the previous target's
    date, requires each one's `CHANGELOG.md` bullet under that date's heading, and takes that
    date's section into its notes too, so the section also holds entries the previous release

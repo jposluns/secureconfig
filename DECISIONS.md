@@ -42,9 +42,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   a later maintainer ruling that withdraws it, after which the `self-signed.md` citations of the API need another
   canonical page or an explicit rule 4 exception.
 - **Maintainer ruling of 2026-11-12 on the day-end rule for releases (#1294).** The maintainer gave this ruling in an
-  attended session at about 20:24Z that day, where the maintainer chose the option labelled "Change the day-end rule" in an
-  AskUserQuestion, so that a release can be cut on the same UTC day as its target merge. No reasoning was recorded
-  beyond that choice. It amends the 2026-11-01 rulings on tagged releases below
+  attended session at about 20:24Z that day, where the maintainer chose the option labelled "Change the day-end rule"
+  in an AskUserQuestion, so that a release can be cut on the same UTC day as its target merge. No reasoning was
+  recorded beyond that choice. It amends the 2026-11-01 rulings on tagged releases below
   in one respect only, and the rest of them stands.
   - Effect, applied in the same change as this entry. `tools/check_release.py` no longer refuses a target whose UTC
     date has not ended. A target covers the merges on its own UTC date only up to and including the target commit,
@@ -55,22 +55,26 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     record it.
   - The guarantee kept by other means, in two halves. First, a release never misstates which changes it covers: the
     body lists the pull requests in the range and says where the target's date stops. Second, no merged change
-    escapes every release's notes: a merge after the target on that date is caught by the next release, which
-    refuses it when its entry is missing, filed under another date, or when the pull request's merge date falls outside the
-    span from the previous release's date to the target's.
+    escapes every release's notes: a merge after the target on that date is caught by the next release. That
+    release refuses any pull request in its range whose entry is missing or filed under another date, or whose
+    merge commit's UTC date is not within `previous_date <= date <= target_date`, both ends inclusive.
   - Refusals that stay. The target must still be the last first-parent merge of its UTC date on `main` when the
     release is checked, and a release's target date must still be after the previous release's, so at most one
     release targets a given UTC date. Every other check is unchanged.
-  - Revert. Restore only the day-end refusal in `examine()` (`target_date >= today`, which refuses a target whose UTC
-    date has not ended), with its test cases, and the day-end sentences in CONTRIBUTING.md "Releasing" step 2 and
-    the comment in `tools/run_all_checks.sh` that calls such a date one a release may target, and the comment in
-    `tools/check_release.py` near line 684 ("The date may be today's"). Leave the text that says a target's date is
-    covered only up to the target commit, in CONTRIBUTING.md step 2 and step 9 and the `CHANGELOG.md` preamble, and keep
-    check 6's widened date window
-    (`previous_date <= date <= target_date`) and the extra date section in the notes. Removing them would block the
-    next release after a same-day release for good whenever another merge landed on that date, because no records
-    pull request can change a commit's date. A release already cut under this rule keeps its tag; its successor
-    must pass `--previous`, and its range is checked as above.
+  - Revert. Restore only the items below, each to #1294's base wording. First, the day-end refusal in `examine()`
+    (`target_date >= today`, which refuses a target whose UTC date has not ended). Second, its test case in
+    `tools/test_release.py`, the base case "a target whose UTC date has not ended is refused" on a target dated 2099,
+    which replaces the two cases at lines 751-757 ("a first release whose target date has not ended passes" and "its
+    body says the date is covered only up to the target"). Third, the check 1 docstring in `tools/check_release.py`
+    (lines 20-23, "That date may be today's: ...") and the comment in the same file near line 685 ("The date may be
+    today's"). Fourth, the comment in `tools/run_all_checks.sh` that calls such a date one a release may target.
+    Fifth, the sentence in CONTRIBUTING.md "Releasing" step 2 that begins "That date may be today's". Leave the next
+    sentence of step 2, and the text in step 9 and the `CHANGELOG.md` preamble, that say a target's date is covered
+    only up to the target commit. After that revert, the first-release wording "(that date only up to the target)"
+    has no test left. Keep check 6's widened date window (`previous_date <= date <= target_date`) and the extra date
+    section in the notes. Removing them would block the next release after a same-day release for good whenever
+    another merge landed on that date, because no records pull request can change a commit's date. A release already
+    cut under this rule keeps its tag; its successor must pass `--previous`, and its range is checked as above.
 - **Maintainer ruling of 2026-11-12 on the REASONED definition (#1290).** The maintainer gave it through
   AskUserQuestion in an attended session at about 14:09Z. No reasoning was recorded beyond the terms below. It
   confirms the 2026-11-11 REASONED proxy decision that "Proxy decisions awaiting maintainer review" below records.
