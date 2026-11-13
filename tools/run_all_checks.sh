@@ -923,8 +923,8 @@ echo "== the release check still refuses what it claims =="
 # it needs a built release directory and runs this suite in a worktree of the target. Its
 # self-test runs here so the shipped rule is tested on every pull request that changes it and on
 # every whole-suite run. The self-test builds
-# throwaway repositories with fixed commit dates and stays offline; the check compares a
-# target's UTC date with today's, and the fixtures sit in October 2026 and in 2099.
+# throwaway repositories with fixed commit dates and stays offline; the fixtures sit in
+# October 2026 and in 2099, a date that has not ended, which a release may now target.
 if release_tests=$(python3 -I -B tools/test_release.py 2>&1); then
   printf '%s\n' "$release_tests"
   if grep -q '^  FAIL  ' <<< "$release_tests" ||
