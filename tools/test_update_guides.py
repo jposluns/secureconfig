@@ -6,18 +6,32 @@ the plugin (plugin.json, skills/secureconfig/scripts/update-guides.sh copied fro
 skills/secureconfig/references with two guides and a MANIFEST.sha256), because the script finds
 plugin.json and the references relative to itself, and runs it as bash <script> with an explicit
 minimal environment and a working directory the test controls. A bash shim named curl comes first
-on PATH: it maps a URL under https://raw.githubusercontent.com/jposluns/secureconfig/main/ to a
-file in the case's fixture folder, honours -o FILE, ignores -fsS and --max-time N, exits 22 for
-any other URL, and appends every URL it is asked for to a log. Each case checks that log, so a
-fetch the shim did not make fails the case. The script's RAW constant is unchanged; there is no
-override for it. This process also replaces the socket connect functions with one that raises.
-Every case runs with LC_ALL=C except the LOCALE cases.
+on PATH: it serves the GitHub API's releases/latest URL from a fixture JSON file, maps a URL under
+https://raw.githubusercontent.com/jposluns/secureconfig/refs/tags/ to a file in the case's fixture
+folder, honours -o FILE, ignores -fsS and --max-time N, exits 22 for any other URL (a URL under
+main included, and the API when the case has no release), and appends every URL it is asked for
+to a log. Each case checks that log, so a fetch the shim did not make fails the case. The script's
+URL constants are unchanged; there is no override for them. This process also replaces the
+socket connect functions with one that raises. Every case runs with LC_ALL=C except the LOCALE
+cases.
 
   - SHIM: an unknown URL exits 22, -o writes the fixture, and both are logged;
-  - GOOD: a newer N.N.N with a matching manifest replaces the references, re-pins plugin.json and
-    says so, fetching VERSION, the manifest and each guide through the shim, in that order; a
-    VERSION with no trailing newline and one ending in CR LF update the same way;
-  - SAME: the published version equal to the installed one is "nothing to do", nothing changed;
+  - GOOD: a release whose tag is vN.N.N, newer than the installed version, with a matching
+    VERSION and manifest at that tag, replaces the references, re-pins plugin.json and says so,
+    fetching the API answer, then VERSION, the manifest and each guide from refs/tags/<tag>
+    through the shim, in that order; a VERSION with no trailing newline and one ending in CR LF
+    update the same way;
+  - SAME: a release equal to the installed version is "nothing to do", nothing changed, and only
+    the API answer is fetched;
+  - OLDER: a release older than the installed version is not installed: exit 0, "nothing to do",
+    nothing changed, only the API is fetched; the comparison is numeric (1.0.10 is newer than
+    1.0.9, not older);
+  - NO RELEASE: no API answer (the shim's 22) is refused with exit 1, nothing changed;
+  - BAD TAG: a tag_name that is not vN.N.N (no v, two or four parts, a suffix, a trailing line
+    end, an escape, non-ASCII digits, a path, a number, null, empty), a draft or pre-release
+    object, one missing those fields, and an answer that is not an object or not JSON, are each
+    refused with exit 1 and a message that does not echo the value, nothing fetched but the API;
+  - TAG MISMATCH: a VERSION at the tag that is not the tag's version is refused;
   - BAD PUBLISHED: 1.0, 1.0.5.6, v1.0.5, 1.0.5-rc1, a terminal escape, a word, a second line, a
     trailing dot, a sign, non-ASCII digits, a huge run of digits, a huge garbage line, a second
     line that stripping whitespace would join into 1.0.56, a trailing blank with and without a
@@ -36,7 +50,26 @@ Every case runs with LC_ALL=C except the LOCALE cases.
   - ISOLATION: every python3 in the script text carries -I; with a json.py planted in the working
     directory the update succeeds and the plant never runs, and a plain python3 -c 'import json'
     in that same directory does run it (the negative control);
-  - MANIFEST: a tampered digest and a "../x" entry are each refused, nothing changed.
+  - MANIFEST: a tampered digest, a line that is not a digest line and a "../x" entry are each
+    refused, nothing changed;
+  - CLOSED MANIFEST: only lines of 64 lowercase hex digits, two spaces and a .md name are accepted;
+    a "#" line, a MANIFEST.sha256 entry, a blank line, a duplicate, a non-.md name, uppercase hex,
+    a one-space, tab or "*" separator, a bad last line with no line end and an empty manifest each
+    refuse the update with nothing changed, and a well-formed manifest with no final line end is
+    accepted; a NUL byte at a line start, inside the hex, between the separators, before and
+    inside a name (including the alpha.md NUL x.md case), a CR, an over-size manifest, a short,
+    long or trailing-text line and an over-long name are refused before any guide is fetched and
+    never name the file; the line-grammar refusals also name the line number, and the size,
+    NUL, CR and empty refusals do not; a manifest of exactly 65536 bytes is accepted, one of
+    65537 refused, and a name ending md without the dot or holding a slash is refused;
+  - VERIFY: a guide that was not written, an extra file beside the guides and a digest mismatch
+    are each refused with nothing changed, including a mismatch on the first manifest entry and
+    a digest that differs only in its last hex digit; every guide is fetched into a guides folder; the script
+    holds no sha256sum, and a sha256sum stand-in that exits 97 is first on PATH in every case;
+  - BOUND and DEPTH: an answer of exactly 1 MiB is used and one of 1 MiB + 1 is refused, a draft or
+    pre-release field of 0 is refused, JSON nested 200000 deep (a RecursionError) in the answer or
+    in plugin.json is refused with no traceback, and the script keeps both isascii tests and no
+    0-9 range.
 
 Exit 0 ok, 1 on a finding.
 """
@@ -55,10 +88,16 @@ from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / 'plugin' / 'skills' / 'secureconfig' / 'scripts' / 'update-guides.sh'
-RAW = 'https://raw.githubusercontent.com/jposluns/secureconfig/main/'
-MANIFEST_PATH = 'plugin/skills/secureconfig/references/MANIFEST.sha256'
+API = 'https://api.github.com/repos/jposluns/secureconfig/releases/latest'
+RAW_PREFIX = 'https://raw.githubusercontent.com/jposluns/secureconfig/refs/tags/'
 INSTALLED = '1.0.4'
 PUBLISHED = '1.0.5'
+TAG = 'v' + PUBLISHED
+RAW = RAW_PREFIX + TAG + '/'
+MANIFEST_PATH = 'plugin/skills/secureconfig/references/MANIFEST.sha256'
+BAD_TAG_MESSAGE = b'the latest release has no tag of the form vN.N.N'
+NO_RELEASE_MESSAGE = b'could not read the latest published release'
+MISMATCH_MESSAGE = b'the VERSION file at the release tag does not match the tag'
 OLD_GUIDES = {'alpha.md': b'# Alpha\n\nInstalled text.\n',
               'gamma.md': b'# Gamma\n\nOnly in the installed bundle.\n'}
 NEW_GUIDES = {'alpha.md': b'# Alpha\n\nPublished text.\n',
@@ -80,8 +119,10 @@ SHIM = r'''#!/usr/bin/env bash
 # Stand-in for curl, written by tools/test_update_guides.py: fixture files only, no network.
 set -u
 log=@LOG@
+outs=@OUTS@
 fixtures=@FIXTURES@
-prefix=https://raw.githubusercontent.com/jposluns/secureconfig/main/
+api=https://api.github.com/repos/jposluns/secureconfig/releases/latest
+prefix=https://raw.githubusercontent.com/jposluns/secureconfig/refs/tags/
 out='' url=''
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -100,7 +141,11 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 printf '%s\n' "$url" >> "$log"
+if [ -n "$out" ]; then
+  printf '%s\n' "$out" >> "$outs"
+fi
 case "$url" in
+  "$api") path=_api/releases-latest.json ;;
   "$prefix"*) path=${url#"$prefix"} ;;
   *) exit 22 ;;
 esac
@@ -111,8 +156,16 @@ file="$fixtures/$path"
 if [ ! -f "$file" ]; then
   exit 22
 fi
+# A case can make a fetch succeed without writing the file (_skip/NAME), or write a stray extra
+# file beside the guides (_stray).
+if [ -f "$fixtures/_skip/${path##*/}" ]; then
+  exit 0
+fi
 if [ -n "$out" ]; then
   cat -- "$file" > "$out"
+  if [ -f "$fixtures/_stray" ] && [ "$(basename "$(dirname "$out")")" = guides ]; then
+    echo stray > "$(dirname "$out")/stray.md"
+  fi
 else
   cat -- "$file"
 fi
@@ -146,8 +199,7 @@ def check(condition, message):
 
 BASE_PATH = os.environ.get('PATH') or os.defpath
 BASH = shutil.which('bash', path=BASE_PATH)
-for tool in ('bash', 'python3', 'sha256sum', 'tr', 'wc', 'mktemp', 'cp', 'mv', 'rm', 'mkdir',
-             'cat'):
+for tool in ('bash', 'python3', 'tr', 'wc', 'mktemp', 'cp', 'mv', 'rm', 'mkdir', 'cat'):
     if not shutil.which(tool, path=BASE_PATH):
         print(f'  FAIL  PREREQ: {tool} is not on PATH, so update-guides.sh cannot be exercised')
         sys.exit(1)
@@ -191,9 +243,24 @@ def manifest_for(guides):
                    for name, body in guides.items()).encode()
 
 
+def release_json(tag=TAG, **fields):
+    data = {'tag_name': tag, 'draft': False, 'prerelease': False}
+    data.update(fields)
+    return json.dumps(data).encode()
+
+
+def padded_release(size):
+    """A valid published-release answer of exactly size bytes."""
+    head = release_json()[:-1] + b', "pad": "'
+    return head + b'x' * (size - len(head) - 2) + b'"}'
+
+
 def build(base, version=PUBLISHED.encode() + b'\n', plugin_text=PLUGIN_JSON,
-          guides=None, manifest=None):
-    """A plugin tree, a fixture folder the shim serves, the shim, a working directory."""
+          guides=None, manifest=None, release=None, tag=TAG):
+    """A plugin tree, a fixture folder the shim serves, the shim, a working directory.
+
+    release is the bytes the API answers with (default: a published release named tag), or False
+    for no release. The VERSION, manifest and guides are served under refs/tags/<tag>/."""
     guides = NEW_GUIDES if guides is None else guides
     plugin = base / 'plugin'
     skill = plugin / 'skills' / 'secureconfig'
@@ -207,21 +274,35 @@ def build(base, version=PUBLISHED.encode() + b'\n', plugin_text=PLUGIN_JSON,
     (skill / 'references' / 'MANIFEST.sha256').write_bytes(manifest_for(OLD_GUIDES))
 
     fixtures = base / 'fixtures'
-    (fixtures / MANIFEST_PATH).parent.mkdir(parents=True)
+    served = fixtures / tag
+    (served / MANIFEST_PATH).parent.mkdir(parents=True)
+    (fixtures / '_api').mkdir()
+    if release is not False:
+        (fixtures / '_api' / 'releases-latest.json').write_bytes(
+            release_json(tag) if release is None else release)
     if version is not None:
-        (fixtures / 'VERSION').write_bytes(version)
+        (served / 'VERSION').write_bytes(version)
     for name, body in guides.items():
-        (fixtures / name).write_bytes(body)
-    (fixtures / MANIFEST_PATH).write_bytes(manifest_for(guides) if manifest is None else manifest)
+        (served / name).write_bytes(body)
+    (served / MANIFEST_PATH).write_bytes(manifest_for(guides) if manifest is None else manifest)
 
     shim_dir = base / 'bin'
     shim_dir.mkdir()
     log = base / 'curl.log'
     log.write_bytes(b'')
     shim = shim_dir / 'curl'
+    outs = base / 'curl.outs'
+    outs.write_bytes(b'')
     shim.write_text(SHIM.replace('@LOG@', shlex.quote(str(log)))
+                    .replace('@OUTS@', shlex.quote(str(outs)))
                     .replace('@FIXTURES@', shlex.quote(str(fixtures))), encoding='utf-8')
     shim.chmod(0o755)
+    # sha256sum is gone from the script, so a call to it is a failure: this stand-in exits 97
+    # (before the update, so the case then fails on its own checks).
+    sha_stub = shim_dir / 'sha256sum'
+    sha_stub.write_text('#!/usr/bin/env bash\necho "sha256sum must not run" >&2\nexit 97\n',
+                        encoding='utf-8')
+    sha_stub.chmod(0o755)
     cwd = base / 'cwd'
     cwd.mkdir()
     tmp = base / 'tmp'
@@ -230,7 +311,7 @@ def build(base, version=PUBLISHED.encode() + b'\n', plugin_text=PLUGIN_JSON,
            'TMPDIR': str(tmp), 'LC_ALL': 'C'}
     return SimpleNamespace(plugin_json=plugin / 'plugin.json', skill=skill,
                            refs=skill / 'references', script=script, fixtures=fixtures,
-                           shim=shim, log=log, cwd=cwd, tmp=tmp, env=env)
+                           shim=shim, log=log, outs=outs, cwd=cwd, tmp=tmp, env=env)
 
 
 def run(t):
@@ -285,6 +366,18 @@ with tempfile.TemporaryDirectory() as tmp:
           and not done.stdout, 'SHIM: -o FILE should write the fixture and print nothing')
     check(fetched(t) == ['https://example.com/VERSION', RAW + 'beta.md'],
           f'SHIM: every URL should be logged: {fetched(t)!r}')
+    main_url = 'https://raw.githubusercontent.com/jposluns/secureconfig/main/VERSION'
+    done = subprocess.run([str(t.shim), '-fsS', '--max-time', '30', main_url],
+                          cwd=t.cwd, env=t.env, capture_output=True, timeout=60)
+    check(done.returncode == 22, f'SHIM: a URL under main should exit 22: {done.returncode}')
+    done = subprocess.run([str(t.shim), '-fsS', '--max-time', '30', API],
+                          cwd=t.cwd, env=t.env, capture_output=True, timeout=60)
+    check(done.returncode == 0 and json.loads(done.stdout)['tag_name'] == TAG,
+          f'SHIM: the API URL should serve the release fixture: {done.returncode} {show(done.stdout)}')
+    t = build(Path(tmp) / 'norelease', release=False)
+    done = subprocess.run([str(t.shim), '-fsS', '--max-time', '30', API],
+                          cwd=t.cwd, env=t.env, capture_output=True, timeout=60)
+    check(done.returncode == 22, f'SHIM: no release should make the API URL exit 22: {done.returncode}')
 
 # ---------------------------------------------------------------- GOOD
 
@@ -304,9 +397,15 @@ def check_updated(t, rc, out, err, label):
     check(f'installed {INSTALLED}, published {PUBLISHED}'.encode() in out
           and f'updated {len(NEW_GUIDES)} guides and re-pinned to {PUBLISHED}'.encode() in out,
           f'{label}: stdout should say it updated: {show(out)}')
-    check(fetched(t) == [RAW + 'VERSION', RAW + MANIFEST_PATH] + [RAW + n for n in NEW_GUIDES],
+    check(fetched(t) == [API, RAW + 'VERSION', RAW + MANIFEST_PATH] + [RAW + n for n in NEW_GUIDES],
           f'{label}: every fetch should go through the shim, in order: {fetched(t)!r}')
     check(not list(t.tmp.iterdir()), f'{label}: the work folder should be removed')
+    outs = t.outs.read_text(encoding='utf-8').splitlines()
+    guide_outs = outs[3:]
+    check(len(outs) == 3 + len(NEW_GUIDES) and all(
+        Path(o).parent.name == 'guides' and Path(o).name == n
+        for o, n in zip(guide_outs, NEW_GUIDES)),
+        f'{label}: every guide should be fetched into a guides folder, not beside the manifest: {outs!r}')
 
 
 def check_good(desc, version=PUBLISHED.encode() + b'\n', locale='C'):
@@ -324,13 +423,129 @@ check_good('GOOD: a CR LF line end', version=PUBLISHED.encode() + b'\r\n')
 # ---------------------------------------------------------------- SAME
 
 with tempfile.TemporaryDirectory() as tmp:
-    t = build(Path(tmp), version=INSTALLED.encode() + b'\n')
+    t = build(Path(tmp), version=INSTALLED.encode() + b'\n', tag='v' + INSTALLED)
     before = state(t)
     rc, out, err = run(t)
     check(rc == 0 and f'already at {INSTALLED}; nothing to do'.encode() in out,
           f'SAME: should exit 0 and say nothing to do: {rc} {show(out)} {show(err)}')
     check(state(t) == before, 'SAME: nothing should change')
-    check(fetched(t) == [RAW + 'VERSION'], f'SAME: only VERSION should be fetched: {fetched(t)!r}')
+    check(fetched(t) == [API], f'SAME: only the API answer should be fetched: {fetched(t)!r}')
+
+# ---------------------------------------------------------------- OLDER
+
+for desc, installed, tag in (('one patch older', INSTALLED, 'v1.0.3'),
+                             ('numerically older, textually later', '1.0.10', 'v1.0.9'),
+                             ('older with leading zeros', INSTALLED, 'v1.0.03')):
+    with tempfile.TemporaryDirectory() as tmp:
+        t = build(Path(tmp), version=tag[1:].encode() + b'\n', tag=tag,
+                  plugin_text=PLUGIN_JSON.replace(INSTALLED, installed))
+        before = state(t)
+        rc, out, err = run(t)
+        check(rc == 0 and f'installed {installed} is newer than the latest release {tag[1:]}; '
+              'nothing to do'.encode() in out and not err,
+              f'OLDER {desc}: should exit 0 and report, not downgrade: {rc} {show(out)} {show(err)}')
+        check(state(t) == before, f'OLDER {desc}: nothing should change')
+        check(fetched(t) == [API], f'OLDER {desc}: only the API answer should be fetched: {fetched(t)!r}')
+
+# A later release whose number is textually earlier is newer: 1.0.10 over an installed 1.0.9.
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), version=b'1.0.10\n', tag='v1.0.10',
+              plugin_text=PLUGIN_JSON.replace(INSTALLED, '1.0.9'))
+    rc, out, err = run(t)
+    got = json.loads(t.plugin_json.read_text(encoding='utf-8')).get('version')
+    check(rc == 0 and got == '1.0.10' and fetched(t)[:2] == [API, RAW_PREFIX + 'v1.0.10/VERSION'],
+          f'OLDER: 1.0.10 over an installed 1.0.9 should update: {rc} {got!r} {show(err)}')
+
+# ---------------------------------------------------------------- NO RELEASE
+
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), release=False)
+    before = state(t)
+    rc, out, err = run(t)
+    check(rc == 1 and NO_RELEASE_MESSAGE in err and not out,
+          f'NO RELEASE: should refuse with exit 1: {rc} {show(out)} {show(err)}')
+    check(b'refused the request, as it does at a rate limit' in err,
+          f'NO RELEASE: the message should name a refusal such as a rate limit (403, 429): {show(err)}')
+    check(state(t) == before, 'NO RELEASE: nothing should change')
+    check(fetched(t) == [API], f'NO RELEASE: only the API should be asked: {fetched(t)!r}')
+
+# ---------------------------------------------------------------- BAD TAG
+
+
+def check_bad_release(desc, release, tokens, locale='C'):
+    """An API answer that holds release is refused: exit 1, BAD_TAG_MESSAGE on stderr only, no
+    token echoed, nothing changed, only the API fetched."""
+    with tempfile.TemporaryDirectory() as tmp:
+        t = build(Path(tmp), release=release)
+        t.env['LC_ALL'] = locale
+        before = state(t)
+        rc, out, err = run(t)
+        both = out + b'\n' + err
+        label = prefixed(f'BAD TAG: {desc}', locale)
+        check(rc == 1 and BAD_TAG_MESSAGE in err and not out,
+              f'{label}: should refuse with exit 1 on stderr only: {rc} {show(out)} {show(err)}')
+        check(not any(echoes(token, both) for token in tokens) and b'\x1b' not in both,
+              f'{label}: the value should not be echoed: {show(err)}')
+        check(b'Traceback' not in err, f'{label}: no Python traceback should reach stderr: {show(err)}')
+        check(state(t) == before, f'{label}: nothing should change')
+        check(fetched(t) == [API], f'{label}: only the API should be fetched: {fetched(t)!r}')
+
+
+for desc, tag in (
+        ('no v', '1.0.5'), ('a capital V', 'V1.0.5'), ('two parts', 'v1.0'),
+        ('four parts', 'v1.0.5.6'), ('a pre-release suffix', 'v1.0.5-rc1'),
+        ('a trailing line end', 'v1.0.5\n'), ('a leading blank', ' v1.0.5'),
+        ('a second line', 'v1.0.5\nv1.0.6'), ('a terminal escape', 'v1.0.5\x1b[31m'),
+        ('non-ASCII digits', 'v١.٠.٥'), ('a path', 'v1.0.5/../../main'),
+        ('a word', 'latest'), ('empty', ''), ('a v alone', 'v')):
+    shown = tag.strip().encode() if tag.isascii() and any(c.isdigit() for c in tag) else b''
+    check_bad_release(desc, release_json(tag), [shown] if shown else [])
+
+for desc, release in (
+        ('a number', release_json(105)), ('null', release_json(None)),
+        ('a list', release_json(['v1.0.5'])),
+        ('no tag_name', json.dumps({'draft': False, 'prerelease': False}).encode()),
+        ('a draft', release_json(draft=True)), ('a pre-release', release_json(prerelease=True)),
+        ('no draft field', json.dumps({'tag_name': TAG, 'prerelease': False}).encode()),
+        ('no prerelease field', json.dumps({'tag_name': TAG, 'draft': False}).encode()),
+        ('draft as a string', release_json(draft='false')),
+        ('draft as the number 0', release_json(draft=0)),
+        ('prerelease as the number 0', release_json(prerelease=0)),
+        ('nested 200000 deep (a RecursionError)', b'[' * 200000),
+        ('one byte over the bound', padded_release(1048577)),
+        ('a list answer', json.dumps([{'tag_name': TAG}]).encode()),
+        ('not JSON', b'<html>rate limited</html>'), ('empty body', b''),
+        ('a NUL byte', b'{"tag_name": "v1.0.5\\u0000", "draft": false, "prerelease": false}'),
+        ('too large', b'{"tag_name": "' + TAG.encode() + b'", "draft": false, "prerelease": false, '
+         b'"body": "' + b'x' * 1048576 + b'"}')):
+    check_bad_release(desc, release, [b'rate limited'])
+
+# The bound is exact: a valid answer of exactly 1 MiB is read and used, one byte more is refused
+# (above), so a bound off by one fails one of the two.
+check(len(padded_release(1048576)) == 1048576 and len(padded_release(1048577)) == 1048577,
+      'BOUND: the fixtures should be exactly 1 MiB and 1 MiB + 1 bytes')
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), release=padded_release(1048576))
+    rc, out, err = run(t)
+    check_updated(t, rc, out, err, 'BOUND: a valid answer of exactly 1 MiB')
+
+# Defence in depth that no behaviour case can separate: both checks of an ASCII-only tag, the
+# python isascii test and the explicit digit list in the regex, must stay, each covering the other.
+_text = SCRIPT.read_text(encoding='utf-8')
+check(_text.count('.isascii()') == 2 and '0-9' not in re.sub(r'#.*', '', _text),
+      'DEPTH: both python blocks should test isascii and no regex should use a 0-9 range')
+
+# ---------------------------------------------------------------- TAG MISMATCH
+
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), version=b'1.0.6\n')
+    before = state(t)
+    rc, out, err = run(t)
+    check(rc == 1 and MISMATCH_MESSAGE in err and b'1.0.6' not in err,
+          f'TAG MISMATCH: a VERSION that differs from its tag should be refused: {rc} {show(err)}')
+    check(state(t) == before, 'TAG MISMATCH: nothing should change')
+    check(fetched(t) == [API, RAW + 'VERSION'],
+          f'TAG MISMATCH: nothing after VERSION should be fetched: {fetched(t)!r}')
 
 # ---------------------------------------------------------------- BAD PUBLISHED
 
@@ -357,7 +572,8 @@ def check_bad_published(desc, raw, locale='C'):
               and b'\x1b' not in both and b'\x07' not in both and b'\x00' not in both,
               f'{label}: the raw value should not be echoed: {show(err)}')
         check(state(t) == before, f'{label}: nothing should change')
-        check(fetched(t) == [RAW + 'VERSION'], f'{label}: nothing after VERSION should be fetched')
+        check(fetched(t) == [API, RAW + 'VERSION'],
+              f'{label}: nothing after VERSION should be fetched')
 
 
 for desc, raw in (
@@ -394,13 +610,14 @@ for desc, raw in (('empty', b''), ('a newline', b'\n'), ('blanks', b'  \t\n\n'))
         check(rc == 1 and EMPTY_PUBLISHED_MESSAGE in err and not out,
               f'{label}: should keep the empty-value message: {rc} {show(err)}')
         check(state(t) == before, f'{label}: nothing should change')
-        check(fetched(t) == [RAW + 'VERSION'], f'{label}: nothing after VERSION should be fetched')
+        check(fetched(t) == [API, RAW + 'VERSION'],
+              f'{label}: nothing after VERSION should be fetched')
 
 with tempfile.TemporaryDirectory() as tmp:
     t = build(Path(tmp), version=None)
     before = state(t)
     rc, out, err = run(t)
-    check(rc not in (0, None) and state(t) == before and fetched(t) == [RAW + 'VERSION'],
+    check(rc not in (0, None) and state(t) == before and fetched(t) == [API, RAW + 'VERSION'],
           f'BAD PUBLISHED: a VERSION the shim does not have should refuse, nothing changed: {rc}')
 
 # ---------------------------------------------------------------- BAD LOCAL
@@ -421,6 +638,7 @@ def check_bad_local(desc, text, tokens, locale='C'):
               f'{label}: should say so on stderr only: {show(out)} {show(err)}')
         check(not any(echoes(token, both) for token in tokens) and b'\x1b' not in both,
               f'{label}: the local value should not be echoed: {show(err)}')
+        check(b'Traceback' not in err, f'{label}: no Python traceback should reach stderr: {show(err)}')
         check(state(t) == before, f'{label}: nothing should be written')
         check(fetched(t) == [], f'{label}: nothing should be fetched: {fetched(t)!r}')
 
@@ -434,7 +652,8 @@ for desc, text, tokens in (
         ('an escape', '{"name": "secureconfig", "version": "1.0.4\\u001b[31m"}\n', [b'1.0.4', b'\x1b']),
         ('a second line', '{"name": "secureconfig", "version": "1.0.4\\n1.0.6"}\n', [b'1.0.4', b'1.0.6']),
         ('two parts', '{"name": "secureconfig", "version": "1.0"}\n', [b'1.0']),
-        ('not an object', '["1.0.4"]\n', [b'1.0.4'])):
+        ('not an object', '["1.0.4"]\n', [b'1.0.4']),
+        ('nested 200000 deep (a RecursionError)', '[' * 200000 + '\n', [])):
     check_bad_local(desc, text, tokens)
 
 # ---------------------------------------------------------------- LOCALE
@@ -459,6 +678,7 @@ for locale in UTF8_LOCALES:
     check_bad_local('Arabic-Indic digits',
                     '{"name": "secureconfig", "version": "' + ARABIC_INDIC + '"}\n',
                     [ARABIC_INDIC.encode()], locale)
+    check_bad_release('Arabic-Indic digits', release_json('v' + ARABIC_INDIC), [], locale)
     check_good('GOOD', locale=locale)
 
 # ---------------------------------------------------------------- ISOLATION
@@ -484,10 +704,15 @@ with tempfile.TemporaryDirectory() as tmp:
 
 # ---------------------------------------------------------------- MANIFEST
 
+LINE_MESSAGE = b'the manifest has a line that is not'
 bad_digest = manifest_for({'alpha.md': NEW_GUIDES['alpha.md'], 'beta.md': b'something else\n'})
 escape = manifest_for(NEW_GUIDES) + manifest_for({'../x': b'x\n'})
+# sha256sum without --strict only warns on a line that is not a digest line and checks the rest, so
+# the guide on that line would be installed unverified.
+malformed = b'zz-not-a-digest  alpha.md\n' + manifest_for({'beta.md': NEW_GUIDES['beta.md']})
 for desc, manifest, message in (
         ('a tampered digest', bad_digest, b'a fetched guide did not match its published digest'),
+        ('a malformed digest line', malformed, LINE_MESSAGE),
         ('a "../x" entry', escape, b'the manifest lists an unexpected file name')):
     with tempfile.TemporaryDirectory() as tmp:
         t = build(Path(tmp), manifest=manifest)
@@ -496,17 +721,218 @@ for desc, manifest, message in (
         label = f'MANIFEST: {desc}'
         check(rc == 1 and message in err, f'{label}: should refuse: {rc} {show(err)}')
         check(state(t) == before, f'{label}: nothing should change')
-        check(fetched(t)[:2] == [RAW + 'VERSION', RAW + MANIFEST_PATH]
+        check(fetched(t)[:3] == [API, RAW + 'VERSION', RAW + MANIFEST_PATH]
               and not any('..' in url for url in fetched(t)),
               f'{label}: fetches through the shim, never the "../x" entry: {fetched(t)!r}')
         check(not (t.tmp / 'x').exists() and not (Path(tmp) / 'x').exists(),
               f'{label}: nothing written outside the work folder')
+
+# The manifest is a closed format: every line is 64 lowercase hex digits, two spaces and a .md
+# name, and anything else refuses the whole update. Each extra file below is served, so that an
+# unfixed script that fetches it can install it instead of failing on a 404.
+zero = '0' * 64
+alpha_line = manifest_for({'alpha.md': NEW_GUIDES['alpha.md']})
+beta_line = manifest_for({'beta.md': NEW_GUIDES['beta.md']})
+evil = b'# Evil\n\nNot a published guide.\n'
+evil_digest = hashlib.sha256(evil).hexdigest().encode()
+notes = b'not a guide\n'
+whole = manifest_for(NEW_GUIDES)
+evil_line = evil_digest + b'  evil.md\n'
+NUL_MESSAGE = b'the manifest holds a NUL or CR byte'
+for desc, manifest, extra, message in (
+        ('a "#  evil.md" line', alpha_line + beta_line + b'#  evil.md\n', {'evil.md': evil},
+         LINE_MESSAGE),
+        ('a "# evil.md" line', alpha_line + beta_line + b'# evil.md\n', {'evil.md': evil},
+         LINE_MESSAGE),
+        ('a MANIFEST.sha256 entry with an all-zero guide digest',
+         zero.encode() + b'  alpha.md\n' + beta_line + zero.encode() + b'  MANIFEST.sha256\n',
+         {'MANIFEST.sha256': whole}, b'the manifest lists an unexpected file name'),
+        ('a blank line', alpha_line + b'\n' + beta_line, {}, LINE_MESSAGE),
+        ('a trailing blank line', alpha_line + beta_line + b'\n', {}, LINE_MESSAGE),
+        ('a duplicate name', alpha_line + beta_line + alpha_line, {},
+         b'the manifest lists a file name twice'),
+        ('a name that is not .md', alpha_line + beta_line
+         + hashlib.sha256(notes).hexdigest().encode() + b'  notes.txt\n', {'notes.txt': notes},
+         b'the manifest lists a file that is not a .md guide'),
+        ('uppercase hex', alpha_line + beta_line
+         + evil_digest.upper() + b'  evil.md\n', {'evil.md': evil}, LINE_MESSAGE),
+        ('a single-space separator', alpha_line + beta_line
+         + evil_digest + b' evil.md\n', {'evil.md': evil}, LINE_MESSAGE),
+        ('a tab separator', alpha_line + beta_line + evil_digest + b'\tevil.md\n',
+         {'evil.md': evil}, LINE_MESSAGE),
+        ('a "*" binary-mode marker', alpha_line + beta_line + evil_digest + b' *evil.md\n',
+         {'evil.md': evil}, LINE_MESSAGE),
+        ('a bad line with no final line end', alpha_line + beta_line + b'#  evil.md',
+         {'evil.md': evil}, LINE_MESSAGE),
+        ('an empty manifest', b'', {}, b'the manifest lists no guides'),
+        # NUL: bash read drops it and GNU sha256sum ends a name at it, so each place is refused.
+        ('a NUL at the start of a line', b'\x00' + alpha_line + beta_line + evil_line,
+         {'evil.md': evil}, NUL_MESSAGE),
+        ('a NUL at the start of the evil line', alpha_line + beta_line + b'\x00' + evil_line,
+         {'evil.md': evil}, NUL_MESSAGE),
+        ('a NUL inside the hex', alpha_line + beta_line + evil_digest[:10] + b'\x00' + evil_digest[10:]
+         + b'  evil.md\n', {'evil.md': evil}, NUL_MESSAGE),
+        ('a NUL between the two spaces', alpha_line + beta_line + evil_digest + b' \x00 evil.md\n',
+         {'evil.md': evil}, NUL_MESSAGE),
+        ('a NUL before the name', alpha_line + beta_line + evil_digest + b'  \x00evil.md\n',
+         {'evil.md': evil}, NUL_MESSAGE),
+        ('a NUL inside a name', alpha_line + beta_line + evil_digest + b'  ev\x00il.md\n',
+         {'evil.md': evil}, NUL_MESSAGE),
+        ('the alpha.md NUL x.md case (R2-F1)',
+         alpha_line + beta_line + alpha_line.replace(b'alpha.md', b'alpha.md\x00x.md'),
+         {'alpha.mdx.md': evil}, NUL_MESSAGE),
+        ('the same with no final line end (R2-F1)',
+         (alpha_line + beta_line + alpha_line.replace(b'alpha.md', b'alpha.md\x00x.md')).rstrip(b'\n'),
+         {'alpha.mdx.md': evil}, NUL_MESSAGE),
+        ('a trailing NUL', alpha_line + beta_line + b'\x00', {}, NUL_MESSAGE),
+        ('CR LF line ends', (alpha_line + beta_line).replace(b'\n', b'\r\n'), {}, NUL_MESSAGE),
+        ('a CR inside a name', alpha_line + beta_line + evil_digest + b'  ev\ril.md\n',
+         {'evil.md': evil}, NUL_MESSAGE),
+        ('a lone final CR', alpha_line + beta_line.rstrip(b'\n') + b'\r', {}, NUL_MESSAGE),
+        ('a manifest over the size bound', alpha_line + beta_line + b'#' * 70000 + b'\n', {},
+         b'the manifest is larger than 65536 bytes'),
+        ('a manifest of one byte over the bound',
+         alpha_line + beta_line + b'x' * (65537 - len(alpha_line + beta_line)), {},
+         b'the manifest is larger than 65536 bytes'),
+        # the digest must be exactly 64 hex digits and the line the whole line
+        ('a 63-digit digest', evil_digest[:63] + b'  evil.md\n' + alpha_line + beta_line,
+         {'evil.md': evil}, LINE_MESSAGE),
+        ('a 1-digit digest', b'0  evil.md\n' + alpha_line + beta_line, {'evil.md': evil}, LINE_MESSAGE),
+        ('a 65-digit digest', evil_digest + b'0  evil.md\n' + alpha_line + beta_line,
+         {'evil.md': evil}, LINE_MESSAGE),
+        ('text after the name', alpha_line.rstrip(b'\n') + b' x\n' + beta_line, {}, LINE_MESSAGE),
+        ('text before the digest', b'x' + alpha_line + beta_line, {}, LINE_MESSAGE),
+        ('a three-space separator', alpha_line.replace(b'  ', b'   ') + beta_line, {}, LINE_MESSAGE),
+        ('a 101-character name', alpha_line + beta_line + evil_digest + b'  ' + b'a' * 98 + b'.md\n',
+         {}, b'the manifest lists an unexpected file name'),
+        ('a name with a terminal escape', alpha_line + beta_line + evil_digest + b'  \x1b[31m.md\n',
+         {}, b'the manifest lists an unexpected file name'),
+        ('a non-ASCII name', alpha_line + beta_line + evil_digest + '  \u00e9.md\n'.encode(),
+         {}, b'the manifest lists an unexpected file name'),
+        ('a name starting with a dot', alpha_line + beta_line + evil_digest + b'  .evil.md\n',
+         {'.evil.md': evil}, b'the manifest lists an unexpected file name'),
+        ('a name holding ..', alpha_line + beta_line + evil_digest + b'  a..md\n',
+         {}, b'the manifest lists an unexpected file name'),
+        # R3-F7: ".md" is a suffix with its dot, and a name is a bare file name
+        ('a name ending md without the dot', alpha_line + beta_line + evil_digest + b'  notesmd\n',
+         {'notesmd': evil}, b'the manifest lists a file that is not a .md guide'),
+        ('a name with a slash', alpha_line + beta_line + evil_digest + b'  a/b.md\n',
+         {}, b'the manifest lists an unexpected file name')):
+    with tempfile.TemporaryDirectory() as tmp:
+        t = build(Path(tmp), manifest=manifest, guides=dict(NEW_GUIDES, **extra))
+        before = state(t)
+        rc, out, err = run(t)
+        label = f'CLOSED MANIFEST: {desc}'
+        check(rc == 1 and message in err, f'{label}: should refuse: {rc} {show(err)}')
+        check(state(t) == before, f'{label}: nothing should change')
+        check(fetched(t) == [API, RAW + 'VERSION', RAW + MANIFEST_PATH],
+              f'{label}: nothing should be fetched after the manifest: {fetched(t)!r}')
+        check(not any(echoes(token, err + out) for token in (b'evil', b'notes', b'alpha.mdx'))
+              and b'\x1b' not in err and b'\x00' not in err,
+              f'{label}: a refused name should not be printed: {show(err)}')
+        # Only the line-grammar refusals name a line; the size, NUL, CR and empty ones do not.
+        if message != b'the manifest lists no guides' and b'larger than' not in message \
+                and b'NUL or CR' not in message:
+            check(re.search(rb'\(line \d+\)', err) is not None,
+                  f'{label}: the message should name the line number: {show(err)}')
+        check(not (t.refs / 'evil.md').exists() and not (t.refs / 'notes.txt').exists(),
+              f'{label}: no extra file in the references')
+        check(not list(t.tmp.iterdir()), f'{label}: the work folder should be removed')
+
+def _flip_last_digit(t, name):
+    """Change the last hex digit of name's digest in the served manifest; the guide is unchanged."""
+    path = t.fixtures / TAG / MANIFEST_PATH
+    lines = path.read_bytes().split(b'\n')
+    for index, line in enumerate(lines):
+        if line.endswith(b'  ' + name.encode()):
+            last = line[63:64]
+            lines[index] = line[:63] + (b'0' if last != b'0' else b'1') + line[64:]
+            break
+    else:
+        raise AssertionError(name)
+    path.write_bytes(b'\n'.join(lines))
+
+
+# After the fetch: a guide that was never written, an extra file beside the guides, and a digest
+# that does not match are each refused, nothing changed.
+for desc, setup, message in (
+        ('a fetched guide that is missing', lambda t: (t.fixtures / '_skip').mkdir()
+         or (t.fixtures / '_skip' / 'beta.md').write_bytes(b''),
+         b'a guide is missing, or a file that the manifest does not list was fetched'),
+        ('an extra file in the guides folder', lambda t: (t.fixtures / '_stray').write_bytes(b''),
+         b'a guide is missing, or a file that the manifest does not list was fetched'),
+        ('a digest mismatch (the file changed in transit)',
+         lambda t: (t.fixtures / TAG / 'beta.md').write_bytes(b'# Beta\n\nChanged in transit.\n'),
+         b'a fetched guide did not match its published digest'),
+        # R3-F1: the FIRST manifest entry is verified too, not only the last
+        ('a digest mismatch on the first manifest entry',
+         lambda t: (t.fixtures / TAG / 'alpha.md').write_bytes(b'# Alpha\n\nChanged in transit.\n'),
+         b'a fetched guide did not match its published digest'),
+        ('a manifest digest that differs from the real one only in its last hex digit, first entry',
+         lambda t: _flip_last_digit(t, 'alpha.md'),
+         b'a fetched guide did not match its published digest'),
+        ('a manifest digest that differs from the real one only in its last hex digit, last entry',
+         lambda t: _flip_last_digit(t, 'beta.md'),
+         b'a fetched guide did not match its published digest')):
+    with tempfile.TemporaryDirectory() as tmp:
+        t = build(Path(tmp))
+        setup(t)
+        before = state(t)
+        rc, out, err = run(t)
+        label = f'VERIFY: {desc}'
+        check(rc == 1 and message in err, f'{label}: should refuse: {rc} {show(err)}')
+        check(state(t) == before, f'{label}: nothing should change')
+        check(not list(t.tmp.iterdir()), f'{label}: the work folder should be removed')
+        check(b'beta' not in err and b'stray' not in err, f'{label}: no name should be printed')
+
+# The manifest is parsed by python3 only: sha256sum is absent from the script's code, and the
+# shim directory's sha256sum stand-in exits 97 if it were run.
+check(not re.search(r'sha256sum', re.sub(r'#.*', '', SCRIPT.read_text(encoding='utf-8'))),
+      'MANIFEST: the script should not run sha256sum')
+
+# A manifest ending without a final line end is still accepted when every line is well formed.
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), manifest=(alpha_line + beta_line).rstrip(b'\n'))
+    rc, out, err = run(t)
+    check(rc == 0 and (t.refs / 'beta.md').read_bytes() == NEW_GUIDES['beta.md'],
+          f'CLOSED MANIFEST: no final line end, every line well formed: {rc} {show(err)}')
+
+# R3-F7: the size bound is exact. A valid manifest of exactly 65536 bytes (392 lines naming 100
+# characters and a last line of 72 bytes) is accepted and one of 65537 bytes is refused before any
+# guide is fetched.
+def sized_guides(last_name_length):
+    guides = {f'g{index:04d}'.ljust(97, 'a') + '.md': b'guide %d\n' % index for index in range(392)}
+    guides['z' * (last_name_length - 3) + '.md'] = b'last\n'
+    return guides
+
+
+at_bound = sized_guides(5)
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), guides=at_bound)
+    size = len(manifest_for(at_bound))
+    check(size == 65536, f'CLOSED MANIFEST: the 65536-byte fixture is {size} bytes')
+    rc, out, err = run(t)
+    check(rc == 0 and all((t.refs / name).read_bytes() == body for name, body in at_bound.items()),
+          f'CLOSED MANIFEST: a valid manifest of exactly 65536 bytes should be accepted: {rc} {show(err)}')
+over_bound = sized_guides(6)
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), guides=over_bound)
+    size = len(manifest_for(over_bound))
+    check(size == 65537, f'CLOSED MANIFEST: the 65537-byte fixture is {size} bytes')
+    before = state(t)
+    rc, out, err = run(t)
+    check(rc == 1 and b'the manifest is larger than 65536 bytes' in err,
+          f'CLOSED MANIFEST: a valid manifest of 65537 bytes should be refused: {rc} {show(err)}')
+    check(state(t) == before and fetched(t) == [API, RAW + 'VERSION', RAW + MANIFEST_PATH],
+          'CLOSED MANIFEST: a refused 65537-byte manifest changes nothing and fetches no guide')
 
 if failures:
     for failure in failures:
         print(f'  FAIL  {failure}')
     sys.exit(1)
 print(f'  ok    {cases} cases for update-guides.sh, offline on a curl shim: the shim itself, an '
-      'update, nothing to do, refused published and local versions, non-ASCII digits refused '
+      'update from the latest release tag, nothing to do, an older release not installed, no '
+      'release, refused tags, release objects and tag mismatch, refused published and local '
+      'versions, non-ASCII digits refused '
       'and an update under ' + ' and '.join(UTF8_LOCALES) + ', python3 -I against a planted '
       'json.py with its negative control, and refused manifests')

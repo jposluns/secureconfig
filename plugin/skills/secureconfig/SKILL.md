@@ -5,7 +5,7 @@ license: CC0-1.0
 compatibility: Every guide is bundled, so no network access is needed to use this skill. scripts/update-guides.sh and scripts/check-updates.py --check-online need network, and only when you choose to run them. Commands in the guides are run by you against the user's own systems.
 metadata:
   source: https://github.com/jposluns/secureconfig
-  version: "1.0.1299"
+  version: "1.0.1300"
 ---
 
 # Secure deployment configuration
@@ -20,10 +20,14 @@ default matters to the decision you are making, check it against the linked vend
 than trusting the bundled copy.**
 
 The guides are bundled so this works with no network, which means they are frozen at the version
-in `plugin.json`. `scripts/update-guides.sh` refreshes them and re-pins that version when you have
-network. It verifies every fetched guide against the publisher's recorded digest and replaces the
-bundle only once all of them match, so a failed or interrupted update leaves the working bundle
-exactly as it was.
+in `plugin.json`. Run `scripts/update-guides.sh` only when the user asks for an update, and only
+when you have network. It downloads the guides of the latest published release, never the moving
+`main` branch, replaces the bundled copies and re-pins that version, and it never installs an
+older release than the one bundled. One `python3 -I` program reads the manifest once and accepts
+only a small manifest, with no NUL or CR byte, of well-formed digest lines for `.md` guides. After
+the fetch it checks each guide's SHA-256 against that read and refuses a missing or an extra file.
+The bundle is replaced only once all of them match, so an update that fails before that
+replacement, on a fetch or a digest, leaves the working bundle exactly as it was.
 
 ## Rules that apply to every deployment
 
