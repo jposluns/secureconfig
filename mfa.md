@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against TOTP standard (no recorded version), authentik source version/2026.8.3, Keycloak documentation 26.8.2, oauth2-proxy documentation v7.15.6, Caddy forward_auth minimum 2.5.1, google-authenticator-libpam source 1.11, and MySQL multifactor authentication 8.0 and 8.4, plus 9 more recorded bases; 14 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 35 claims: 2 demonstrated by a check that ran and 33 reasoned from cited sources.
+Written against TOTP standard (no recorded version), authentik source version/2026.8.3, Keycloak documentation 26.8.2, oauth2-proxy documentation v7.15.6, Caddy forward_auth minimum 2.5.1, google-authenticator-libpam source 1.11, and MySQL multifactor authentication 8.0 and 8.4, plus 9 more recorded bases; 14 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 35 claims: 2 demonstrated by a check that ran and 33 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

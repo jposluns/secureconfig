@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against PgBouncer listener source pgbouncer_1_26_0, PgBouncer source and fixes 1.25.2, PgBouncer LDAP minimum 1.25.0, PgBouncer password-expiry fix 1.24.1, and Pgpool-II backend handshake 4.7.2; 3 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 53 claims, all reasoned from cited sources.
+Written against PgBouncer listener source pgbouncer_1_26_0, PgBouncer source and fixes 1.25.2, PgBouncer LDAP minimum 1.25.0, PgBouncer password-expiry fix 1.24.1, and Pgpool-II backend handshake 4.7.2; 3 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 53 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

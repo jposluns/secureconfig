@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against frps source v0.72.0, frpc source v0.72.0, frp compare diff v0.71.0...v0.72.0, frp TLS default minimum v0.50.0, go-oidc source v3.21.0, Linux source v6.8, and iproute2 manuals v6.12.0; 2 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 37 claims, all reasoned from cited sources.
+Written against frps source v0.72.0, frpc source v0.72.0, frp compare diff v0.71.0...v0.72.0, frp TLS default minimum v0.50.0, go-oidc source v3.21.0, Linux source v6.8, and iproute2 manuals v6.12.0; 2 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 37 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

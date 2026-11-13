@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Kafka listener default 4.3.1, Kafka documentation 4.3, Kafka source 4.3.0, Kafka legacy authorization 3.9, and OpenSSL documentation 3.5; 2 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 41 claims, all reasoned from cited sources.
+Written against Kafka listener default 4.3.1, Kafka documentation 4.3, Kafka source 4.3.0, Kafka legacy authorization 3.9, and OpenSSL documentation 3.5; 2 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 41 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against lighttpd TLS minimum 1.4.56, lighttpd separate-key minimum 1.4.53, lighttpd redirect default transition 1.4.75, lighttpd module loader source 1.4.75, lighttpd file authentication source 1.4.75, lighttpd verify source 1.4.75, Apache htpasswd manual 2.4, and Debian apache2-utils package trixie, plus 5 more recorded bases; 2 further sources carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 16 claims, all reasoned from cited sources.
+Written against lighttpd TLS minimum 1.4.56, lighttpd separate-key minimum 1.4.53, lighttpd redirect default transition 1.4.75, lighttpd module loader source 1.4.75, lighttpd file authentication source 1.4.75, lighttpd verify source 1.4.75, Apache htpasswd manual 2.4, and Debian apache2-utils package trixie, plus 5 more recorded bases; 2 further sources carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 16 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

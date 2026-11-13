@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against PostgreSQL initdb source REL_17_11, PostgreSQL TLS minimum 12, PostgreSQL SCRAM default 14, PostgreSQL schema defaults 15, PostgreSQL membership and require_auth 16, and PostgreSQL MD5 and logging changes 18; 2 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 46 claims: 2 demonstrated by a check that ran and 44 reasoned from cited sources.
+Written against PostgreSQL initdb source REL_17_11, PostgreSQL TLS minimum 12, PostgreSQL SCRAM default 14, PostgreSQL schema defaults 15, PostgreSQL membership and require_auth 16, and PostgreSQL MD5 and logging changes 18; 2 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 46 claims: 2 demonstrated by a check that ran and 44 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

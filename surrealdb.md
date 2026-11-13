@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against SurrealDB server and image v4.0.0, SurrealDB 3.x server v3.3.5, SurrealDB native AUDIENCE minimum 3.3, SurrealDB SCOPE deprecation 2.x, SurrealDB SCOPE removal 3.0, GNU Bash reference manual bash-5.3, Linux procfs manual man-pages-6.19, and Linux ptrace manual man-pages-6.19; 3 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 45 claims, all reasoned from cited sources.
+Written against SurrealDB server and image v4.0.0, SurrealDB 3.x server v3.3.5, SurrealDB native AUDIENCE minimum 3.3, SurrealDB SCOPE deprecation 2.x, SurrealDB SCOPE removal 3.0, GNU Bash reference manual bash-5.3, Linux procfs manual man-pages-6.19, and Linux ptrace manual man-pages-6.19; 3 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 45 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

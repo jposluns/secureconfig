@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against nginx source release-1.26.3, Certbot nginx configurator v2.3.0, Authelia nginx integration v4.39.28, oauth2-proxy nginx integration v7.15.6, Apache httpd source 2.4.69, Debian apache2 packaging 2.4.69-1, HSTS specification RFC 6797, and OWASP Password Storage Cheat Sheet commit 72865b1e; 3 further sources carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 29 claims, all reasoned from cited sources.
+Written against nginx source release-1.26.3, Certbot nginx configurator v2.3.0, Authelia nginx integration v4.39.28, oauth2-proxy nginx integration v7.15.6, Apache httpd source 2.4.69, Debian apache2 packaging 2.4.69-1, HSTS specification RFC 6797, and OWASP Password Storage Cheat Sheet commit 72865b1e; 3 further sources carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 29 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
