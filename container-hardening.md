@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Docker documentation (no recorded version), Docker Compose source and reference v2.32.4, Kubernetes Pod Security Admission 1.34, kubectl source v1.34.0, Linux process status and capabilities manuals man-pages-6.19, JSON Merge Patch RFC 7396, and BusyBox source 1_36_1; 4 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 23 claims, all reasoned from cited sources.
+Written against Docker documentation (no recorded version), Docker Compose source and reference v2.32.4, Kubernetes Pod Security Admission 1.34, kubectl source v1.34.0, Linux process status and capabilities manuals man-pages-6.19, JSON Merge Patch RFC 7396, and BusyBox source 1_36_1; 4 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 23 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Go certificate-store qualification 1.27, Go header-count qualification 1.27, Go per-request deadline minimum 1.20+, Go Request.Host source 1.27.0, Go environment source go1.27.0, go-oidc documentation v3, pquerna/otp v1.5.0, and Authelia source v4.39.28; 1 further source is pinned to a commit and 8 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 38 claims, all reasoned from cited sources.
+Written against Go certificate-store qualification 1.27, Go header-count qualification 1.27, Go per-request deadline minimum 1.20+, Go Request.Host source 1.27.0, Go environment source go1.27.0, go-oidc documentation v3, pquerna/otp v1.5.0, and Authelia source v4.39.28; 1 further source is pinned to a commit and 8 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 38 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

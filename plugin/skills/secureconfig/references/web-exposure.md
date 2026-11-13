@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against nginx documentation (no recorded version), Apache documentation 2.4, Caddy documentation v2.11.4, Next.js browser source maps v16.3.6, Vite production source maps v8.3.1, Debian apache2 packaging 2.4.69-1, ACME HTTP-01 RFC 8555, and GNU grep 3.12; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 26 claims, all reasoned from cited sources.
+Written against nginx documentation (no recorded version), Apache documentation 2.4, Caddy documentation v2.11.4, Next.js browser source maps v16.3.6, Vite production source maps v8.3.1, Debian apache2 packaging 2.4.69-1, ACME HTTP-01 RFC 8555, and GNU grep 3.12; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 26 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

@@ -1953,7 +1953,7 @@ class TwoSectionTests(unittest.TestCase):
 
     def test_header_counts_folding_merging_and_limits(self):
         data = fixture()
-        self.assertIn('1 claim, all reasoned from cited sources.', vb.header(data))
+        self.assertIn('1 claim, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.', vb.header(data))
         data['claims']['other'] = dict(data['claims']['control'], status='DEMONSTRATED')
         self.assertIn('2 claims: 1 demonstrated by a check that ran and 1 reasoned', vb.header(data))
         data['claims']['control']['status'] = 'DEMONSTRATED'
@@ -2043,7 +2043,7 @@ class TwoSectionTests(unittest.TestCase):
         self.assertEqual(vb.header(fixture()),
             'Written against Product v1.0. Metadata reviewed 2026-09-26; '
             'documentation checked September 2026. The guide records 1 claim, '
-            'all reasoned from cited sources.\n\n'
+            'all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.\n\n'
             'A newer release of any of this software can make version-specific details here outdated. '
             'To prioritize an update, open a GitHub issue, send a pull request, add a request under '
             '[requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) '

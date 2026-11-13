@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Streamlit 1.64.0, Google OpenID Connect documentation rolling documentation, checked 2026-10-15, Authlib minimum 1.3.2, httpx minimum 0.24.1, Caddy v2.11.4, oauth2-proxy v7.15.6 and v7.15.4, Keycloak 26.8.2 and 26.7.4, and curl minimum write-out version 7.75.0; 3 further sources carry no recorded version. Metadata reviewed 2026-11-06; documentation checked October 2026. The guide records 36 claims: 12 demonstrated by a check that ran and 24 reasoned from cited sources.
+Written against Streamlit 1.64.0, Google OpenID Connect documentation rolling documentation, checked 2026-10-15, Authlib minimum 1.3.2, httpx minimum 0.24.1, Caddy v2.11.4, oauth2-proxy v7.15.6 and v7.15.4, Keycloak 26.8.2 and 26.7.4, and curl minimum write-out version 7.75.0; 3 further sources carry no recorded version. Metadata reviewed 2026-11-06; documentation checked October 2026. The guide records 36 claims: 12 demonstrated by a check that ran and 24 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

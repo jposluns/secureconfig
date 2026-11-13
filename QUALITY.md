@@ -356,7 +356,7 @@ listener and reproduce the exposed configuration; `CONTRIBUTING.md` rule 5 says 
 impractical to stand up merely because it runs in a container or because the binary is absent where
 it could be obtained. A REASONED declaration whose only prerequisite is "no listener on this host"
 is PARTIAL on C4 unless the guide also says why a demonstration was unavailable for that service.
-REASONED is an accepted end state when labelled; it never converts an unknown into a verified result.
+REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form; it is an accepted end state when labelled and never converts an unknown into a verified result.
 
 **5. What belongs in Verify and what belongs in prose.**
 Verify holds runnable, guarded fences, one per control or one that classifies several, plus the
