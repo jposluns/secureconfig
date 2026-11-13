@@ -165,8 +165,9 @@ curl -fsS --max-time 30 -o "$work/MANIFEST.sha256" \
 # and a name. A name may hold only the ASCII letters and digits, ".", "_" and "-", is at most 100
 # characters, must end in ".md", may not be MANIFEST.sha256, contain "..", start with ".", or
 # repeat an earlier name; an empty manifest is refused too. A last line with no line end is read
-# and validated like any other. A refusal names the line number and never the name. It writes two files from that single read: names, one validated name per line,
-# which the loop below reads, and digests, the digest and name of each line, which the verify step
+# and validated like any other. A refusal of a line names its line number, and no refusal names
+# the file. It writes two files from that single read: names, one validated name per line, which
+# the loop below reads, and digests, the digest and name of each line, which the verify step
 # reads. The verify step lists guides/ and refuses a missing or an extra file, then compares the
 # SHA-256 of each file there, computed with hashlib, with the digest from that same read.
 manifest_tool='

@@ -58,10 +58,13 @@ cases.
     refuse the update with nothing changed, and a well-formed manifest with no final line end is
     accepted; a NUL byte at a line start, inside the hex, between the separators, before and
     inside a name (including the alpha.md NUL x.md case), a CR, an over-size manifest, a short,
-    long or trailing-text line and an over-long name are refused before any guide is fetched, with
-    the line number and never the name;
+    long or trailing-text line and an over-long name are refused before any guide is fetched and
+    never name the file; the line-grammar refusals also name the line number, and the size,
+    NUL, CR and empty refusals do not; a manifest of exactly 65536 bytes is accepted, one of
+    65537 refused, and a name ending md without the dot or holding a slash is refused;
   - VERIFY: a guide that was not written, an extra file beside the guides and a digest mismatch
-    are each refused with nothing changed; every guide is fetched into a guides folder; the script
+    are each refused with nothing changed, including a mismatch on the first manifest entry and
+    a digest that differs only in its last hex digit; every guide is fetched into a guides folder; the script
     holds no sha256sum, and a sha256sum stand-in that exits 97 is first on PATH in every case;
   - BOUND and DEPTH: an answer of exactly 1 MiB is used and one of 1 MiB + 1 is refused, a draft or
     pre-release field of 0 is refused, JSON nested 200000 deep (a RecursionError) in the answer or
@@ -809,6 +812,11 @@ for desc, manifest, extra, message in (
         ('a name starting with a dot', alpha_line + beta_line + evil_digest + b'  .evil.md\n',
          {'.evil.md': evil}, b'the manifest lists an unexpected file name'),
         ('a name holding ..', alpha_line + beta_line + evil_digest + b'  a..md\n',
+         {}, b'the manifest lists an unexpected file name'),
+        # R3-F7: ".md" is a suffix with its dot, and a name is a bare file name
+        ('a name ending md without the dot', alpha_line + beta_line + evil_digest + b'  notesmd\n',
+         {'notesmd': evil}, b'the manifest lists a file that is not a .md guide'),
+        ('a name with a slash', alpha_line + beta_line + evil_digest + b'  a/b.md\n',
          {}, b'the manifest lists an unexpected file name')):
     with tempfile.TemporaryDirectory() as tmp:
         t = build(Path(tmp), manifest=manifest, guides=dict(NEW_GUIDES, **extra))
@@ -822,6 +830,7 @@ for desc, manifest, extra, message in (
         check(not any(echoes(token, err + out) for token in (b'evil', b'notes', b'alpha.mdx'))
               and b'\x1b' not in err and b'\x00' not in err,
               f'{label}: a refused name should not be printed: {show(err)}')
+        # Only the line-grammar refusals name a line; the size, NUL, CR and empty ones do not.
         if message != b'the manifest lists no guides' and b'larger than' not in message \
                 and b'NUL or CR' not in message:
             check(re.search(rb'\(line \d+\)', err) is not None,
@@ -829,6 +838,20 @@ for desc, manifest, extra, message in (
         check(not (t.refs / 'evil.md').exists() and not (t.refs / 'notes.txt').exists(),
               f'{label}: no extra file in the references')
         check(not list(t.tmp.iterdir()), f'{label}: the work folder should be removed')
+
+def _flip_last_digit(t, name):
+    """Change the last hex digit of name's digest in the served manifest; the guide is unchanged."""
+    path = t.fixtures / TAG / MANIFEST_PATH
+    lines = path.read_bytes().split(b'\n')
+    for index, line in enumerate(lines):
+        if line.endswith(b'  ' + name.encode()):
+            last = line[63:64]
+            lines[index] = line[:63] + (b'0' if last != b'0' else b'1') + line[64:]
+            break
+    else:
+        raise AssertionError(name)
+    path.write_bytes(b'\n'.join(lines))
+
 
 # After the fetch: a guide that was never written, an extra file beside the guides, and a digest
 # that does not match are each refused, nothing changed.
@@ -840,6 +863,16 @@ for desc, setup, message in (
          b'a guide is missing, or a file that the manifest does not list was fetched'),
         ('a digest mismatch (the file changed in transit)',
          lambda t: (t.fixtures / TAG / 'beta.md').write_bytes(b'# Beta\n\nChanged in transit.\n'),
+         b'a fetched guide did not match its published digest'),
+        # R3-F1: the FIRST manifest entry is verified too, not only the last
+        ('a digest mismatch on the first manifest entry',
+         lambda t: (t.fixtures / TAG / 'alpha.md').write_bytes(b'# Alpha\n\nChanged in transit.\n'),
+         b'a fetched guide did not match its published digest'),
+        ('a manifest digest that differs from the real one only in its last hex digit, first entry',
+         lambda t: _flip_last_digit(t, 'alpha.md'),
+         b'a fetched guide did not match its published digest'),
+        ('a manifest digest that differs from the real one only in its last hex digit, last entry',
+         lambda t: _flip_last_digit(t, 'beta.md'),
          b'a fetched guide did not match its published digest')):
     with tempfile.TemporaryDirectory() as tmp:
         t = build(Path(tmp))
@@ -863,6 +896,35 @@ with tempfile.TemporaryDirectory() as tmp:
     rc, out, err = run(t)
     check(rc == 0 and (t.refs / 'beta.md').read_bytes() == NEW_GUIDES['beta.md'],
           f'CLOSED MANIFEST: no final line end, every line well formed: {rc} {show(err)}')
+
+# R3-F7: the size bound is exact. A valid manifest of exactly 65536 bytes (392 lines naming 100
+# characters and a last line of 72 bytes) is accepted and one of 65537 bytes is refused before any
+# guide is fetched.
+def sized_guides(last_name_length):
+    guides = {f'g{index:04d}'.ljust(97, 'a') + '.md': b'guide %d\n' % index for index in range(392)}
+    guides['z' * (last_name_length - 3) + '.md'] = b'last\n'
+    return guides
+
+
+at_bound = sized_guides(5)
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), guides=at_bound)
+    size = len(manifest_for(at_bound))
+    check(size == 65536, f'CLOSED MANIFEST: the 65536-byte fixture is {size} bytes')
+    rc, out, err = run(t)
+    check(rc == 0 and all((t.refs / name).read_bytes() == body for name, body in at_bound.items()),
+          f'CLOSED MANIFEST: a valid manifest of exactly 65536 bytes should be accepted: {rc} {show(err)}')
+over_bound = sized_guides(6)
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), guides=over_bound)
+    size = len(manifest_for(over_bound))
+    check(size == 65537, f'CLOSED MANIFEST: the 65537-byte fixture is {size} bytes')
+    before = state(t)
+    rc, out, err = run(t)
+    check(rc == 1 and b'the manifest is larger than 65536 bytes' in err,
+          f'CLOSED MANIFEST: a valid manifest of 65537 bytes should be refused: {rc} {show(err)}')
+    check(state(t) == before and fetched(t) == [API, RAW + 'VERSION', RAW + MANIFEST_PATH],
+          'CLOSED MANIFEST: a refused 65537-byte manifest changes nothing and fetches no guide')
 
 if failures:
     for failure in failures:
