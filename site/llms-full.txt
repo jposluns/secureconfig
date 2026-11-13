@@ -823,7 +823,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -1286,7 +1286,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -1945,7 +1945,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -2248,7 +2248,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -2640,7 +2640,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -3079,7 +3079,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -3830,7 +3830,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -4481,7 +4481,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -6235,7 +6235,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -6615,7 +6615,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -7612,7 +7612,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -8248,7 +8248,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -8801,7 +8801,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -9164,7 +9164,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -9925,7 +9925,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -10392,7 +10392,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -10961,7 +10961,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -11397,7 +11397,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -11946,7 +11946,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -12552,7 +12552,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -13064,7 +13064,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -13546,7 +13546,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -14088,7 +14088,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -14691,7 +14691,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -15662,7 +15662,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -16739,7 +16739,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -17648,7 +17648,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -17839,7 +17839,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against SvelteKit adapter-node @sveltejs/adapter-node@5.5.7, SvelteKit routing and hooks documentation @sveltejs/kit@2.70.3, Nuxt lockfile v4.0.0, Nuxt documentation 4.x, Nuxt output source v4.0.0, Vite bind source v8.3.1, and h3 request and Node adapter source at release commit 1.15.3, plus 3 more recorded bases; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
+Written against SvelteKit adapter-node @sveltejs/adapter-node@5.5.7, SvelteKit routing and hooks documentation @sveltejs/kit@2.70.3, SvelteKit 3.0.0 changelog @sveltejs/kit@3.0.0, Nuxt lockfile v4.0.0, Nuxt documentation 4.x, Nuxt output source v4.0.0, and Vite bind source v8.3.1, plus 4 more recorded bases; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 33 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -17855,7 +17855,7 @@ HOST=127.0.0.1 PORT=3000 node build
 
 Behind a reverse proxy, set `ORIGIN` (for example `ORIGIN=https://app.example.com`) so SvelteKit computes the correct origin for redirects and cookies. `PROTOCOL_HEADER` and `HOST_HEADER` (for example `x-forwarded-proto` and `x-forwarded-host`) let it read the real scheme and host from the proxy; the docs caution to set these only behind a trusted reverse proxy, since an untrusted client could otherwise spoof them. `ADDRESS_HEADER` and `XFF_DEPTH` do the same for the client's real IP.
 
-CSRF: `csrf.checkOrigin` (default `true`; deprecated in the pinned `@sveltejs/kit@2.70.3` source, and marked removed in 3.0 in the current svelte.dev reference) checks the `Origin` header for a POST, PUT, PATCH, or DELETE form submission whose `Content-Type` is `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain`, and verifies that it matches the server's origin. The pinned type documentation describes the check only for form submissions with those three content types, so do not rely on it for a JSON body or any other content type reaching a `+server.js` endpoint or form action; give those requests their own origin or session check. The pinned type documentation points to `csrf.trustedOrigins` instead: an allowlist (default empty) of specific origins permitted to submit forms cross site; only `'*'` trusts every origin, and that documentation calls it generally not recommended.
+CSRF: `csrf.checkOrigin` (default `true`; deprecated in the pinned `@sveltejs/kit@2.70.3` source, and removed in `@sveltejs/kit@3.0.0`, whose changelog lists the removal in favor of `trustedOrigins`) checks the `Origin` header for a POST, PUT, PATCH, or DELETE form submission whose `Content-Type` is `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain`. It verifies that the header matches the server's origin. The pinned type documentation describes the check only for form submissions with those three content types, so do not rely on it for a JSON body or any other content type reaching a `+server.js` endpoint or form action; give those requests their own origin or session check. The pinned type documentation points to `csrf.trustedOrigins` instead: an allowlist (default empty) of specific origins permitted to submit forms cross site; only `'*'` trusts every origin, and that documentation calls it generally not recommended.
 
 Public env: the pinned `@sveltejs/kit@2.70.3` type documentation describes `env.publicPrefix` (default `PUBLIC_`) as the prefix that signals an environment variable is safe to expose to client-side code, and points to `$env/static/public` and `$env/dynamic/public`; treat every variable with that prefix as public and never give a secret that prefix. Keep secrets in modules SvelteKit treats as server-only, either `$env/static/private` / `$env/dynamic/private`, a `.server.js` filename, or anything under `$lib/server/` ([secrets.md](https://github.com/jposluns/secureconfig/blob/main/secrets.md)); SvelteKit statically traces import chains and fails the build if client code imports one, even through a dynamic `import()`.
 
@@ -17863,7 +17863,7 @@ None of this gates a request for you by default. The pinned SvelteKit load docum
 
 ## Nuxt (Nitro server routes)
 
-Files under `server/api/`, `server/routes/`, and `server/middleware/` are auto-registered Nitro handlers exported with `defineEventHandler()`, and a handler in `server/middleware/` runs before every other server route. Nuxt ships no built-in authentication. A middleware handler can enforce access if it throws (for example `createError` with a 401 or 403) or otherwise ends the request there; one that only attaches `event.context.auth` for other handlers to read has not enforced anything, and every handler that reads it still has to check it itself:
+Files under `server/api/`, `server/routes/`, and `server/middleware/` are auto-registered Nitro handlers exported with `defineEventHandler()`, and a handler in `server/middleware/` runs before every other server route. Nuxt ships no built-in authentication. A middleware handler can enforce access if it throws (for example `createError` with a 401 or 403); the Nuxt server directory page says middleware should not return anything or close or respond to the request, so a response belongs in a route handler. A middleware that only attaches `event.context.auth` for other handlers to read has not enforced anything, and every handler that reads it still has to check it itself:
 
 ```ts
 // server/api/admin.ts: the route checks for itself; the middleware only sets event.context.auth
@@ -17887,15 +17887,15 @@ NITRO_HOST=127.0.0.1 NITRO_PORT=3000 node .output/server/index.mjs
 
 Both are development tooling, not a production server: the `vite preview` docs say plainly "do not use this as a production server as it's not designed for it." Deploy the built `dist/` behind a real server, CDN, or your platform's hosting per [paas.md](https://github.com/jposluns/secureconfig/blob/main/paas.md) instead.
 
-`server.host` defaults to `'localhost'` (as of Vite 8.3.1); setting it to `true` or `0.0.0.0` makes the dev server listen on all addresses, including the LAN, which is fine for testing from a phone on a trusted network but should not be left on elsewhere. `server.allowedHosts` defaults to `[]`, which still auto-permits localhost, `.localhost`, and IP addresses; setting it to `true` disables the check entirely, and the docs warn this "allows any website to send requests to your dev server and download your source code and content" (DNS rebinding). Prefer an explicit hostname allowlist over `true`.
+`server.host` defaults to `'localhost'` (as of Vite 8.3.1); setting it to `true` or `0.0.0.0` makes the dev server listen on all addresses, including the LAN, which is fine for testing from a phone on a trusted network but should not be left on elsewhere. `server.allowedHosts` defaults to `[]`, which still auto-permits localhost, `.localhost`, and IP addresses; setting it to `true` disables the check entirely, and the docs warn this "allows any website to send requests to your dev server through DNS rebinding attacks, allowing them to download your source code and content." Prefer an explicit hostname allowlist over `true`.
 
 ## Verify
 
 REASONED: output-path coverage per the cited SvelteKit adapter-node, Nitro and Vite pinned sources; no framework application or production build is available in the authoring environment, so the paths were checked against those sources rather than a built tree. Run from the project root after a production build. The paths below cover default SvelteKit adapter-node output (`build/client` plus the separate `build/prerendered`), Nuxt/Nitro public output (`.output/public`, including copied public assets and prerendered pages), and a plain Vite client build (`dist`, including copied public assets). They exclude adapter-node server output and Nitro `.output/server`.
 
-REASONED: scan coverage and the dist/server classification per the design of the block itself and the cited output-path sources; at marking time the scan ran against local fixture trees, where a secret planted under dist/assets was reported as a FINDING, a tree without it reported clean, and a plant only under dist/server was reported as server output. The same marking-time fixture run also showed that, with no listed directory, the block refused as inconclusive, and that, with dist/assets a symlink to an external fixture directory holding the planted value, the scan followed the link and reported dist/assets/x.js as a FINDING. These fixture runs covered an earlier form, whose FINDING and error arms ended with status 0; none was re-run on the current form, whose FINDING arm exits 1 and whose error arm exits 3. The current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs with real grep on fixture trees while it was drafted. No real framework production build is available in the authoring environment, so none was scanned. Before running, adjust the scan block's directory list for your actual adapter, Nitro preset or configured output directories. The block always scans all of `dist`, following symlinks, so it never misses a browser-served file. In a Vite SSR layout, where `dist/server` holds the server build, a result whose matches are all under `dist/server/` is reported as server output rather than as a client leak, and any other result is a FINDING, with its `dist/server/` matches labelled as server output. Confirm that `dist/server` is server-only in your deployment before treating a server-output result as clean. Include any separately deployed static assets and prerendered HTML, and, apart from `dist` (scanned whole, as described above), never select a parent containing server-only output. This file scan does not inspect dynamically rendered HTML or API responses.
+REASONED: scan coverage and the dist/server classification per the design of the block itself and the cited output-path sources; no real framework production build is available in the authoring environment, so none was scanned. The scan's fixture, syntax and stub checks, none of them on a real build, are listed under Verification record at the end of this section. Before running, adjust the scan block's directory list for your actual adapter, Nitro preset or configured output directories. The block always scans all of `dist`, following symlinks, so it never misses a browser-served file. In a Vite SSR layout, where `dist/server` holds the server build, a result whose matches are all under `dist/server/` is reported as server output rather than as a client leak, and any other result is a FINDING, with its `dist/server/` matches labelled as server output. Confirm that `dist/server` is server-only in your deployment before treating a server-output result as clean. Include any separately deployed static assets and prerendered HTML, and, apart from `dist` (scanned whole, as described above), never select a parent containing server-only output. This file scan does not inspect dynamically rendered HTML or API responses.
 
-REASONED: following block; private-route denial and Host handling, with the proxy cookie and redirect checks in the prose after the next block; the client-secret scan is the next block. No deployed framework application or run outcome is recorded here; expectations are reasoned from the guide and its cited framework documentation. The private-route and spoofed-Host requests take the application's host name once, on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The block exits 1 if `/api/private` answers a 2xx without a session cookie, 3 if it answers anything else but 401 or if either request fails, and otherwise 0; a curl exit 52 on the spoofed-Host request, where the server closes without a response as nginx's `return 444` does, is not a failure. That request pins HTTP/1.1 with `--http1.1`, because exit 52 is curl's HTTP/1.1 reading of that close, and curl may otherwise negotiate HTTP/2 with a listener that sets `http2 on`, as the HTTPS server block in [nginx.md](https://github.com/jposluns/secureconfig/blob/main/nginx.md) does. The spoofed-Host result stays for you to judge. The block's current form is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs while it was drafted; it has not been run against a deployment.
+REASONED: following block; private-route denial and Host handling, with the proxy cookie and redirect checks in the prose after the next block; the client-secret scan is the next block. No deployed framework application or run outcome is recorded here; expectations are reasoned from the guide and its cited framework documentation. The private-route and spoofed-Host requests take the application's host name once, on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains. The block exits 1 if `/api/private` answers a 2xx without a session cookie, 3 if it answers anything else but 401 or if either request fails, and otherwise 0; a curl exit 52 on the spoofed-Host request, where the server closes without a response as nginx's `return 444` does, is not a failure. That request pins HTTP/1.1 with `--http1.1`, because exit 52 is curl's HTTP/1.1 reading of that close, and curl may otherwise negotiate HTTP/2 with a listener that sets `http2 on`, as the HTTPS server block in [nginx.md](https://github.com/jposluns/secureconfig/blob/main/nginx.md) does. The spoofed-Host result stays for you to judge. It has not been run against a deployment; its syntax and curl-stub checks are listed under Verification record below.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -17996,11 +17996,11 @@ REASONED: following block; private-route denial and Host handling, with the prox
 )
 ```
 
-REASONED: preceding block; the output-path listing and the client-secret scan, per the cited framework documentation and GNU grep manual entries; the private-route and spoofed-Host requests are in the block before it. The scan subshell ran at marking time against local fixture trees, where a planted secret produced the FINDING line and a clean fixture tree reported clean. On 2026-10-13 (UTC), with Bash 5.3.9 and a dummy secret typed at a pty's hidden prompt, the scan subshell traced two lines under `bash -x` (`trap -` and `set +x +a +e`), neither holding the dummy, where the same subshell with `set +x` removed traced 32 lines, one of them holding the dummy; an interactive Bash given the subshell wrote a history file holding the block's lines and not the dummy. The fixture, bash -x and history runs of the scan subshell recorded here covered an earlier form, whose FINDING and error arms ended with status 0; none was re-run on the current form, whose FINDING arm exits 1 and whose error arm exits 3. The current form, which also lists its directories itself, holds its captures in positional parameters and exits 3 when the hidden prompt fails, is covered only by the gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs while it was drafted. The account-owner and transformation limits stated in this paragraph are documented, not demonstrated. The secret reaches grep on stdin, never argv; the hidden prompt keeps it out of shell history and the block's `set +x` keeps it out of `set -x` tracing, but this does not hide it from the account owner or root. Paste the secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. A clean grep result here is evidence, not proof: it means the literal value did not match in the directories searched, not that the secret cannot be present in some other form. A bundler could split, encode, or otherwise transform it, so check the exit code and confirm the directory actually exists rather than reading silence alone as clean.
+REASONED: preceding block; the output-path listing and the client-secret scan, per the cited framework documentation and GNU grep manual entries; the private-route and spoofed-Host requests are in the block before it. Its fixture, tracing, shell-history, syntax and stub checks are listed under Verification record below; none of them ran against a real build or a service. The account-owner and transformation limits stated in this paragraph are documented, not demonstrated. The secret reaches grep on stdin, never argv; the hidden prompt keeps it out of shell history and the block's `set +x` keeps it out of `set -x` tracing, but this does not hide it from the account owner or root. Paste the secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. A clean grep result here is evidence, not proof: it means the literal value did not match in the directories searched, not that the secret cannot be present in some other form. A bundler could split, encode, or otherwise transform it, so check the exit code and confirm the directory actually exists rather than reading silence alone as clean.
 
 REASONED: Host, proxy cookie, redirect and trusted-proxy checks per the cited SvelteKit adapter-node and core source, Vite server-options documentation, Nuxt runtime config documentation, the pinned Nuxt 4.0.0 package manifest and lockfile, pinned nitropack 2.12.0 and h3 1.15.3 sources, and Node v22.22.1 HTTP documentation. No reverse proxy or deployed adapter is available in the authoring environment, so the outcomes of the Host, proxy cookie, redirect and trusted-proxy checks were not observed. The deployed application must not trust a spoofed Host. The supplied Vite allowlist reference covers its dev server. Guide assessment: for this probe, exposed means the application responds to the spoofed Host, so curl prints its first response line. Fixed means a fronting proxy or server refuses the unknown Host before the application; apply the default-server refusal pattern in [nginx.md](https://github.com/jposluns/secureconfig/blob/main/nginx.md) to the probed HTTPS listener. With a refusal response, curl prints its status line; with nginx return 444 closing without a response, curl prints no status line. Neither a status line nor silence alone proves which layer handled the request or whether the application builds URLs or redirects from Host. Correlate proxy and application logs with the probe and a working allowed-host control; inspect response headers and generated URLs separately to judge Host use. Adapter-node 5.5.7 uses `ORIGIN` or configured/request headers for the request origin; without `ORIGIN` or `PROTOCOL_HEADER`, it defaults the protocol to `https` and uses the request `Host` header unless `HOST_HEADER` supplies one. Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use an `https://` `Location` once `ORIGIN` (SvelteKit) is set. `NUXT_PUBLIC_...` is the public runtime-config prefix, exposed straight to the client bundle; it is not a trusted-proxy or secure-cookie setting and does nothing for this check. Nuxt 4.0.0 pins nitropack 2.12.0. For a non-static production build with no preset named or matched, nitropack falls back to `node-server`, whose entry runtime passes the h3 app through h3's `toNodeListener` to a Node HTTP or HTTPS server. In the traced adapter-node 5.5.7 handler and SvelteKit Node request conversion, `ORIGIN` or configured/request headers form the request URL without a Host allowlist. In the traced nitropack 2.12.0 node-server and app construction, the h3 app reaches Node HTTP or HTTPS without a Host allowlist. Nuxt v4.0.0 resolves h3 1.15.3: its traced request utilities read `Host` or optionally `x-forwarded-host` and construct a URL without an allowlist; the release commit exports `toNodeListener`, which creates an event and calls `app.handler`, matching the adapter Nitro imports. Node v22.22.1 documents default rejection of an HTTP/1.1 request missing `Host`; that is not an allowed-host list. Guide assessment: these source paths do not establish a universal Host rejection outcome, how the hosting platform treats Host and forwarded headers, or a deployed cookie and redirect outcome. Guide assessment: Nuxt's own trusted-proxy and origin handling come from its deployment preset and hosting platform rather than one documented app-level variable. Guide advice: verify the equivalent behaviour against the deployed Nuxt preset and hosting platform, or whichever adapter you deploy with.
 
-REASONED: following block; the production-server listener bind, with the loopback-bind controls set per the SvelteKit, Nuxt/Nitro and Vite sections above. No isolated (loopback-only) network namespace was available in the authoring environment, so no Nuxt (Nitro), SvelteKit adapter-node production server or Vite preview server was stood up without one, their bind outcomes are reasoned from the cited defaults and were not observed, and the block has not been run against a deployment. What ran: on 2026-11-12 (UTC), with Node v22.22.1, iproute2 ss 6.19.0, Bash 5.3.9 and ShellCheck 0.11.0, the block's current form passed bash -n and ShellCheck and was run against bare Node `net` listeners on port 3000 of one host, one `net.createServer().listen(...)` per listener, not a framework production build or a deployment: with no host given (ss showed `*:3000`), with `::` IPv6-only (`[::]:3000`) and with `0.0.0.0` it exited 1; with `127.0.0.1`, `::1`, or both it exited 0; with `127.0.0.1` beside `[::]:3000` it exited 1; with `127.0.0.1` beside a LAN address it exited 3; with nothing listening it exited 3; and with a stub ss printing `127.0.0.2:3000` it exited 3. After starting the built server with the guide's loopback bind set (SvelteKit `HOST=127.0.0.1`, Nuxt `NITRO_HOST=127.0.0.1`, or Vite's `localhost` default), run `ss -Hltn 'sport = :3000'` on the server host. Exposed: a listener's Local Address is `0.0.0.0:3000`, `[::]:3000` or `*:3000`, an all-interface bind. The unset bind defaults differ: adapter-node defaults to `0.0.0.0`, per the cited adapter-node source; Nitro node-server has no default host, per the cited nitropack source, so Node listens on `::` when IPv6 is available, which in most operating systems may also accept IPv4, or on `0.0.0.0` otherwise, per the cited Node net documentation; Vite defaults to `localhost`, per the cited Vite source. Per the cited iproute2 source, ss prints an IPv6 wildcard listener as `[::]` when it is IPv6-only and as `*` otherwise. Fixed: every listener is `127.0.0.1:3000` or `[::1]:3000`, loopback only. The block compares the whole Local Address column, so `10.0.0.0:3000` is not read as `0.0.0.0:3000` and `[::1]:3000` is not read as `[::]:3000`. It exits 2 if ss is absent and 3 if ss fails or nothing listens. Otherwise an all-interface listener exits 1 even beside other addresses; failing that, it exits 0 when every listener is `127.0.0.1:3000` or `[::1]:3000`, and 3 when any listener is on another address (a specific address, another loopback form such as `127.0.0.2:3000`, or one that ss shows with a `%` interface suffix, `addr%ifname` per the cited iproute2 `sock_addr_print` source), which it prints for you to judge.
+REASONED: following block; the production-server listener bind, with the loopback-bind controls set per the SvelteKit, Nuxt/Nitro and Vite sections above. No isolated (loopback-only) network namespace was available in the authoring environment, so no Nuxt (Nitro), SvelteKit adapter-node production server or Vite preview server was stood up without one. Their bind outcomes are reasoned from the cited defaults and were not observed, the block has not been run against a deployment, and its runs against bare Node listeners are listed under Verification record below. After starting the built server with the guide's loopback bind set (SvelteKit `HOST=127.0.0.1`, Nuxt `NITRO_HOST=127.0.0.1`, or Vite's `localhost` default), run `ss -Hltn 'sport = :3000'` on the server host. Exposed: a listener's Local Address is `0.0.0.0:3000`, `[::]:3000` or `*:3000`, an all-interface bind. The unset bind defaults differ: adapter-node defaults to `0.0.0.0`, per the cited adapter-node source; Nitro node-server has no default host, per the cited nitropack source, so Node listens on `::` when IPv6 is available, which in most operating systems may also accept IPv4, or on `0.0.0.0` otherwise, per the cited Node net documentation; Vite defaults to `localhost`, per the cited Vite source. Per the cited iproute2 source, ss prints an IPv6 wildcard listener as `[::]` when it is IPv6-only and as `*` otherwise. Fixed: every listener is `127.0.0.1:3000` or `[::1]:3000`, loopback only. The block compares the whole Local Address column, so `10.0.0.0:3000` is not read as `0.0.0.0:3000` and `[::1]:3000` is not read as `[::]:3000`. It exits 2 if ss is absent and 3 if ss fails or nothing listens. Otherwise an all-interface listener exits 1 even beside other addresses; failing that, it exits 0 when every listener is `127.0.0.1:3000` or `[::1]:3000`. Failing both, it exits 3 when any listener is on another address (a specific address, another loopback form such as `127.0.0.2:3000`, or one that ss shows with a `%` interface suffix, `addr%ifname` per the cited iproute2 `sock_addr_print` source), which it prints for you to judge.
 
 ```bash
 # After starting the built server with the guide's loopback bind set
@@ -18027,6 +18027,16 @@ REASONED: following block; the production-server listener bind, with the loopbac
   echo "a listener above is on neither all interfaces nor exactly 127.0.0.1 or ::1 (a specific address, another loopback form such as 127.0.0.2, or one ss shows with a %interface suffix); judge the printed address; inconclusive"; exit 3
 )
 ```
+
+### Verification record
+
+REASONED: what was run on the three blocks above, and on what. None of it was run against a framework production build, a reverse proxy or a deployment: bash -n and ShellCheck are syntax checks, and the stub, fixture, tracing and bare-listener runs test the blocks' own guards, classification and secret handling, not a framework's behaviour. No block or claim in this guide is demonstrated; the earlier-form runs below were not repeated on the current forms.
+
+REASONED: the private-route and spoofed-Host block, the first above, is covered in its current form only by bash -n and ShellCheck 0.11.0 syntax checks and by curl-stub runs made while it was written; it has not been run against a deployment.
+
+REASONED: the client-secret scan block, the second above, was run in an earlier form, whose FINDING and error arms ended with status 0, against local fixture trees: a secret planted under dist/assets was reported as a FINDING, a tree without it reported clean, and a plant only under dist/server was reported as server output. The same fixture run showed that, with no listed directory, the block refused as inconclusive, and that, with dist/assets a symlink to an external fixture directory holding the planted value, the scan followed the link and reported dist/assets/x.js as a FINDING. On 2026-10-13 (UTC), with Bash 5.3.9 and a dummy secret typed at a pty's hidden prompt, the scan subshell traced two lines under `bash -x` (`trap -` and `set +x +a +e`), neither holding the dummy, where the same subshell with `set +x` removed traced 32 lines, one of them holding the dummy; an interactive Bash given the subshell wrote a history file holding the block's lines and not the dummy. None of these fixture, `bash -x` and history runs was re-run on the current form, whose FINDING arm exits 1 and whose error arm exits 3. The current form, which also lists its directories itself, holds its captures in positional parameters and exits 3 when the hidden prompt fails, is covered only by bash -n and ShellCheck 0.11.0 syntax checks and by stub runs, with real grep on fixture trees, made while it was written.
+
+REASONED: the listener-inventory block, the third above, was run in its current form on 2026-11-12 (UTC) with Node v22.22.1, iproute2 ss 6.19.0, Bash 5.3.9 and ShellCheck 0.11.0: it passed bash -n and ShellCheck and was run against bare Node `net` listeners on port 3000 of one host, one `net.createServer().listen(...)` per listener, not a framework production build or a deployment. With no host given (ss showed `*:3000`), with `::` IPv6-only (`[::]:3000`) and with `0.0.0.0` it exited 1; with `127.0.0.1`, `::1`, or both it exited 0; with `127.0.0.1` beside `[::]:3000` it exited 1; with `127.0.0.1` beside a LAN address it exited 3; with nothing listening it exited 3; and with a stub ss printing `127.0.0.2:3000` it exited 3.
 
 ## Common mistakes
 
@@ -18079,18 +18089,20 @@ REASONED: following block; the production-server listener bind, with the loopbac
 - Nitro public assets copied to production public output (rolling documentation, checked September 2026): https://nitro.build/docs/assets
 - Vite default build.outDir 'dist' (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/build.ts#L395
 - Vite public assets copied to build output (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/config.ts#L388-L396
-- Vite build output directory and public-copy defaults: https://vite.dev/config/build-options
-- Vite SSR uses separate client and server builds: https://vite.dev/guide/ssr
-- SvelteKit adapter-node: https://svelte.dev/docs/kit/adapter-node
-- SvelteKit server-only modules: https://svelte.dev/docs/kit/server-only-modules
+- Vite build output directory and public-copy defaults (rolling documentation, checked November 2026): https://vite.dev/config/build-options
+- Vite SSR uses separate client and server builds (rolling documentation, checked November 2026): https://vite.dev/guide/ssr
+- SvelteKit adapter-node (rolling documentation, checked November 2026): https://svelte.dev/docs/kit/adapter-node
+- SvelteKit server-only modules (rolling documentation, now describing SvelteKit 3, checked November 2026): https://svelte.dev/docs/kit/server-only-modules
+- SvelteKit pinned server-only modules (pinned tag @sveltejs/kit@2.70.3; checked November 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/30-advanced/50-server-only-modules.md#L9-L61
 - SvelteKit current `$env/static/public` reference, which now says the module was deprecated in SvelteKit 3 (rolling documentation, checked October 2026): https://svelte.dev/docs/kit/$env-static-public
 - SvelteKit `csrf.checkOrigin` (default `true`, deprecated) and `csrf.trustedOrigins` (default empty; `'*'` trusts every origin and is generally not recommended) configuration types (pinned tag @sveltejs/kit@2.70.3; checked October 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/packages/kit/src/exports/public.d.ts#L423-L450
 - SvelteKit `env.publicPrefix` (default `PUBLIC_`) configuration type (pinned tag @sveltejs/kit@2.70.3; checked October 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/packages/kit/src/exports/public.d.ts#L466-L470
-- SvelteKit current `@sveltejs/kit/vite` reference, which marks `csrf.checkOrigin` deprecated and removed in 3.0 (rolling documentation, checked October 2026): https://svelte.dev/docs/kit/@sveltejs-kit-vite
-- Nuxt runtime config: https://nuxt.com/docs/4.x/guide/going-further/runtime-config
-- Nuxt server directory structure: https://nuxt.com/docs/4.x/directory-structure/server
-- Vite server options (`server.host`, `server.allowedHosts`): https://vite.dev/config/server-options
-- Vite CLI (`vite preview`): https://vite.dev/guide/cli
+- SvelteKit current `@sveltejs/kit/vite` reference, which marks `csrf.checkOrigin` deprecated and removed in 3.0 (rolling documentation, checked November 2026): https://svelte.dev/docs/kit/@sveltejs-kit-vite
+- SvelteKit 3.0.0 changelog: the deprecated CSRF `checkOrigin` option removed in favor of `trustedOrigins` (pinned tag @sveltejs/kit@3.0.0; checked November 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%403.0.0/packages/kit/CHANGELOG.md#L57
+- Nuxt runtime config (rolling documentation, checked November 2026): https://nuxt.com/docs/4.x/guide/going-further/runtime-config
+- Nuxt server directory structure (rolling documentation, checked November 2026): https://nuxt.com/docs/4.x/directory-structure/server
+- Vite server options (`server.host`, `server.allowedHosts`) (rolling documentation, checked November 2026): https://vite.dev/config/server-options
+- Vite CLI (`vite preview`) (rolling documentation, checked November 2026): https://vite.dev/guide/cli
 - Vite resolves an unset `server.host` to `'localhost'` (pinned tag v8.3.1): https://github.com/vitejs/vite/blob/v8.3.1/packages/vite/src/node/utils.ts#L1010-L1022
 - SvelteKit adapter-node `host = env('HOST', '0.0.0.0')` and `port = env('PORT', !path && '3000')`, with `path = env('SOCKET_PATH', false)`, where `env()` returns a variable's value whenever it is present, even empty, and the socket-activation branch that listens on the passed descriptor instead (pinned tag @sveltejs/adapter-node@5.5.7). SvelteKit adapter-node 5.5.7 sources: https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L10-L12, https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/env.js#L46-L50 and https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/index.js#L57-L60
 - GNU grep `-f -` ("When file is '-', read patterns from standard input"), `-l` ("print the name of each input file from which output would normally have been printed") and its exit status (0 if a line is selected, 1 if none, 2 on error). GNU grep manual sources: https://www.gnu.org/software/grep/manual/html_node/Matching-Control.html , https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html and https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html
@@ -18107,12 +18119,13 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
 - adapter: SvelteKit adapter-node (@sveltejs/adapter-node@5.5.7)
 - svelte-kit-pin: SvelteKit routing and hooks documentation (@sveltejs/kit@2.70.3)
+- svelte-kit-3: SvelteKit 3.0.0 changelog (@sveltejs/kit@3.0.0)
 - nuxt-lock: Nuxt lockfile (v4.0.0)
 - nuxt: Nuxt documentation (4.x)
 - nuxt-output: Nuxt output source (v4.0.0)
@@ -18132,13 +18145,16 @@ Claims (full source mapping in the JSON block below):
 - adapter-bind (REASONED; adapter, svelte): adapter-node defaults 0.0.0.0:3000 only with SOCKET_PATH unset/empty and no systemd socket; set HOST=127.0.0.1 PORT=3000.
 - adapter-origin (REASONED; svelte): Set ORIGIN to external HTTPS origin; trust PROTOCOL_HEADER/HOST_HEADER only behind a trusted proxy.
 - adapter-ip (REASONED; svelte): ADDRESS_HEADER and XFF_DEPTH configure proxy-derived client IP and require trusted proxy handling.
-- csrf-check (REASONED; svelte, svelte-kit-pin): csrf.checkOrigin defaults true, deprecated; documented for cross-origin POST/PUT/PATCH/DELETE form content types only; give JSON/other content origin/session checks.
+- csrf-check (REASONED; svelte, svelte-kit-pin, svelte-kit-3): csrf.checkOrigin defaults true, deprecated and removed in @sveltejs/kit 3.0.0; documented for cross-origin POST/PUT/PATCH/DELETE form content types only; give JSON/other content origin/session checks.
 - csrf-trust (REASONED; svelte, svelte-kit-pin): csrf.trustedOrigins defaults empty; list specific form origins, with wildcard trust discouraged.
 - svelte-public (REASONED; svelte-kit-pin): Pinned 2.70.3 types: env.publicPrefix (default PUBLIC_) marks env variables safe to expose to client-side code; keep secrets out.
-- svelte-private (REASONED; svelte): Private env modules, .server.js and lib/server are server-only; client import chains, including dynamic imports, fail builds.
+- svelte-private (REASONED; svelte, svelte-kit-pin): Private env modules, .server.js and lib/server are server-only; client import chains, including dynamic imports, fail builds.
 - svelte-routes (REASONED; svelte-kit-pin): Pinned docs and source show layout `load` does not run on every request, layout/page `load` run concurrently unless a child calls `await parent()`, `+layout` has no effect on `+server.js`, and form actions run before page loads. Guide advice: do not rely on a layout guard to protect a sibling page load, form action or directly reached endpoint; check the session before protected work in each.
-- svelte-handle (REASONED; svelte-kit-pin, adapter): Pinned hooks docs describe `handle` for SvelteKit server requests, including prerendering; runtime source calls it after checks that can reject requests before the hook and lets it return before `resolve`. In adapter-node 5.5.7, client assets and already prerendered pages are served before SSR, so they do not reach `handle` through that adapter. For client-initiated remote function requests, runtime source takes the calling-page path and search from request headers and resolves `route` and `params` from that path; pinned remote-functions docs describe the same fields on `RequestEvent` inside remote functions, and both docs warn never to use these request-derived fields to authorize data access. Guide advice: use `handle` to block unauthorized SvelteKit requests that reach it; a redirect-only or `event.locals`-only hook leaves directly reached endpoints and form actions open unless they check the session; do not rely on calling-page fields alone, and authorize each specific resource where served because a session check alone does not authorize it.
-- nuxt-handlers (REASONED; nuxt): Nuxt auto-registers server/api, server/routes and middleware; middleware runs first, but context.auth alone enforces nothing. Throw/end requests or check each handler.
+- svelte-handle (REASONED; svelte-kit-pin): Pinned hooks docs describe `handle` for SvelteKit server requests, including prerendering; runtime source calls it after checks that can reject requests before the hook and lets it return before `resolve`.
+- svelte-handle-adapter (REASONED; adapter): In adapter-node 5.5.7, client assets and already prerendered pages are served before SSR, so they do not reach `handle` through that adapter.
+- svelte-handle-remote (REASONED; svelte-kit-pin): For client-initiated remote function requests, runtime source takes the calling-page path and search from request headers and resolves `route` and `params` from that path; pinned remote-functions docs describe the same fields on `RequestEvent` inside remote functions, and the pinned hooks and remote-functions docs both warn never to use these request-derived fields to authorize data access.
+- svelte-handle-advice (REASONED; svelte-kit-pin, adapter): Guide advice: use `handle` to block unauthorized SvelteKit requests that reach it; a redirect-only or `event.locals`-only hook leaves directly reached endpoints and form actions open unless they check the session; do not rely on calling-page fields alone, and authorize each specific resource where served because a session check alone does not authorize it.
+- nuxt-handlers (REASONED; nuxt): Nuxt auto-registers server/api, server/routes and middleware; middleware runs first, but context.auth alone enforces nothing. Throw an error in middleware, respond from route handlers, or check each handler.
 - nuxt-auth (REASONED; nuxt): Nuxt ships no built-in authentication; enforce access server-side, not with client redirects.
 - nuxt-private (REASONED; nuxt): Direct runtimeConfig keys are server-only with NUXT_ overrides; rendering or passing to useState can disclose them.
 - nuxt-public (REASONED; nuxt): runtimeConfig.public is client-exposed with NUXT_PUBLIC_ overrides, not proxy/cookie configuration.
@@ -18148,16 +18164,24 @@ Claims (full source mapping in the JSON block below):
 - vite-hosts (REASONED; vite): server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names.
 - verify-bind (REASONED; adapter, nitro-node, vite-pin, iproute2-ss, node-http): After setting the loopback bind, run `ss -Hltn 'sport = :3000'` on the production host. A Local Address of `0.0.0.0:3000`, `[::]:3000` or `*:3000` (all interfaces; adapter-node and Nitro default) exits 1 even beside others; else every listener on `127.0.0.1:3000` or `[::1]:3000` exits 0; any other address exits 3. Seen on bare Node listeners; defaults reasoned from sources; no deployment run.
 - verify-private (REASONED; nuxt): Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects.
-- verify-secret (REASONED; grep, adapter, nuxt-output, nitro-output, vite-pin, vite, nitro-output-docs): Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole following symlinks; only a result with every match under dist/server/ is reported as server output, else FINDING with dist/server/ matches labelled. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; hidden input and set +x keep the secret from argv, history and tracing, not the account owner or root.
-- verify-host (REASONED; vite, adapter, nitro-node, svelte-kit-pin, h3-pin, node-http, nuxt-lock): The deployed application must not trust a spoofed Host. The supplied Vite allowlist reference covers its dev server. Guide assessment: for this probe, exposed means the application responds to the spoofed Host, so curl prints its first response line. Fixed means a fronting proxy or server refuses the unknown Host before the application; apply the default-server refusal pattern in [nginx.md](https://github.com/jposluns/secureconfig/blob/main/nginx.md) to the probed HTTPS listener. With a refusal response, curl prints its status line; with nginx return 444 closing without a response, curl prints no status line. Neither a status line nor silence alone proves which layer handled the request or whether the application builds URLs or redirects from Host. Correlate proxy and application logs with the probe and a working allowed-host control; inspect response headers and generated URLs separately to judge Host use. In the traced adapter-node 5.5.7 and SvelteKit Node request conversion, ORIGIN or configured/request headers form the request URL; these files do not apply a Host allowlist. In the traced nitropack 2.12.0 node-server and app construction, the h3 app is passed to Node HTTP or HTTPS without a Host allowlist. Nuxt v4.0.0 resolves h3 1.15.3; its traced request utilities read Host or optionally forwarded Host and construct a URL without an allowlist; the release commit exports toNodeListener, which creates an event and calls app.handler, matching the adapter Nitro imports. Node v22.22.1 documents a default missing-Host rejection for HTTP/1.1, not an allowed-host list. Guide assessment: these source paths do not establish a universal Host rejection outcome or how the hosting platform treats Host and forwarded headers.
-- verify-proxy (REASONED; svelte, nuxt, adapter, nuxt-output, nitro-node): Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its deployment preset and hosting platform, not NUXT_PUBLIC_. Adapter-node 5.5.7 uses ORIGIN or configured/request headers for the request origin; with ORIGIN and PROTOCOL_HEADER unset, it defaults to https and uses the request Host header unless HOST_HEADER supplies one. Nuxt 4.0.0 pins nitropack 2.12.0, which falls back to its node-server preset for a non-static production build with no preset named or matched; that preset passes the h3 app through toNodeListener to a Node HTTP or HTTPS server. Guide assessment: Nuxt's own trusted-proxy and origin handling come from its deployment preset and hosting platform rather than one documented app-level variable; the cited lines do not establish how h3 1.x or the hosting platform treats Host and forwarded headers or a deployed cookie and redirect outcome.
+- verify-secret (REASONED; grep, adapter, nuxt-output, nitro-output, vite-pin, vite, nitro-output-docs): Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole following symlinks; only a result with every match under dist/server/ is reported as server output, else FINDING with dist/server/ matches labelled. Adjust paths for custom layouts/SSR; reject absence.
+- verify-secret-grep (REASONED; grep, adapter, nuxt-output, nitro-output, vite-pin, vite, nitro-output-docs): Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; hidden input and set +x keep the secret from argv, history and tracing, not the account owner or root.
+- verify-host (REASONED; vite, adapter, nitro-node, svelte-kit-pin, h3-pin, node-http, nuxt-lock): The deployed application must not trust a spoofed Host. The supplied Vite allowlist reference covers its dev server. Guide assessment: for this probe, exposed means the application responds to the spoofed Host, so curl prints its first response line.
+- verify-host-fixed (REASONED; vite, adapter, nitro-node, svelte-kit-pin, h3-pin, node-http, nuxt-lock): Guide assessment: fixed means a fronting proxy or server refuses the unknown Host before the application; apply the default-server refusal pattern in [nginx.md](https://github.com/jposluns/secureconfig/blob/main/nginx.md) to the probed HTTPS listener. With a refusal response, curl prints its status line; with nginx return 444 closing without a response, curl prints no status line.
+- verify-host-judge (REASONED; vite, adapter, nitro-node, svelte-kit-pin, h3-pin, node-http, nuxt-lock): Neither a status line nor silence alone proves which layer handled the request or whether the application builds URLs or redirects from Host. Correlate proxy and application logs with the probe and a working allowed-host control; inspect response headers and generated URLs separately to judge Host use.
+- verify-host-adapter (REASONED; adapter, svelte-kit-pin): In the traced adapter-node 5.5.7 and SvelteKit Node request conversion, ORIGIN or configured/request headers form the request URL; these files do not apply a Host allowlist.
+- verify-host-nitro (REASONED; nitro-node, h3-pin, nuxt-lock): In the traced nitropack 2.12.0 node-server and app construction, the h3 app is passed to Node HTTP or HTTPS without a Host allowlist. Nuxt v4.0.0 resolves h3 1.15.3; its traced request utilities read Host or optionally forwarded Host and construct a URL without an allowlist; the release commit exports toNodeListener, which creates an event and calls app.handler, matching the adapter Nitro imports.
+- verify-host-scope (REASONED; vite, adapter, nitro-node, svelte-kit-pin, h3-pin, node-http, nuxt-lock): Node v22.22.1 documents a default missing-Host rejection for HTTP/1.1, not an allowed-host list. Guide assessment: these source paths do not establish a universal Host rejection outcome or how the hosting platform treats Host and forwarded headers.
+- verify-proxy (REASONED; svelte, nuxt, adapter, nuxt-output, nitro-node): Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its deployment preset and hosting platform, not NUXT_PUBLIC_. Adapter-node 5.5.7 uses ORIGIN or configured/request headers for the request origin; with ORIGIN and PROTOCOL_HEADER unset, it defaults to https and uses the request Host header unless HOST_HEADER supplies one.
+- verify-proxy-nitro (REASONED; nuxt-output, nitro-node): Nuxt 4.0.0 pins nitropack 2.12.0, which falls back to its node-server preset for a non-static production build with no preset named or matched; that preset passes the h3 app through toNodeListener to a Node HTTP or HTTPS server.
+- verify-proxy-scope (REASONED; svelte, nuxt, adapter, nuxt-output, nitro-node): Guide assessment: Nuxt's own trusted-proxy and origin handling come from its deployment preset and hosting platform rather than one documented app-level variable; the cited lines do not establish how h3 1.x or the hosting platform treats Host and forwarded headers or a deployed cookie and redirect outcome.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "cac0ccc6898fbfeac3d2ef275cbf00939c572804dd17669a44a5764f117db077",
+  "body_sha256": "a5b0c5eedd6d770b88bb55efb37125c508c999330fd7a7dce12d71c7f866000f",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -18195,7 +18219,15 @@ Claims (full source mapping in the JSON block below):
         "s89773d0c39e7": "https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/packages/kit/src/runtime/server/respond.js#L274-L306",
         "sd1c295d2cf56": "https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/packages/kit/src/exports/node/index.js#L121-L160",
         "s029a2e9edbca": "https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/packages/kit/src/exports/public.d.ts#L423-L450",
-        "s8e93f5865bbc": "https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/packages/kit/src/exports/public.d.ts#L466-L470"
+        "s8e93f5865bbc": "https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/packages/kit/src/exports/public.d.ts#L466-L470",
+        "sb21b72450e17": "https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/30-advanced/50-server-only-modules.md#L9-L61"
+      }
+    },
+    "svelte-kit-3": {
+      "name": "SvelteKit 3.0.0 changelog",
+      "basis": "@sveltejs/kit@3.0.0",
+      "sources": {
+        "s4f76ac707c1c": "https://github.com/sveltejs/kit/blob/%40sveltejs/kit%403.0.0/packages/kit/CHANGELOG.md#L57"
       }
     },
     "nuxt-lock": {
@@ -18317,13 +18349,16 @@ Claims (full source mapping in the JSON block below):
     "adapter-bind": {"text": "adapter-node defaults 0.0.0.0:3000 only with SOCKET_PATH unset/empty and no systemd socket; set HOST=127.0.0.1 PORT=3000.", "components": ["adapter", "svelte"], "sources": ["adapter:s011f4e44c91a", "adapter:s93f13e6b8d31", "adapter:sd23cac9a730f", "svelte:s59abf03bae6a"], "status": "REASONED"},
     "adapter-origin": {"text": "Set ORIGIN to external HTTPS origin; trust PROTOCOL_HEADER/HOST_HEADER only behind a trusted proxy.", "components": ["svelte"], "sources": ["svelte:s59abf03bae6a"], "status": "REASONED"},
     "adapter-ip": {"text": "ADDRESS_HEADER and XFF_DEPTH configure proxy-derived client IP and require trusted proxy handling.", "components": ["svelte"], "sources": ["svelte:s59abf03bae6a"], "status": "REASONED"},
-    "csrf-check": {"text": "csrf.checkOrigin defaults true, deprecated; documented for cross-origin POST/PUT/PATCH/DELETE form content types only; give JSON/other content origin/session checks.", "components": ["svelte", "svelte-kit-pin"], "sources": ["svelte:s23f255e94668", "svelte-kit-pin:s029a2e9edbca"], "status": "REASONED"},
+    "csrf-check": {"text": "csrf.checkOrigin defaults true, deprecated and removed in @sveltejs/kit 3.0.0; documented for cross-origin POST/PUT/PATCH/DELETE form content types only; give JSON/other content origin/session checks.", "components": ["svelte", "svelte-kit-pin", "svelte-kit-3"], "sources": ["svelte:s23f255e94668", "svelte-kit-pin:s029a2e9edbca", "svelte-kit-3:s4f76ac707c1c"], "status": "REASONED"},
     "csrf-trust": {"text": "csrf.trustedOrigins defaults empty; list specific form origins, with wildcard trust discouraged.", "components": ["svelte", "svelte-kit-pin"], "sources": ["svelte:s23f255e94668", "svelte-kit-pin:s029a2e9edbca"], "status": "REASONED"},
     "svelte-public": {"text": "Pinned 2.70.3 types: env.publicPrefix (default PUBLIC_) marks env variables safe to expose to client-side code; keep secrets out.", "components": ["svelte-kit-pin"], "sources": ["svelte-kit-pin:s8e93f5865bbc"], "status": "REASONED"},
-    "svelte-private": {"text": "Private env modules, .server.js and lib/server are server-only; client import chains, including dynamic imports, fail builds.", "components": ["svelte"], "sources": ["svelte:se2fdc4fd5885"], "status": "REASONED"},
+    "svelte-private": {"text": "Private env modules, .server.js and lib/server are server-only; client import chains, including dynamic imports, fail builds.", "components": ["svelte", "svelte-kit-pin"], "sources": ["svelte:se2fdc4fd5885", "svelte-kit-pin:sb21b72450e17"], "status": "REASONED"},
     "svelte-routes": {"text": "Pinned docs and source show layout `load` does not run on every request, layout/page `load` run concurrently unless a child calls `await parent()`, `+layout` has no effect on `+server.js`, and form actions run before page loads. Guide advice: do not rely on a layout guard to protect a sibling page load, form action or directly reached endpoint; check the session before protected work in each.", "components": ["svelte-kit-pin"], "sources": ["svelte-kit-pin:sca07fbe19546", "svelte-kit-pin:sa9bbf285a91c", "svelte-kit-pin:s380cc33507e0", "svelte-kit-pin:sfb110948d2ca", "svelte-kit-pin:sffcf647d5328", "svelte-kit-pin:s0969ea98a4f1", "svelte-kit-pin:s6a78ad19d884"], "status": "REASONED"},
-    "svelte-handle": {"text": "Pinned hooks docs describe `handle` for SvelteKit server requests, including prerendering; runtime source calls it after checks that can reject requests before the hook and lets it return before `resolve`. In adapter-node 5.5.7, client assets and already prerendered pages are served before SSR, so they do not reach `handle` through that adapter. For client-initiated remote function requests, runtime source takes the calling-page path and search from request headers and resolves `route` and `params` from that path; pinned remote-functions docs describe the same fields on `RequestEvent` inside remote functions, and both docs warn never to use these request-derived fields to authorize data access. Guide advice: use `handle` to block unauthorized SvelteKit requests that reach it; a redirect-only or `event.locals`-only hook leaves directly reached endpoints and form actions open unless they check the session; do not rely on calling-page fields alone, and authorize each specific resource where served because a session check alone does not authorize it.", "components": ["svelte-kit-pin", "adapter"], "sources": ["svelte-kit-pin:sf5b873616d3c", "svelte-kit-pin:s5ad7a525e0ea", "svelte-kit-pin:s67fe32e7a18d", "svelte-kit-pin:sc4708064d4fd", "svelte-kit-pin:s95d5c7dd7a50", "svelte-kit-pin:sca363a35f3fc", "svelte-kit-pin:s89773d0c39e7", "adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b"], "status": "REASONED"},
-    "nuxt-handlers": {"text": "Nuxt auto-registers server/api, server/routes and middleware; middleware runs first, but context.auth alone enforces nothing. Throw/end requests or check each handler.", "components": ["nuxt"], "sources": ["nuxt:se2d1e4a2e433"], "status": "REASONED"},
+    "svelte-handle": {"text": "Pinned hooks docs describe `handle` for SvelteKit server requests, including prerendering; runtime source calls it after checks that can reject requests before the hook and lets it return before `resolve`.", "components": ["svelte-kit-pin"], "sources": ["svelte-kit-pin:sf5b873616d3c", "svelte-kit-pin:s5ad7a525e0ea", "svelte-kit-pin:s67fe32e7a18d", "svelte-kit-pin:sc4708064d4fd", "svelte-kit-pin:s95d5c7dd7a50", "svelte-kit-pin:sca363a35f3fc", "svelte-kit-pin:s89773d0c39e7"], "status": "REASONED"},
+    "svelte-handle-adapter": {"text": "In adapter-node 5.5.7, client assets and already prerendered pages are served before SSR, so they do not reach `handle` through that adapter.", "components": ["adapter"], "sources": ["adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b"], "status": "REASONED"},
+    "svelte-handle-remote": {"text": "For client-initiated remote function requests, runtime source takes the calling-page path and search from request headers and resolves `route` and `params` from that path; pinned remote-functions docs describe the same fields on `RequestEvent` inside remote functions, and the pinned hooks and remote-functions docs both warn never to use these request-derived fields to authorize data access.", "components": ["svelte-kit-pin"], "sources": ["svelte-kit-pin:sf5b873616d3c", "svelte-kit-pin:s5ad7a525e0ea", "svelte-kit-pin:s67fe32e7a18d", "svelte-kit-pin:sc4708064d4fd", "svelte-kit-pin:s95d5c7dd7a50", "svelte-kit-pin:sca363a35f3fc", "svelte-kit-pin:s89773d0c39e7"], "status": "REASONED"},
+    "svelte-handle-advice": {"text": "Guide advice: use `handle` to block unauthorized SvelteKit requests that reach it; a redirect-only or `event.locals`-only hook leaves directly reached endpoints and form actions open unless they check the session; do not rely on calling-page fields alone, and authorize each specific resource where served because a session check alone does not authorize it.", "components": ["svelte-kit-pin", "adapter"], "sources": ["svelte-kit-pin:sf5b873616d3c", "svelte-kit-pin:s5ad7a525e0ea", "svelte-kit-pin:s67fe32e7a18d", "svelte-kit-pin:sc4708064d4fd", "svelte-kit-pin:s95d5c7dd7a50", "svelte-kit-pin:sca363a35f3fc", "svelte-kit-pin:s89773d0c39e7", "adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b"], "status": "REASONED"},
+    "nuxt-handlers": {"text": "Nuxt auto-registers server/api, server/routes and middleware; middleware runs first, but context.auth alone enforces nothing. Throw an error in middleware, respond from route handlers, or check each handler.", "components": ["nuxt"], "sources": ["nuxt:se2d1e4a2e433"], "status": "REASONED"},
     "nuxt-auth": {"text": "Nuxt ships no built-in authentication; enforce access server-side, not with client redirects.", "components": ["nuxt"], "sources": ["nuxt:se2d1e4a2e433"], "status": "REASONED"},
     "nuxt-private": {"text": "Direct runtimeConfig keys are server-only with NUXT_ overrides; rendering or passing to useState can disclose them.", "components": ["nuxt"], "sources": ["nuxt:s32e447cb5ef4"], "status": "REASONED"},
     "nuxt-public": {"text": "runtimeConfig.public is client-exposed with NUXT_PUBLIC_ overrides, not proxy/cookie configuration.", "components": ["nuxt"], "sources": ["nuxt:s32e447cb5ef4"], "status": "REASONED"},
@@ -18333,9 +18368,17 @@ Claims (full source mapping in the JSON block below):
     "vite-hosts": {"text": "server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names.", "components": ["vite"], "sources": ["vite:sae9dd90908fc"], "status": "REASONED"},
     "verify-bind": {"text": "After setting the loopback bind, run `ss -Hltn 'sport = :3000'` on the production host. A Local Address of `0.0.0.0:3000`, `[::]:3000` or `*:3000` (all interfaces; adapter-node and Nitro default) exits 1 even beside others; else every listener on `127.0.0.1:3000` or `[::1]:3000` exits 0; any other address exits 3. Seen on bare Node listeners; defaults reasoned from sources; no deployment run.", "components": ["adapter", "nitro-node", "vite-pin", "iproute2-ss", "node-http"], "sources": ["adapter:s93f13e6b8d31", "nitro-node:s68e3655562f1", "vite-pin:s36532f775f7f", "iproute2-ss:sde20173b1cdf", "iproute2-ss:scf8e779f9031", "node-http:sac6de1c6e048"], "status": "REASONED", "verify": [3]},
     "verify-private": {"text": "Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects.", "components": ["nuxt"], "sources": ["nuxt:se2d1e4a2e433"], "status": "REASONED", "verify": [1]},
-    "verify-secret": {"text": "Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole following symlinks; only a result with every match under dist/server/ is reported as server output, else FINDING with dist/server/ matches labelled. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; hidden input and set +x keep the secret from argv, history and tracing, not the account owner or root.", "components": ["grep", "adapter", "nuxt-output", "nitro-output", "vite-pin", "vite", "nitro-output-docs"], "sources": ["grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae", "adapter:s200d6e800c74", "adapter:sf17c5646623c", "adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b", "nuxt-output:sa65d64f55ca1", "nuxt-output:se1cb3e5b4959", "nitro-output:sbe9fd1f61fe0", "nitro-output-docs:s47fff9b24fba", "nitro-output-docs:s51e38e411bfa", "vite-pin:s8ba1c2b868b7", "vite-pin:s484948ac14b6", "vite:s7c70a12e43ed", "vite:sba6dbfdd7590"], "status": "REASONED", "verify": [2]},
-    "verify-host": {"text": "The deployed application must not trust a spoofed Host. The supplied Vite allowlist reference covers its dev server. Guide assessment: for this probe, exposed means the application responds to the spoofed Host, so curl prints its first response line. Fixed means a fronting proxy or server refuses the unknown Host before the application; apply the default-server refusal pattern in [nginx.md](nginx.md) to the probed HTTPS listener. With a refusal response, curl prints its status line; with nginx return 444 closing without a response, curl prints no status line. Neither a status line nor silence alone proves which layer handled the request or whether the application builds URLs or redirects from Host. Correlate proxy and application logs with the probe and a working allowed-host control; inspect response headers and generated URLs separately to judge Host use. In the traced adapter-node 5.5.7 and SvelteKit Node request conversion, ORIGIN or configured/request headers form the request URL; these files do not apply a Host allowlist. In the traced nitropack 2.12.0 node-server and app construction, the h3 app is passed to Node HTTP or HTTPS without a Host allowlist. Nuxt v4.0.0 resolves h3 1.15.3; its traced request utilities read Host or optionally forwarded Host and construct a URL without an allowlist; the release commit exports toNodeListener, which creates an event and calls app.handler, matching the adapter Nitro imports. Node v22.22.1 documents a default missing-Host rejection for HTTP/1.1, not an allowed-host list. Guide assessment: these source paths do not establish a universal Host rejection outcome or how the hosting platform treats Host and forwarded headers.", "components": ["vite", "adapter", "nitro-node", "svelte-kit-pin", "h3-pin", "node-http", "nuxt-lock"], "sources": ["vite:sae9dd90908fc", "adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:s0c8ca22542d2", "svelte-kit-pin:sd1c295d2cf56", "h3-pin:scfe5cba40964", "h3-pin:sdbe7e781611f", "h3-pin:s218970f40ae0", "node-http:sdc846082a7e3", "nuxt-lock:se77b46c1e3ad"], "status": "REASONED", "verify": [1]},
-    "verify-proxy": {"text": "Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its deployment preset and hosting platform, not NUXT_PUBLIC_. Adapter-node 5.5.7 uses ORIGIN or configured/request headers for the request origin; with ORIGIN and PROTOCOL_HEADER unset, it defaults to https and uses the request Host header unless HOST_HEADER supplies one. Nuxt 4.0.0 pins nitropack 2.12.0, which falls back to its node-server preset for a non-static production build with no preset named or matched; that preset passes the h3 app through toNodeListener to a Node HTTP or HTTPS server. Guide assessment: Nuxt's own trusted-proxy and origin handling come from its deployment preset and hosting platform rather than one documented app-level variable; the cited lines do not establish how h3 1.x or the hosting platform treats Host and forwarded headers or a deployed cookie and redirect outcome.", "components": ["svelte", "nuxt", "adapter", "nuxt-output", "nitro-node"], "sources": ["svelte:s59abf03bae6a", "nuxt:s32e447cb5ef4", "adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "nuxt-output:sd00a53729513", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:sdf38c24e1f80", "nitro-node:s91ab58ddc148", "nitro-node:s0c8ca22542d2"], "status": "REASONED", "verify": [1]}
+    "verify-secret": {"text": "Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole following symlinks; only a result with every match under dist/server/ is reported as server output, else FINDING with dist/server/ matches labelled. Adjust paths for custom layouts/SSR; reject absence.", "components": ["grep", "adapter", "nuxt-output", "nitro-output", "vite-pin", "vite", "nitro-output-docs"], "sources": ["grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae", "adapter:s200d6e800c74", "adapter:sf17c5646623c", "adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b", "nuxt-output:sa65d64f55ca1", "nuxt-output:se1cb3e5b4959", "nitro-output:sbe9fd1f61fe0", "nitro-output-docs:s47fff9b24fba", "nitro-output-docs:s51e38e411bfa", "vite-pin:s8ba1c2b868b7", "vite-pin:s484948ac14b6", "vite:s7c70a12e43ed", "vite:sba6dbfdd7590"], "status": "REASONED", "verify": [2]},
+    "verify-secret-grep": {"text": "Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; hidden input and set +x keep the secret from argv, history and tracing, not the account owner or root.", "components": ["grep", "adapter", "nuxt-output", "nitro-output", "vite-pin", "vite", "nitro-output-docs"], "sources": ["grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae", "adapter:s200d6e800c74", "adapter:sf17c5646623c", "adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b", "nuxt-output:sa65d64f55ca1", "nuxt-output:se1cb3e5b4959", "nitro-output:sbe9fd1f61fe0", "nitro-output-docs:s47fff9b24fba", "nitro-output-docs:s51e38e411bfa", "vite-pin:s8ba1c2b868b7", "vite-pin:s484948ac14b6", "vite:s7c70a12e43ed", "vite:sba6dbfdd7590"], "status": "REASONED", "verify": [2]},
+    "verify-host": {"text": "The deployed application must not trust a spoofed Host. The supplied Vite allowlist reference covers its dev server. Guide assessment: for this probe, exposed means the application responds to the spoofed Host, so curl prints its first response line.", "components": ["vite", "adapter", "nitro-node", "svelte-kit-pin", "h3-pin", "node-http", "nuxt-lock"], "sources": ["vite:sae9dd90908fc", "adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:s0c8ca22542d2", "svelte-kit-pin:sd1c295d2cf56", "h3-pin:scfe5cba40964", "h3-pin:sdbe7e781611f", "h3-pin:s218970f40ae0", "node-http:sdc846082a7e3", "nuxt-lock:se77b46c1e3ad"], "status": "REASONED", "verify": [1]},
+    "verify-host-fixed": {"text": "Guide assessment: fixed means a fronting proxy or server refuses the unknown Host before the application; apply the default-server refusal pattern in [nginx.md](nginx.md) to the probed HTTPS listener. With a refusal response, curl prints its status line; with nginx return 444 closing without a response, curl prints no status line.", "components": ["vite", "adapter", "nitro-node", "svelte-kit-pin", "h3-pin", "node-http", "nuxt-lock"], "sources": ["vite:sae9dd90908fc", "adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:s0c8ca22542d2", "svelte-kit-pin:sd1c295d2cf56", "h3-pin:scfe5cba40964", "h3-pin:sdbe7e781611f", "h3-pin:s218970f40ae0", "node-http:sdc846082a7e3", "nuxt-lock:se77b46c1e3ad"], "status": "REASONED", "verify": [1]},
+    "verify-host-judge": {"text": "Neither a status line nor silence alone proves which layer handled the request or whether the application builds URLs or redirects from Host. Correlate proxy and application logs with the probe and a working allowed-host control; inspect response headers and generated URLs separately to judge Host use.", "components": ["vite", "adapter", "nitro-node", "svelte-kit-pin", "h3-pin", "node-http", "nuxt-lock"], "sources": ["vite:sae9dd90908fc", "adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:s0c8ca22542d2", "svelte-kit-pin:sd1c295d2cf56", "h3-pin:scfe5cba40964", "h3-pin:sdbe7e781611f", "h3-pin:s218970f40ae0", "node-http:sdc846082a7e3", "nuxt-lock:se77b46c1e3ad"], "status": "REASONED", "verify": [1]},
+    "verify-host-adapter": {"text": "In the traced adapter-node 5.5.7 and SvelteKit Node request conversion, ORIGIN or configured/request headers form the request URL; these files do not apply a Host allowlist.", "components": ["adapter", "svelte-kit-pin"], "sources": ["adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "svelte-kit-pin:sd1c295d2cf56"], "status": "REASONED", "verify": [1]},
+    "verify-host-nitro": {"text": "In the traced nitropack 2.12.0 node-server and app construction, the h3 app is passed to Node HTTP or HTTPS without a Host allowlist. Nuxt v4.0.0 resolves h3 1.15.3; its traced request utilities read Host or optionally forwarded Host and construct a URL without an allowlist; the release commit exports toNodeListener, which creates an event and calls app.handler, matching the adapter Nitro imports.", "components": ["nitro-node", "h3-pin", "nuxt-lock"], "sources": ["nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:s0c8ca22542d2", "h3-pin:scfe5cba40964", "h3-pin:sdbe7e781611f", "h3-pin:s218970f40ae0", "nuxt-lock:se77b46c1e3ad"], "status": "REASONED", "verify": [1]},
+    "verify-host-scope": {"text": "Node v22.22.1 documents a default missing-Host rejection for HTTP/1.1, not an allowed-host list. Guide assessment: these source paths do not establish a universal Host rejection outcome or how the hosting platform treats Host and forwarded headers.", "components": ["vite", "adapter", "nitro-node", "svelte-kit-pin", "h3-pin", "node-http", "nuxt-lock"], "sources": ["vite:sae9dd90908fc", "adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:s0c8ca22542d2", "svelte-kit-pin:sd1c295d2cf56", "h3-pin:scfe5cba40964", "h3-pin:sdbe7e781611f", "h3-pin:s218970f40ae0", "node-http:sdc846082a7e3", "nuxt-lock:se77b46c1e3ad"], "status": "REASONED", "verify": [1]},
+    "verify-proxy": {"text": "Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its deployment preset and hosting platform, not NUXT_PUBLIC_. Adapter-node 5.5.7 uses ORIGIN or configured/request headers for the request origin; with ORIGIN and PROTOCOL_HEADER unset, it defaults to https and uses the request Host header unless HOST_HEADER supplies one.", "components": ["svelte", "nuxt", "adapter", "nuxt-output", "nitro-node"], "sources": ["svelte:s59abf03bae6a", "nuxt:s32e447cb5ef4", "adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "nuxt-output:sd00a53729513", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:sdf38c24e1f80", "nitro-node:s91ab58ddc148", "nitro-node:s0c8ca22542d2"], "status": "REASONED", "verify": [1]},
+    "verify-proxy-nitro": {"text": "Nuxt 4.0.0 pins nitropack 2.12.0, which falls back to its node-server preset for a non-static production build with no preset named or matched; that preset passes the h3 app through toNodeListener to a Node HTTP or HTTPS server.", "components": ["nuxt-output", "nitro-node"], "sources": ["nuxt-output:sd00a53729513", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:sdf38c24e1f80", "nitro-node:s91ab58ddc148", "nitro-node:s0c8ca22542d2"], "status": "REASONED", "verify": [1]},
+    "verify-proxy-scope": {"text": "Guide assessment: Nuxt's own trusted-proxy and origin handling come from its deployment preset and hosting platform rather than one documented app-level variable; the cited lines do not establish how h3 1.x or the hosting platform treats Host and forwarded headers or a deployed cookie and redirect outcome.", "components": ["svelte", "nuxt", "adapter", "nuxt-output", "nitro-node"], "sources": ["svelte:s59abf03bae6a", "nuxt:s32e447cb5ef4", "adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "nuxt-output:sd00a53729513", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:sdf38c24e1f80", "nitro-node:s91ab58ddc148", "nitro-node:s0c8ca22542d2"], "status": "REASONED", "verify": [1]}
   }
 }
 ````
@@ -18676,7 +18719,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -19206,7 +19249,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -19691,7 +19734,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -20516,7 +20559,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -21385,7 +21428,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -22131,7 +22174,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -22613,7 +22656,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -23037,7 +23080,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -23579,7 +23622,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -23949,7 +23992,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -24616,7 +24659,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -25105,7 +25148,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -25716,7 +25759,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -26751,7 +26794,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -27547,7 +27590,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -28546,7 +28589,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -29649,7 +29692,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -30948,7 +30991,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -32621,7 +32664,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -34128,7 +34171,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -35033,7 +35076,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -35842,7 +35885,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -36968,7 +37011,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -37924,7 +37967,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -39085,7 +39128,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -39941,7 +39984,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -40829,7 +40872,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -42321,7 +42364,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -42913,7 +42956,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -43501,7 +43544,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -44195,7 +44238,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -45027,7 +45070,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -45610,7 +45653,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -46552,7 +46595,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -48028,7 +48071,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -49081,7 +49124,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -49802,7 +49845,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -50640,7 +50683,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -51445,7 +51488,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -51913,7 +51956,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -52568,7 +52611,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -53330,7 +53373,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -53601,7 +53644,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -54212,7 +54255,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -55233,7 +55276,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -55610,7 +55653,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -56192,7 +56235,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -56832,7 +56875,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -57465,7 +57508,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -58697,7 +58740,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -59460,7 +59503,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -60061,7 +60104,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -60589,7 +60632,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -61274,7 +61317,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -61817,7 +61860,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -62400,7 +62443,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -63217,7 +63260,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -64347,7 +64390,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -64974,7 +65017,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -66498,7 +66541,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -67483,7 +67526,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -67975,7 +68018,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -68220,7 +68263,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -69381,7 +69424,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -69914,7 +69957,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -70493,7 +70536,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -70975,7 +71018,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -71491,7 +71534,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -71902,7 +71945,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -72926,7 +72969,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -73747,7 +73790,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -74357,7 +74400,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -75825,7 +75868,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -76595,7 +76638,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -77221,7 +77264,7 @@ This generated section holds the recorded versions, claim statuses and source ma
 
 AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. Unknown means no version recorded.
 
 Components (recorded basis):
 
