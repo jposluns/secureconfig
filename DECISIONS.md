@@ -22,8 +22,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   fix the text", whose description read "Block keeps ssl_verify=False; its comment and sentence state the source fact
   (needed unless the cert covers localhost; it only governs that startup request). Withdraw the earlier ruling."
   The label and description are quoted exactly except that the label's closing "(Recommended)" is dropped. The ruling
-  withdraws the choice of 2026-11-12, "Drop it, explain when", which rested on a wrong premise: the pinned Gradio
-  6.31.0 source shows `launch()` requesting `https://localhost:PORT/` with `verify=ssl_verify` when
+  withdraws the choice of 2026-11-12, "Drop it, explain when" (the label's closing "(Recommended)" is omitted from the quote).
+  That choice rested on a wrong premise: the pinned Gradio
+  6.31.0 source shows a default launch without SSR requesting a URL under `https://localhost:PORT/` with `verify=ssl_verify` when
   `server_name="0.0.0.0"` (blocks.py lines 3431-3432 and 3559-3563; http_server.py lines 113 and 186-187). This pull
   request applies the ruling: the example keeps `ssl_verify=False`, and its comment, the sentence after it and the
   `tls` claim state that fact. The revert path is a later maintainer ruling that picks another option, such as an
