@@ -87,11 +87,13 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     keep the current `VERSION`, `plugin/plugin.json` and `SKILL.md` versions; in `CONTRIBUTING.md` keep step 10
     as it is and take the reverted steps 2 and 9; in `DECISIONS.md` keep every entry, this one included, and
     add a ruling that records the withdrawal. The revert also removes #1294's `CHANGELOG.md` entry under
-    2026-11-12 and the partial-date clause of the CHANGELOG preamble, which must be put back with the entry,
-    because the CHANGELOG records every merged pull request. Because v1.0.1295 targeted a merge on its own date, the
-    release after it needs check 6's inclusive lower bound (`previous_date <= date`) and the previous-date
-    notes section, so a revert before that release must keep or re-add them, with their tests. Run
-    `tools/test_release.py` and the whole gate suite after the revert.
+    2026-11-12, which must be put back, because the CHANGELOG records every merged pull request. Because
+    v1.0.1295 targeted a merge on its own date, the release after it needs check 6's inclusive lower bound
+    (`previous_date <= date`) and the previous-date notes section, so a revert before that release must keep
+    or re-add them, with their tests. It must also keep or re-add the previous-date half of the CHANGELOG
+    preamble clause and of CONTRIBUTING.md step 9, and check 1's docstring must then drop "so every CHANGELOG
+    date section falls wholly in one release". Run `tools/test_release.py` and the whole gate suite after the
+    revert.
 - **Maintainer ruling of 2026-11-12 on the REASONED definition (#1290).** The maintainer gave it through
   AskUserQuestion in an attended session at about 14:09Z. No reasoning was recorded beyond the terms below. It
   confirms the 2026-11-11 REASONED proxy decision that "Proxy decisions awaiting maintainer review" below records.
