@@ -195,8 +195,9 @@ echo "== credential scanner regressions and shell lint =="
 python3 tools/test_scan_credential.py || bad "credential scanner self-test"
 if command -v shellcheck >/dev/null 2>&1; then
   shellcheck --norc tools/scan_credential.sh || bad "credential scanner shellcheck"
+  shellcheck --norc tools/run_all_checks.sh || bad "gate suite shellcheck"
 else
-  printf '  SKIP  shellcheck is not installed; credential scanner lint not run\n'
+  printf '  SKIP  shellcheck is not installed; shell lint not run\n'
 fi
 
 # section: version-basis
@@ -1536,6 +1537,7 @@ run_gate test_update_guides.py python3 -I -B tools/test_update_guides.py
 # section: baseline-pin
 echo "== the copied site template files match their pin =="
 run_gate test_baseline_pin.py python3 -I -B tools/test_baseline_pin.py
+run_gate test_copy_baseline.py python3 -I -B tools/test_copy_baseline.py
 run_gate check_baseline_pin.py python3 -I -B tools/check_baseline_pin.py
 
 # section: palette
