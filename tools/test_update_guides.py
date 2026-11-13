@@ -50,8 +50,13 @@ cases.
   - ISOLATION: every python3 in the script text carries -I; with a json.py planted in the working
     directory the update succeeds and the plant never runs, and a plain python3 -c 'import json'
     in that same directory does run it (the negative control);
-  - MANIFEST: a tampered digest, a line that is not a digest line (sha256sum --strict) and a
-    "../x" entry are each refused, nothing changed;
+  - MANIFEST: a tampered digest, a line that is not a digest line and a "../x" entry are each
+    refused, nothing changed;
+  - CLOSED MANIFEST: only lines of 64 lowercase hex digits, two spaces and a .md name are accepted;
+    a "#" line, a MANIFEST.sha256 entry, a blank line, a duplicate, a non-.md name, uppercase hex,
+    a one-space, tab or "*" separator, a bad last line with no line end and an empty manifest each
+    refuse the update with nothing changed, and a well-formed manifest with no final line end is
+    accepted;
   - BOUND and DEPTH: an answer of exactly 1 MiB is used and one of 1 MiB + 1 is refused, a draft or
     pre-release field of 0 is refused, JSON nested 200000 deep (a RecursionError) in the answer or
     in plugin.json is refused with no traceback, and the script keeps both isascii tests and no
@@ -664,6 +669,7 @@ with tempfile.TemporaryDirectory() as tmp:
 
 # ---------------------------------------------------------------- MANIFEST
 
+LINE_MESSAGE = b'the manifest has a line that is not'
 bad_digest = manifest_for({'alpha.md': NEW_GUIDES['alpha.md'], 'beta.md': b'something else\n'})
 escape = manifest_for(NEW_GUIDES) + manifest_for({'../x': b'x\n'})
 # sha256sum without --strict only warns on a line that is not a digest line and checks the rest, so
@@ -671,8 +677,7 @@ escape = manifest_for(NEW_GUIDES) + manifest_for({'../x': b'x\n'})
 malformed = b'zz-not-a-digest  alpha.md\n' + manifest_for({'beta.md': NEW_GUIDES['beta.md']})
 for desc, manifest, message in (
         ('a tampered digest', bad_digest, b'a fetched guide did not match its published digest'),
-        ('a malformed digest line', malformed,
-         b'a fetched guide did not match its published digest'),
+        ('a malformed digest line', malformed, LINE_MESSAGE),
         ('a "../x" entry', escape, b'the manifest lists an unexpected file name')):
     with tempfile.TemporaryDirectory() as tmp:
         t = build(Path(tmp), manifest=manifest)
@@ -686,6 +691,60 @@ for desc, manifest, message in (
               f'{label}: fetches through the shim, never the "../x" entry: {fetched(t)!r}')
         check(not (t.tmp / 'x').exists() and not (Path(tmp) / 'x').exists(),
               f'{label}: nothing written outside the work folder')
+
+# The manifest is a closed format: every line is 64 lowercase hex digits, two spaces and a .md
+# name, and anything else refuses the whole update. Each extra file below is served, so that an
+# unfixed script that fetches it can install it instead of failing on a 404.
+zero = '0' * 64
+alpha_line = manifest_for({'alpha.md': NEW_GUIDES['alpha.md']})
+beta_line = manifest_for({'beta.md': NEW_GUIDES['beta.md']})
+evil = b'# Evil\n\nNot a published guide.\n'
+evil_digest = hashlib.sha256(evil).hexdigest().encode()
+notes = b'not a guide\n'
+whole = manifest_for(NEW_GUIDES)
+for desc, manifest, extra, message in (
+        ('a "#  evil.md" line', alpha_line + beta_line + b'#  evil.md\n', {'evil.md': evil},
+         LINE_MESSAGE),
+        ('a "# evil.md" line', alpha_line + beta_line + b'# evil.md\n', {'evil.md': evil},
+         LINE_MESSAGE),
+        ('a MANIFEST.sha256 entry with an all-zero guide digest',
+         zero.encode() + b'  alpha.md\n' + beta_line + zero.encode() + b'  MANIFEST.sha256\n',
+         {'MANIFEST.sha256': whole}, b'the manifest lists an unexpected file name'),
+        ('a blank line', alpha_line + b'\n' + beta_line, {}, LINE_MESSAGE),
+        ('a trailing blank line', alpha_line + beta_line + b'\n', {}, LINE_MESSAGE),
+        ('a duplicate name', alpha_line + beta_line + alpha_line, {},
+         b'the manifest lists a file name twice'),
+        ('a name that is not .md', alpha_line + beta_line
+         + hashlib.sha256(notes).hexdigest().encode() + b'  notes.txt\n', {'notes.txt': notes},
+         b'the manifest lists a file that is not a .md guide'),
+        ('uppercase hex', alpha_line + beta_line
+         + evil_digest.upper() + b'  evil.md\n', {'evil.md': evil}, LINE_MESSAGE),
+        ('a single-space separator', alpha_line + beta_line
+         + evil_digest + b' evil.md\n', {'evil.md': evil}, LINE_MESSAGE),
+        ('a tab separator', alpha_line + beta_line + evil_digest + b'\tevil.md\n',
+         {'evil.md': evil}, LINE_MESSAGE),
+        ('a "*" binary-mode marker', alpha_line + beta_line + evil_digest + b' *evil.md\n',
+         {'evil.md': evil}, LINE_MESSAGE),
+        ('a bad line with no final line end', alpha_line + beta_line + b'#  evil.md',
+         {'evil.md': evil}, LINE_MESSAGE),
+        ('an empty manifest', b'', {}, b'the manifest lists no guides')):
+    with tempfile.TemporaryDirectory() as tmp:
+        t = build(Path(tmp), manifest=manifest, guides=dict(NEW_GUIDES, **extra))
+        before = state(t)
+        rc, out, err = run(t)
+        label = f'CLOSED MANIFEST: {desc}'
+        check(rc == 1 and message in err, f'{label}: should refuse: {rc} {show(err)}')
+        check(state(t) == before, f'{label}: nothing should change')
+        check(not (t.refs / 'evil.md').exists() and not (t.refs / 'notes.txt').exists(),
+              f'{label}: no extra file in the references')
+        check(not list(t.tmp.iterdir()), f'{label}: the work folder should be removed')
+
+# A manifest ending without a final line end is still accepted when every line is well formed.
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), manifest=(alpha_line + beta_line).rstrip(b'\n'))
+    rc, out, err = run(t)
+    check(rc == 0 and (t.refs / 'beta.md').read_bytes() == NEW_GUIDES['beta.md'],
+          f'CLOSED MANIFEST: no final line end, every line well formed: {rc} {show(err)}')
 
 if failures:
     for failure in failures:

@@ -23,8 +23,8 @@ The guides are bundled so this works with no network, which means they are froze
 in `plugin.json`. Run `scripts/update-guides.sh` only when the user asks for an update, and only
 when you have network. It downloads the guides of the latest published release, never the moving
 `main` branch, replaces the bundled copies and re-pins that version, and it never installs an
-older release than the one bundled. It verifies every fetched guide against the publisher's
-recorded digest and replaces the bundle only once all of them match, so an update that fails
+older release than the one bundled. It accepts only a manifest of well-formed digest lines for
+`.md` guides, verifies every fetched guide against its recorded digest and replaces the bundle only once all of them match, so an update that fails
 before that replacement, on a fetch or a digest, leaves the working bundle exactly as it was.
 
 ## Rules that apply to every deployment

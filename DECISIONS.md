@@ -33,14 +33,19 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     and of reporting an older release as nothing to do, is the orchestrator's design, not the maintainer's.
   - The limit. `SKILL.md` now says the agent runs `scripts/update-guides.sh` only when the user asks for an update,
     as it permits `scripts/check-updates.py --check-online` when the user permits network egress.
-  - The Gradio line is recorded but NOT applied. The third choice, "Drop it, explain when", is held for the
-    maintainer, and `gradio.md` is unchanged by #1300. A reading of the pinned Gradio 6.31.0 source shows that
-    `launch()` with `server_name="0.0.0.0"` requests `https://localhost:PORT/` with `verify=ssl_verify`
-    (`gradio/http_server.py` lines 113 and 186-187, `gradio/blocks.py` lines 3559-3563 and 3063). Removing
-    `ssl_verify=False` would therefore stop the copy-paste block from starting with a certificate that does not
-    list `localhost`, which includes almost every CA-issued certificate. `ssl_verify` governs only that startup
-    request, not client connections. The orchestrator's question to the maintainer had stated that premise
-    incorrectly, so the choice rested on it. This is a reading of the source, not a run.
+  - The Gradio line is recorded but NOT applied. The third choice, "Drop it, explain when", was withdrawn by the
+    maintainer on 2026-11-13 in favour of keeping the flag with corrected text, which its own Rulings entry
+    records in a separate pull request, and `gradio.md` is unchanged by #1300. A reading of the pinned Gradio 6.31.0 source shows that
+    `launch()` with `server_name="0.0.0.0"` requests `https://localhost:PORT/` plus the `API_PREFIX` path and
+    `startup-events` with `verify=ssl_verify`. The lines are `gradio/http_server.py` 113 and 186-187 and
+    `gradio/blocks.py` 3431-3432, 3559-3563 and 3063. `API_PREFIX` is imported from `gradio.route_utils`, which was
+    not among the fetched sources, so its value is not shown. Removing `ssl_verify=False` would therefore stop the
+    copy-paste block from starting with a certificate that does not list `localhost`. `launch()` uses `ssl_verify`
+    for that startup request (`gradio/blocks.py` lines 3559-3563); the fetched sources do not show other uses,
+    though `gradio/blocks.py` line 3221 stores it on the object. The orchestrator's question to the maintainer
+    implied that premise (a block "needed for a self-signed" certificate that a reader with a CA-issued one "keeps
+    the check off"), and no reasoning was recorded beyond the choices; that the choice rested on it is the
+    orchestrator's inference. This is a reading of the source, not a run.
   - The revert path is a later maintainer ruling. The updater reverts by pointing `update-guides.sh` back at `main`,
     which also needs `tools/test_update_guides.py` to change with it.
 - **Dated note of 2026-11-12 on the PocketBase forge links that #1251 moved to the `rev=refs/tags/` form (#1298).**

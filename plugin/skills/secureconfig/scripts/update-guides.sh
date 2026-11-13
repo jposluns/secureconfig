@@ -12,8 +12,9 @@
 # It will not leave you worse off than it found you. Everything is fetched and verified into a
 # temporary directory first, and the installed bundle is replaced only once every file has matched
 # the digest the publisher recorded for it. Any failure before that replacement leaves the working
-# bundle untouched, and a manifest line that is not a well-formed digest line is a failure. It
-# never replaces the bundle with an older release than the one installed.
+# bundle untouched. The manifest is read as a closed format, and any line that is not exactly 64
+# lowercase hex digits, two spaces and the name of a .md guide is a failure, as is a repeated name,
+# so every guide is both fetched from, and checked against, a digest line of that form. It never replaces the bundle with an older release than the one installed.
 set -euo pipefail
 
 REPO="https://raw.githubusercontent.com/jposluns/secureconfig"
@@ -153,32 +154,60 @@ echo "installed $current, published $latest"
 curl -fsS --max-time 30 -o "$work/MANIFEST.sha256" \
   "$RAW/plugin/skills/secureconfig/references/MANIFEST.sha256"
 
+mkdir "$work/guides"
+
+# The manifest is read as a closed format: every line must be exactly 64 lowercase hex digits
+# (listed one by one, so the set does not depend on the locale), two spaces, and a bare guide file
+# name, and nothing else is accepted. A blank line, a "#" line, a single-space or tab separator and
+# uppercase hex are all refused, not skipped, and so is a missing final line end that hides a bad
+# line. A name may hold only the ASCII letters and digits, ".", "_" and "-", must end in ".md", and
+# may not be MANIFEST.sha256, contain "..", start with ".", or repeat an earlier name. Any bad
+# line, or an empty manifest, refuses the whole update with the bundle untouched. The guides are
+# fetched into "$work/guides", a folder apart from the manifest, so that no entry can overwrite the
+# manifest that drives the loop, and the loop reads that one file, which sha256sum --strict then
+# checks again below.
+line_re='^[0123456789abcdef]{64}  ([^ ]+)$'
+seen=$'\n'
 count=0
-while read -r _digest name; do
-  [ -n "$name" ] || continue
-  # A manifest entry names a file to write under "$work"; reject anything that is not a bare
-  # guide file name, so "../x" or an absolute path cannot escape the temporary directory even
-  # if its recorded digest matches. A name may hold only the ASCII letters and digits, listed one
-  # by one rather than as ranges so that the set does not depend on the locale, and ".", "_" and
-  # "-". Any bad entry refuses the whole update, leaving the bundle untouched.
+while IFS= read -r line || [ -n "$line" ]; do
+  if ! [[ $line =~ $line_re ]]; then
+    echo "the manifest has a line that is not '<64 lowercase hex digits>  <guide>.md'; refusing to update, nothing changed" >&2
+    exit 1
+  fi
+  name=${BASH_REMATCH[1]}
   case "$name" in
-    *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]* | *..* | .*)
-      echo "the manifest lists an unexpected file name ($name); refusing to update" >&2
+    *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]* | *..* | .* | MANIFEST.sha256)
+      echo "the manifest lists an unexpected file name ($name); refusing to update, nothing changed" >&2
       exit 1 ;;
   esac
-  curl -fsS --max-time 60 -o "$work/$name" "$RAW/$name"
+  case "$name" in
+    *.md) ;;
+    *)
+      echo "the manifest lists a file that is not a .md guide ($name); refusing to update, nothing changed" >&2
+      exit 1 ;;
+  esac
+  case "$seen" in
+    *$'\n'"$name"$'\n'*)
+      echo "the manifest lists a file name twice ($name); refusing to update, nothing changed" >&2
+      exit 1 ;;
+  esac
+  seen="$seen$name"$'\n'
+  curl -fsS --max-time 60 -o "$work/guides/$name" "$RAW/$name"
   count=$((count + 1))
 done < "$work/MANIFEST.sha256"
+if [ "$count" -eq 0 ]; then
+  echo "the manifest lists no guides; refusing to update, nothing changed" >&2
+  exit 1
+fi
 
-( cd "$work" && sha256sum --quiet --check --strict MANIFEST.sha256 ) || {
+( cd "$work/guides" && sha256sum --quiet --check --strict ../MANIFEST.sha256 ) || {
   echo "a fetched guide did not match its published digest; nothing changed" >&2
   exit 1
 }
 
-cp "$work/MANIFEST.sha256" "$work/.verified"
 rm -rf "$refs.new"
 mkdir -p "$refs.new"
-cp "$work"/*.md "$work/MANIFEST.sha256" "$refs.new/"
+cp "$work/guides"/*.md "$work/MANIFEST.sha256" "$refs.new/"
 rm -rf "$refs"
 mv "$refs.new" "$refs"
 
