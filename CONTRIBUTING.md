@@ -492,13 +492,14 @@ link to `CHANGELOG.md` at the tag.
    and confirm that `git rev-parse main origin/main` prints one commit twice and that the
    working tree is clean.
 2. Choose the target: the last first-parent merge on `main` so far of a UTC date. That date
-   may be today's: the maintainer ruled on 2026-11-12 that a release can be cut on the day of
-   its target. Such a release covers that date only up to the target commit, and the release
-   body and notes say so. A merge that lands on that date after the target is covered by the next
-   release, whose check counts the merges after the previous target on the previous target's
-   date, requires each one's `CHANGELOG.md` bullet under that date's heading, and takes that
-   date's section into its notes too, so the section also holds entries the previous release
-   covered. A second release cannot target the same UTC date as the previous one.
+   may be today's: the maintainer ruled on 2026-11-12 that a release can be cut on the day
+   of its target. Such a release covers that date only up to the target commit, and the
+   release body and notes say so. A merge that lands on that date after the target is
+   covered by the next release, whose check counts the merges after the previous target on
+   the previous target's date, requires each one's `CHANGELOG.md` bullet under that date's
+   heading, and takes that date's section into its notes too, so the section also holds
+   entries the previous release covered. A second release cannot target the same UTC date as
+   the previous one.
    `TZ=UTC git log --first-parent --date=format-local:%Y-%m-%dT%H:%M:%SZ --format='%H %cd %s' main`
    lists the merges with their UTC times. The target's subject begins
    `Merge pull request #N from `, and the tag is `v` plus `git show <sha>:VERSION`. The target
