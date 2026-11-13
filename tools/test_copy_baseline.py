@@ -4,7 +4,7 @@
 The copy script is loaded as a module and never run as __main__. Each case calls its main() on a
 fresh temporary tree: a fake repository root, a fake unpacked 9.9.9 folder holding LICENSE and its
 SHA256SUMS, and a gzip tar archive built here with tarfile. The module's ROOT, VERSION, UPSTREAM,
-ARCHIVE_SHA256, SUMS_SHA256, RUNTIME and BUILD_TOOLS are patched for each case. The clean run must
+ARCHIVE_SHA256, SUMS_SHA256, MAX_ARCHIVE_BYTES (1024), RUNTIME and BUILD_TOOLS are patched for each case. The clean run must
 copy LICENSE and write a pin naming the archive's digest. Every refusal must return 1, or exit 2
 for a missing --archive, print its reason without an exception escaping main(), and leave a
 pre-existing site/assets/baseline/ untouched, with no pin written and nothing copied.
@@ -113,6 +113,9 @@ CASES = [
      archive_case(lambda fx: fx["good"] + b"\0", patch_digest=False), 1,
      f"is not the published baseline-{VERSION}.tar.gz"),
     ("an archive path that does not exist", missing_archive_file, 1, "cannot read the archive"),
+    ("an archive larger than the size bound",
+     archive_case(lambda fx: fx["good"] + b"\0" * 2048, patch_digest=True), 1,
+     "is larger than 1024 bytes"),
     ("a file with the patched digest that is not gzip",
      archive_case(lambda fx: b"This is not a gzip tar archive.\n"), 1,
      "is not a readable gzip tar archive"),
@@ -151,6 +154,9 @@ def run(module, prepare, want, expected):
         module.UPSTREAM = f"https://example.invalid/baseline/{VERSION}/"
         module.ARCHIVE_SHA256 = archive_sha256
         module.SUMS_SHA256 = digest(fx["sums"])
+        module.MAX_ARCHIVE_BYTES = 1024
+        if len(fx["good"]) >= 1024:
+            return [f"the good archive is {len(fx['good'])} bytes, not under the 1024-byte bound"]
         module.RUNTIME = ("LICENSE",)
         module.BUILD_TOOLS = {}
         if want != 0:

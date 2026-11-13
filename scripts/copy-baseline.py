@@ -37,6 +37,8 @@ UPSTREAM = f"https://posluns.ca/baseline/{VERSION}/"
 # SHA256SUMS in https://posluns.dev/hashes.txt (its "baseline 1.12.4" row, verified 2026-11-12).
 ARCHIVE_SHA256 = "62898739e59aa7dc772805b737633a99823eba4c4a4d53b233e3a2b6dcf1f719"
 SUMS_SHA256 = "0510e973cd0d2b5210925f87e20690fd7d96998ea8a627ab0ee5e0627d67facb"
+# The published archive is about 1.5 MB; verify_archive reads no more than this many bytes of one.
+MAX_ARCHIVE_BYTES = 64 * 1024 * 1024
 # Pin keys are paths relative to the site root (site/), as the baseline README shows them.
 KEY_PREFIX = "assets/baseline/"
 # The runtime and licence files the site publishes. The reference pages, tools/measure.js,
@@ -105,15 +107,19 @@ def verify_archive(archive, folder):
 
     The archive's SHA-256 must be ARCHIVE_SHA256, it must be a gzip tar holding <VERSION>/SHA256SUMS
     as a regular file, and that member must equal folder/SHA256SUMS byte for byte. Each failure is
-    returned as a one-line reason; this function never raises, so a damaged archive fails closed.
+    returned as a one-line reason, and an archive over MAX_ARCHIVE_BYTES is refused before more than
+    that many bytes are read, so a damaged archive fails closed.
     """
     def why(exc):
         return " ".join(f"{type(exc).__name__}: {exc}".split())
 
     try:
-        data = archive.read_bytes()
+        with archive.open("rb") as fh:
+            data = fh.read(MAX_ARCHIVE_BYTES + 1)
     except OSError as exc:
         return f"cannot read the archive {archive}: {why(exc)}"
+    if len(data) > MAX_ARCHIVE_BYTES:
+        return f"{archive} is larger than {MAX_ARCHIVE_BYTES} bytes, so it is not the published archive"
     digest = hashlib.sha256(data).hexdigest()
     if digest != ARCHIVE_SHA256:
         return (f"{archive} is not the published baseline-{VERSION}.tar.gz: its SHA-256 is {digest}, "
