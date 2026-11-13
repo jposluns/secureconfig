@@ -20,7 +20,8 @@ The output is byte-stable when nothing changed, so a run after a guide edit that
 score produces no diff. `fix_round` runs this on every guide edit, so that property matters.
 
 The four mechanical leads (QUALITY.md 3.6):
-  M (M1): the count of entries across the five baseline and allow files; zero is P, else PARTIAL(M1).
+  M (M1): the count of entries in the five baseline and allow files whose guide field is exactly the
+          guide (comment lines and reason text do not count); zero is P, else PARTIAL(M1).
   D (D3): the Sources heading month against each item month; an earlier item is GAP(D3), a later
           one with no stated meaning is PARTIAL(D3), otherwise P (n/a when there is no Sources).
   F (F1): PARTIAL(F1) when a Verify H2 carries its declaration, else `?` (the rest is judgment).
@@ -58,9 +59,11 @@ MONTHS = {m: i for i, m in enumerate(
     ["January", "February", "March", "April", "May", "June", "July", "August",
      "September", "October", "November", "December"], start=1)}
 
+# The four TAB files carry the guide in field 1; the exposure allowlist is `<guide> <port>  # reason`.
+EXPOSURE_ALLOWLIST = "tools/exposure_index_allowlist.txt"
 BASELINES = ["tools/verify_marking_baseline.txt", "tools/version_basis_sources_baseline.txt",
              "tools/claim_length_baseline.txt", "tools/bracket_ranges_allow.txt",
-             "tools/exposure_index_allowlist.txt"]
+             EXPOSURE_ALLOWLIST]
 
 # Provisional type assignment from the 2026-11-09 audit (gen_table.py), confirmed by the hardening
 # lane. Everything not named here is type S; the two K index guides are pinned in check_guide_quality.
@@ -95,12 +98,30 @@ def gtype(guide):
     return "S"
 
 
+def entry_guide(path, line):
+    """The guide an entry line names, or None for a blank or comment line.
+
+    The allowlist is parsed as check_exposure_index.load_allowlist does (text before `#`, split on
+    whitespace); every other file is TAB-separated with the guide in field 1.
+    """
+    if not line.strip() or line.startswith("#"):
+        return None
+    if path == EXPOSURE_ALLOWLIST:
+        body = line.split("#", 1)[0].split()
+        return body[0] if body else None
+    return line.split("\t", 1)[0]
+
+
+def m1_count(guide, files):
+    """Entries for `guide` across {path: text}; each occurrence line counts once."""
+    return sum(1 for path, text in files.items() for line in text.split("\n")
+               if entry_guide(path, line) == guide)
+
+
 def m1(guide):
-    n = 0
-    for b in BASELINES:
-        for line in (ROOT / b).read_text(encoding="utf-8").splitlines():
-            if guide in line:
-                n += 1
+    """The M1 lead cell and entry count for one guide, read from the five files in BASELINES."""
+    files = {b: (ROOT / b).read_text(encoding="utf-8") for b in BASELINES}
+    n = m1_count(guide, files)
     return ("P", 0) if n == 0 else ("PARTIAL(M1)", n)
 
 
