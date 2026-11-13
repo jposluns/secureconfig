@@ -51173,12 +51173,12 @@ demo.launch(
     share=False,        # even for a TLS deployment: never implicitly share via GRADIO_SHARE or Colab
     ssl_certfile="/path/cert.pem",
     ssl_keyfile="/path/key.pem",
-    ssl_verify=False,   # only for self-signed certificates; skips validating your own cert
+    ssl_verify=False,   # launch() checks https://localhost:PORT/ at startup; needed unless the cert is valid for localhost
     auth=(os.environ["GRADIO_USER"], os.environ["GRADIO_PASS"]),
 )
 ```
 
-`ssl_keyfile_password` exists for encrypted keys. `ssl_verify=False` here affects how the launcher checks its own certificate; it is needed for self-signed certificates and unnecessary with a CA-issued one. Supply any key password through your secret manager or environment, not a literal in the script. See the [TLS parameters](https://gradio.app/docs/gradio/blocks) and [launcher certificate check](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/blocks.py).
+`ssl_keyfile_password` exists for encrypted keys. With `server_name="0.0.0.0"`, `launch()` makes a startup request to `https://localhost:PORT/` using `ssl_verify`, so `ssl_verify=False` is needed unless the certificate is valid for `localhost`. That covers a self-signed certificate and also a CA-issued certificate for the real hostname. The flag governs that startup request; the fetched 6.31.0 sources show no other use of it. Supply any key password through your secret manager or environment, not a literal in the script. See the [TLS parameters](https://gradio.app/docs/gradio/blocks), the [launcher startup request](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/blocks.py) (blocks.py lines 3431-3432 and 3559-3563), and the [localhost URL choice](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/http_server.py) (http_server.py lines 113 and 186-187).
 
 Behind a proxy, keep `server_name="127.0.0.1"` explicit. The argument defaults to `None`, resolving through `GRADIO_SERVER_NAME` to loopback when that variable is unset. If the proxy publishes the app beneath `/demo`, `root_path="/demo"` builds the corresponding URLs. It is **not an access control** and does not replace authentication or prevent direct access to the backend. See the [launch reference](https://gradio.app/docs/gradio/blocks).
 
@@ -51465,6 +51465,7 @@ Consider `launch(run_history=False)`. In 6.31.0 its default is `None`, resolving
 - Gradio security advisories: [the `/file` traversal and SSRF fixed in 4.11.0](https://github.com/gradio-app/gradio/security/advisories/GHSA-6qm2-wpxq-7qh2) and [the case-handling blocklist bypass](https://github.com/gradio-app/gradio/security/advisories/GHSA-j2jg-fq62-7c3h). Historical evidence for keeping a current release and minimizing the process filesystem and additional allowed paths; no precise fix version is assigned here to the case-handling advisory.
 - [Gradio 6.31.0 release](https://github.com/gradio-app/gradio/releases/tag/gradio%406.31.0).
 - [Gradio 6.31.0 Blocks source](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/blocks.py): launch and queue signatures/defaults, off-Spaces api_open default, vibe-mode truthiness, path environment fallback, sharing behavior, component cache downloads, API names, and history settings.
+- [Gradio 6.31.0 http_server source](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/http_server.py): the `localhost` URL chosen for `server_name="0.0.0.0"` and the `https` scheme when a key file is set (lines 113 and 186-187); the startup request using `ssl_verify` is at blocks.py lines 3559-3563.
 - [Gradio 6.31.0 routes source](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/routes.py): login checks, native tokens/cookies/logout, auth_dependency, vibe handlers, conditional MCP setup, direct queue-bypass refusal, multipart limits, and SSRF-protected file streaming.
 - Gradio 6.31.0 Interface source: `flagging_mode` resolution through `GRADIO_FLAGGING_MODE` to `"manual"` ([lines 389 to 399](https://github.com/gradio-app/gradio/blob/gradio%406.31.0/gradio/interface.py#L389-L399)) and flagging-callback setup only when the mode is not `"never"` ([lines 467 to 476](https://github.com/gradio-app/gradio/blob/gradio%406.31.0/gradio/interface.py#L467-L476)). Flag buttons only for `"manual"` and the submit button for `"auto"` ([lines 607 to 610](https://github.com/gradio-app/gradio/blob/gradio%406.31.0/gradio/interface.py#L607-L610) and [lines 657 to 662](https://github.com/gradio-app/gradio/blob/gradio%406.31.0/gradio/interface.py#L657-L662)), and no flagging event without flag buttons, with `"auto"` flagging inputs and outputs after each successful submit ([lines 841 to 870](https://github.com/gradio-app/gradio/blob/gradio%406.31.0/gradio/interface.py#L841-L870)).
 - Gradio 6.31.0 Interface source, flag buttons unset unless the mode renders them: the input column ([line 564](https://github.com/gradio-app/gradio/blob/gradio%406.31.0/gradio/interface.py#L564)) and the output column ([lines 630 to 635](https://github.com/gradio-app/gradio/blob/gradio%406.31.0/gradio/interface.py#L630-L635)) each start `flag_btns` as `None`.
@@ -51508,7 +51509,7 @@ Claims (full source mapping in the JSON block below):
 - sessions (REASONED; gradio): Native bearer tokens live in process memory without server-side expiry; login issues HttpOnly Secure and insecure fallback cookies, and accepts either.
 - revocation (REASONED; gradio): Restart clears native tokens; /logout defaults all_session=True, revoking all sessions for a username; cookie lifetime is not server revocation.
 - external-policy (REASONED; gradio, gradio-rolling): Require HTTPS and externally enforced MFA, throttling, lockout and finite lifetime on every request; a copied native cookie must not bypass that boundary.
-- tls (REASONED; gradio, gradio-rolling): ssl_certfile/ssl_keyfile enable HTTPS and ssl_keyfile_password supports encrypted keys; ssl_verify=False affects launcher self-checks and is only needed for self-signed certificates.
+- tls (REASONED; gradio, gradio-rolling): ssl_certfile/ssl_keyfile enable HTTPS and ssl_keyfile_password supports encrypted keys; with server_name="0.0.0.0", launch() makes a startup request to https://localhost:PORT/ using ssl_verify, so ssl_verify=False is needed unless the certificate is valid for localhost (a self-signed certificate, or a CA-issued one for the real hostname).
 - prefix (REASONED; gradio-rolling): root_path builds URLs beneath the proxy prefix; it neither authenticates nor prevents direct backend access.
 - share (REASONED; gradio): share=True publishes a public relay URL; omitted share may inherit GRADIO_SHARE=True or auto-enable in hosted notebooks; deploy with explicit False.
 - file-route (REASONED; gradio, gradio-rolling): /gradio_api/file= serves registered static paths, allowed_paths and cache; returned file outputs can expose eligible working/temp paths to every app user.
@@ -51559,7 +51560,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-09",
-  "body_sha256": "858cabb567e8e3a9f67586d2a03bfa122342d966f89398496890dcd53d6180f5",
+  "body_sha256": "119d9bfd7d6706cfe04a3431b49c3de6034a1625d9337ed7f626bb7fd961bb6a",
   "components": {
     "gradio": {
       "name": "Gradio",
@@ -51568,6 +51569,7 @@ Claims (full source mapping in the JSON block below):
         "s629ceeab3c07": "https://github.com/gradio-app/gradio/releases/tag/gradio%406.31.0",
         "sae6db7547d00": "https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/blocks.py",
         "s37df1f92298b": "https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/routes.py",
+        "sdcdad5ea4067": "https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/http_server.py",
         "s96937c91853b": "https://github.com/gradio-app/gradio/blob/gradio%406.31.0/gradio/interface.py#L389-L399",
         "sbe57cf8cae8d": "https://github.com/gradio-app/gradio/blob/gradio%406.31.0/gradio/interface.py#L467-L476",
         "sa9f247ed7ad2": "https://github.com/gradio-app/gradio/blob/gradio%406.31.0/gradio/interface.py#L607-L610",
@@ -51624,7 +51626,7 @@ Claims (full source mapping in the JSON block below):
     "sessions": {"text": "Native bearer tokens live in process memory without server-side expiry; login issues HttpOnly Secure and insecure fallback cookies, and accepts either.", "components": ["gradio"], "sources": ["gradio:s37df1f92298b"], "status": "REASONED"},
     "revocation": {"text": "Restart clears native tokens; /logout defaults all_session=True, revoking all sessions for a username; cookie lifetime is not server revocation.", "components": ["gradio"], "sources": ["gradio:s37df1f92298b"], "status": "REASONED"},
     "external-policy": {"text": "Require HTTPS and externally enforced MFA, throttling, lockout and finite lifetime on every request; a copied native cookie must not bypass that boundary.", "components": ["gradio", "gradio-rolling"], "sources": ["gradio-rolling:s2e352ec80647", "gradio:s37df1f92298b"], "status": "REASONED"},
-    "tls": {"text": "ssl_certfile/ssl_keyfile enable HTTPS and ssl_keyfile_password supports encrypted keys; ssl_verify=False affects launcher self-checks and is only needed for self-signed certificates.", "components": ["gradio", "gradio-rolling"], "sources": ["gradio-rolling:s2e352ec80647", "gradio:sae6db7547d00"], "status": "REASONED"},
+    "tls": {"text": "ssl_certfile/ssl_keyfile enable HTTPS and ssl_keyfile_password supports encrypted keys; with server_name=\"0.0.0.0\", launch() makes a startup request to https://localhost:PORT/ using ssl_verify, so ssl_verify=False is needed unless the certificate is valid for localhost (a self-signed certificate, or a CA-issued one for the real hostname).", "components": ["gradio", "gradio-rolling"], "sources": ["gradio-rolling:s2e352ec80647", "gradio:sae6db7547d00", "gradio:sdcdad5ea4067"], "status": "REASONED"},
     "prefix": {"text": "root_path builds URLs beneath the proxy prefix; it neither authenticates nor prevents direct backend access.", "components": ["gradio-rolling"], "sources": ["gradio-rolling:s2e352ec80647"], "status": "REASONED"},
     "share": {"text": "share=True publishes a public relay URL; omitted share may inherit GRADIO_SHARE=True or auto-enable in hosted notebooks; deploy with explicit False.", "components": ["gradio"], "sources": ["gradio:sae6db7547d00"], "status": "REASONED"},
     "file-route": {"text": "/gradio_api/file= serves registered static paths, allowed_paths and cache; returned file outputs can expose eligible working/temp paths to every app user.", "components": ["gradio", "gradio-rolling"], "sources": ["gradio-rolling:s236e6a1cfda7", "gradio:s37df1f92298b"], "status": "REASONED"},

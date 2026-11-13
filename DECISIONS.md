@@ -17,6 +17,17 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-13 on the `ssl_verify=False` line in `gradio.md` (#1302), withdrawing the 2026-11-12 choice "Drop it, explain when".**
+  In an attended session at about 12:18Z the maintainer chose, in an AskUserQuestion, the option labelled "Keep flag,
+  fix the text", whose description read "Block keeps ssl_verify=False; its comment and sentence state the source fact
+  (needed unless the cert covers localhost; it only governs that startup request). Withdraw the earlier ruling."
+  The label and description are quoted exactly except that the label's closing "(Recommended)" is dropped. The ruling
+  withdraws the choice of 2026-11-12, "Drop it, explain when", which rested on a wrong premise: the pinned Gradio
+  6.31.0 source shows `launch()` requesting `https://localhost:PORT/` with `verify=ssl_verify` when
+  `server_name="0.0.0.0"` (blocks.py lines 3431-3432 and 3559-3563; http_server.py lines 113 and 186-187). This pull
+  request applies the ruling: the example keeps `ssl_verify=False`, and its comment, the sentence after it and the
+  `tls` claim state that fact. The revert path is a later maintainer ruling that picks another option, such as an
+  example whose certificate lists `localhost` with the line dropped, after which the three texts change to match.
 - **Dated note of 2026-11-12 on the PocketBase forge links that #1251 moved to the `rev=refs/tags/` form (#1298).**
   This is a dated note, not a new ruling. In an attended session at about 20:06Z that day the maintainer chose,
   in an AskUserQuestion, the option labelled "Note the #1251 link form", whose description read "Add a dated
