@@ -56,7 +56,13 @@ cases.
     a "#" line, a MANIFEST.sha256 entry, a blank line, a duplicate, a non-.md name, uppercase hex,
     a one-space, tab or "*" separator, a bad last line with no line end and an empty manifest each
     refuse the update with nothing changed, and a well-formed manifest with no final line end is
-    accepted;
+    accepted; a NUL byte at a line start, inside the hex, between the separators, before and
+    inside a name (including the alpha.md NUL x.md case), a CR, an over-size manifest, a short,
+    long or trailing-text line and an over-long name are refused before any guide is fetched, with
+    the line number and never the name;
+  - VERIFY: a guide that was not written, an extra file beside the guides and a digest mismatch
+    are each refused with nothing changed; every guide is fetched into a guides folder; the script
+    holds no sha256sum, and a sha256sum stand-in that exits 97 is first on PATH in every case;
   - BOUND and DEPTH: an answer of exactly 1 MiB is used and one of 1 MiB + 1 is refused, a draft or
     pre-release field of 0 is refused, JSON nested 200000 deep (a RecursionError) in the answer or
     in plugin.json is refused with no traceback, and the script keeps both isascii tests and no
@@ -110,6 +116,7 @@ SHIM = r'''#!/usr/bin/env bash
 # Stand-in for curl, written by tools/test_update_guides.py: fixture files only, no network.
 set -u
 log=@LOG@
+outs=@OUTS@
 fixtures=@FIXTURES@
 api=https://api.github.com/repos/jposluns/secureconfig/releases/latest
 prefix=https://raw.githubusercontent.com/jposluns/secureconfig/refs/tags/
@@ -131,6 +138,9 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 printf '%s\n' "$url" >> "$log"
+if [ -n "$out" ]; then
+  printf '%s\n' "$out" >> "$outs"
+fi
 case "$url" in
   "$api") path=_api/releases-latest.json ;;
   "$prefix"*) path=${url#"$prefix"} ;;
@@ -143,8 +153,16 @@ file="$fixtures/$path"
 if [ ! -f "$file" ]; then
   exit 22
 fi
+# A case can make a fetch succeed without writing the file (_skip/NAME), or write a stray extra
+# file beside the guides (_stray).
+if [ -f "$fixtures/_skip/${path##*/}" ]; then
+  exit 0
+fi
 if [ -n "$out" ]; then
   cat -- "$file" > "$out"
+  if [ -f "$fixtures/_stray" ] && [ "$(basename "$(dirname "$out")")" = guides ]; then
+    echo stray > "$(dirname "$out")/stray.md"
+  fi
 else
   cat -- "$file"
 fi
@@ -178,8 +196,7 @@ def check(condition, message):
 
 BASE_PATH = os.environ.get('PATH') or os.defpath
 BASH = shutil.which('bash', path=BASE_PATH)
-for tool in ('bash', 'python3', 'sha256sum', 'tr', 'wc', 'mktemp', 'cp', 'mv', 'rm', 'mkdir',
-             'cat'):
+for tool in ('bash', 'python3', 'tr', 'wc', 'mktemp', 'cp', 'mv', 'rm', 'mkdir', 'cat'):
     if not shutil.which(tool, path=BASE_PATH):
         print(f'  FAIL  PREREQ: {tool} is not on PATH, so update-guides.sh cannot be exercised')
         sys.exit(1)
@@ -271,9 +288,18 @@ def build(base, version=PUBLISHED.encode() + b'\n', plugin_text=PLUGIN_JSON,
     log = base / 'curl.log'
     log.write_bytes(b'')
     shim = shim_dir / 'curl'
+    outs = base / 'curl.outs'
+    outs.write_bytes(b'')
     shim.write_text(SHIM.replace('@LOG@', shlex.quote(str(log)))
+                    .replace('@OUTS@', shlex.quote(str(outs)))
                     .replace('@FIXTURES@', shlex.quote(str(fixtures))), encoding='utf-8')
     shim.chmod(0o755)
+    # sha256sum is gone from the script, so a call to it is a failure: this stand-in exits 97
+    # (before the update, so the case then fails on its own checks).
+    sha_stub = shim_dir / 'sha256sum'
+    sha_stub.write_text('#!/usr/bin/env bash\necho "sha256sum must not run" >&2\nexit 97\n',
+                        encoding='utf-8')
+    sha_stub.chmod(0o755)
     cwd = base / 'cwd'
     cwd.mkdir()
     tmp = base / 'tmp'
@@ -282,7 +308,7 @@ def build(base, version=PUBLISHED.encode() + b'\n', plugin_text=PLUGIN_JSON,
            'TMPDIR': str(tmp), 'LC_ALL': 'C'}
     return SimpleNamespace(plugin_json=plugin / 'plugin.json', skill=skill,
                            refs=skill / 'references', script=script, fixtures=fixtures,
-                           shim=shim, log=log, cwd=cwd, tmp=tmp, env=env)
+                           shim=shim, log=log, outs=outs, cwd=cwd, tmp=tmp, env=env)
 
 
 def run(t):
@@ -371,6 +397,12 @@ def check_updated(t, rc, out, err, label):
     check(fetched(t) == [API, RAW + 'VERSION', RAW + MANIFEST_PATH] + [RAW + n for n in NEW_GUIDES],
           f'{label}: every fetch should go through the shim, in order: {fetched(t)!r}')
     check(not list(t.tmp.iterdir()), f'{label}: the work folder should be removed')
+    outs = t.outs.read_text(encoding='utf-8').splitlines()
+    guide_outs = outs[3:]
+    check(len(outs) == 3 + len(NEW_GUIDES) and all(
+        Path(o).parent.name == 'guides' and Path(o).name == n
+        for o, n in zip(guide_outs, NEW_GUIDES)),
+        f'{label}: every guide should be fetched into a guides folder, not beside the manifest: {outs!r}')
 
 
 def check_good(desc, version=PUBLISHED.encode() + b'\n', locale='C'):
@@ -702,6 +734,8 @@ evil = b'# Evil\n\nNot a published guide.\n'
 evil_digest = hashlib.sha256(evil).hexdigest().encode()
 notes = b'not a guide\n'
 whole = manifest_for(NEW_GUIDES)
+evil_line = evil_digest + b'  evil.md\n'
+NUL_MESSAGE = b'the manifest holds a NUL or CR byte'
 for desc, manifest, extra, message in (
         ('a "#  evil.md" line', alpha_line + beta_line + b'#  evil.md\n', {'evil.md': evil},
          LINE_MESSAGE),
@@ -727,7 +761,55 @@ for desc, manifest, extra, message in (
          {'evil.md': evil}, LINE_MESSAGE),
         ('a bad line with no final line end', alpha_line + beta_line + b'#  evil.md',
          {'evil.md': evil}, LINE_MESSAGE),
-        ('an empty manifest', b'', {}, b'the manifest lists no guides')):
+        ('an empty manifest', b'', {}, b'the manifest lists no guides'),
+        # NUL: bash read drops it and GNU sha256sum ends a name at it, so each place is refused.
+        ('a NUL at the start of a line', b'\x00' + alpha_line + beta_line + evil_line,
+         {'evil.md': evil}, NUL_MESSAGE),
+        ('a NUL at the start of the evil line', alpha_line + beta_line + b'\x00' + evil_line,
+         {'evil.md': evil}, NUL_MESSAGE),
+        ('a NUL inside the hex', alpha_line + beta_line + evil_digest[:10] + b'\x00' + evil_digest[10:]
+         + b'  evil.md\n', {'evil.md': evil}, NUL_MESSAGE),
+        ('a NUL between the two spaces', alpha_line + beta_line + evil_digest + b' \x00 evil.md\n',
+         {'evil.md': evil}, NUL_MESSAGE),
+        ('a NUL before the name', alpha_line + beta_line + evil_digest + b'  \x00evil.md\n',
+         {'evil.md': evil}, NUL_MESSAGE),
+        ('a NUL inside a name', alpha_line + beta_line + evil_digest + b'  ev\x00il.md\n',
+         {'evil.md': evil}, NUL_MESSAGE),
+        ('the alpha.md NUL x.md case (R2-F1)',
+         alpha_line + beta_line + alpha_line.replace(b'alpha.md', b'alpha.md\x00x.md'),
+         {'alpha.mdx.md': evil}, NUL_MESSAGE),
+        ('the same with no final line end (R2-F1)',
+         (alpha_line + beta_line + alpha_line.replace(b'alpha.md', b'alpha.md\x00x.md')).rstrip(b'\n'),
+         {'alpha.mdx.md': evil}, NUL_MESSAGE),
+        ('a trailing NUL', alpha_line + beta_line + b'\x00', {}, NUL_MESSAGE),
+        ('CR LF line ends', (alpha_line + beta_line).replace(b'\n', b'\r\n'), {}, NUL_MESSAGE),
+        ('a CR inside a name', alpha_line + beta_line + evil_digest + b'  ev\ril.md\n',
+         {'evil.md': evil}, NUL_MESSAGE),
+        ('a lone final CR', alpha_line + beta_line.rstrip(b'\n') + b'\r', {}, NUL_MESSAGE),
+        ('a manifest over the size bound', alpha_line + beta_line + b'#' * 70000 + b'\n', {},
+         b'the manifest is larger than 65536 bytes'),
+        ('a manifest of one byte over the bound',
+         alpha_line + beta_line + b'x' * (65537 - len(alpha_line + beta_line)), {},
+         b'the manifest is larger than 65536 bytes'),
+        # the digest must be exactly 64 hex digits and the line the whole line
+        ('a 63-digit digest', evil_digest[:63] + b'  evil.md\n' + alpha_line + beta_line,
+         {'evil.md': evil}, LINE_MESSAGE),
+        ('a 1-digit digest', b'0  evil.md\n' + alpha_line + beta_line, {'evil.md': evil}, LINE_MESSAGE),
+        ('a 65-digit digest', evil_digest + b'0  evil.md\n' + alpha_line + beta_line,
+         {'evil.md': evil}, LINE_MESSAGE),
+        ('text after the name', alpha_line.rstrip(b'\n') + b' x\n' + beta_line, {}, LINE_MESSAGE),
+        ('text before the digest', b'x' + alpha_line + beta_line, {}, LINE_MESSAGE),
+        ('a three-space separator', alpha_line.replace(b'  ', b'   ') + beta_line, {}, LINE_MESSAGE),
+        ('a 101-character name', alpha_line + beta_line + evil_digest + b'  ' + b'a' * 98 + b'.md\n',
+         {}, b'the manifest lists an unexpected file name'),
+        ('a name with a terminal escape', alpha_line + beta_line + evil_digest + b'  \x1b[31m.md\n',
+         {}, b'the manifest lists an unexpected file name'),
+        ('a non-ASCII name', alpha_line + beta_line + evil_digest + '  \u00e9.md\n'.encode(),
+         {}, b'the manifest lists an unexpected file name'),
+        ('a name starting with a dot', alpha_line + beta_line + evil_digest + b'  .evil.md\n',
+         {'.evil.md': evil}, b'the manifest lists an unexpected file name'),
+        ('a name holding ..', alpha_line + beta_line + evil_digest + b'  a..md\n',
+         {}, b'the manifest lists an unexpected file name')):
     with tempfile.TemporaryDirectory() as tmp:
         t = build(Path(tmp), manifest=manifest, guides=dict(NEW_GUIDES, **extra))
         before = state(t)
@@ -735,9 +817,45 @@ for desc, manifest, extra, message in (
         label = f'CLOSED MANIFEST: {desc}'
         check(rc == 1 and message in err, f'{label}: should refuse: {rc} {show(err)}')
         check(state(t) == before, f'{label}: nothing should change')
+        check(fetched(t) == [API, RAW + 'VERSION', RAW + MANIFEST_PATH],
+              f'{label}: nothing should be fetched after the manifest: {fetched(t)!r}')
+        check(not any(echoes(token, err + out) for token in (b'evil', b'notes', b'alpha.mdx'))
+              and b'\x1b' not in err and b'\x00' not in err,
+              f'{label}: a refused name should not be printed: {show(err)}')
+        if message != b'the manifest lists no guides' and b'larger than' not in message \
+                and b'NUL or CR' not in message:
+            check(re.search(rb'\(line \d+\)', err) is not None,
+                  f'{label}: the message should name the line number: {show(err)}')
         check(not (t.refs / 'evil.md').exists() and not (t.refs / 'notes.txt').exists(),
               f'{label}: no extra file in the references')
         check(not list(t.tmp.iterdir()), f'{label}: the work folder should be removed')
+
+# After the fetch: a guide that was never written, an extra file beside the guides, and a digest
+# that does not match are each refused, nothing changed.
+for desc, setup, message in (
+        ('a fetched guide that is missing', lambda t: (t.fixtures / '_skip').mkdir()
+         or (t.fixtures / '_skip' / 'beta.md').write_bytes(b''),
+         b'a guide is missing, or a file that the manifest does not list was fetched'),
+        ('an extra file in the guides folder', lambda t: (t.fixtures / '_stray').write_bytes(b''),
+         b'a guide is missing, or a file that the manifest does not list was fetched'),
+        ('a digest mismatch (the file changed in transit)',
+         lambda t: (t.fixtures / TAG / 'beta.md').write_bytes(b'# Beta\n\nChanged in transit.\n'),
+         b'a fetched guide did not match its published digest')):
+    with tempfile.TemporaryDirectory() as tmp:
+        t = build(Path(tmp))
+        setup(t)
+        before = state(t)
+        rc, out, err = run(t)
+        label = f'VERIFY: {desc}'
+        check(rc == 1 and message in err, f'{label}: should refuse: {rc} {show(err)}')
+        check(state(t) == before, f'{label}: nothing should change')
+        check(not list(t.tmp.iterdir()), f'{label}: the work folder should be removed')
+        check(b'beta' not in err and b'stray' not in err, f'{label}: no name should be printed')
+
+# The manifest is parsed by python3 only: sha256sum is absent from the script's code, and the
+# shim directory's sha256sum stand-in exits 97 if it were run.
+check(not re.search(r'sha256sum', re.sub(r'#.*', '', SCRIPT.read_text(encoding='utf-8'))),
+      'MANIFEST: the script should not run sha256sum')
 
 # A manifest ending without a final line end is still accepted when every line is well formed.
 with tempfile.TemporaryDirectory() as tmp:

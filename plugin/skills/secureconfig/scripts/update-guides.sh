@@ -12,9 +12,12 @@
 # It will not leave you worse off than it found you. Everything is fetched and verified into a
 # temporary directory first, and the installed bundle is replaced only once every file has matched
 # the digest the publisher recorded for it. Any failure before that replacement leaves the working
-# bundle untouched. The manifest is read as a closed format, and any line that is not exactly 64
-# lowercase hex digits, two spaces and the name of a .md guide is a failure, as is a repeated name,
-# so every guide is both fetched from, and checked against, a digest line of that form. It never replaces the bundle with an older release than the one installed.
+# bundle untouched. The manifest is read once, as bytes, by one python3 -I program, as a closed
+# format: a manifest that is over 65536 bytes or holds a NUL or CR byte, any line that is not exactly
+# 64 lowercase hex digits, two spaces and the name of a .md guide, and a repeated name are each a
+# failure. The same program then checks each fetched guide's SHA-256, computed with hashlib,
+# against the digest from that one read, and refuses a missing or an extra file. No sha256sum runs.
+# It never replaces the bundle with an older release than the one installed.
 set -euo pipefail
 
 REPO="https://raw.githubusercontent.com/jposluns/secureconfig"
@@ -149,61 +152,109 @@ if [ "$latest" != "$tag_version" ]; then
 fi
 echo "installed $current, published $latest"
 
-# The publisher's digest list for the new version. Every file below is checked against it, so a
+# The publisher's digest list for the new version. Every guide below is checked against it, so a
 # truncated download or a file that changed in transit is a refusal rather than a bad guide.
 curl -fsS --max-time 30 -o "$work/MANIFEST.sha256" \
   "$RAW/plugin/skills/secureconfig/references/MANIFEST.sha256"
 
-mkdir "$work/guides"
+# The manifest is opened and read once, as bytes, by the one python3 -I program below, which both
+# validates it and, after the fetch, checks the fetched guides. bash never parses the manifest and
+# no sha256sum runs. The validate step refuses the whole update, with the bundle untouched, if the
+# manifest is over 65536 bytes, holds any NUL or CR byte, or has a line that is not exactly 64
+# lowercase hex digits (listed one by one, so the set does not depend on the locale), two spaces
+# and a name. A name may hold only the ASCII letters and digits, ".", "_" and "-", is at most 100
+# characters, must end in ".md", may not be MANIFEST.sha256, contain "..", start with ".", or
+# repeat an earlier name; an empty manifest is refused too. A last line with no line end is read
+# and validated like any other. A refusal names the line number and never the name. It writes two files from that single read: names, one validated name per line,
+# which the loop below reads, and digests, the digest and name of each line, which the verify step
+# reads. The verify step lists guides/ and refuses a missing or an extra file, then compares the
+# SHA-256 of each file there, computed with hashlib, with the digest from that same read.
+manifest_tool='
+import hashlib, os, re, stat, sys
 
-# The manifest is read as a closed format: every line must be exactly 64 lowercase hex digits
-# (listed one by one, so the set does not depend on the locale), two spaces, and a bare guide file
-# name, and nothing else is accepted. A blank line, a "#" line, a single-space or tab separator and
-# uppercase hex are all refused, not skipped, and so is a missing final line end that hides a bad
-# line. A name may hold only the ASCII letters and digits, ".", "_" and "-", must end in ".md", and
-# may not be MANIFEST.sha256, contain "..", start with ".", or repeat an earlier name. Any bad
-# line, or an empty manifest, refuses the whole update with the bundle untouched. The guides are
-# fetched into "$work/guides", a folder apart from the manifest, so that no entry can overwrite the
-# manifest that drives the loop, and the loop reads that one file, which sha256sum --strict then
-# checks again below.
-line_re='^[0123456789abcdef]{64}  ([^ ]+)$'
-seen=$'\n'
+MAX_MANIFEST = 65536
+LINE = re.compile(rb"([0123456789abcdef]{64})  ([^ ]+)")
+NAME = re.compile(rb"[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]{1,100}")
+
+
+def refuse(why):
+    sys.stderr.write(why + "; refusing to update, nothing changed\n")
+    sys.exit(1)
+
+
+def validate(manifest, names_path, digests_path):
+    try:
+        with open(manifest, "rb") as fh:
+            data = fh.read(MAX_MANIFEST + 1)
+    except OSError:
+        refuse("could not read the manifest")
+    if len(data) > MAX_MANIFEST:
+        refuse("the manifest is larger than 65536 bytes")
+    if b"\0" in data or b"\r" in data:
+        refuse("the manifest holds a NUL or CR byte")
+    if not data:
+        refuse("the manifest lists no guides")
+    if data.endswith(b"\n"):
+        data = data[:-1]
+    seen = set()
+    entries = []
+    for number, line in enumerate(data.split(b"\n"), 1):
+        found = LINE.fullmatch(line)
+        if not found:
+            refuse("the manifest has a line that is not 64 lowercase hex digits, two spaces and a guide name.md (line %d)" % number)
+        digest, name = found.groups()
+        if (not NAME.fullmatch(name) or b".." in name or name.startswith(b".")
+                or name == b"MANIFEST.sha256"):
+            refuse("the manifest lists an unexpected file name (line %d)" % number)
+        if not name.endswith(b".md"):
+            refuse("the manifest lists a file that is not a .md guide (line %d)" % number)
+        if name in seen:
+            refuse("the manifest lists a file name twice (line %d)" % number)
+        seen.add(name)
+        entries.append((digest.decode("ascii"), name.decode("ascii")))
+    with open(names_path, "w", encoding="ascii") as fh:
+        for digest, name in entries:
+            fh.write(name + "\n")
+    with open(digests_path, "w", encoding="ascii") as fh:
+        for digest, name in entries:
+            fh.write(digest + "  " + name + "\n")
+
+
+def verify(guides, digests_path):
+    with open(digests_path, encoding="ascii") as fh:
+        entries = [line.rstrip("\n").split("  ") for line in fh]
+    if sorted(os.listdir(guides)) != sorted(name for digest, name in entries):
+        refuse("a guide is missing, or a file that the manifest does not list was fetched")
+    for digest, name in entries:
+        path = os.path.join(guides, name)
+        try:
+            if not stat.S_ISREG(os.lstat(path).st_mode):
+                refuse("a fetched guide is not a regular file")
+            with open(path, "rb") as fh:
+                body = fh.read()
+        except OSError:
+            refuse("a fetched guide could not be read")
+        if hashlib.sha256(body).hexdigest() != digest:
+            refuse("a fetched guide did not match its published digest")
+
+
+if sys.argv[1] == "validate":
+    validate(sys.argv[2], sys.argv[3], sys.argv[4])
+else:
+    verify(sys.argv[2], sys.argv[3])
+'
+python3 -I -c "$manifest_tool" validate "$work/MANIFEST.sha256" "$work/names" "$work/digests"
+
+# The guides are fetched into "$work/guides", a folder apart from the manifest. The names come from
+# the validated list, one per line, and hold only the characters above, so none can be a path.
+mkdir "$work/guides"
 count=0
-while IFS= read -r line || [ -n "$line" ]; do
-  if ! [[ $line =~ $line_re ]]; then
-    echo "the manifest has a line that is not '<64 lowercase hex digits>  <guide>.md'; refusing to update, nothing changed" >&2
-    exit 1
-  fi
-  name=${BASH_REMATCH[1]}
-  case "$name" in
-    *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]* | *..* | .* | MANIFEST.sha256)
-      echo "the manifest lists an unexpected file name ($name); refusing to update, nothing changed" >&2
-      exit 1 ;;
-  esac
-  case "$name" in
-    *.md) ;;
-    *)
-      echo "the manifest lists a file that is not a .md guide ($name); refusing to update, nothing changed" >&2
-      exit 1 ;;
-  esac
-  case "$seen" in
-    *$'\n'"$name"$'\n'*)
-      echo "the manifest lists a file name twice ($name); refusing to update, nothing changed" >&2
-      exit 1 ;;
-  esac
-  seen="$seen$name"$'\n'
+while IFS= read -r name; do
   curl -fsS --max-time 60 -o "$work/guides/$name" "$RAW/$name"
   count=$((count + 1))
-done < "$work/MANIFEST.sha256"
-if [ "$count" -eq 0 ]; then
-  echo "the manifest lists no guides; refusing to update, nothing changed" >&2
-  exit 1
-fi
+done < "$work/names"
 
-( cd "$work/guides" && sha256sum --quiet --check --strict ../MANIFEST.sha256 ) || {
-  echo "a fetched guide did not match its published digest; nothing changed" >&2
-  exit 1
-}
+python3 -I -c "$manifest_tool" verify "$work/guides" "$work/digests"
 
 rm -rf "$refs.new"
 mkdir -p "$refs.new"
