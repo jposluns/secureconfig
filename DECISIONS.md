@@ -61,10 +61,12 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   - Refusals that stay. The target must still be the last first-parent merge of its UTC date on `main` when the
     release is checked, and a release's target date must still be after the previous release's, so at most one
     release targets a given UTC date. Every other check is unchanged.
-  - Revert. To revert, revert #1294's merge commit with `git revert -m 1 9cf8d474` and resolve its conflicts
-    keeping the current `VERSION`, `plugin/plugin.json` and `SKILL.md` versions and the later rulings. The
-    revert also removes #1294's `CHANGELOG.md` entry under 2026-11-12, which must be put back, because the
-    CHANGELOG records every merged pull request. Because v1.0.1295 targeted a merge on its own date, the
+  - Revert. To revert, revert #1294's merge commit with `git revert -m 1 9cf8d474` and resolve its conflicts:
+    keep the current `VERSION`, `plugin/plugin.json` and `SKILL.md` versions; in `CONTRIBUTING.md` keep step 10
+    as it is and take the reverted steps 2 and 9; in `DECISIONS.md` keep every entry, this one included, and
+    add a ruling that records the withdrawal. The revert also removes #1294's `CHANGELOG.md` entry under
+    2026-11-12 and the partial-date clause of the CHANGELOG preamble, which must be put back with the entry,
+    because the CHANGELOG records every merged pull request. Because v1.0.1295 targeted a merge on its own date, the
     release after it needs check 6's inclusive lower bound (`previous_date <= date`) and the previous-date
     notes section, so a revert before that release must keep or re-add them, with their tests. Run
     `tools/test_release.py` and the whole gate suite after the revert.
