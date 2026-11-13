@@ -17,6 +17,41 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-13 on the `ssl_verify=False` line in `gradio.md` (#1302), withdrawing the 2026-11-12 choice "Drop it, explain when".**
+  In an attended session at about 12:18Z the maintainer chose, in an AskUserQuestion, the option labelled "Keep flag,
+  fix the text", whose description read "Block keeps ssl_verify=False; its comment and sentence state the source fact
+  (needed unless the cert covers localhost; it only governs that startup request). Withdraw the earlier ruling."
+  The label and description are quoted exactly except that the label's closing "(Recommended)" is dropped. The ruling
+  withdraws the choice of 2026-11-12, "Drop it, explain when" (the label's closing "(Recommended)" is omitted from the quote).
+  That choice rested on a wrong premise: the pinned Gradio
+  6.31.0 source shows a default first `launch()` without SSR (blocks.py lines 3035-3039, 3085 and 3407-3415) requesting a URL under
+  `https://localhost:PORT/` with `verify=ssl_verify` when `server_name="0.0.0.0"` (blocks.py lines 3431-3432 and 3559-3563;
+  http_server.py lines 113 and 186-187). The guide has not checked SSR on. This pull
+  request applies the ruling: the example keeps `ssl_verify=False`, and its comment, the sentence after it and the
+  `tls` claim state that fact. The revert path is a later maintainer ruling that picks another option, such as an
+  example whose certificate lists `localhost` with the line dropped, after which the three texts change to match.
+- **Maintainer rulings of 2026-11-12 on the plugin updater's source, the `SKILL.md` updater limit and the Gradio
+  `ssl_verify` line (#1300).** The maintainer gave these three rulings through AskUserQuestion in an attended session
+  at about 23:06Z that day. No reasoning was recorded beyond the choices. The first chose the option labelled "Pin to
+  release tags (Recommended)", whose description read "The updater reads from the latest published release tag
+  (immutable releases are on), so it only installs what passed the release checks." The second chose "Add the limit
+  (Recommended)", whose description read "SKILL.md:23 says the agent runs update-guides.sh only when the user asks for
+  an update." The third chose "Drop it, explain when (Recommended)", whose description read "Remove ssl_verify=False
+  from the block and add one sourced sentence: set it only for a self-signed certificate (Gradio's launch docs)."
+  - The updater. The first ruling supersedes the "for now" note that the 2026-11-01 release ruling below records
+    about `update-guides.sh` reading `main`. The script asks the GitHub API for `releases/latest`, accepts only a tag
+    of the form `vN.N.N`, and downloads `VERSION`, the manifest and the guides from `raw.githubusercontent.com` at
+    `refs/tags/<tag>`. It refuses a `VERSION` that differs from its tag, keeps every earlier refusal, and does not
+    install a release older than the installed version. The choice of the API over the `releases/latest` redirect,
+    and of reporting an older release as nothing to do, is the orchestrator's design, not the maintainer's.
+  - The limit. `SKILL.md` now says the agent runs `scripts/update-guides.sh` only when the user asks for an update,
+    as it permits `scripts/check-updates.py --check-online` when the user permits network egress.
+  - The Gradio line is recorded but NOT applied. The third choice, "Drop it, explain when", was withdrawn by the
+    maintainer on 2026-11-13 in favour of keeping the flag with corrected text. #1302 carries that ruling's own
+    Rulings entry and the `gradio.md` correction, with its exact scope. `gradio.md` is unchanged by #1300, and
+    #1300 makes no claim about Gradio's behaviour.
+  - The revert path is a later maintainer ruling. The updater reverts by pointing `update-guides.sh` back at `main`,
+    which also needs `tools/test_update_guides.py` to change with it.
 - **Dated note of 2026-11-12 on the PocketBase forge links that #1251 moved to the `rev=refs/tags/` form (#1298).**
   This is a dated note, not a new ruling. In an attended session at about 20:06Z that day the maintainer chose,
   in an AskUserQuestion, the option labelled "Note the #1251 link form", whose description read "Add a dated
@@ -211,6 +246,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     tag.
   - Integrity. Integrity comes from the API-created tag, `SHA256SUMS` and, where enabled, immutable releases.
   - The updater. `plugin/skills/secure-deployment-config/scripts/update-guides.sh` keeps reading `main` for now.
+    The ruling of 2026-11-12 above supersedes this: the updater reads the latest release tag.
   - Effect, applied in the same change as this entry: `tools/check_release.py` is the offline release check, and
     its self-test, `tools/test_release.py`, runs in `tools/run_all_checks.sh`. CONTRIBUTING.md gains a "Releasing"
     section with the steps, and the `CHANGELOG.md` preamble no longer says there is no release artifact.
