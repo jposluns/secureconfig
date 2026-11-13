@@ -574,14 +574,16 @@ link to `CHANGELOG.md` at the tag.
    on a later release.
 9. Record the release in a records pull request through the normal flow: one `CHANGELOG.md`
    bullet naming the tag, its target commit and the UTC dates it covers, saying that the
-   target's date is covered only up to the target commit, and also saying when the release covers
+   target's date is covered only up to the target commit, and also saying whether the release covers
    the previous release's date after that previous target. The next release
    passes this tag as `--previous`.
-10. Ask lab_infra, which maintains https://posluns.dev/hashes.txt, to add the release: send the
-    tag, its target commit and the SHA-256 of the release's `SHA256SUMS` asset, which
-    `sha256sum <dir>/assets/SHA256SUMS` prints. Once lab_infra reports the line live, fetch
-    https://posluns.dev/hashes.txt and compare its `secureconfig` line for the release with that
-    digest; a missing or different line is reported to lab_infra and corrected.
+10. Ask the posluns orchestrator, which owns https://posluns.dev/hashes.txt, to add the release:
+    send the project, the version, the release date (UTC), the tag, its target commit, the
+    artefact location and the SHA-256 of the release's `SHA256SUMS` asset, which
+    `sha256sum <dir>/assets/SHA256SUMS` prints, and how to reproduce that digest. Once posluns
+    reports the line live, fetch https://posluns.dev/hashes.txt and compare its `secureconfig`
+    line for the release with that digest; a missing or different line is reported to posluns
+    and corrected.
 
 The released `llms-full.txt` is the committed file, so its repository links point at `main`,
 not at the tag, and the body says so. The bundled
