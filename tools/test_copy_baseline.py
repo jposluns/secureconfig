@@ -4,8 +4,8 @@
 The copy script is loaded as a module and never run as __main__. Each case calls its main() on a
 fresh temporary tree: a fake repository root, a fake unpacked 9.9.9 folder holding LICENSE and its
 SHA256SUMS, and a gzip tar archive built here with tarfile. The module's ROOT, VERSION, UPSTREAM,
-ARCHIVE_SHA256, SUMS_SHA256, MAX_ARCHIVE_BYTES (1024), RUNTIME and BUILD_TOOLS are patched for each case. The clean run must
-copy LICENSE and write a pin naming the archive's digest. Every refusal must return 1, or exit 2
+ARCHIVE_SHA256, SUMS_SHA256, MAX_ARCHIVE_BYTES (1024), RUNTIME and BUILD_TOOLS are patched for each
+case. The clean run must copy LICENSE and write a pin naming the archive's digest. Every refusal must return 1, or exit 2
 for a missing --archive, print its reason without an exception escaping main(), and leave a
 pre-existing site/assets/baseline/ untouched, with no pin written and nothing copied.
 

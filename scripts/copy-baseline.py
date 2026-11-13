@@ -37,7 +37,8 @@ UPSTREAM = f"https://posluns.ca/baseline/{VERSION}/"
 # SHA256SUMS in https://posluns.dev/hashes.txt (its "baseline 1.12.4" row, verified 2026-11-12).
 ARCHIVE_SHA256 = "62898739e59aa7dc772805b737633a99823eba4c4a4d53b233e3a2b6dcf1f719"
 SUMS_SHA256 = "0510e973cd0d2b5210925f87e20690fd7d96998ea8a627ab0ee5e0627d67facb"
-# The published archive is about 1.5 MB; verify_archive reads no more than this many bytes of one.
+# The published archive is about 1.5 MB; verify_archive reads at most this many bytes plus one (the
+# extra byte detects an over-size file).
 MAX_ARCHIVE_BYTES = 64 * 1024 * 1024
 # Pin keys are paths relative to the site root (site/), as the baseline README shows them.
 KEY_PREFIX = "assets/baseline/"
@@ -107,8 +108,9 @@ def verify_archive(archive, folder):
 
     The archive's SHA-256 must be ARCHIVE_SHA256, it must be a gzip tar holding <VERSION>/SHA256SUMS
     as a regular file, and that member must equal folder/SHA256SUMS byte for byte. Each failure is
-    returned as a one-line reason, and an archive over MAX_ARCHIVE_BYTES is refused before more than
-    that many bytes are read, so a damaged archive fails closed.
+    returned as a one-line reason, and the function reads at most MAX_ARCHIVE_BYTES + 1 bytes (one
+    more than the bound, to detect an over-size file) and refuses an archive over the bound, so a damaged
+    archive fails closed.
     """
     def why(exc):
         return " ".join(f"{type(exc).__name__}: {exc}".split())
