@@ -22,10 +22,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   in an AskUserQuestion, the option labelled "Use this version", whose description read "One QA'd PR applies these texts to
   SKILL.md, plugin.json, always-on.md, and the same phrase in README and llms.txt; CONTRIBUTING/QUALITY scope rules unchanged."
   The label is quoted exactly except that its closing "(Recommended)" is omitted from the quote. This pull request applies the
-  texts to `plugin/skills/secureconfig/SKILL.md`, `plugin/plugin.json`, `plugin/always-on.md` and `site/llms.txt`. README.md has no
-  intro sentence whose list fits the phrase cleanly, so it is unchanged. The scope rules in CONTRIBUTING.md and QUALITY.md are
-  unchanged as the ruling states, and so are CLAUDE.md and AGENTS.md. The revert path is to revert this pull request's merge commit, or a
-  later maintainer ruling that picks other wording, after which the four texts change to match.
+  texts to `plugin/skills/secureconfig/SKILL.md`, `plugin/plugin.json`, `plugin/always-on.md` and `site/llms.txt`. The approved option named README and llms.txt, but README.md is unchanged in this pull request: its intro has no
+  matching list, and its only matching text, line 279, is a scope statement. Whether to change README.md is a pending question to the
+  maintainer. The scope rules in CONTRIBUTING.md and QUALITY.md are unchanged as the ruling states, and so are CLAUDE.md and AGENTS.md,
+  which the ruling did not name. The revert path is to revert this pull request's merge commit, or a later maintainer ruling that picks
+  other wording, then a pull request that restores or changes the four texts to match.
 
 - **Maintainer ruling of 2026-11-13 on the `ssl_verify=False` line in `gradio.md` (#1302), withdrawing the 2026-11-12 choice "Drop it, explain when".**
   In an attended session at about 12:18Z the maintainer chose, in an AskUserQuestion, the option labelled "Keep flag,
