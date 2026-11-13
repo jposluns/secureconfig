@@ -61,34 +61,13 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   - Refusals that stay. The target must still be the last first-parent merge of its UTC date on `main` when the
     release is checked, and a release's target date must still be after the previous release's, so at most one
     release targets a given UTC date. Every other check is unchanged.
-  - Revert, in three steps. First, revert #1294's merge commit in full: `git revert -m 1 9cf8d474`. That restores
-    every change #1294 made to code, tests, comments, docstrings and text together, so no item is named line by
-    line. The revert conflicts in `CONTRIBUTING.md` (steps 2 and 9), `DECISIONS.md`, `VERSION`,
-    `plugin/plugin.json` and `plugin/skills/secureconfig/SKILL.md`. Resolve it by keeping the current version in the
-    last three, by keeping this entry and adding the withdrawing ruling above it, and in `CONTRIBUTING.md` by
-    keeping step 10 as it now is and taking the reverted text of steps 2 and 9. A release already cut under this
-    rule keeps its tag, and its successor must pass `--previous`.
-  - Second, because a same-day release (v1.0.1295) has since been published, re-apply only check 6's widened date
-    window and the extra previous-date notes section in `tools/check_release.py`, with the tests that cover them.
-    Without them the release after v1.0.1295 is refused whenever another merge landed on 2026-11-13, because no
-    records pull request can change a commit's date. In `examine()`, re-apply check 6's condition
-    `previous_date <= date <= target_date` with its finding, and the notes branch for `--previous`: `again`,
-    `dates`, `start`, `again_note`, and `again_note` in the notes text and in `scope`. Re-apply check 6's
-    docstring item, with its sentences on the previous release's own date. In the check 1 docstring, drop "so every
-    CHANGELOG date section falls wholly in one release", which v1.0.1295 contradicts. In `tools/test_release.py`,
-    re-apply the `sameday`, `samedayomit`, `samedaymisdated` and `samedaybefore` fixtures with their cases.
-    The cases that pass are "a range pull request merged on the previous release's UTC date, after its target,
-    passes", "the notes then take the previous date's section too and say why" and "the body lists the later
-    same-date merge and says the date is taken again". The cases that are refused are "a later same-date merge
-    with no entry is refused by the next release" and "a later same-date merge filed under another date is
-    refused by the next release". Two more are "a range pull request merged before the previous release's UTC
-    date is refused, even with its entry under its own date" and, on the `sameday` fixture, "a target whose UTC
-    date is not after the previous release's is refused". Their expected notes text
-    is the base wording plus `again_note`. In `CONTRIBUTING.md` step 2, add the sentence that a previous release
-    which targeted a merge of its own UTC date left the later merges of that date to the next release, whose
-    check requires each one's entry under that date and takes that date's section into the notes.
-  - Third, run `tools/test_release.py` and the whole gate suite (`tools/run_all_checks.sh`), and read each test
-    name and docstring that mentions a date window or "today" for a sentence the two steps made false.
+  - Revert. To revert, revert #1294's merge commit with `git revert -m 1 9cf8d474` and resolve its conflicts
+    keeping the current `VERSION`, `plugin/plugin.json` and `SKILL.md` versions and the later rulings. The
+    revert also removes #1294's `CHANGELOG.md` entry under 2026-11-12, which must be put back, because the
+    CHANGELOG records every merged pull request. Because v1.0.1295 targeted a merge on its own date, the
+    release after it needs check 6's inclusive lower bound (`previous_date <= date`) and the previous-date
+    notes section, so a revert before that release must keep or re-add them, with their tests. Run
+    `tools/test_release.py` and the whole gate suite after the revert.
 - **Maintainer ruling of 2026-11-12 on the REASONED definition (#1290).** The maintainer gave it through
   AskUserQuestion in an attended session at about 14:09Z. No reasoning was recorded beyond the terms below. It
   confirms the 2026-11-11 REASONED proxy decision that "Proxy decisions awaiting maintainer review" below records.
