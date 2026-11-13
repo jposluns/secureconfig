@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Keycloak Admin CLI 26.8.2, Keycloak source 26.8.2, Keycloak release records 26.8.2, authentik source version/2026.8.5, authentik Redis removal 2025.10, and curl documentation curl-8_23_0; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 78 claims, all reasoned from cited sources.
+Written against Keycloak Admin CLI 26.8.2, Keycloak source 26.8.2, Keycloak release records 26.8.2, authentik source version/2026.8.5, authentik Redis removal 2025.10, and curl documentation curl-8_23_0; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 78 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

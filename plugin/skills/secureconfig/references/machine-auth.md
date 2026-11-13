@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against OAuth client credentials (no recorded version), nginx mTLS release-1.28.0, Apache mTLS 2.4, PostgreSQL client certificates 17, MySQL client certificates 8.4, Redis TLS client authentication 7.4.2, and RabbitMQ TLS client authentication 3.13, plus 8 more recorded bases; 4 further sources are pinned to a commit and 17 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 44 claims, all reasoned from cited sources.
+Written against OAuth client credentials (no recorded version), nginx mTLS release-1.28.0, Apache mTLS 2.4, PostgreSQL client certificates 17, MySQL client certificates 8.4, Redis TLS client authentication 7.4.2, and RabbitMQ TLS client authentication 3.13, plus 8 more recorded bases; 4 further sources are pinned to a commit and 17 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 44 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
