@@ -67,7 +67,7 @@ demo.launch(
 )
 ```
 
-`ssl_keyfile_password` exists for encrypted keys. With `server_name="0.0.0.0"` and a default launch without SSR, the first `launch()` makes a startup request to a URL under `https://localhost:PORT/` using `ssl_verify`, so it is needed for a self-signed certificate, and for a CA-issued certificate that does not also name `localhost`. With SSR on (the `ssr_mode` argument, or `GRADIO_SSR_MODE`), that request uses plain http to the Node proxy, so `ssl_verify` does not apply there. In the three fetched 6.31.0 files (blocks.py, http_server.py and networking.py) the only use of the flag is `verify=ssl_verify` at blocks.py line 3561. The flag is also stored on the Blocks object (line 3221, default True at line 1454), so other modules could read it. Supply any key password through your secret manager or environment, not a literal in the script. See the [TLS parameters](https://gradio.app/docs/gradio/blocks), the [launcher startup request](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/blocks.py) (blocks.py lines 3035-3039, 3407-3415, 3431-3432, 3507-3515 and 3559-3563), and the [localhost URL choice](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/http_server.py) (http_server.py lines 113 and 186-187).
+`ssl_keyfile_password` exists for encrypted keys. With `server_name="0.0.0.0"` and a default first `launch()` without SSR, `launch()` makes a startup request to a URL under `https://localhost:PORT/` using `ssl_verify`, so `ssl_verify=False` is needed for a self-signed certificate, and for a CA-issued certificate that does not also name `localhost`. This guide has not checked the behaviour with SSR on (the `ssr_mode` argument or `GRADIO_SSR_MODE`). In the three fetched 6.31.0 files (blocks.py, http_server.py and networking.py) the only use of the flag is `verify=ssl_verify` at blocks.py line 3561. The flag is also stored on the Blocks object (line 3221, default True at line 1454), so other modules could read it. Supply any key password through your secret manager or environment, not a literal in the script. See the [TLS parameters](https://gradio.app/docs/gradio/blocks), the [launcher startup request](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/blocks.py) (blocks.py lines 3035-3039 and 3085 for the SSR default, 3407-3415 for the first `launch()`, and 3431-3432 and 3559-3563 for the request), and the [localhost URL choice](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/http_server.py) (http_server.py lines 113 and 186-187).
 
 Behind a proxy, keep `server_name="127.0.0.1"` explicit. The argument defaults to `None`, resolving through `GRADIO_SERVER_NAME` to loopback when that variable is unset. If the proxy publishes the app beneath `/demo`, `root_path="/demo"` builds the corresponding URLs. It is **not an access control** and does not replace authentication or prevent direct access to the backend. See the [launch reference](https://gradio.app/docs/gradio/blocks).
 
@@ -449,7 +449,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-09",
-  "body_sha256": "a357ba8dce05d9c9e16a4dcfe152d6132b24f3bff6fe4881d42b18215223edff",
+  "body_sha256": "ae26b475e1000906452403da6ca6d3f6f84e288c41c3d1e3f61f0fd3d48860a3",
   "components": {
     "gradio": {
       "name": "Gradio",

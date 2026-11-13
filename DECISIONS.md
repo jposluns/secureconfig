@@ -24,8 +24,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   The label and description are quoted exactly except that the label's closing "(Recommended)" is dropped. The ruling
   withdraws the choice of 2026-11-12, "Drop it, explain when" (the label's closing "(Recommended)" is omitted from the quote).
   That choice rested on a wrong premise: the pinned Gradio
-  6.31.0 source shows a default launch without SSR requesting a URL under `https://localhost:PORT/` with `verify=ssl_verify` when
-  `server_name="0.0.0.0"` (blocks.py lines 3431-3432 and 3559-3563; http_server.py lines 113 and 186-187). This pull
+  6.31.0 source shows a default first `launch()` without SSR (blocks.py lines 3035-3039, 3085 and 3407-3415) requesting a URL under
+  `https://localhost:PORT/` with `verify=ssl_verify` when `server_name="0.0.0.0"` (blocks.py lines 3431-3432 and 3559-3563;
+  http_server.py lines 113 and 186-187). It has not checked SSR on. This pull
   request applies the ruling: the example keeps `ssl_verify=False`, and its comment, the sentence after it and the
   `tls` claim state that fact. The revert path is a later maintainer ruling that picks another option, such as an
   example whose certificate lists `localhost` with the line dropped, after which the three texts change to match.
