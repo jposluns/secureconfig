@@ -20,7 +20,9 @@ The output is byte-stable when nothing changed, so a run after a guide edit that
 score produces no diff. `fix_round` runs this on every guide edit, so that property matters.
 
 The four mechanical leads (QUALITY.md 3.6):
-  M (M1): the count of entries across the five baseline and allow files; zero is P, else PARTIAL(M1).
+  M (M1): the count of entries in the five baseline and allow files whose guide field is exactly the
+          guide (comment lines and reason text do not count; an allowlist line counts only as the
+          exposure gate loads it, once per distinct guide and port); zero is P, else PARTIAL(M1).
   D (D3): the Sources heading month against each item month; an earlier item is GAP(D3), a later
           one with no stated meaning is PARTIAL(D3), otherwise P (n/a when there is no Sources).
   F (F1): PARTIAL(F1) when a Verify H2 carries its declaration, else `?` (the rest is judgment).
@@ -58,9 +60,11 @@ MONTHS = {m: i for i, m in enumerate(
     ["January", "February", "March", "April", "May", "June", "July", "August",
      "September", "October", "November", "December"], start=1)}
 
+# The four TAB files carry the guide in field 1; the exposure allowlist is `<guide> <port>  # reason`.
+EXPOSURE_ALLOWLIST = "tools/exposure_index_allowlist.txt"
 BASELINES = ["tools/verify_marking_baseline.txt", "tools/version_basis_sources_baseline.txt",
              "tools/claim_length_baseline.txt", "tools/bracket_ranges_allow.txt",
-             "tools/exposure_index_allowlist.txt"]
+             EXPOSURE_ALLOWLIST]
 
 # Provisional type assignment from the 2026-11-09 audit (gen_table.py), confirmed by the hardening
 # lane. Everything not named here is type S; the two K index guides are pinned in check_guide_quality.
@@ -95,12 +99,51 @@ def gtype(guide):
     return "S"
 
 
-def m1(guide):
+def allow_entry(line):
+    """The (guide, port) an exposure allowlist line holds, or None for any other line.
+
+    Parsed as check_exposure_index.load_allowlist does: text before `#`, split on whitespace, kept
+    only when it has exactly 2 tokens and the second is all digits.
+    """
+    body = line.split("#", 1)[0].split()
+    if len(body) == 2 and body[1].isdigit():
+        return body[0], int(body[1])
+    return None
+
+
+def entry_guide(path, line):
+    """The guide an entry line names, or None for a blank, comment or non-entry line.
+
+    The allowlist follows allow_entry; every other file is TAB-separated with the guide in field 1.
+    """
+    if not line.strip() or line.startswith("#"):
+        return None
+    if path == EXPOSURE_ALLOWLIST:
+        entry = allow_entry(line)
+        return entry[0] if entry else None
+    return line.split("\t", 1)[0]
+
+
+def m1_count(guide, files):
+    """Entries for `guide` across {path: text}.
+
+    Each occurrence line of a TAB-separated file counts once. The allowlist counts distinct
+    (guide, port) pairs, as the gate's dict of entries does.
+    """
     n = 0
-    for b in BASELINES:
-        for line in (ROOT / b).read_text(encoding="utf-8").splitlines():
-            if guide in line:
-                n += 1
+    for path, text in files.items():
+        lines = text.split("\n")
+        if path == EXPOSURE_ALLOWLIST:
+            n += len({e for e in map(allow_entry, lines) if e and e[0] == guide})
+        else:
+            n += sum(1 for line in lines if entry_guide(path, line) == guide)
+    return n
+
+
+def m1(guide):
+    """The M1 lead cell and entry count for one guide, read from the five files in BASELINES."""
+    files = {b: (ROOT / b).read_text(encoding="utf-8") for b in BASELINES}
+    n = m1_count(guide, files)
     return ("P", 0) if n == 0 else ("PARTIAL(M1)", n)
 
 
