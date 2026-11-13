@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Mosquitto v2.0.22 and v2.1.2 and Mosquitto legacy v1.6.15; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 45 claims, all reasoned from cited sources.
+Written against Mosquitto v2.0.22 and v2.1.2 and Mosquitto legacy v1.6.15; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 45 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

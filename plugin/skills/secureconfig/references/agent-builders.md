@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Dify plugin daemon 0.6.10, Flowise account minimum v3.0.1, Langflow settings source v1.12.6, LibreChat changelog v0.7.7, Docker Compose go.mod v2.24.3, Docker Compose release source v2.24.4, compose-go loader v2.0.0-rc.2, and compose-go reset loader v2.0.0-rc.3; 8 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-22; documentation checked September 2026. The guide records 81 claims, all reasoned from cited sources.
+Written against Dify plugin daemon 0.6.10, Flowise account minimum v3.0.1, Langflow settings source v1.12.6, LibreChat changelog v0.7.7, Docker Compose go.mod v2.24.3, Docker Compose release source v2.24.4, compose-go loader v2.0.0-rc.2, and compose-go reset loader v2.0.0-rc.3; 8 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-22; documentation checked September 2026. The guide records 81 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

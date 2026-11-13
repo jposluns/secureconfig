@@ -21,7 +21,7 @@ A library of short, generic, copy-ready guides covering the full deployment surf
 
 ## The gap and the standard
 
-Publicly reachable services keep shipping with the gap on the deployment surface: services listening on plain HTTP, admin consoles with no login, AI tools exposed on their defaults. These guides close that gap, and they hold themselves to the standard they ask of you. Contributions must take every configuration line from the vendor documentation cited in the guide, and Verify steps declare what they rest on: DEMONSTRATED means the check ran against both the exposed and the fixed state, REASONED means it is derived from cited vendor behaviour and says so, and a reasoned step is never presented as verified. Where a tool has no native control, the guide says so plainly instead of inventing one. Most guides also carry machine-readable front matter recording the sources checked and, where known, the exact versions. An automated gate suite under [tools/](https://github.com/jposluns/secureconfig/tree/main/tools/) checks the structure of these declarations on every change, with older steps still being brought in line listed in [tools/verify_marking_baseline.txt](https://github.com/jposluns/secureconfig/blob/main/tools/verify_marking_baseline.txt); whether a demonstration ran or a reasoned step is justified is checked in review, not by the gates. The full ceiling every guide is scored against is the Guide Quality Standard, [QUALITY.md](https://github.com/jposluns/secureconfig/blob/main/QUALITY.md), whose scored matrix is [tools/guide_quality.tsv](https://github.com/jposluns/secureconfig/blob/main/tools/guide_quality.tsv).
+Publicly reachable services keep shipping with the gap on the deployment surface: services listening on plain HTTP, admin consoles with no login, AI tools exposed on their defaults. These guides close that gap, and they hold themselves to the standard they ask of you. Contributions must take every configuration line from the vendor documentation cited in the guide, and Verify steps declare what they rest on: DEMONSTRATED means the check ran against both the exposed and the fixed state; REASONED records source reasoning, and any earlier-form run it rests on, not a live demonstration of the shipped form. A reasoned step says so and is never presented as verified. Where a tool has no native control, the guide says so plainly instead of inventing one. Most guides also carry machine-readable front matter recording the sources checked and, where known, the exact versions. An automated gate suite under [tools/](https://github.com/jposluns/secureconfig/tree/main/tools/) checks the structure of these declarations on every change, with older steps still being brought in line listed in [tools/verify_marking_baseline.txt](https://github.com/jposluns/secureconfig/blob/main/tools/verify_marking_baseline.txt); whether a demonstration ran or a reasoned step is justified is checked in review, not by the gates. The full ceiling every guide is scored against is the Guide Quality Standard, [QUALITY.md](https://github.com/jposluns/secureconfig/blob/main/QUALITY.md), whose scored matrix is [tools/guide_quality.tsv](https://github.com/jposluns/secureconfig/blob/main/tools/guide_quality.tsv).
 
 ## Built for AI assistants
 
@@ -507,7 +507,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Let's Encrypt documentation (no recorded version), Certbot reconfigure minimum 2.3.0, Certbot user guide and source v2.3.0, Certbot Cloudflare DNS plugin v2.3.0, Caddy automatic HTTPS v2.11.4, certmagic ACME implementation v0.25.3, and Traefik ACME documentation v3.5, plus 5 more recorded bases; 3 further sources carry no recorded version. Metadata reviewed 2026-11-12; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources.
+Written against Let's Encrypt documentation (no recorded version), Certbot reconfigure minimum 2.3.0, Certbot user guide and source v2.3.0, Certbot Cloudflare DNS plugin v2.3.0, Caddy automatic HTTPS v2.11.4, certmagic ACME implementation v0.25.3, and Traefik ACME documentation v3.5, plus 5 more recorded bases; 3 further sources carry no recorded version. Metadata reviewed 2026-11-12; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -1095,7 +1095,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against OpenSSL documentation (rolling) (no recorded version), Requests TLS documentation v2.32.3, Git ignore documentation v2.43.0, curl command documentation curl-8_12_1, Node.js extra CA certificates v22.19.0, and Service identity RFC 9525, plus 5 more recorded bases; 9 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 27 claims: 1 demonstrated by a check that ran and 26 reasoned from cited sources.
+Written against OpenSSL documentation (rolling) (no recorded version), Requests TLS documentation v2.32.3, Git ignore documentation v2.43.0, curl command documentation curl-8_12_1, Node.js extra CA certificates v22.19.0, and Service identity RFC 9525, plus 5 more recorded bases; 9 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 27 claims: 1 demonstrated by a check that ran and 26 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -1632,7 +1632,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against cloudflared token-file minimum 2025.4.0, cloudflared service installer 2026.9.3, cloudflared README 2026.9.3, and curl command-line options curl-8_23_0; 1 further source is pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 30 claims, all reasoned from cited sources.
+Written against cloudflared token-file minimum 2025.4.0, cloudflared service installer 2026.9.3, cloudflared README 2026.9.3, and curl command-line options curl-8_23_0; 1 further source is pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 30 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -2127,7 +2127,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Tailscale CLI change v1.52 and curl option documentation 7.75.0; 2 further sources carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 18 claims, all reasoned from cited sources.
+Written against Tailscale CLI change v1.52 and curl option documentation 7.75.0; 2 further sources carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 18 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -2372,7 +2372,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against frps source v0.72.0, frpc source v0.72.0, frp compare diff v0.71.0...v0.72.0, frp TLS default minimum v0.50.0, go-oidc source v3.21.0, Linux source v6.8, and iproute2 manuals v6.12.0; 2 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 37 claims, all reasoned from cited sources.
+Written against frps source v0.72.0, frpc source v0.72.0, frp compare diff v0.71.0...v0.72.0, frp TLS default minimum v0.50.0, go-oidc source v3.21.0, Linux source v6.8, and iproute2 manuals v6.12.0; 2 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 37 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -2905,7 +2905,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against OWASP authentication and password storage (no recorded version), OAuth security BCP RFC 9700, OpenID Connect Core 1.0, NIST password guidance SP 800-63B-4, Python bcrypt rejection threshold 5.0.0, OpenSSL rand 3.5, Python secrets 3.13, and Git ignore rules v2.49.0, plus 15 more recorded bases; 16 further sources are pinned to a commit and 7 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 58 claims, all reasoned from cited sources.
+Written against OWASP authentication and password storage (no recorded version), OAuth security BCP RFC 9700, OpenID Connect Core 1.0, NIST password guidance SP 800-63B-4, Python bcrypt rejection threshold 5.0.0, OpenSSL rand 3.5, Python secrets 3.13, and Git ignore rules v2.49.0, plus 15 more recorded bases; 16 further sources are pinned to a commit and 7 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 58 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -3682,7 +3682,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against TOTP standard (no recorded version), authentik source version/2026.8.3, Keycloak documentation 26.8.2, oauth2-proxy documentation v7.15.6, Caddy forward_auth minimum 2.5.1, google-authenticator-libpam source 1.11, and MySQL multifactor authentication 8.0 and 8.4, plus 9 more recorded bases; 14 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 35 claims: 2 demonstrated by a check that ran and 33 reasoned from cited sources.
+Written against TOTP standard (no recorded version), authentik source version/2026.8.3, Keycloak documentation 26.8.2, oauth2-proxy documentation v7.15.6, Caddy forward_auth minimum 2.5.1, google-authenticator-libpam source 1.11, and MySQL multifactor authentication 8.0 and 8.4, plus 9 more recorded bases; 14 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 35 claims: 2 demonstrated by a check that ran and 33 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -4327,7 +4327,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Git ignore patterns 2.42.0, gitleaks git/dir path argument 8.19.1 to 8.30.1, gitleaks 8.19.0 git/dir source flag v8.19.0, gitleaks detect before 8.19.0 v8.18.4, OpenSSL random bytes 3.0, Python secrets 3.13, Vite environment variables 6, and GNU Bash reference manual bash-5.3; 1 further source is pinned to a commit and 18 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 25 claims, all reasoned from cited sources.
+Written against Git ignore patterns 2.42.0, gitleaks git/dir path argument 8.19.1 to 8.30.1, gitleaks 8.19.0 git/dir source flag v8.19.0, gitleaks detect before 8.19.0 v8.18.4, OpenSSL random bytes 3.0, Python secrets 3.13, Vite environment variables 6, and GNU Bash reference manual bash-5.3; 1 further source is pinned to a commit and 18 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 25 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -4827,7 +4827,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Vault loopback run 2.1.1, Vault handler source v2.2.1, Vault forwarding source v2.2.1, Vault JWT audience minimum 1.17, Vault historical wrapping qualification 0.8, and curl minimum write-out version 7.75.0; 1 further source carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 36 claims: 16 demonstrated by a check that ran and 20 reasoned from cited sources.
+Written against Vault loopback run 2.1.1, Vault handler source v2.2.1, Vault forwarding source v2.2.1, Vault JWT audience minimum 1.17, Vault historical wrapping qualification 0.8, and curl minimum write-out version 7.75.0; 1 further source carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 36 claims: 16 demonstrated by a check that ran and 20 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -6457,7 +6457,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Microsoft Entra documentation (no recorded version), Authelia v4.39.28, oauth2-proxy v7.15.6, authentik source version/2026.8.3, Keycloak documentation 26.8.2, Ory Kratos v26.2.0, and Ory Hydra v26.2.0; 11 further sources are pinned to a commit and 14 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources.
+Written against Microsoft Entra documentation (no recorded version), Authelia v4.39.28, oauth2-proxy v7.15.6, authentik source version/2026.8.3, Keycloak documentation 26.8.2, Ory Kratos v26.2.0, and Ory Hydra v26.2.0; 11 further sources are pinned to a commit and 14 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -7058,7 +7058,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Keycloak Admin CLI 26.8.2, Keycloak source 26.8.2, Keycloak release records 26.8.2, authentik source version/2026.8.5, authentik Redis removal 2025.10, and curl documentation curl-8_23_0; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 78 claims, all reasoned from cited sources.
+Written against Keycloak Admin CLI 26.8.2, Keycloak source 26.8.2, Keycloak release records 26.8.2, authentik source version/2026.8.5, authentik Redis removal 2025.10, and curl documentation curl-8_23_0; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 78 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -8046,7 +8046,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against OpenID Connect Core 1.0, OpenID Connect Discovery 1.0, and OpenID Connect RP-Initiated Logout 1.0; 4 further sources are pinned to a commit and 10 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 52 claims, all reasoned from cited sources.
+Written against OpenID Connect Core 1.0, OpenID Connect Discovery 1.0, and OpenID Connect RP-Initiated Logout 1.0; 4 further sources are pinned to a commit and 10 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 52 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -8569,7 +8569,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against AWS ALB (no recorded version), Vercel production-protection announcement 2026-09-09, and curl minimum write-out version 7.75.0; 5 further sources carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 51 claims, all reasoned from cited sources.
+Written against AWS ALB (no recorded version), Vercel production-protection announcement 2026-09-09, and curl minimum write-out version 7.75.0; 5 further sources carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 51 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -9025,7 +9025,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against OAuth client credentials (no recorded version), nginx mTLS release-1.28.0, Apache mTLS 2.4, PostgreSQL client certificates 17, MySQL client certificates 8.4, Redis TLS client authentication 7.4.2, and RabbitMQ TLS client authentication 3.13, plus 8 more recorded bases; 4 further sources are pinned to a commit and 17 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 44 claims, all reasoned from cited sources.
+Written against OAuth client credentials (no recorded version), nginx mTLS release-1.28.0, Apache mTLS 2.4, PostgreSQL client certificates 17, MySQL client certificates 8.4, Redis TLS client authentication 7.4.2, and RabbitMQ TLS client authentication 3.13, plus 8 more recorded bases; 4 further sources are pinned to a commit and 17 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 44 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -9654,7 +9654,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against oauth2-proxy v7.15.6, Authelia v4.39.28, and curl minimum write-out version 7.75.0; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 34 claims, all reasoned from cited sources.
+Written against oauth2-proxy v7.15.6, Authelia v4.39.28, and curl minimum write-out version 7.75.0; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 34 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -10128,7 +10128,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Apache HTTP Server 2.4, Apache TLSv1.3 minimum 2.4.36+, Apache per-vhost protocol minimum 2.4.42+, Apache chain-file minimum 2.4.8, httpd htpasswd 2.4.69, OpenSSL qualification 1.1.1+, Certbot Apache installation v2.3.0, and Debian apache2 packaging 2.4.69-1, plus 5 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 20 claims, all reasoned from cited sources.
+Written against Apache HTTP Server 2.4, Apache TLSv1.3 minimum 2.4.36+, Apache per-vhost protocol minimum 2.4.42+, Apache chain-file minimum 2.4.8, httpd htpasswd 2.4.69, OpenSSL qualification 1.1.1+, Certbot Apache installation v2.3.0, and Debian apache2 packaging 2.4.69-1, plus 5 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 20 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -10609,7 +10609,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against nginx source release-1.26.3, Certbot nginx configurator v2.3.0, Authelia nginx integration v4.39.28, oauth2-proxy nginx integration v7.15.6, Apache httpd source 2.4.69, Debian apache2 packaging 2.4.69-1, HSTS specification RFC 6797, and OWASP Password Storage Cheat Sheet commit 72865b1e; 3 further sources carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 29 claims, all reasoned from cited sources.
+Written against nginx source release-1.26.3, Certbot nginx configurator v2.3.0, Authelia nginx integration v4.39.28, oauth2-proxy nginx integration v7.15.6, Apache httpd source 2.4.69, Debian apache2 packaging 2.4.69-1, HSTS specification RFC 6797, and OWASP Password Storage Cheat Sheet commit 72865b1e; 3 further sources carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 29 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -11179,7 +11179,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against lighttpd TLS minimum 1.4.56, lighttpd separate-key minimum 1.4.53, lighttpd redirect default transition 1.4.75, lighttpd module loader source 1.4.75, lighttpd file authentication source 1.4.75, lighttpd verify source 1.4.75, Apache htpasswd manual 2.4, and Debian apache2-utils package trixie, plus 5 more recorded bases; 2 further sources carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 16 claims, all reasoned from cited sources.
+Written against lighttpd TLS minimum 1.4.56, lighttpd separate-key minimum 1.4.53, lighttpd redirect default transition 1.4.75, lighttpd module loader source 1.4.75, lighttpd file authentication source 1.4.75, lighttpd verify source 1.4.75, Apache htpasswd manual 2.4, and Debian apache2-utils package trixie, plus 5 more recorded bases; 2 further sources carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 16 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -11626,7 +11626,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Caddy admin source v2.11.9, Caddy prior-release admin source v2.11.4, systemd manual v262, and Let's Encrypt expiration-email notice 2025; 7 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 34 claims, all reasoned from cited sources.
+Written against Caddy admin source v2.11.9, Caddy prior-release admin source v2.11.4, systemd manual v262, and Let's Encrypt expiration-email notice 2025; 7 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 34 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -12186,7 +12186,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against HAProxy 3.0, HAProxy http-after-response minimum 2.2+, OpenSSL password command 3.0, and Certbot deploy hook documentation v2.3.0; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 30 claims, all reasoned from cited sources.
+Written against HAProxy 3.0, HAProxy http-after-response minimum 2.2+, OpenSSL password command 3.0, and Certbot deploy hook documentation v2.3.0; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 30 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -12710,7 +12710,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Traefik v3 documentation v3.7, Traefik ACME storage source v3.7.17, Traefik BasicAuth source v3.7.17, Apache httpd htpasswd source 2.4.69, and curl write-out minimum 7.75.0; 2 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-11-08; documentation checked September 2026. The guide records 31 claims: 1 demonstrated by a check that ran and 30 reasoned from cited sources.
+Written against Traefik v3 documentation v3.7, Traefik ACME storage source v3.7.17, Traefik BasicAuth source v3.7.17, Apache httpd htpasswd source 2.4.69, and curl write-out minimum 7.75.0; 2 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-11-08; documentation checked September 2026. The guide records 31 claims: 1 demonstrated by a check that ran and 30 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -13273,7 +13273,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Node.js API documentation v26.13.0, express-rate-limit minimum v8, otplib v12.0.1, qrcode v1.5.4, node.bcrypt.js v6.0.0, node-argon2 v0.45.1, Linux man-pages ip(7) 6.19, and Linux man-pages capabilities(7) 6.19, plus 1 more recorded basis; 3 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
+Written against Node.js API documentation v26.13.0, express-rate-limit minimum v8, otplib v12.0.1, qrcode v1.5.4, node.bcrypt.js v6.0.0, node-argon2 v0.45.1, Linux man-pages ip(7) 6.19, and Linux man-pages capabilities(7) 6.19, plus 1 more recorded basis; 3 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -13810,7 +13810,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Django documentation 6.1, Python http.server documentation 3.14.4, Python http.server source v3.14.10, Python standard library documentation 3.14, CPython ssl source and documentation v3.14.10, CPython ssl source v3.14.9, and CPython secrets documentation and source v3.14.10, plus 8 more recorded bases; 5 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources.
+Written against Django documentation 6.1, Python http.server documentation 3.14.4, Python http.server source v3.14.10, Python standard library documentation 3.14, CPython ssl source and documentation v3.14.10, CPython ssl source v3.14.9, and CPython secrets documentation and source v3.14.10, plus 8 more recorded bases; 5 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -14468,7 +14468,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Docker Engine minimum boundary 28.0, Moby Docker service unit v28.3.3, Docker firewalld reload fix 28.3.3, systemd unit ordering v262, Git ignore rules v2.49.0, PostgreSQL 17, Caddy v2.11.4, and nginx authentication source release-1.26.3, plus 3 more recorded bases; 8 further sources are pinned to a commit and 8 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 27 claims, all reasoned from cited sources.
+Written against Docker Engine minimum boundary 28.0, Moby Docker service unit v28.3.3, Docker firewalld reload fix 28.3.3, systemd unit ordering v262, Git ignore rules v2.49.0, PostgreSQL 17, Caddy v2.11.4, and nginx authentication source release-1.26.3, plus 3 more recorded bases; 8 further sources are pinned to a commit and 8 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 27 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -15047,7 +15047,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Kubernetes kubelet/kubeadm source v1.37.1, Envoy Gateway v1.9.1, cert-manager Gateway support minimum 1.15, and GKE new-cluster read-only-port boundary 1.32; 1 further source is pinned to a commit and 12 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 50 claims, all reasoned from cited sources.
+Written against Kubernetes kubelet/kubeadm source v1.37.1, Envoy Gateway v1.9.1, cert-manager Gateway support minimum 1.15, and GKE new-cluster read-only-port boundary 1.32; 1 further source is pinned to a commit and 12 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 50 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -15981,7 +15981,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Argo CD v3.5.3 source (pinned to a commit), Flux OIDC introduction v2.9, Dex source v2.45.1, Redis source 8.2.3, curl curl-8_14_1, go-grpc-middleware source v2.3.3, and go-grpc-middleware providers/prometheus source v1.1.0; 4 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources.
+Written against Argo CD v3.5.3 source (pinned to a commit), Flux OIDC introduction v2.9, Dex source v2.45.1, Redis source 8.2.3, curl curl-8_14_1, go-grpc-middleware source v2.3.3, and go-grpc-middleware providers/prometheus source v1.1.0; 4 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -17165,7 +17165,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against GitHub Actions documentation (no recorded version), GitHub REST API 2026-03-10, GitLab Runner source v19.5.0, and Python tomllib minimum 3.11; 3 further sources carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 37 claims: 1 demonstrated by a check that ran and 36 reasoned from cited sources.
+Written against GitHub Actions documentation (no recorded version), GitHub REST API 2026-03-10, GitLab Runner source v19.5.0, and Python tomllib minimum 3.11; 3 further sources carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 37 claims: 1 demonstrated by a check that ran and 36 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -17839,7 +17839,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against SvelteKit adapter-node @sveltejs/adapter-node@5.5.7, SvelteKit routing and hooks documentation @sveltejs/kit@2.70.3, SvelteKit 3.0.0 changelog @sveltejs/kit@3.0.0, Nuxt lockfile v4.0.0, Nuxt documentation 4.x, Nuxt output source v4.0.0, and Vite bind source v8.3.1, plus 4 more recorded bases; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 33 claims, all reasoned from cited sources.
+Written against SvelteKit adapter-node @sveltejs/adapter-node@5.5.7, SvelteKit routing and hooks documentation @sveltejs/kit@2.70.3, SvelteKit 3.0.0 changelog @sveltejs/kit@3.0.0, Nuxt lockfile v4.0.0, Nuxt documentation 4.x, Nuxt output source v4.0.0, and Vite bind source v8.3.1, plus 4 more recorded bases; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 33 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -18408,7 +18408,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Docker documentation (no recorded version), Docker Compose source and reference v2.32.4, Kubernetes Pod Security Admission 1.34, kubectl source v1.34.0, Linux process status and capabilities manuals man-pages-6.19, JSON Merge Patch RFC 7396, and BusyBox source 1_36_1; 4 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 23 claims, all reasoned from cited sources.
+Written against Docker documentation (no recorded version), Docker Compose source and reference v2.32.4, Kubernetes Pod Security Admission 1.34, kubectl source v1.34.0, Linux process status and capabilities manuals man-pages-6.19, JSON Merge Patch RFC 7396, and BusyBox source 1_36_1; 4 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 23 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -18933,7 +18933,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Next.js listener source v16.3.6, Node.js listener source v22.22.1, and Commander 12.1.0; 6 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources.
+Written against Next.js listener source v16.3.6, Node.js listener source v22.22.1, and Commander 12.1.0; 6 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -19451,7 +19451,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Go certificate-store qualification 1.27, Go header-count qualification 1.27, Go per-request deadline minimum 1.20+, Go Request.Host source 1.27.0, Go environment source go1.27.0, go-oidc documentation v3, pquerna/otp v1.5.0, and Authelia source v4.39.28; 1 further source is pinned to a commit and 8 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 38 claims, all reasoned from cited sources.
+Written against Go certificate-store qualification 1.27, Go header-count qualification 1.27, Go per-request deadline minimum 1.20+, Go Request.Host source 1.27.0, Go environment source go1.27.0, go-oidc documentation v3, pquerna/otp v1.5.0, and Authelia source v4.39.28; 1 further source is pinned to a commit and 8 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 38 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -19994,7 +19994,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against ASP.NET Core documentation .NET 10, ASP.NET Core rate-limiter minimum .NET 7, ASP.NET Core .NET 10, ASP.NET Core source v10.0.0, ASP.NET Core proxy hardening 8.0.17, NET runtime source v10.0.0, WebApplicationBuilder precedence .NET 7, and OpenSSL documentation 3.0, plus 1 more recorded basis; 1 further source is pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 71 claims, all reasoned from cited sources.
+Written against ASP.NET Core documentation .NET 10, ASP.NET Core rate-limiter minimum .NET 7, ASP.NET Core .NET 10, ASP.NET Core source v10.0.0, ASP.NET Core proxy hardening 8.0.17, NET runtime source v10.0.0, WebApplicationBuilder precedence .NET 7, and OpenSSL documentation 3.0, plus 1 more recorded basis; 1 further source is pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 71 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -20879,7 +20879,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Spring Boot 4.1.2, Spring Boot starter migration 4.0, Spring Security HSTS 6.5, JDK keytool documentation 21, Tomcat HTTP connector 10.1, curl minimum diagnostics version 7.75.0, OpenJDK jdk21u javax.net.ssl sources jdk-21.0.12.1-ga, and Authelia source v4.39.28; 2 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources.
+Written against Spring Boot 4.1.2, Spring Boot starter migration 4.0, Spring Security HSTS 6.5, JDK keytool documentation 21, Tomcat HTTP connector 10.1, curl minimum diagnostics version 7.75.0, OpenJDK jdk21u javax.net.ssl sources jdk-21.0.12.1-ga, and Authelia source v4.39.28; 2 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -21734,7 +21734,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against PHP native configuration 8.x, PHP production template 8.4 and 8.3, Laravel 12.x, fail2ban 1.1.1, and curl manual 7.75.0; 2 further sources carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 65 claims, all reasoned from cited sources.
+Written against PHP native configuration 8.x, PHP production template 8.4 and 8.3, Laravel 12.x, fail2ban 1.1.1, and curl manual 7.75.0; 2 further sources carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 65 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -22440,7 +22440,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Rails documentation (no recorded version), Action Pack 7.1, and Puma defaults v8.0.2; 5 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 26 claims, all reasoned from cited sources.
+Written against Rails documentation (no recorded version), Action Pack 7.1, and Puma defaults v8.0.2; 5 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 26 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -22849,7 +22849,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against OpenSSH documentation (no recorded version), OpenSSH 8.2 server manual V_8_2_P1, OpenSSH 8.1 server manual V_8_1_P1, OpenSSH 9.9 source V_9_9_P2, DNF 4.14.0, cloud-init 26.2 and 20.1, iproute2 ss manual v6.12.0, and BusyBox 1_36_1; 9 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
+Written against OpenSSH documentation (no recorded version), OpenSSH 8.2 server manual V_8_2_P1, OpenSSH 8.1 server manual V_8_1_P1, OpenSSH 9.9 source V_9_9_P2, DNF 4.14.0, cloud-init 26.2 and 20.1, iproute2 ss manual v6.12.0, and BusyBox 1_36_1; 9 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -23424,7 +23424,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against AWS security groups and CLI (no recorded version); 2 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 14 claims, all reasoned from cited sources.
+Written against AWS security groups and CLI (no recorded version); 2 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 14 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -23762,7 +23762,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Render documentation (no recorded version), Next.js pinned documentation v16.4.2, Next.js environment variables 15, Express request protocol 5.x, Django proxy security setting 6.1, MySQL client connection options 8.4, and curl curl-8_14_1; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-22; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources.
+Written against Render documentation (no recorded version), Next.js pinned documentation v16.4.2, Next.js environment variables 15, Express request protocol 5.x, Django proxy security setting 6.1, MySQL client connection options 8.4, and curl curl-8_14_1; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-22; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -24257,7 +24257,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against AWS metadata and networking (no recorded version), Azure IMDS API 2025-04-07, iptables owner match v1.8.13, and nftables packet filtering v1.1.7; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 27 claims, all reasoned from cited sources.
+Written against AWS metadata and networking (no recorded version), Azure IMDS API 2025-04-07, iptables owner match v1.8.13, and nftables packet filtering v1.1.7; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 27 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -24853,7 +24853,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against RunPod documentation (no recorded version), Jupyter Server contents authentication v2.18.0, Ollama v0.34.2, iproute2 ss manual v6.12.0, and Linux network namespaces manual man-pages-5.13; 3 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 44 claims, all reasoned from cited sources.
+Written against RunPod documentation (no recorded version), Jupyter Server contents authentication v2.18.0, Ollama v0.34.2, iproute2 ss manual v6.12.0, and Linux network namespaces manual man-pages-5.13; 3 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 44 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -25449,7 +25449,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Nmap documentation (no recorded version), BIND dig documentation 9.18.39, OpenSSL command documentation 3.0, OpenBSD nc manual 7.6, OWASP Web Security Testing Guide v4.2, OAuth2 Proxy v7.15.6, Authelia v4.39.28, and NIST digital identity guidelines SP 800-63B-4, plus 3 more recorded bases; 9 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
+Written against Nmap documentation (no recorded version), BIND dig documentation 9.18.39, OpenSSL command documentation 3.0, OpenBSD nc manual 7.6, OWASP Web Security Testing Guide v4.2, OAuth2 Proxy v7.15.6, Authelia v4.39.28, and NIST digital identity guidelines SP 800-63B-4, plus 3 more recorded bases; 9 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -26087,7 +26087,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against PostgreSQL initdb source REL_17_11, PostgreSQL TLS minimum 12, PostgreSQL SCRAM default 14, PostgreSQL schema defaults 15, PostgreSQL membership and require_auth 16, and PostgreSQL MD5 and logging changes 18; 2 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 46 claims: 2 demonstrated by a check that ran and 44 reasoned from cited sources.
+Written against PostgreSQL initdb source REL_17_11, PostgreSQL TLS minimum 12, PostgreSQL SCRAM default 14, PostgreSQL schema defaults 15, PostgreSQL membership and require_auth 16, and PostgreSQL MD5 and logging changes 18; 2 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 46 claims: 2 demonstrated by a check that ran and 44 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -27044,7 +27044,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against PgBouncer listener source pgbouncer_1_26_0, PgBouncer source and fixes 1.25.2, PgBouncer LDAP minimum 1.25.0, PgBouncer password-expiry fix 1.24.1, and Pgpool-II backend handshake 4.7.2; 3 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 53 claims, all reasoned from cited sources.
+Written against PgBouncer listener source pgbouncer_1_26_0, PgBouncer source and fixes 1.25.2, PgBouncer LDAP minimum 1.25.0, PgBouncer password-expiry fix 1.24.1, and Pgpool-II backend handshake 4.7.2; 3 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 53 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -27828,7 +27828,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against MySQL reference 8.4, 8.0, 9.7, and 26.7, MySQL Docker package mysql-8.4.9, and MariaDB package source mariadb-11.8.9; 2 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 55 claims: 2 demonstrated by a check that ran and 53 reasoned from cited sources.
+Written against MySQL reference 8.4, 8.0, 9.7, and 26.7, MySQL Docker package mysql-8.4.9, and MariaDB package source mariadb-11.8.9; 2 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 55 claims: 2 demonstrated by a check that ran and 53 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -28898,7 +28898,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against MongoDB bind source r8.0.32 and MongoDB documentation 8.0; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 81 claims: 1 demonstrated by a check that ran and 80 reasoned from cited sources.
+Written against MongoDB bind source r8.0.32 and MongoDB documentation 8.0; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 81 claims: 1 demonstrated by a check that ran and 80 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -30006,7 +30006,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Redis configuration 6.0.20, 6.2.14, 6.2.0, 7.0.15, 8.2.1, and 8.6.0, Redis HA source 8.10.1, Redis image tag v8.10.2, and Redis compiled defaults 7.4.8 and 8.10.2; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 59 claims: 1 demonstrated by a check that ran and 58 reasoned from cited sources.
+Written against Redis configuration 6.0.20, 6.2.14, 6.2.0, 7.0.15, 8.2.1, and 8.6.0, Redis HA source 8.10.1, Redis image tag v8.10.2, and Redis compiled defaults 7.4.8 and 8.10.2; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 59 claims: 1 demonstrated by a check that ran and 58 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -31327,7 +31327,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Elasticsearch API 8.x, Elasticsearch reference 8.19, Elasticsearch listener source 8.19.22 and 9.5.4, OpenSearch reference 3.6, OpenSearch S3 reference 3.1, OpenSearch S3 source 3.8.0, OpenSearch GCS source 3.8.0, and OpenSearch Azure source 3.8.0, plus 7 more recorded bases; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-22; documentation checked September 2026. The guide records 83 claims, all reasoned from cited sources.
+Written against Elasticsearch API 8.x, Elasticsearch reference 8.19, Elasticsearch listener source 8.19.22 and 9.5.4, OpenSearch reference 3.6, OpenSearch S3 reference 3.1, OpenSearch S3 source 3.8.0, OpenSearch GCS source 3.8.0, and OpenSearch Azure source 3.8.0, plus 7 more recorded bases; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-22; documentation checked September 2026. The guide records 83 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -33342,7 +33342,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against AIStor documentation (no recorded version) and curl curl-8_14_1; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 44 claims, all reasoned from cited sources.
+Written against AIStor documentation (no recorded version) and curl curl-8_14_1; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 44 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -34383,7 +34383,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against RabbitMQ source v4.4.0, rabbitmqadmin v2, RabbitMQ topic authorization introduction 3.7.0, Erlang/OTP distribution 27, and Pika source 1.3.2; 2 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-11-07; documentation checked September 2026. The guide records 37 claims, all reasoned from cited sources.
+Written against RabbitMQ source v4.4.0, rabbitmqadmin v2, RabbitMQ topic authorization introduction 3.7.0, Erlang/OTP distribution 27, and Pika source 1.3.2; 2 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-11-07; documentation checked September 2026. The guide records 37 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -35320,7 +35320,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Mosquitto v2.0.22 and v2.1.2 and Mosquitto legacy v1.6.15; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 45 claims, all reasoned from cited sources.
+Written against Mosquitto v2.0.22 and v2.1.2 and Mosquitto legacy v1.6.15; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 45 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -36123,7 +36123,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Kafka listener default 4.3.1, Kafka documentation 4.3, Kafka source 4.3.0, Kafka legacy authorization 3.9, and OpenSSL documentation 3.5; 2 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 41 claims, all reasoned from cited sources.
+Written against Kafka listener default 4.3.1, Kafka documentation 4.3, Kafka source 4.3.0, Kafka legacy authorization 3.9, and OpenSSL documentation 3.5; 2 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 41 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -37226,7 +37226,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against ClickHouse documentation (no recorded version); 5 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 53 claims, all reasoned from cited sources.
+Written against ClickHouse documentation (no recorded version); 5 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 53 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -38234,7 +38234,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Neo4j Enterprise 5.26, Packaged Neo4j 5, Neo4j password setting minimum 5.3, Neo4j LOAD minimum 5.13, Neo4j CIDR LOAD minimum 5.16, Cypher Shell history minimum 2025.08, Cypher Shell timeout minimum 2025.12, and Neo4j server timeout exception 4.2 through 5.2, plus 7 more recorded bases; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 76 claims: 1 demonstrated by a check that ran and 75 reasoned from cited sources.
+Written against Neo4j Enterprise 5.26, Packaged Neo4j 5, Neo4j password setting minimum 5.3, Neo4j LOAD minimum 5.13, Neo4j CIDR LOAD minimum 5.16, Cypher Shell history minimum 2025.08, Cypher Shell timeout minimum 2025.12, and Neo4j server timeout exception 4.2 through 5.2, plus 7 more recorded bases; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 76 claims: 1 demonstrated by a check that ran and 75 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -39539,7 +39539,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against memcached source 1.6.45 and OpenSSL CLI 3.0; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-15; documentation checked September 2026. The guide records 37 claims: 1 demonstrated by a check that ran and 36 reasoned from cited sources.
+Written against memcached source 1.6.45 and OpenSSL CLI 3.0; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-15; documentation checked September 2026. The guide records 37 claims: 1 demonstrated by a check that ran and 36 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -40188,7 +40188,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Amazon S3 documentation (no recorded version); 4 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 63 claims, all reasoned from cited sources.
+Written against Amazon S3 documentation (no recorded version); 4 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 63 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -41154,7 +41154,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against NATS Server v2.15.2, NATS image listener source v2.15.2, natscli v0.4.0, and Go socket source go1.26.8; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 70 claims, all reasoned from cited sources.
+Written against NATS Server v2.15.2, NATS image listener source v2.15.2, natscli v0.4.0, and Go socket source go1.26.8; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 70 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -42695,7 +42695,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Meilisearch release reference v1.53.2, Typesense 30.2, Caddy v2.11.4, curl minimum 7.75.0, Git grep manual 2.55.0, Git rev-list manual 2.56.0, and Git manual 2.56.0; 4 further sources carry no recorded version. Metadata reviewed 2026-10-12; documentation checked October 2026. The guide records 30 claims: 10 demonstrated by a check that ran and 20 reasoned from cited sources.
+Written against Meilisearch release reference v1.53.2, Typesense 30.2, Caddy v2.11.4, curl minimum 7.75.0, Git grep manual 2.55.0, Git rev-list manual 2.56.0, and Git manual 2.56.0; 4 further sources carry no recorded version. Metadata reviewed 2026-10-12; documentation checked October 2026. The guide records 30 claims: 10 demonstrated by a check that ran and 20 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -43165,7 +43165,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against SQLite documentation (rolling) (no recorded version), Litestream MCP minimum v0.5.0, LiteFS source v0.5.14, Git documentation v2.56.0, GNU Coreutils stat manual v9.7, GNU Bash reference manual bash-5.3, curl curl-8_14_1, and GNU grep documentation v3.12; 7 further sources carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 40 claims: 2 demonstrated by a check that ran and 38 reasoned from cited sources.
+Written against SQLite documentation (rolling) (no recorded version), Litestream MCP minimum v0.5.0, LiteFS source v0.5.14, Git documentation v2.56.0, GNU Coreutils stat manual v9.7, GNU Bash reference manual bash-5.3, curl curl-8_14_1, and GNU grep documentation v3.12; 7 further sources carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 40 claims: 2 demonstrated by a check that ran and 38 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -43901,7 +43901,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Datasette container generator (pinned to a commit), sqlite-web package 0.8.1, sqlite-web tagged implementation 0.8.1, datasette-auth-passwords 1.1.1, datasette-write 0.4, Docker localhost-publication boundary 28.0.0, and curl minimum write-out version 7.75.0; 3 further sources are pinned to a commit and 11 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 55 claims: 18 demonstrated by a check that ran and 37 reasoned from cited sources.
+Written against Datasette container generator (pinned to a commit), sqlite-web package 0.8.1, sqlite-web tagged implementation 0.8.1, datasette-auth-passwords 1.1.1, datasette-write 0.4, Docker localhost-publication boundary 28.0.0, and curl minimum write-out version 7.75.0; 3 further sources are pinned to a commit and 11 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 55 claims: 18 demonstrated by a check that ran and 37 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -44588,7 +44588,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against SurrealDB server and image v4.0.0, SurrealDB 3.x server v3.3.5, SurrealDB native AUDIENCE minimum 3.3, SurrealDB SCOPE deprecation 2.x, SurrealDB SCOPE removal 3.0, GNU Bash reference manual bash-5.3, Linux procfs manual man-pages-6.19, and Linux ptrace manual man-pages-6.19; 3 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 45 claims, all reasoned from cited sources.
+Written against SurrealDB server and image v4.0.0, SurrealDB 3.x server v3.3.5, SurrealDB native AUDIENCE minimum 3.3, SurrealDB SCOPE deprecation 2.x, SurrealDB SCOPE removal 3.0, GNU Bash reference manual bash-5.3, Linux procfs manual man-pages-6.19, and Linux ptrace manual man-pages-6.19; 3 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 45 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -45372,7 +45372,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against InfluxDB OSS 2.x and 1.x, VictoriaMetrics single-node v1.155.0, VictoriaMetrics cluster v1.155.0-cluster, VictoriaMetrics shipped Compose image v1.154.1, and QuestDB Enterprise qualification 4.0.0; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 45 claims, all reasoned from cited sources.
+Written against InfluxDB OSS 2.x and 1.x, VictoriaMetrics single-node v1.155.0, VictoriaMetrics cluster v1.155.0-cluster, VictoriaMetrics shipped Compose image v1.154.1, and QuestDB Enterprise qualification 4.0.0; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 45 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -45913,7 +45913,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Jupyter Server v2.21.1, JupyterHub 6.2.0 and 5.5.5, jupyter_client 8.6.3, configurable-http-proxy 5.4.0, and NativeAuthenticator 1.3.0; 7 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 70 claims, all reasoned from cited sources.
+Written against Jupyter Server v2.21.1, JupyterHub 6.2.0 and 5.5.5, jupyter_client 8.6.3, configurable-http-proxy 5.4.0, and NativeAuthenticator 1.3.0; 7 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked September 2026. The guide records 70 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -46932,7 +46932,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Ollama v0.40.14, Ollama (go list sweep and go.sum reading) v0.34.2, Docker Engine localhost boundary 28.0, systemd v257, Go go1.26.5, go1.26.0, go1.26.1, go1.26.2, go1.26.3, go1.26.4, go1.26.6, go1.26.7, go1.26.8, go1.26.9, and go1.26.10, and github.com/dgryski/trifles v0.0.0-20200323201526-dd97f9abfb48, plus 3 more recorded bases; 7 further sources carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 79 claims, all reasoned from cited sources.
+Written against Ollama v0.40.14, Ollama (go list sweep and go.sum reading) v0.34.2, Docker Engine localhost boundary 28.0, systemd v257, Go go1.26.5, go1.26.0, go1.26.1, go1.26.2, go1.26.3, go1.26.4, go1.26.6, go1.26.7, go1.26.8, go1.26.9, and go1.26.10, and github.com/dgryski/trifles v0.0.0-20200323201526-dd97f9abfb48, plus 3 more recorded bases; 7 further sources carry no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 79 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -48695,7 +48695,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Open WebUI (pinned to a commit) and Docker Engine localhost boundary 28.0.0; 1 further source carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 62 claims, all reasoned from cited sources.
+Written against Open WebUI (pinned to a commit) and Docker Engine localhost boundary 28.0.0; 1 further source carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 62 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -49340,7 +49340,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against LiteLLM SSO allowance v1.76.0, LiteLLM metrics default v1.85.0, and LiteLLM CLI v1.102.1; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 51 claims, all reasoned from cited sources.
+Written against LiteLLM SSO allowance v1.76.0, LiteLLM metrics default v1.85.0, and LiteLLM CLI v1.102.1; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 51 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -50059,7 +50059,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against llama.cpp (pinned to a commit), vLLM v0.30.0, TGI launcher/image v3.3.7, SGLang v0.5.20, and curl minimum write-out version 7.75.0; 7 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 75 claims: 3 demonstrated by a check that ran and 72 reasoned from cited sources.
+Written against llama.cpp (pinned to a commit), vLLM v0.30.0, TGI launcher/image v3.3.7, SGLang v0.5.20, and curl minimum write-out version 7.75.0; 7 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 75 claims: 3 demonstrated by a check that ran and 72 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -51129,7 +51129,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Gradio 6.31.0 and Gradio historical fixes 6.16.0 and 6.20.0; 2 further sources carry no recorded version. Metadata reviewed 2026-11-07; documentation checked September 2026. The guide records 53 claims, all reasoned from cited sources.
+Written against Gradio 6.31.0 and Gradio historical fixes 6.16.0 and 6.20.0; 2 further sources carry no recorded version. Metadata reviewed 2026-11-07; documentation checked September 2026. The guide records 53 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -51698,7 +51698,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Streamlit 1.64.0, Google OpenID Connect documentation rolling documentation, checked 2026-10-15, Authlib minimum 1.3.2, httpx minimum 0.24.1, Caddy v2.11.4, oauth2-proxy v7.15.6 and v7.15.4, Keycloak 26.8.2 and 26.7.4, and curl minimum write-out version 7.75.0; 3 further sources carry no recorded version. Metadata reviewed 2026-11-06; documentation checked October 2026. The guide records 36 claims: 12 demonstrated by a check that ran and 24 reasoned from cited sources.
+Written against Streamlit 1.64.0, Google OpenID Connect documentation rolling documentation, checked 2026-10-15, Authlib minimum 1.3.2, httpx minimum 0.24.1, Caddy v2.11.4, oauth2-proxy v7.15.6 and v7.15.4, Keycloak 26.8.2 and 26.7.4, and curl minimum write-out version 7.75.0; 3 further sources carry no recorded version. Metadata reviewed 2026-11-06; documentation checked October 2026. The guide records 36 claims: 12 demonstrated by a check that ran and 24 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -52200,7 +52200,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against n8n listener source n8n@2.47.2, n8n runtime source n8n@2.47.2, n8n environment policy minimum 2.18.0, n8n SSRF filter minimum 2.12.0, n8n 2.0 default exclusion source n8n@2.0.0, n8n 1.x default exclusion source n8n@1.123.85, and n8n later 2.x default exclusion source n8n@2.43.8, plus 7 more recorded bases; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-11-07; documentation checked October 2026. The guide records 92 claims, all reasoned from cited sources.
+Written against n8n listener source n8n@2.47.2, n8n runtime source n8n@2.47.2, n8n environment policy minimum 2.18.0, n8n SSRF filter minimum 2.12.0, n8n 2.0 default exclusion source n8n@2.0.0, n8n 1.x default exclusion source n8n@1.123.85, and n8n later 2.x default exclusion source n8n@2.43.8, plus 7 more recorded bases; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-11-07; documentation checked October 2026. The guide records 92 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -53203,7 +53203,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against code-server v4.145.2. Metadata reviewed 2026-11-07; documentation checked November 2026. The guide records 23 claims, all reasoned from cited sources.
+Written against code-server v4.145.2. Metadata reviewed 2026-11-07; documentation checked November 2026. The guide records 23 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -53478,7 +53478,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Sentry and self-hosted distribution 26.10.1, Sentry prior-release frontend-migrated reference 26.8.0, and GlitchTip backend v6.2.6; 3 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 23 claims, all reasoned from cited sources.
+Written against Sentry and self-hosted distribution 26.10.1, Sentry prior-release frontend-migrated reference 26.8.0, and GlitchTip backend v6.2.6; 3 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 23 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -53791,7 +53791,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Qdrant source v1.20.0, Weaviate source v1.40.4, Milvus v2.6.26 and v3.0.5, Milvus Helm chart 5.0.30, Milvus Operator v1.3.11, Chroma source 1.5.9, Chroma migration documentation v1.0.0, and pgvector source v0.8.7, plus 4 more recorded bases; 3 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-11-04; documentation checked October 2026. The guide records 83 claims, all reasoned from cited sources.
+Written against Qdrant source v1.20.0, Weaviate source v1.40.4, Milvus v2.6.26 and v3.0.5, Milvus Helm chart 5.0.30, Milvus Operator v1.3.11, Chroma source 1.5.9, Chroma migration documentation v1.0.0, and pgvector source v0.8.7, plus 4 more recorded bases; 3 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-11-04; documentation checked October 2026. The guide records 83 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -54876,7 +54876,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against MCP 2026-07-28, MCP legacy 2025-11-25, and curl minimum 7.75.0; 3 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 39 claims, all reasoned from cited sources.
+Written against MCP 2026-07-28, MCP legacy 2025-11-25, and curl minimum 7.75.0; 3 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 39 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -55462,7 +55462,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against MCP 2026-07-28, OAuth 2.1 draft draft-ietf-oauth-v2-1-14, CIMD draft draft-ietf-oauth-client-id-metadata-document-00, and OpenID Connect 1.0 errata 2; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 29 claims, all reasoned from cited sources.
+Written against MCP 2026-07-28, OAuth 2.1 draft draft-ietf-oauth-v2-1-14, CIMD draft draft-ietf-oauth-client-id-metadata-document-00, and OpenID Connect 1.0 errata 2; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 29 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -55833,7 +55833,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Ray pinned source ray-2.58.0, Ray token authentication introduction 2.52.0, KubeRay chart v1.7.0, KubeRay authentication source v1.6.0, KubeRay prior RayCluster types v1.5.0, CPython WSGI server v3.11.0, and curl minimum write-out version 7.75.0; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 46 claims: 1 demonstrated by a check that ran and 45 reasoned from cited sources.
+Written against Ray pinned source ray-2.58.0, Ray token authentication introduction 2.52.0, KubeRay chart v1.7.0, KubeRay authentication source v1.6.0, KubeRay prior RayCluster types v1.5.0, CPython WSGI server v3.11.0, and curl minimum write-out version 7.75.0; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 46 claims: 1 demonstrated by a check that ran and 45 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -56558,7 +56558,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against MLflow pinned source v3.16.1, MLflow security middleware minimum 3.5.0, Docker Engine loopback publication minimum 28.0.0, nginx proxy implementation release-1.28.0, Caddy reverse proxy parser v2.11.4, oauth2-proxy documentation v7.15.6, and Authelia source v4.39.28, plus 3 more recorded bases; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources.
+Written against MLflow pinned source v3.16.1, MLflow security middleware minimum 3.5.0, Docker Engine loopback publication minimum 28.0.0, nginx proxy implementation release-1.28.0, Caddy reverse proxy parser v2.11.4, oauth2-proxy documentation v7.15.6, and Authelia source v4.39.28, plus 3 more recorded bases; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-11-06; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -57110,7 +57110,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Dify plugin daemon 0.6.10, Flowise account minimum v3.0.1, Langflow settings source v1.12.6, LibreChat changelog v0.7.7, Docker Compose go.mod v2.24.3, Docker Compose release source v2.24.4, compose-go loader v2.0.0-rc.2, and compose-go reset loader v2.0.0-rc.3; 8 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-22; documentation checked September 2026. The guide records 81 claims, all reasoned from cited sources.
+Written against Dify plugin daemon 0.6.10, Flowise account minimum v3.0.1, Langflow settings source v1.12.6, LibreChat changelog v0.7.7, Docker Compose go.mod v2.24.3, Docker Compose release source v2.24.4, compose-go loader v2.0.0-rc.2, and compose-go reset loader v2.0.0-rc.3; 8 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-22; documentation checked September 2026. The guide records 81 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -58101,7 +58101,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against SearxNG documentation (no recorded version), TEI HTTP source v1.9.0, Onyx v4.3 source v4.3.13, Onyx v4.4 source v4.4.0, Onyx v4.5 source v4.5.0, Onyx v4.9 source v4.9.2 and v4.9.4, and GNU grep 3.12; 7 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 53 claims: 1 demonstrated by a check that ran and 52 reasoned from cited sources.
+Written against SearxNG documentation (no recorded version), TEI HTTP source v1.9.0, Onyx v4.3 source v4.3.13, Onyx v4.4 source v4.4.0, Onyx v4.5 source v4.5.0, Onyx v4.9 source v4.9.2 and v4.9.4, and GNU grep 3.12; 7 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 53 claims: 1 demonstrated by a check that ran and 52 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -59127,7 +59127,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against LiveKit v1.13.7, livekit-cli v2.18.2, coturn 4.18.0, coturn DTLS opt-in introduction 4.17.0, curl minimum write-out version 7.75.0, OpenSSL CLI 3.0, and OpenSSL dgst 3.5; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-12; documentation checked September 2026. The guide records 50 claims: 1 demonstrated by a check that ran and 49 reasoned from cited sources.
+Written against LiveKit v1.13.7, livekit-cli v2.18.2, coturn 4.18.0, coturn DTLS opt-in introduction 4.17.0, curl minimum write-out version 7.75.0, OpenSSL CLI 3.0, and OpenSSL dgst 3.5; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-12; documentation checked September 2026. The guide records 50 claims: 1 demonstrated by a check that ran and 49 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -59764,7 +59764,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against ComfyUI v0.37.0, AUTOMATIC1111 v1.10.1, Fooocus v2.5.5, Gradio 3.41.2, Docker Engine minimum loopback boundary 28.0, Docker Compose source v2.32.4, and curl minimum write-out version 7.75.0; 1 further source is pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 28 claims: 2 demonstrated by a check that ran and 26 reasoned from cited sources.
+Written against ComfyUI v0.37.0, AUTOMATIC1111 v1.10.1, Fooocus v2.5.5, Gradio 3.41.2, Docker Engine minimum loopback boundary 28.0, Docker Compose source v2.32.4, and curl minimum write-out version 7.75.0; 1 further source is pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 28 claims: 2 demonstrated by a check that ran and 26 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -60362,7 +60362,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against AnythingLLM documentation (no recorded version), LobeHub v2.2.16, Docker CLI v27.5.1, Docker Compose v2.32.4, compose-go v2.4.7, Moby v27.5.1, and curl minimum write-out version 7.75.0; 6 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 30 claims, all reasoned from cited sources.
+Written against AnythingLLM documentation (no recorded version), LobeHub v2.2.16, Docker CLI v27.5.1, Docker Compose v2.32.4, compose-go v2.4.7, Moby v27.5.1, and curl minimum write-out version 7.75.0; 6 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 30 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -60856,7 +60856,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against OpenClaw v2026.11.2; 1 further source carries no recorded version. Metadata reviewed 2026-11-09; documentation checked November 2026. The guide records 31 claims, all reasoned from cited sources.
+Written against OpenClaw v2026.11.2; 1 further source carries no recorded version. Metadata reviewed 2026-11-09; documentation checked November 2026. The guide records 31 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -61478,7 +61478,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Forgejo v17.0.1; 1 further source carries no recorded version. Metadata reviewed 2026-11-10; documentation checked November 2026. The guide records 32 claims, all reasoned from cited sources.
+Written against Forgejo v17.0.1; 1 further source carries no recorded version. Metadata reviewed 2026-11-10; documentation checked November 2026. The guide records 32 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -62006,7 +62006,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against GitLab v19.5.3, Omnibus GitLab 19.5.3+ce.0, and Omnibus GitLab EE 19.5.3+ee.0; 1 further source carries no recorded version. Metadata reviewed 2026-11-10; documentation checked November 2026. The guide records 60 claims, all reasoned from cited sources.
+Written against GitLab v19.5.3, Omnibus GitLab 19.5.3+ce.0, and Omnibus GitLab EE 19.5.3+ee.0; 1 further source carries no recorded version. Metadata reviewed 2026-11-10; documentation checked November 2026. The guide records 60 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -62688,7 +62688,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Langfuse documentation (no recorded version), Phoenix listener source arize-phoenix-v21.0.0 and arize-phoenix-v20.27.0, OpenTelemetry Collector v0.161.0, Collector distributions v0.161.0, and Phoenix TLS source arize-phoenix-v21.0.0, plus 2 more recorded bases; 7 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-11-04; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources.
+Written against Langfuse documentation (no recorded version), Phoenix listener source arize-phoenix-v21.0.0 and arize-phoenix-v20.27.0, OpenTelemetry Collector v0.161.0, Collector distributions v0.161.0, and Phoenix TLS source arize-phoenix-v21.0.0, plus 2 more recorded bases; 7 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-11-04; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -63638,7 +63638,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Prefect Basic Auth minimum 3.1.8, Dagster OSS 1.13.24, Apache Airflow 3.3.2, Temporal Go SDK codec source v1.28.0, Flower v2.2.0, Argo Workflows v3.7.18 and v4.1.4, Prefect Blocks source 3.1.8, and Apache Airflow historical configuration 2.11.0, plus 10 more recorded bases; 1 further source is pinned to a commit and 7 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 62 claims: 3 demonstrated by a check that ran and 59 reasoned from cited sources.
+Written against Prefect Basic Auth minimum 3.1.8, Dagster OSS 1.13.24, Apache Airflow 3.3.2, Temporal Go SDK codec source v1.28.0, Flower v2.2.0, Argo Workflows v3.7.18 and v4.1.4, Prefect Blocks source 3.1.8, and Apache Airflow historical configuration 2.11.0, plus 10 more recorded bases; 1 further source is pinned to a commit and 7 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 62 claims: 3 demonstrated by a check that ran and 59 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -64861,7 +64861,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against phpMyAdmin (no recorded version), Grafana v13.2.2, Prometheus v3.14.0, RedisInsight 3.8.0, Apache htpasswd 2.4, Apache httpd htpasswd source 2.4.69, and Moby port mapping source v28.3.3; 2 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 20 claims, all reasoned from cited sources.
+Written against phpMyAdmin (no recorded version), Grafana v13.2.2, Prometheus v3.14.0, RedisInsight 3.8.0, Apache htpasswd 2.4, Apache httpd htpasswd source 2.4.69, and Moby port mapping source v28.3.3; 2 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 20 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -65236,7 +65236,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 102 claims: 14 demonstrated by a check that ran and 88 reasoned from cited sources.
+Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 102 claims: 14 demonstrated by a check that ran and 88 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -67272,7 +67272,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Portainer (no recorded version), Dashboard arguments v2.7.0, Gitea source v28.3.0, Gitea 1.x source v1.27.3, Gitea MFA minimum 1.24, and Apache htpasswd 2.4; 2 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-11-04; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources.
+Written against Portainer (no recorded version), Dashboard arguments v2.7.0, Gitea source v28.3.0, Gitea 1.x source v1.27.3, Gitea MFA minimum 1.24, and Apache htpasswd 2.4; 2 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-11-04; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -67888,7 +67888,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against MDN CORS documentation (no recorded version); 3 further sources carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 13 claims, all reasoned from cited sources.
+Written against MDN CORS documentation (no recorded version); 3 further sources carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 13 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -68122,7 +68122,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against MDN HTTP documentation (no recorded version), nginx source release-1.26.3, Apache HTTP Server 2.4.69, Caddy source v2.11.4, Helmet v8.1.0, Django 5.2, and curl 8.23.0; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources.
+Written against MDN HTTP documentation (no recorded version), nginx source release-1.26.3, Apache HTTP Server 2.4.69, Caddy source v2.11.4, Helmet v8.1.0, Django 5.2, and curl 8.23.0; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -68457,7 +68457,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Firebase documentation (no recorded version), PostgreSQL invoker-view minimum 15, curl curl-8_14_1, and ShellCheck v0.11.0; 2 further sources carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 70 claims: 2 demonstrated by a check that ran and 68 reasoned from cited sources.
+Written against Firebase documentation (no recorded version), PostgreSQL invoker-view minimum 15, curl curl-8_14_1, and ShellCheck v0.11.0; 2 further sources carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 70 claims: 2 demonstrated by a check that ran and 68 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -69730,7 +69730,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Supabase documentation (no recorded version) and curl curl-8_14_1; 4 further sources are pinned to a commit. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 28 claims, all reasoned from cited sources.
+Written against Supabase documentation (no recorded version) and curl curl-8_14_1; 4 further sources are pinned to a commit. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 28 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -70126,7 +70126,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against nginx documentation (no recorded version), Apache documentation 2.4, Caddy documentation v2.11.4, Next.js browser source maps v16.3.6, Vite production source maps v8.3.1, Debian apache2 packaging 2.4.69-1, ACME HTTP-01 RFC 8555, and GNU grep 3.12; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 26 claims, all reasoned from cited sources.
+Written against nginx documentation (no recorded version), Apache documentation 2.4, Caddy documentation v2.11.4, Next.js browser source maps v16.3.6, Vite production source maps v8.3.1, Debian apache2 packaging 2.4.69-1, ACME HTTP-01 RFC 8555, and GNU grep 3.12; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 26 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -70766,7 +70766,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against WebSocket protocol RFC 6455, stripe-node v18.5.0, stripe-python v12.5.0, Traefik timeout reference v3.5, Caddy source v2.11.4, nginx source release-1.26.3, HAProxy 3.0, and HAProxy source v3.0.0, plus 1 more recorded basis; 7 further sources carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 36 claims, all reasoned from cited sources.
+Written against WebSocket protocol RFC 6455, stripe-node v18.5.0, stripe-python v12.5.0, Traefik timeout reference v3.5, Caddy source v2.11.4, nginx source release-1.26.3, HAProxy 3.0, and HAProxy source v3.0.0, plus 1 more recorded basis; 7 further sources carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 36 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -71287,7 +71287,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against SPF RFC 7208, DKIM RFC 6376, DKIM cryptography RFC 8301, DMARC RFC 9989, DMARC aggregate reporting RFC 9990, DMARC failure reporting RFC 9991, Submission TLS RFC 8314, and SMTP submission roles RFC 6409, plus 8 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 31 claims, all reasoned from cited sources.
+Written against SPF RFC 7208, DKIM RFC 6376, DKIM cryptography RFC 8301, DMARC RFC 9989, DMARC aggregate reporting RFC 9990, DMARC failure reporting RFC 9991, Submission TLS RFC 8314, and SMTP submission roles RFC 6409, plus 8 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 31 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -71786,7 +71786,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Metabase v0.65.3, Redash v26.9.0, environ 1.2.0, Ring Jetty adapter 1.15.3, and Jetty 12.1.13; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 25 claims, all reasoned from cited sources.
+Written against Metabase v0.65.3, Redash v26.9.0, environ 1.2.0, Ring Jetty adapter 1.15.3, and Jetty 12.1.13; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 25 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -72134,7 +72134,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against NocoDB 2026.09.0, Baserow 2.3.4, Appsmith v2.4.1, Budibase v3.50.0 and v3.46.0, Windmill v1.864.1, Docker CLI v27.2.0 and v27.1.2, Node.js v22.22.1, and CouchDB 3.5.2, plus 1 more recorded basis; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 71 claims: 3 demonstrated by a check that ran and 68 reasoned from cited sources.
+Written against NocoDB 2026.09.0, Baserow 2.3.4, Appsmith v2.4.1, Budibase v3.50.0 and v3.46.0, Windmill v1.864.1, Docker CLI v27.2.0 and v27.1.2, Node.js v22.22.1, and CouchDB 3.5.2, plus 1 more recorded basis; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 71 claims: 3 demonstrated by a check that ran and 68 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -73456,7 +73456,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Cockpit 368, Webmin 2.670, Proxmox VE 9.2 docs 9.2.12, pve-manager 9.2.20, Usermin 2.570, and systemd v262; 3 further sources are pinned to a commit. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 38 claims: 4 demonstrated by a check that ran and 34 reasoned from cited sources.
+Written against Cockpit 368, Webmin 2.670, Proxmox VE 9.2 docs 9.2.12, pve-manager 9.2.20, Usermin 2.570, and systemd v262; 3 further sources are pinned to a commit. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 38 claims: 4 demonstrated by a check that ran and 34 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -74043,7 +74043,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Nomad Community Edition 2.0.7 and Consul Community Edition 2.0.4. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 42 claims: 13 demonstrated by a check that ran and 29 reasoned from cited sources.
+Written against Nomad Community Edition 2.0.7 and Consul Community Edition 2.0.4. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 42 claims: 13 demonstrated by a check that ran and 29 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -74599,7 +74599,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against PocketBase v0.41.1, Appwrite 2.7.0, utopia-php/database 10.1.0, and curl curl-8_14_1; 2 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked November 2026. The guide records 91 claims: 2 demonstrated by a check that ran and 89 reasoned from cited sources.
+Written against PocketBase v0.41.1, Appwrite 2.7.0, utopia-php/database 10.1.0, and curl curl-8_14_1; 2 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked November 2026. The guide records 91 claims: 2 demonstrated by a check that ran and 89 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -76335,7 +76335,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Chromium 154.0.8037.57, browserless (open source) 2.56.7, browserless Playwright file-protocol fix 2.51.0, Playwright source v1.58.2, and curl documentation curl-8_14_1; 2 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 32 claims, all reasoned from cited sources.
+Written against Chromium 154.0.8037.57, browserless (open source) 2.56.7, browserless Playwright file-protocol fix 2.51.0, Playwright source v1.58.2, and curl documentation curl-8_14_1; 2 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 32 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -76909,7 +76909,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Strapi Users and Permissions source v5.58.0, Directus listener source v12.4.1, Directus quickstart 12.0.2, Hasura quickstart image 2.46.0, Hasura authentication-status minimum 2.48.0, and PostgREST listener source v16.4; 6 further sources carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources.
+Written against Strapi Users and Permissions source v5.58.0, Directus listener source v12.4.1, Directus quickstart 12.0.2, Hasura quickstart image 2.46.0, Hasura authentication-status minimum 2.48.0, and PostgREST listener source v16.4; 6 further sources carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

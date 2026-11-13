@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Strapi Users and Permissions source v5.58.0, Directus listener source v12.4.1, Directus quickstart 12.0.2, Hasura quickstart image 2.46.0, Hasura authentication-status minimum 2.48.0, and PostgREST listener source v16.4; 6 further sources carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources.
+Written against Strapi Users and Permissions source v5.58.0, Directus listener source v12.4.1, Directus quickstart 12.0.2, Hasura quickstart image 2.46.0, Hasura authentication-status minimum 2.48.0, and PostgREST listener source v16.4; 6 further sources carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

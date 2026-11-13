@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Apache HTTP Server 2.4, Apache TLSv1.3 minimum 2.4.36+, Apache per-vhost protocol minimum 2.4.42+, Apache chain-file minimum 2.4.8, httpd htpasswd 2.4.69, OpenSSL qualification 1.1.1+, Certbot Apache installation v2.3.0, and Debian apache2 packaging 2.4.69-1, plus 5 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 20 claims, all reasoned from cited sources.
+Written against Apache HTTP Server 2.4, Apache TLSv1.3 minimum 2.4.36+, Apache per-vhost protocol minimum 2.4.42+, Apache chain-file minimum 2.4.8, httpd htpasswd 2.4.69, OpenSSL qualification 1.1.1+, Certbot Apache installation v2.3.0, and Debian apache2 packaging 2.4.69-1, plus 5 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 20 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

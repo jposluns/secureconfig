@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Nomad Community Edition 2.0.7 and Consul Community Edition 2.0.4. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 42 claims: 13 demonstrated by a check that ran and 29 reasoned from cited sources.
+Written against Nomad Community Edition 2.0.7 and Consul Community Edition 2.0.4. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 42 claims: 13 demonstrated by a check that ran and 29 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

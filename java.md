@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Spring Boot 4.1.2, Spring Boot starter migration 4.0, Spring Security HSTS 6.5, JDK keytool documentation 21, Tomcat HTTP connector 10.1, curl minimum diagnostics version 7.75.0, OpenJDK jdk21u javax.net.ssl sources jdk-21.0.12.1-ga, and Authelia source v4.39.28; 2 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources.
+Written against Spring Boot 4.1.2, Spring Boot starter migration 4.0, Spring Security HSTS 6.5, JDK keytool documentation 21, Tomcat HTTP connector 10.1, curl minimum diagnostics version 7.75.0, OpenJDK jdk21u javax.net.ssl sources jdk-21.0.12.1-ga, and Authelia source v4.39.28; 2 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
