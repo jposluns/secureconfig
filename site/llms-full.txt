@@ -17863,7 +17863,7 @@ None of this gates a request for you by default. The pinned SvelteKit load docum
 
 ## Nuxt (Nitro server routes)
 
-Files under `server/api/`, `server/routes/`, and `server/middleware/` are auto-registered Nitro handlers exported with `defineEventHandler()`, and a handler in `server/middleware/` runs before every other server route. Nuxt ships no built-in authentication. A middleware handler can enforce access if it throws (for example `createError` with a 401 or 403); the Nuxt server directory page says middleware should not return anything or close or respond to the request, as this guide's reading, a response belongs in a route handler. A middleware that only attaches `event.context.auth` for other handlers to read has not enforced anything, and every handler that reads it still has to check it itself:
+Files under `server/api/`, `server/routes/`, and `server/middleware/` are auto-registered Nitro handlers exported with `defineEventHandler()`, and a handler in `server/middleware/` runs before every other server route. Nuxt ships no built-in authentication. A middleware handler can enforce access if it throws (for example `createError` with a 401 or 403); the Nuxt server directory page says middleware should not return anything or close or respond to the request; in this guide's reading, a response therefore belongs in a route handler. A middleware that only attaches `event.context.auth` for other handlers to read has not enforced anything, and every handler that reads it still has to check it itself:
 
 ```ts
 // server/api/admin.ts: the route checks for itself; the middleware only sets event.context.auth
@@ -18181,7 +18181,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "254f021dfe0ea38d72aac690d83c05eb7a2ca1fe5f51d5d81292d0276c4d32f8",
+  "body_sha256": "ae1f0cdf5de7f49ae07511eec43780ebb1845926231130908a6e70fa1581d806",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
