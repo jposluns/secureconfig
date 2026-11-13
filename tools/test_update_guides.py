@@ -50,7 +50,12 @@ cases.
   - ISOLATION: every python3 in the script text carries -I; with a json.py planted in the working
     directory the update succeeds and the plant never runs, and a plain python3 -c 'import json'
     in that same directory does run it (the negative control);
-  - MANIFEST: a tampered digest and a "../x" entry are each refused, nothing changed.
+  - MANIFEST: a tampered digest, a line that is not a digest line (sha256sum --strict) and a
+    "../x" entry are each refused, nothing changed;
+  - BOUND and DEPTH: an answer of exactly 1 MiB is used and one of 1 MiB + 1 is refused, a draft or
+    pre-release field of 0 is refused, JSON nested 200000 deep (a RecursionError) in the answer or
+    in plugin.json is refused with no traceback, and the script keeps both isascii tests and no
+    0-9 range.
 
 Exit 0 ok, 1 on a finding.
 """
@@ -217,6 +222,12 @@ def release_json(tag=TAG, **fields):
     data = {'tag_name': tag, 'draft': False, 'prerelease': False}
     data.update(fields)
     return json.dumps(data).encode()
+
+
+def padded_release(size):
+    """A valid published-release answer of exactly size bytes."""
+    head = release_json()[:-1] + b', "pad": "'
+    return head + b'x' * (size - len(head) - 2) + b'"}'
 
 
 def build(base, version=PUBLISHED.encode() + b'\n', plugin_text=PLUGIN_JSON,
@@ -413,6 +424,8 @@ with tempfile.TemporaryDirectory() as tmp:
     rc, out, err = run(t)
     check(rc == 1 and NO_RELEASE_MESSAGE in err and not out,
           f'NO RELEASE: should refuse with exit 1: {rc} {show(out)} {show(err)}')
+    check(b'refused the request, as it does at a rate limit' in err,
+          f'NO RELEASE: the message should name a refusal such as a rate limit (403, 429): {show(err)}')
     check(state(t) == before, 'NO RELEASE: nothing should change')
     check(fetched(t) == [API], f'NO RELEASE: only the API should be asked: {fetched(t)!r}')
 
@@ -433,6 +446,7 @@ def check_bad_release(desc, release, tokens, locale='C'):
               f'{label}: should refuse with exit 1 on stderr only: {rc} {show(out)} {show(err)}')
         check(not any(echoes(token, both) for token in tokens) and b'\x1b' not in both,
               f'{label}: the value should not be echoed: {show(err)}')
+        check(b'Traceback' not in err, f'{label}: no Python traceback should reach stderr: {show(err)}')
         check(state(t) == before, f'{label}: nothing should change')
         check(fetched(t) == [API], f'{label}: only the API should be fetched: {fetched(t)!r}')
 
@@ -455,12 +469,31 @@ for desc, release in (
         ('no draft field', json.dumps({'tag_name': TAG, 'prerelease': False}).encode()),
         ('no prerelease field', json.dumps({'tag_name': TAG, 'draft': False}).encode()),
         ('draft as a string', release_json(draft='false')),
+        ('draft as the number 0', release_json(draft=0)),
+        ('prerelease as the number 0', release_json(prerelease=0)),
+        ('nested 200000 deep (a RecursionError)', b'[' * 200000),
+        ('one byte over the bound', padded_release(1048577)),
         ('a list answer', json.dumps([{'tag_name': TAG}]).encode()),
         ('not JSON', b'<html>rate limited</html>'), ('empty body', b''),
         ('a NUL byte', b'{"tag_name": "v1.0.5\\u0000", "draft": false, "prerelease": false}'),
         ('too large', b'{"tag_name": "' + TAG.encode() + b'", "draft": false, "prerelease": false, '
          b'"body": "' + b'x' * 1048576 + b'"}')):
     check_bad_release(desc, release, [b'rate limited'])
+
+# The bound is exact: a valid answer of exactly 1 MiB is read and used, one byte more is refused
+# (above), so a bound off by one fails one of the two.
+check(len(padded_release(1048576)) == 1048576 and len(padded_release(1048577)) == 1048577,
+      'BOUND: the fixtures should be exactly 1 MiB and 1 MiB + 1 bytes')
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), release=padded_release(1048576))
+    rc, out, err = run(t)
+    check_updated(t, rc, out, err, 'BOUND: a valid answer of exactly 1 MiB')
+
+# Defence in depth that no behaviour case can separate: both checks of an ASCII-only tag, the
+# python isascii test and the explicit digit list in the regex, must stay, each covering the other.
+_text = SCRIPT.read_text(encoding='utf-8')
+check(_text.count('.isascii()') == 2 and '0-9' not in re.sub(r'#.*', '', _text),
+      'DEPTH: both python blocks should test isascii and no regex should use a 0-9 range')
 
 # ---------------------------------------------------------------- TAG MISMATCH
 
@@ -565,6 +598,7 @@ def check_bad_local(desc, text, tokens, locale='C'):
               f'{label}: should say so on stderr only: {show(out)} {show(err)}')
         check(not any(echoes(token, both) for token in tokens) and b'\x1b' not in both,
               f'{label}: the local value should not be echoed: {show(err)}')
+        check(b'Traceback' not in err, f'{label}: no Python traceback should reach stderr: {show(err)}')
         check(state(t) == before, f'{label}: nothing should be written')
         check(fetched(t) == [], f'{label}: nothing should be fetched: {fetched(t)!r}')
 
@@ -578,7 +612,8 @@ for desc, text, tokens in (
         ('an escape', '{"name": "secureconfig", "version": "1.0.4\\u001b[31m"}\n', [b'1.0.4', b'\x1b']),
         ('a second line', '{"name": "secureconfig", "version": "1.0.4\\n1.0.6"}\n', [b'1.0.4', b'1.0.6']),
         ('two parts', '{"name": "secureconfig", "version": "1.0"}\n', [b'1.0']),
-        ('not an object', '["1.0.4"]\n', [b'1.0.4'])):
+        ('not an object', '["1.0.4"]\n', [b'1.0.4']),
+        ('nested 200000 deep (a RecursionError)', '[' * 200000 + '\n', [])):
     check_bad_local(desc, text, tokens)
 
 # ---------------------------------------------------------------- LOCALE
@@ -631,8 +666,13 @@ with tempfile.TemporaryDirectory() as tmp:
 
 bad_digest = manifest_for({'alpha.md': NEW_GUIDES['alpha.md'], 'beta.md': b'something else\n'})
 escape = manifest_for(NEW_GUIDES) + manifest_for({'../x': b'x\n'})
+# sha256sum without --strict only warns on a line that is not a digest line and checks the rest, so
+# the guide on that line would be installed unverified.
+malformed = b'zz-not-a-digest  alpha.md\n' + manifest_for({'beta.md': NEW_GUIDES['beta.md']})
 for desc, manifest, message in (
         ('a tampered digest', bad_digest, b'a fetched guide did not match its published digest'),
+        ('a malformed digest line', malformed,
+         b'a fetched guide did not match its published digest'),
         ('a "../x" entry', escape, b'the manifest lists an unexpected file name')):
     with tempfile.TemporaryDirectory() as tmp:
         t = build(Path(tmp), manifest=manifest)

@@ -32,9 +32,15 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     install a release older than the installed version. The choice of the API over the `releases/latest` redirect,
     and of reporting an older release as nothing to do, is the orchestrator's design, not the maintainer's.
   - The limit. `SKILL.md` now says the agent runs `scripts/update-guides.sh` only when the user asks for an update,
-    as it already did for `scripts/check-updates.py`.
-  - The Gradio line. `gradio.md` no longer carries `ssl_verify=False` in its copy-paste block, and one sentence says
-    to set it only for a self-signed certificate, citing the Gradio 6.31.0 `launch` source the guide pins.
+    as it permits `scripts/check-updates.py --check-online` when the user permits network egress.
+  - The Gradio line is recorded but NOT applied. The third choice, "Drop it, explain when", is held for the
+    maintainer, and `gradio.md` is unchanged by #1300. A reading of the pinned Gradio 6.31.0 source shows that
+    `launch()` with `server_name="0.0.0.0"` requests `https://localhost:PORT/` with `verify=ssl_verify`
+    (`gradio/http_server.py` lines 113 and 186-187, `gradio/blocks.py` lines 3559-3563 and 3063). Removing
+    `ssl_verify=False` would therefore stop the copy-paste block from starting with a certificate that does not
+    list `localhost`, which includes almost every CA-issued certificate. `ssl_verify` governs only that startup
+    request, not client connections. The orchestrator's question to the maintainer had stated that premise
+    incorrectly, so the choice rested on it. This is a reading of the source, not a run.
   - The revert path is a later maintainer ruling. The updater reverts by pointing `update-guides.sh` back at `main`,
     which also needs `tools/test_update_guides.py` to change with it.
 - **Dated note of 2026-11-12 on the PocketBase forge links that #1251 moved to the `rev=refs/tags/` form (#1298).**
@@ -230,7 +236,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   - `llms-full.txt`. The asset ships as committed, and the body says its repository links follow `main`, not the
     tag.
   - Integrity. Integrity comes from the API-created tag, `SHA256SUMS` and, where enabled, immutable releases.
-  - The updater. `plugin/skills/secure-deployment-config/scripts/update-guides.sh` keeps reading `main` for now. The ruling of 2026-11-12 above supersedes this: the updater reads the latest release tag.
+  - The updater. `plugin/skills/secure-deployment-config/scripts/update-guides.sh` keeps reading `main` for now.
+    The ruling of 2026-11-12 above supersedes this: the updater reads the latest release tag.
   - Effect, applied in the same change as this entry: `tools/check_release.py` is the offline release check, and
     its self-test, `tools/test_release.py`, runs in `tools/run_all_checks.sh`. CONTRIBUTING.md gains a "Releasing"
     section with the steps, and the `CHANGELOG.md` preamble no longer says there is no release artifact.

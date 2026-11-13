@@ -11,7 +11,8 @@
 #
 # It will not leave you worse off than it found you. Everything is fetched and verified into a
 # temporary directory first, and the installed bundle is replaced only once every file has matched
-# the digest the publisher recorded for it. Any failure leaves the working bundle untouched. It
+# the digest the publisher recorded for it. Any failure before that replacement leaves the working
+# bundle untouched, and a manifest line that is not a well-formed digest line is a failure. It
 # never replaces the bundle with an older release than the one installed.
 set -euo pipefail
 
@@ -41,7 +42,7 @@ import json, sys
 try:
     with open(sys.argv[1], encoding="utf-8") as fh:
         version = json.load(fh).get("version")
-except (OSError, ValueError, AttributeError):
+except (OSError, ValueError, AttributeError, RecursionError, MemoryError):
     version = None
 ok = isinstance(version, str) and version.isascii() and version.isprintable()
 print(version if ok else "")
@@ -61,7 +62,7 @@ trap 'rm -rf "$work"' EXIT
 # pre-release, or lacks those fields, is refused.
 : > "$work/release.json"
 if ! curl -fsS --max-time 30 -o "$work/release.json" "$API"; then
-  echo "could not read the latest published release (none is published, or GitHub did not answer); nothing changed" >&2
+  echo "could not read the latest published release (none is published, GitHub refused the request, as it does at a rate limit, or it did not answer); nothing changed" >&2
   exit 1
 fi
 tag=$(python3 -I -c '
@@ -70,7 +71,7 @@ try:
     with open(sys.argv[1], "rb") as fh:
         raw = fh.read(1048577)
     data = json.loads(raw) if len(raw) <= 1048576 else None
-except (OSError, ValueError):
+except (OSError, ValueError, RecursionError, MemoryError):
     data = None
 tag = data.get("tag_name") if isinstance(data, dict) else None
 ok = (isinstance(tag, str) and tag.isascii() and tag.isprintable()
@@ -169,7 +170,7 @@ while read -r _digest name; do
   count=$((count + 1))
 done < "$work/MANIFEST.sha256"
 
-( cd "$work" && sha256sum --quiet --check MANIFEST.sha256 ) || {
+( cd "$work" && sha256sum --quiet --check --strict MANIFEST.sha256 ) || {
   echo "a fetched guide did not match its published digest; nothing changed" >&2
   exit 1
 }

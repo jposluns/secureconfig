@@ -24,8 +24,8 @@ in `plugin.json`. Run `scripts/update-guides.sh` only when the user asks for an 
 when you have network. It downloads the guides of the latest published release, never the moving
 `main` branch, replaces the bundled copies and re-pins that version, and it never installs an
 older release than the one bundled. It verifies every fetched guide against the publisher's
-recorded digest and replaces the bundle only once all of them match, so a failed or interrupted
-update leaves the working bundle exactly as it was.
+recorded digest and replaces the bundle only once all of them match, so an update that fails
+before that replacement, on a fetch or a digest, leaves the working bundle exactly as it was.
 
 ## Rules that apply to every deployment
 
