@@ -17,6 +17,19 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-13 on the `ssl_verify=False` line in `gradio.md` (#1302), withdrawing the 2026-11-12 choice "Drop it, explain when".**
+  In an attended session at about 12:18Z the maintainer chose, in an AskUserQuestion, the option labelled "Keep flag,
+  fix the text", whose description read "Block keeps ssl_verify=False; its comment and sentence state the source fact
+  (needed unless the cert covers localhost; it only governs that startup request). Withdraw the earlier ruling."
+  The label and description are quoted exactly except that the label's closing "(Recommended)" is dropped. The ruling
+  withdraws the choice of 2026-11-12, "Drop it, explain when" (the label's closing "(Recommended)" is omitted from the quote).
+  That choice rested on a wrong premise: the pinned Gradio
+  6.31.0 source shows a default first `launch()` without SSR (blocks.py lines 3035-3039, 3085 and 3407-3415) requesting a URL under
+  `https://localhost:PORT/` with `verify=ssl_verify` when `server_name="0.0.0.0"` (blocks.py lines 3431-3432 and 3559-3563;
+  http_server.py lines 113 and 186-187). The guide has not checked SSR on. This pull
+  request applies the ruling: the example keeps `ssl_verify=False`, and its comment, the sentence after it and the
+  `tls` claim state that fact. The revert path is a later maintainer ruling that picks another option, such as an
+  example whose certificate lists `localhost` with the line dropped, after which the three texts change to match.
 - **Maintainer rulings of 2026-11-12 on the plugin updater's source, the `SKILL.md` updater limit and the Gradio
   `ssl_verify` line (#1300).** The maintainer gave these three rulings through AskUserQuestion in an attended session
   at about 23:06Z that day. No reasoning was recorded beyond the choices. The first chose the option labelled "Pin to
