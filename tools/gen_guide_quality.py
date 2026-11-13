@@ -21,7 +21,8 @@ score produces no diff. `fix_round` runs this on every guide edit, so that prope
 
 The four mechanical leads (QUALITY.md 3.6):
   M (M1): the count of entries in the five baseline and allow files whose guide field is exactly the
-          guide (comment lines and reason text do not count); zero is P, else PARTIAL(M1).
+          guide (comment lines and reason text do not count; an allowlist line counts only as the
+          exposure gate loads it, once per distinct guide and port); zero is P, else PARTIAL(M1).
   D (D3): the Sources heading month against each item month; an earlier item is GAP(D3), a later
           one with no stated meaning is PARTIAL(D3), otherwise P (n/a when there is no Sources).
   F (F1): PARTIAL(F1) when a Verify H2 carries its declaration, else `?` (the rest is judgment).
@@ -98,24 +99,45 @@ def gtype(guide):
     return "S"
 
 
-def entry_guide(path, line):
-    """The guide an entry line names, or None for a blank or comment line.
+def allow_entry(line):
+    """The (guide, port) an exposure allowlist line holds, or None for any other line.
 
-    The allowlist is parsed as check_exposure_index.load_allowlist does (text before `#`, split on
-    whitespace); every other file is TAB-separated with the guide in field 1.
+    Parsed as check_exposure_index.load_allowlist does: text before `#`, split on whitespace, kept
+    only when it has exactly 2 tokens and the second is all digits.
+    """
+    body = line.split("#", 1)[0].split()
+    if len(body) == 2 and body[1].isdigit():
+        return body[0], int(body[1])
+    return None
+
+
+def entry_guide(path, line):
+    """The guide an entry line names, or None for a blank, comment or non-entry line.
+
+    The allowlist follows allow_entry; every other file is TAB-separated with the guide in field 1.
     """
     if not line.strip() or line.startswith("#"):
         return None
     if path == EXPOSURE_ALLOWLIST:
-        body = line.split("#", 1)[0].split()
-        return body[0] if body else None
+        entry = allow_entry(line)
+        return entry[0] if entry else None
     return line.split("\t", 1)[0]
 
 
 def m1_count(guide, files):
-    """Entries for `guide` across {path: text}; each occurrence line counts once."""
-    return sum(1 for path, text in files.items() for line in text.split("\n")
-               if entry_guide(path, line) == guide)
+    """Entries for `guide` across {path: text}.
+
+    Each occurrence line of a TAB-separated file counts once. The allowlist counts distinct
+    (guide, port) pairs, as the gate's dict of entries does.
+    """
+    n = 0
+    for path, text in files.items():
+        lines = text.split("\n")
+        if path == EXPOSURE_ALLOWLIST:
+            n += len({e for e in map(allow_entry, lines) if e and e[0] == guide})
+        else:
+            n += sum(1 for line in lines if entry_guide(path, line) == guide)
+    return n
 
 
 def m1(guide):

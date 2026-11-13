@@ -12,6 +12,7 @@ import sys
 
 sys.path.insert(0, "tools")
 import check_guide_quality as c  # noqa: E402
+import check_exposure_index as cei  # noqa: E402
 import gen_guide_quality as gen  # noqa: E402
 
 DIGEST = {"a.md": "a" * 64, "b.md": "b" * 64,
@@ -222,6 +223,35 @@ def main():
           gen.m1_count("docker.md", {allow: "#docker.md 80\n"}) == 0)
     check("a whitespace-only allowlist line names no guide", gen.entry_guide(allow, "   ") is None)
     check("a whitespace-only TAB-file line names no guide", gen.entry_guide(claims, "   ") is None)
+
+    # The allowlist is read as the gate's own loader reads it: the expected value is what
+    # check_exposure_index.load_allowlist returns for the same text, not a literal.
+    class _GateFile:
+        def __init__(self, text):
+            self.text = text
+
+        def read_text(self, encoding=None):
+            return self.text
+
+    class _GateRoot:
+        def __init__(self, text):
+            self.text = text
+
+        def __truediv__(self, rel):
+            return _GateFile(self.text)
+
+    def gate_count(guide, text):
+        return sum(1 for g, _port in cei.load_allowlist(_GateRoot(text)) if g == guide)
+
+    for label, text, expected in [
+            ("a line with no port", "docker.md  # r\n", 0),
+            ("a line with three tokens", "docker.md 80 81\n", 0),
+            ("a line with a non-numeric port", "docker.md http\n", 0),
+            ("a duplicated guide and port pair", "docker.md 80  # a\ndocker.md 80  # b\n", 1),
+            ("two ports for one guide", "docker.md 80\ndocker.md 81\n", 2)]:
+        got = gen.m1_count("docker.md", {allow: text})
+        check(f"M1 counts {label} as the gate does ({expected})",
+              got == gate_count("docker.md", text) == expected)
 
     # m1() maps the count to its cell; ROOT is swapped for an in-memory tree, so nothing is written.
     class _Text:
