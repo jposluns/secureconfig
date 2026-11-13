@@ -17,6 +17,14 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-13 on keeping the card-builder fonts under `.baseline/card-fonts/` (#1303).**
+  The question was about template ruling D-103, which allows a site that uses only icons to delete
+  `.baseline/card-fonts/`. In an attended session at about 18:51Z the maintainer chose, in an AskUserQuestion, the
+  option labelled "Keep them for now", whose description read "The adoption PR stays a pure 1.13.0 copy; deleting
+  the fonts can be a separate small PR later if wanted. Predicted choice." The label and description are quoted
+  exactly except that the label's closing "(Recommended)" is omitted. This pull request applies the ruling: the four
+  card-font files stay copied and pinned. The revert path is a later pull request that deletes the fonts and their
+  `NOTICE` and `CLAUDE.md` mentions.
 - **Maintainer ruling of 2026-11-13 on the `ssl_verify=False` line in `gradio.md` (#1302), withdrawing the 2026-11-12 choice "Drop it, explain when".**
   In an attended session at about 12:18Z the maintainer chose, in an AskUserQuestion, the option labelled "Keep flag,
   fix the text", whose description read "Block keeps ssl_verify=False; its comment and sentence state the source fact

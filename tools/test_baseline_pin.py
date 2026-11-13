@@ -10,7 +10,7 @@ baseline 1.6.0 cases hold .baseline/check_palette.py, the copied palette gate, t
 added in QA round 1 of #1190 refuse a .baseline/ that is a symbolic link or not a directory, a
 pin.toml that is a link, and any other entry in .baseline/ (a file, a subdirectory, a link). The
 baseline 1.8.0 cases hold .baseline/check_overflow.js, the copied overflow check, to its pin. The
-baseline 1.13.0 cases hold .baseline/build_card.js and its fonts under .baseline/card-fonts/ to
+baseline 1.12.4 cases hold .baseline/build_card.js and its fonts under .baseline/card-fonts/ to
 their pins, admit .baseline/card-fonts only as a real directory holding pinned tools and nothing
 else, admit the site's own .baseline/site-card.toml only as a regular file, and refuse the 1.11.3
 Dancing Script woff2 left behind unpinned.
@@ -225,7 +225,7 @@ CASES = [
      ".baseline/check_overflow.js is pinned but missing"),
     ("the overflow check's pin line removed", edit_pin_line('".baseline/check_overflow.js" ='), 1,
      "does not pin .baseline/check_overflow.js"),
-    # Baseline 1.13.0: the card builder and its fonts are copied to .baseline/ and pinned; the
+    # Baseline 1.12.4: the card builder and its fonts are copied to .baseline/ and pinned; the
     # site's own card data file is admitted unpinned, as a regular file only.
     ("one byte changed in .baseline/build_card.js", flip(CARD_BUILDER), 1,
      ".baseline/build_card.js differs from its pin"),
