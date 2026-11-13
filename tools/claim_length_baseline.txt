@@ -44,10 +44,6 @@ lighttpd.md	mfa	498
 lighttpd.md	verify-config	502
 lighttpd.md	verify-host	713
 llm-observability.md	otel-bearer	593
-low-code-builders.md	budibase-init	586
-low-code-builders.md	budibase-sample-check	442
-low-code-builders.md	nocodb-packaging	474
-low-code-builders.md	verify-litellm	535
 mfa.md	admin-factors	593
 mfa.md	push-matching	942
 mfa.md	ssh-nullok	456
