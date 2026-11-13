@@ -17,6 +17,26 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Dated note of 2026-11-12 on the PocketBase forge links that #1251 moved to the `rev=refs/tags/` form (#1298).**
+  This is a dated note, not a new ruling. The maintainer asked through AskUserQuestion in an attended session at
+  about 20:00Z that day that the move be recorded, and no reasoning was recorded beyond that request. The
+  "Maintainer ruling of 2026-11-05 on `pocketbase.md` TODO 1.414 (#1234)" below names the citation form
+  `files/<path>?rev=v0.41.1`. #1251 moved the forge source links to `files/<path>?rev=refs/tags/v0.41.1`, because
+  the forge's API refuses the bare `rev=v0.41.1` with HTTP 400, as `CHANGELOG.md` records. The links still name the
+  v0.41.1 tag, so the terms of the 2026-11-05 ruling hold. A tag can move where a commit cannot, and pinning the
+  links to commits instead would need a later ruling. The revert path is a later maintainer ruling, after which the
+  links return to the `files/<path>?rev=v0.41.1` form or move to pinned commits.
+- **Maintainer ruling of 2026-11-12 on Red Hat's product life-cycle API as a canonical documentation page (#1298).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session at about 20:00Z that day. No
+  reasoning was recorded beyond the terms below. It answers a question that an earlier QA of #1206 left open. Its
+  terms: Red Hat's product life-cycle API response,
+  `https://access.redhat.com/product-life-cycles/api/v1/products?name=Red%20Hat%20Enterprise%20Linux`, counts as a
+  canonical documentation page under CONTRIBUTING.md rule 4 when a guide cites it as the API response, not as the
+  rendered errata page. `self-signed.md` cites it that way: its Sources item names it as the API response and not as
+  the rendered errata page, and its version-basis metadata names the same URL as "Red Hat product life-cycle API
+  response (RHEL)". Its effect: no guide changes, and a later citation of the same API in that form needs no
+  further ruling. The revert path is a later maintainer ruling that withdraws it, after which the `self-signed.md`
+  citations of the API need another canonical page or an explicit rule 4 exception.
 - **Maintainer ruling of 2026-11-12 on the day-end rule for releases (#1294).** The maintainer gave this ruling in an
   attended session at about 20:24Z that day, where he chose the option labelled "Change the day-end rule" in an
   AskUserQuestion, so that a release can be cut on the same UTC day as its target merge. No reasoning was recorded
