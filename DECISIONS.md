@@ -17,6 +17,26 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-11-12 on the plugin updater's source, the `SKILL.md` updater limit and the Gradio
+  `ssl_verify` line (#1300).** The maintainer gave these three rulings through AskUserQuestion in an attended session
+  at about 23:06Z that day. No reasoning was recorded beyond the choices. The first chose the option labelled "Pin to
+  release tags (Recommended)", whose description read "The updater reads from the latest published release tag
+  (immutable releases are on), so it only installs what passed the release checks." The second chose "Add the limit
+  (Recommended)", whose description read "SKILL.md:23 says the agent runs update-guides.sh only when the user asks for
+  an update." The third chose "Drop it, explain when (Recommended)", whose description read "Remove ssl_verify=False
+  from the block and add one sourced sentence: set it only for a self-signed certificate (Gradio's launch docs)."
+  - The updater. The first ruling supersedes the "for now" note that the 2026-11-01 release ruling below records
+    about `update-guides.sh` reading `main`. The script asks the GitHub API for `releases/latest`, accepts only a tag
+    of the form `vN.N.N`, and downloads `VERSION`, the manifest and the guides from `raw.githubusercontent.com` at
+    `refs/tags/<tag>`. It refuses a `VERSION` that differs from its tag, keeps every earlier refusal, and does not
+    install a release older than the installed version. The choice of the API over the `releases/latest` redirect,
+    and of reporting an older release as nothing to do, is the orchestrator's design, not the maintainer's.
+  - The limit. `SKILL.md` now says the agent runs `scripts/update-guides.sh` only when the user asks for an update,
+    as it already did for `scripts/check-updates.py`.
+  - The Gradio line. `gradio.md` no longer carries `ssl_verify=False` in its copy-paste block, and one sentence says
+    to set it only for a self-signed certificate, citing the Gradio 6.31.0 `launch` source the guide pins.
+  - The revert path is a later maintainer ruling. The updater reverts by pointing `update-guides.sh` back at `main`,
+    which also needs `tools/test_update_guides.py` to change with it.
 - **Dated note of 2026-11-12 on the PocketBase forge links that #1251 moved to the `rev=refs/tags/` form (#1298).**
   This is a dated note, not a new ruling. In an attended session at about 20:06Z that day the maintainer chose,
   in an AskUserQuestion, the option labelled "Note the #1251 link form", whose description read "Add a dated
@@ -210,7 +230,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   - `llms-full.txt`. The asset ships as committed, and the body says its repository links follow `main`, not the
     tag.
   - Integrity. Integrity comes from the API-created tag, `SHA256SUMS` and, where enabled, immutable releases.
-  - The updater. `plugin/skills/secure-deployment-config/scripts/update-guides.sh` keeps reading `main` for now.
+  - The updater. `plugin/skills/secure-deployment-config/scripts/update-guides.sh` keeps reading `main` for now. The ruling of 2026-11-12 above supersedes this: the updater reads the latest release tag.
   - Effect, applied in the same change as this entry: `tools/check_release.py` is the offline release check, and
     its self-test, `tools/test_release.py`, runs in `tools/run_all_checks.sh`. CONTRIBUTING.md gains a "Releasing"
     section with the steps, and the `CHANGELOG.md` preamble no longer says there is no release artifact.

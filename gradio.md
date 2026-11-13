@@ -62,12 +62,11 @@ demo.launch(
     share=False,        # even for a TLS deployment: never implicitly share via GRADIO_SHARE or Colab
     ssl_certfile="/path/cert.pem",
     ssl_keyfile="/path/key.pem",
-    ssl_verify=False,   # only for self-signed certificates; skips validating your own cert
     auth=(os.environ["GRADIO_USER"], os.environ["GRADIO_PASS"]),
 )
 ```
 
-`ssl_keyfile_password` exists for encrypted keys. `ssl_verify=False` here affects how the launcher checks its own certificate; it is needed for self-signed certificates and unnecessary with a CA-issued one. Supply any key password through your secret manager or environment, not a literal in the script. See the [TLS parameters](https://gradio.app/docs/gradio/blocks) and [launcher certificate check](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/blocks.py).
+`ssl_keyfile_password` exists for encrypted keys. Supply any key password through your secret manager or environment, not a literal in the script. Add `ssl_verify=False` to the call only for a self-signed certificate: it switches off the launcher's check of its own certificate, which a CA-issued certificate does not need and which you should leave on. See the [TLS parameters](https://gradio.app/docs/gradio/blocks) and [launcher certificate check](https://raw.githubusercontent.com/gradio-app/gradio/gradio%406.31.0/gradio/blocks.py).
 
 Behind a proxy, keep `server_name="127.0.0.1"` explicit. The argument defaults to `None`, resolving through `GRADIO_SERVER_NAME` to loopback when that variable is unset. If the proxy publishes the app beneath `/demo`, `root_path="/demo"` builds the corresponding URLs. It is **not an access control** and does not replace authentication or prevent direct access to the backend. See the [launch reference](https://gradio.app/docs/gradio/blocks).
 
@@ -448,7 +447,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-09",
-  "body_sha256": "858cabb567e8e3a9f67586d2a03bfa122342d966f89398496890dcd53d6180f5",
+  "body_sha256": "766aad424efcb5dd8601a152679ffd319afe2726327903bab077b7619d27fbfc",
   "components": {
     "gradio": {
       "name": "Gradio",

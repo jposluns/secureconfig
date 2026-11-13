@@ -33,7 +33,7 @@ gitlab.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	33847a992ac1079e1b78c02635760313
 gitops-controllers.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	b93332fac2381126c55dd1cf869f3ff85ee57aa99959e15fc102c28f872a09af	2026-11-10	tool	current
 go.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	5c4b33e6d16d118aaf133645b369cb3b46099ff732119bf81755e5b05f7b12a5	2026-11-10	tool	current
 gpu-clouds.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	987e395d78900fcb8f247ee334e70cf832f1d272bbd202d0f2200133369a4335	2026-11-10	tool	current
-gradio.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	858cabb567e8e3a9f67586d2a03bfa122342d966f89398496890dcd53d6180f5	2026-11-10	tool	current
+gradio.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	766aad424efcb5dd8601a152679ffd319afe2726327903bab077b7619d27fbfc	2026-11-10	tool	current
 haproxy.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	d2feed52638b0fb5736dd12ba940bb27a5bb2fc765bec492b0f15a8b22908a8d	2026-11-10	tool	current
 headers.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	39ca21a6acd6f5e964df85181ee154aa3168d8cb4fc6335f88a465ae8739629b	2026-11-10	tool	current
 headless-browser-services.md	C	P	?	?	?	GAP(D3)	?	?	?	?	?	MINOR-GAPS	c495bd437a18c4742276a20cc1088a8a65f8024e968e1f0c5649a1bc160c292d	2026-11-10	tool	current

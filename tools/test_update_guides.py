@@ -6,18 +6,32 @@ the plugin (plugin.json, skills/secureconfig/scripts/update-guides.sh copied fro
 skills/secureconfig/references with two guides and a MANIFEST.sha256), because the script finds
 plugin.json and the references relative to itself, and runs it as bash <script> with an explicit
 minimal environment and a working directory the test controls. A bash shim named curl comes first
-on PATH: it maps a URL under https://raw.githubusercontent.com/jposluns/secureconfig/main/ to a
-file in the case's fixture folder, honours -o FILE, ignores -fsS and --max-time N, exits 22 for
-any other URL, and appends every URL it is asked for to a log. Each case checks that log, so a
-fetch the shim did not make fails the case. The script's RAW constant is unchanged; there is no
-override for it. This process also replaces the socket connect functions with one that raises.
-Every case runs with LC_ALL=C except the LOCALE cases.
+on PATH: it serves the GitHub API's releases/latest URL from a fixture JSON file, maps a URL under
+https://raw.githubusercontent.com/jposluns/secureconfig/refs/tags/ to a file in the case's fixture
+folder, honours -o FILE, ignores -fsS and --max-time N, exits 22 for any other URL (a URL under
+main included, and the API when the case has no release), and appends every URL it is asked for
+to a log. Each case checks that log, so a fetch the shim did not make fails the case. The script's
+URL constants are unchanged; there is no override for them. This process also replaces the
+socket connect functions with one that raises. Every case runs with LC_ALL=C except the LOCALE
+cases.
 
   - SHIM: an unknown URL exits 22, -o writes the fixture, and both are logged;
-  - GOOD: a newer N.N.N with a matching manifest replaces the references, re-pins plugin.json and
-    says so, fetching VERSION, the manifest and each guide through the shim, in that order; a
-    VERSION with no trailing newline and one ending in CR LF update the same way;
-  - SAME: the published version equal to the installed one is "nothing to do", nothing changed;
+  - GOOD: a release whose tag is vN.N.N, newer than the installed version, with a matching
+    VERSION and manifest at that tag, replaces the references, re-pins plugin.json and says so,
+    fetching the API answer, then VERSION, the manifest and each guide from refs/tags/<tag>
+    through the shim, in that order; a VERSION with no trailing newline and one ending in CR LF
+    update the same way;
+  - SAME: a release equal to the installed version is "nothing to do", nothing changed, and only
+    the API answer is fetched;
+  - OLDER: a release older than the installed version is not installed: exit 0, "nothing to do",
+    nothing changed, only the API is fetched; the comparison is numeric (1.0.10 is newer than
+    1.0.9, not older);
+  - NO RELEASE: no API answer (the shim's 22) is refused with exit 1, nothing changed;
+  - BAD TAG: a tag_name that is not vN.N.N (no v, two or four parts, a suffix, a trailing line
+    end, an escape, non-ASCII digits, a path, a number, null, empty), a draft or pre-release
+    object, one missing those fields, and an answer that is not an object or not JSON, are each
+    refused with exit 1 and a message that does not echo the value, nothing fetched but the API;
+  - TAG MISMATCH: a VERSION at the tag that is not the tag's version is refused;
   - BAD PUBLISHED: 1.0, 1.0.5.6, v1.0.5, 1.0.5-rc1, a terminal escape, a word, a second line, a
     trailing dot, a sign, non-ASCII digits, a huge run of digits, a huge garbage line, a second
     line that stripping whitespace would join into 1.0.56, a trailing blank with and without a
@@ -55,10 +69,16 @@ from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / 'plugin' / 'skills' / 'secureconfig' / 'scripts' / 'update-guides.sh'
-RAW = 'https://raw.githubusercontent.com/jposluns/secureconfig/main/'
-MANIFEST_PATH = 'plugin/skills/secureconfig/references/MANIFEST.sha256'
+API = 'https://api.github.com/repos/jposluns/secureconfig/releases/latest'
+RAW_PREFIX = 'https://raw.githubusercontent.com/jposluns/secureconfig/refs/tags/'
 INSTALLED = '1.0.4'
 PUBLISHED = '1.0.5'
+TAG = 'v' + PUBLISHED
+RAW = RAW_PREFIX + TAG + '/'
+MANIFEST_PATH = 'plugin/skills/secureconfig/references/MANIFEST.sha256'
+BAD_TAG_MESSAGE = b'the latest release has no tag of the form vN.N.N'
+NO_RELEASE_MESSAGE = b'could not read the latest published release'
+MISMATCH_MESSAGE = b'the VERSION file at the release tag does not match the tag'
 OLD_GUIDES = {'alpha.md': b'# Alpha\n\nInstalled text.\n',
               'gamma.md': b'# Gamma\n\nOnly in the installed bundle.\n'}
 NEW_GUIDES = {'alpha.md': b'# Alpha\n\nPublished text.\n',
@@ -81,7 +101,8 @@ SHIM = r'''#!/usr/bin/env bash
 set -u
 log=@LOG@
 fixtures=@FIXTURES@
-prefix=https://raw.githubusercontent.com/jposluns/secureconfig/main/
+api=https://api.github.com/repos/jposluns/secureconfig/releases/latest
+prefix=https://raw.githubusercontent.com/jposluns/secureconfig/refs/tags/
 out='' url=''
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -101,6 +122,7 @@ while [ "$#" -gt 0 ]; do
 done
 printf '%s\n' "$url" >> "$log"
 case "$url" in
+  "$api") path=_api/releases-latest.json ;;
   "$prefix"*) path=${url#"$prefix"} ;;
   *) exit 22 ;;
 esac
@@ -191,9 +213,18 @@ def manifest_for(guides):
                    for name, body in guides.items()).encode()
 
 
+def release_json(tag=TAG, **fields):
+    data = {'tag_name': tag, 'draft': False, 'prerelease': False}
+    data.update(fields)
+    return json.dumps(data).encode()
+
+
 def build(base, version=PUBLISHED.encode() + b'\n', plugin_text=PLUGIN_JSON,
-          guides=None, manifest=None):
-    """A plugin tree, a fixture folder the shim serves, the shim, a working directory."""
+          guides=None, manifest=None, release=None, tag=TAG):
+    """A plugin tree, a fixture folder the shim serves, the shim, a working directory.
+
+    release is the bytes the API answers with (default: a published release named tag), or False
+    for no release. The VERSION, manifest and guides are served under refs/tags/<tag>/."""
     guides = NEW_GUIDES if guides is None else guides
     plugin = base / 'plugin'
     skill = plugin / 'skills' / 'secureconfig'
@@ -207,12 +238,17 @@ def build(base, version=PUBLISHED.encode() + b'\n', plugin_text=PLUGIN_JSON,
     (skill / 'references' / 'MANIFEST.sha256').write_bytes(manifest_for(OLD_GUIDES))
 
     fixtures = base / 'fixtures'
-    (fixtures / MANIFEST_PATH).parent.mkdir(parents=True)
+    served = fixtures / tag
+    (served / MANIFEST_PATH).parent.mkdir(parents=True)
+    (fixtures / '_api').mkdir()
+    if release is not False:
+        (fixtures / '_api' / 'releases-latest.json').write_bytes(
+            release_json(tag) if release is None else release)
     if version is not None:
-        (fixtures / 'VERSION').write_bytes(version)
+        (served / 'VERSION').write_bytes(version)
     for name, body in guides.items():
-        (fixtures / name).write_bytes(body)
-    (fixtures / MANIFEST_PATH).write_bytes(manifest_for(guides) if manifest is None else manifest)
+        (served / name).write_bytes(body)
+    (served / MANIFEST_PATH).write_bytes(manifest_for(guides) if manifest is None else manifest)
 
     shim_dir = base / 'bin'
     shim_dir.mkdir()
@@ -285,6 +321,18 @@ with tempfile.TemporaryDirectory() as tmp:
           and not done.stdout, 'SHIM: -o FILE should write the fixture and print nothing')
     check(fetched(t) == ['https://example.com/VERSION', RAW + 'beta.md'],
           f'SHIM: every URL should be logged: {fetched(t)!r}')
+    main_url = 'https://raw.githubusercontent.com/jposluns/secureconfig/main/VERSION'
+    done = subprocess.run([str(t.shim), '-fsS', '--max-time', '30', main_url],
+                          cwd=t.cwd, env=t.env, capture_output=True, timeout=60)
+    check(done.returncode == 22, f'SHIM: a URL under main should exit 22: {done.returncode}')
+    done = subprocess.run([str(t.shim), '-fsS', '--max-time', '30', API],
+                          cwd=t.cwd, env=t.env, capture_output=True, timeout=60)
+    check(done.returncode == 0 and json.loads(done.stdout)['tag_name'] == TAG,
+          f'SHIM: the API URL should serve the release fixture: {done.returncode} {show(done.stdout)}')
+    t = build(Path(tmp) / 'norelease', release=False)
+    done = subprocess.run([str(t.shim), '-fsS', '--max-time', '30', API],
+                          cwd=t.cwd, env=t.env, capture_output=True, timeout=60)
+    check(done.returncode == 22, f'SHIM: no release should make the API URL exit 22: {done.returncode}')
 
 # ---------------------------------------------------------------- GOOD
 
@@ -304,7 +352,7 @@ def check_updated(t, rc, out, err, label):
     check(f'installed {INSTALLED}, published {PUBLISHED}'.encode() in out
           and f'updated {len(NEW_GUIDES)} guides and re-pinned to {PUBLISHED}'.encode() in out,
           f'{label}: stdout should say it updated: {show(out)}')
-    check(fetched(t) == [RAW + 'VERSION', RAW + MANIFEST_PATH] + [RAW + n for n in NEW_GUIDES],
+    check(fetched(t) == [API, RAW + 'VERSION', RAW + MANIFEST_PATH] + [RAW + n for n in NEW_GUIDES],
           f'{label}: every fetch should go through the shim, in order: {fetched(t)!r}')
     check(not list(t.tmp.iterdir()), f'{label}: the work folder should be removed')
 
@@ -324,13 +372,107 @@ check_good('GOOD: a CR LF line end', version=PUBLISHED.encode() + b'\r\n')
 # ---------------------------------------------------------------- SAME
 
 with tempfile.TemporaryDirectory() as tmp:
-    t = build(Path(tmp), version=INSTALLED.encode() + b'\n')
+    t = build(Path(tmp), version=INSTALLED.encode() + b'\n', tag='v' + INSTALLED)
     before = state(t)
     rc, out, err = run(t)
     check(rc == 0 and f'already at {INSTALLED}; nothing to do'.encode() in out,
           f'SAME: should exit 0 and say nothing to do: {rc} {show(out)} {show(err)}')
     check(state(t) == before, 'SAME: nothing should change')
-    check(fetched(t) == [RAW + 'VERSION'], f'SAME: only VERSION should be fetched: {fetched(t)!r}')
+    check(fetched(t) == [API], f'SAME: only the API answer should be fetched: {fetched(t)!r}')
+
+# ---------------------------------------------------------------- OLDER
+
+for desc, installed, tag in (('one patch older', INSTALLED, 'v1.0.3'),
+                             ('numerically older, textually later', '1.0.10', 'v1.0.9'),
+                             ('older with leading zeros', INSTALLED, 'v1.0.03')):
+    with tempfile.TemporaryDirectory() as tmp:
+        t = build(Path(tmp), version=tag[1:].encode() + b'\n', tag=tag,
+                  plugin_text=PLUGIN_JSON.replace(INSTALLED, installed))
+        before = state(t)
+        rc, out, err = run(t)
+        check(rc == 0 and f'installed {installed} is newer than the latest release {tag[1:]}; '
+              'nothing to do'.encode() in out and not err,
+              f'OLDER {desc}: should exit 0 and report, not downgrade: {rc} {show(out)} {show(err)}')
+        check(state(t) == before, f'OLDER {desc}: nothing should change')
+        check(fetched(t) == [API], f'OLDER {desc}: only the API answer should be fetched: {fetched(t)!r}')
+
+# A later release whose number is textually earlier is newer: 1.0.10 over an installed 1.0.9.
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), version=b'1.0.10\n', tag='v1.0.10',
+              plugin_text=PLUGIN_JSON.replace(INSTALLED, '1.0.9'))
+    rc, out, err = run(t)
+    got = json.loads(t.plugin_json.read_text(encoding='utf-8')).get('version')
+    check(rc == 0 and got == '1.0.10' and fetched(t)[:2] == [API, RAW_PREFIX + 'v1.0.10/VERSION'],
+          f'OLDER: 1.0.10 over an installed 1.0.9 should update: {rc} {got!r} {show(err)}')
+
+# ---------------------------------------------------------------- NO RELEASE
+
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), release=False)
+    before = state(t)
+    rc, out, err = run(t)
+    check(rc == 1 and NO_RELEASE_MESSAGE in err and not out,
+          f'NO RELEASE: should refuse with exit 1: {rc} {show(out)} {show(err)}')
+    check(state(t) == before, 'NO RELEASE: nothing should change')
+    check(fetched(t) == [API], f'NO RELEASE: only the API should be asked: {fetched(t)!r}')
+
+# ---------------------------------------------------------------- BAD TAG
+
+
+def check_bad_release(desc, release, tokens, locale='C'):
+    """An API answer that holds release is refused: exit 1, BAD_TAG_MESSAGE on stderr only, no
+    token echoed, nothing changed, only the API fetched."""
+    with tempfile.TemporaryDirectory() as tmp:
+        t = build(Path(tmp), release=release)
+        t.env['LC_ALL'] = locale
+        before = state(t)
+        rc, out, err = run(t)
+        both = out + b'\n' + err
+        label = prefixed(f'BAD TAG: {desc}', locale)
+        check(rc == 1 and BAD_TAG_MESSAGE in err and not out,
+              f'{label}: should refuse with exit 1 on stderr only: {rc} {show(out)} {show(err)}')
+        check(not any(echoes(token, both) for token in tokens) and b'\x1b' not in both,
+              f'{label}: the value should not be echoed: {show(err)}')
+        check(state(t) == before, f'{label}: nothing should change')
+        check(fetched(t) == [API], f'{label}: only the API should be fetched: {fetched(t)!r}')
+
+
+for desc, tag in (
+        ('no v', '1.0.5'), ('a capital V', 'V1.0.5'), ('two parts', 'v1.0'),
+        ('four parts', 'v1.0.5.6'), ('a pre-release suffix', 'v1.0.5-rc1'),
+        ('a trailing line end', 'v1.0.5\n'), ('a leading blank', ' v1.0.5'),
+        ('a second line', 'v1.0.5\nv1.0.6'), ('a terminal escape', 'v1.0.5\x1b[31m'),
+        ('non-ASCII digits', 'v١.٠.٥'), ('a path', 'v1.0.5/../../main'),
+        ('a word', 'latest'), ('empty', ''), ('a v alone', 'v')):
+    shown = tag.strip().encode() if tag.isascii() and any(c.isdigit() for c in tag) else b''
+    check_bad_release(desc, release_json(tag), [shown] if shown else [])
+
+for desc, release in (
+        ('a number', release_json(105)), ('null', release_json(None)),
+        ('a list', release_json(['v1.0.5'])),
+        ('no tag_name', json.dumps({'draft': False, 'prerelease': False}).encode()),
+        ('a draft', release_json(draft=True)), ('a pre-release', release_json(prerelease=True)),
+        ('no draft field', json.dumps({'tag_name': TAG, 'prerelease': False}).encode()),
+        ('no prerelease field', json.dumps({'tag_name': TAG, 'draft': False}).encode()),
+        ('draft as a string', release_json(draft='false')),
+        ('a list answer', json.dumps([{'tag_name': TAG}]).encode()),
+        ('not JSON', b'<html>rate limited</html>'), ('empty body', b''),
+        ('a NUL byte', b'{"tag_name": "v1.0.5\\u0000", "draft": false, "prerelease": false}'),
+        ('too large', b'{"tag_name": "' + TAG.encode() + b'", "draft": false, "prerelease": false, '
+         b'"body": "' + b'x' * 1048576 + b'"}')):
+    check_bad_release(desc, release, [b'rate limited'])
+
+# ---------------------------------------------------------------- TAG MISMATCH
+
+with tempfile.TemporaryDirectory() as tmp:
+    t = build(Path(tmp), version=b'1.0.6\n')
+    before = state(t)
+    rc, out, err = run(t)
+    check(rc == 1 and MISMATCH_MESSAGE in err and b'1.0.6' not in err,
+          f'TAG MISMATCH: a VERSION that differs from its tag should be refused: {rc} {show(err)}')
+    check(state(t) == before, 'TAG MISMATCH: nothing should change')
+    check(fetched(t) == [API, RAW + 'VERSION'],
+          f'TAG MISMATCH: nothing after VERSION should be fetched: {fetched(t)!r}')
 
 # ---------------------------------------------------------------- BAD PUBLISHED
 
@@ -357,7 +499,8 @@ def check_bad_published(desc, raw, locale='C'):
               and b'\x1b' not in both and b'\x07' not in both and b'\x00' not in both,
               f'{label}: the raw value should not be echoed: {show(err)}')
         check(state(t) == before, f'{label}: nothing should change')
-        check(fetched(t) == [RAW + 'VERSION'], f'{label}: nothing after VERSION should be fetched')
+        check(fetched(t) == [API, RAW + 'VERSION'],
+              f'{label}: nothing after VERSION should be fetched')
 
 
 for desc, raw in (
@@ -394,13 +537,14 @@ for desc, raw in (('empty', b''), ('a newline', b'\n'), ('blanks', b'  \t\n\n'))
         check(rc == 1 and EMPTY_PUBLISHED_MESSAGE in err and not out,
               f'{label}: should keep the empty-value message: {rc} {show(err)}')
         check(state(t) == before, f'{label}: nothing should change')
-        check(fetched(t) == [RAW + 'VERSION'], f'{label}: nothing after VERSION should be fetched')
+        check(fetched(t) == [API, RAW + 'VERSION'],
+              f'{label}: nothing after VERSION should be fetched')
 
 with tempfile.TemporaryDirectory() as tmp:
     t = build(Path(tmp), version=None)
     before = state(t)
     rc, out, err = run(t)
-    check(rc not in (0, None) and state(t) == before and fetched(t) == [RAW + 'VERSION'],
+    check(rc not in (0, None) and state(t) == before and fetched(t) == [API, RAW + 'VERSION'],
           f'BAD PUBLISHED: a VERSION the shim does not have should refuse, nothing changed: {rc}')
 
 # ---------------------------------------------------------------- BAD LOCAL
@@ -459,6 +603,7 @@ for locale in UTF8_LOCALES:
     check_bad_local('Arabic-Indic digits',
                     '{"name": "secureconfig", "version": "' + ARABIC_INDIC + '"}\n',
                     [ARABIC_INDIC.encode()], locale)
+    check_bad_release('Arabic-Indic digits', release_json('v' + ARABIC_INDIC), [], locale)
     check_good('GOOD', locale=locale)
 
 # ---------------------------------------------------------------- ISOLATION
@@ -496,7 +641,7 @@ for desc, manifest, message in (
         label = f'MANIFEST: {desc}'
         check(rc == 1 and message in err, f'{label}: should refuse: {rc} {show(err)}')
         check(state(t) == before, f'{label}: nothing should change')
-        check(fetched(t)[:2] == [RAW + 'VERSION', RAW + MANIFEST_PATH]
+        check(fetched(t)[:3] == [API, RAW + 'VERSION', RAW + MANIFEST_PATH]
               and not any('..' in url for url in fetched(t)),
               f'{label}: fetches through the shim, never the "../x" entry: {fetched(t)!r}')
         check(not (t.tmp / 'x').exists() and not (Path(tmp) / 'x').exists(),
@@ -507,6 +652,8 @@ if failures:
         print(f'  FAIL  {failure}')
     sys.exit(1)
 print(f'  ok    {cases} cases for update-guides.sh, offline on a curl shim: the shim itself, an '
-      'update, nothing to do, refused published and local versions, non-ASCII digits refused '
+      'update from the latest release tag, nothing to do, an older release not installed, no '
+      'release, refused tags, release objects and tag mismatch, refused published and local '
+      'versions, non-ASCII digits refused '
       'and an update under ' + ' and '.join(UTF8_LOCALES) + ', python3 -I against a planted '
       'json.py with its negative control, and refused manifests')
