@@ -588,8 +588,12 @@ link to `CHANGELOG.md` at the tag.
 
 The released `llms-full.txt` is the committed file, so its repository links point at `main`,
 not at the tag, and the body says so. The bundled
-`plugin/skills/secureconfig/scripts/update-guides.sh` still reads `main`, not a
-release.
+`plugin/skills/secureconfig/scripts/update-guides.sh` reads the latest published release, not
+`main`: it asks the GitHub API for `releases/latest`, which never names a draft or a
+pre-release, accepts only a tag of the form `vN.N.N`, and downloads the manifest and the
+guides from `raw.githubusercontent.com` at `refs/tags/<tag>`, so it installs only what passed
+the release checks. It refuses a `VERSION` at the tag that differs from the tag, and it never
+installs a release older than the installed version.
 
 ## Licence
 
