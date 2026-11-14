@@ -17,7 +17,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
-- **Unattended D-1096 vote of 2026-11-14 on pinning `ssr_mode=False` in the `gradio.md` TLS example (#PRNUM).**
+- **Unattended D-1096 vote of 2026-11-14 on pinning `ssr_mode=False` in the `gradio.md` TLS example (#1313).**
   With the fleet unattended, secureconfig sent the question under D-1096 at 11:08Z on 2026-11-14, with two options as
   written in `notes.md`. Option 1 was to pin `ssr_mode=False` in the TLS example with a comment. Option 2 was that pin
   plus a sourced sentence replacing the guide's "has not checked the behaviour with SSR on" disclaimer. lab_infra
