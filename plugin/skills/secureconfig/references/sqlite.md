@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against SQLite documentation (rolling) (no recorded version), Litestream MCP minimum v0.5.0, LiteFS source v0.5.14, Git documentation v2.56.0, GNU Coreutils stat manual v9.7, GNU Bash reference manual bash-5.3, curl curl-8_14_1, and GNU grep documentation v3.12; 7 further sources carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 40 claims: 2 demonstrated by a check that ran and 38 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against SQLite documentation (rolling) (no recorded version), Litestream MCP minimum v0.5.0, LiteFS source v0.5.14, Git documentation v2.56.0, GNU Coreutils stat manual v9.7, GNU Bash reference manual bash-5.3, curl curl-8_14_1, and GNU grep documentation v3.12; 7 further sources carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 40 claims: 2 demonstrated by a check that ran; 38 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
