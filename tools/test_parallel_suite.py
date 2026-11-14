@@ -88,7 +88,7 @@ DIFFERENTIAL_NORMALISE = (
     # cut copy dies by a signal: a line dropped, not rewritten. For TERM it is the bare notice
     # ("Terminated   bash -c '. /dev/fd/3' ..."); for KILL, HUP, ABRT and the others bash puts the
     # script's name, a line number and the PID before it ("<script>: line 485: 1234 Killed   ..."),
-    # and ABRT adds "(core dumped)"; INT prints none. The description is bash's text for the signal,
+    # and ABRT adds "(core dumped)"; INT and PIPE print none. The description is bash's text for the signal,
     # so it may hold "/" or "-" ("I/O possible", "Real-time signal 3"). Only a notice for this exact
     # command line is dropped. The parallel run prints none, and the exit status is the same.
     (re.compile(r"^(?:\S.*: line [0-9]+: [0-9]+ )?[A-Z][A-Za-z0-9 /-]*? +(?:\(core dumped\) )?"
@@ -672,8 +672,9 @@ def t11_normaliser():
           and normalise("Ran 118 tests in 288.973s") != normalise("Ran 117 tests in 288.973s"),
           normalise("Ran 118 tests in 288.973s"))
     command = "bash -c '. /dev/fd/3' \"$PWD/tools/run_all_checks.sh\" 3<<< \"$script\""
-    # The forms bash 5 printed for the serial --sections run in the stand-in harness, except
-    # RTMIN, which is written from bash's "Real-time signal N" description and was not observed.
+    # TERM, KILL, HUP and ABRT are the forms bash 5 printed for the serial --sections run in the
+    # stand-in harness, with the line number since updated from 466 to 485; IO and RTMIN were
+    # written by hand from bash's "I/O possible" and "Real-time signal N" descriptions.
     notices = (
         ("TERM", f"Terminated                 {command}"),
         ("KILL", f"/var/tmp/tmpfoankz4g/tools/run_all_checks.sh: line 485: 1546593 Killed                     {command}"),

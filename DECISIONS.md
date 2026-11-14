@@ -35,7 +35,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     server, and the `gate-runners` section also runs the new test. Output
     order and lines are identical apart from 3 fields that differ between any 2 runs: the credential scanner's elapsed
     time and sampling counts, and unittest's elapsed times. On 2 failing paths the lines differ as well. Under
-    `--sections`, a section killed by a signal other than INT makes the serial run print bash's job notice for its child shell,
+    `--sections`, a section killed by a signal other than INT or PIPE makes the serial run print bash's job notice for its child shell,
     which the parallel run does not print. And a diagnostic that bash itself prints from inside a section, such as
     an unbound variable or a command not found, names another file or line, because each section runs from its own
     temporary script. The exit status is the same in every case tested, a fatal shell error in a section included:

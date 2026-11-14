@@ -395,7 +395,7 @@ the script's order once it and every section before it finish. A section run alo
 and `plugin`, which rewrite the working tree in place, runs first. On a passing run, the only
 lines that differ between 2 runs of either mode are the credential scanner's line, in its elapsed
 time and sampling counts, and unittest's elapsed times. On 2 failing paths the modes differ in
-more. Under `--sections`, a section killed by a signal other than INT makes the serial run print bash's job notice
+more. Under `--sections`, a section killed by a signal other than INT or PIPE makes the serial run print bash's job notice
 for its child shell, which the parallel run does not print. And a diagnostic that bash itself
 prints from inside a section, such as an unbound variable or a command not found, names another
 file or line. `python3 tools/test_parallel_suite.py --differential` compares the 2

@@ -59,7 +59,7 @@
 # compares them. On 2 failing paths the modes also differ in lines. When a section is killed by a
 # signal under --sections, the serial run's parent shell prints bash's job notice for its child
 # shell ("Terminated   bash -c ..." for TERM, and for KILL, HUP and other signals the same notice
-# after this file's name, a line number and a PID; none for INT), and the parallel run prints
+# after this file's name, a line number and a PID; none for INT or PIPE), and the parallel run prints
 # none; the comparison leaves that line out and the status is the same. And a diagnostic that
 # bash itself prints from inside a section (an unbound variable, a command not found) names
 # another file or line: this file's name and line in a whole serial run and "/dev/fd/3" with
