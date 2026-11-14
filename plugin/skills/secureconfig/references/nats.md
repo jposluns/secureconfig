@@ -764,9 +764,11 @@ REASONED: verification scope from the recorded authoring limitations and cited s
 
 REASONED: comparison procedure from the paired controls below; no live broker or external test fixture is available. Run exposed-state comparisons only in an authorized isolated fixture. Keep the target, identity, payload, and observation window matched while changing the control under test. Record diagnostics and positive controls without secrets. DNS failures, generic timeouts, and local fixture errors are inconclusive.
 
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. A block that says its final status is not a verdict ends with the status of its last command.
+
 ### V0. Offline checks and their limits
 
-DEMONSTRATED: the local shell-syntax and guard checks recorded in this paragraph, re-run at marking time: the five fragments passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0 with no diagnostics. The marking-time guard-only runs rejected 30 invalid cases (unsubstituted placeholders, removed set markers, wrong argument counts, empty values, angle brackets and example.com hosts) with their not-probing messages, and all five substituted controls reached a local stub marker. No network command ran in that marking-time re-run. **Demonstrated here:** the five fenced Bash fragments below passed `bash -n` with Bash 5.3.9 and ShellCheck 0.11.0. Guard-only execution rejected 145 invalid input cases and allowed five substituted controls to reach a local marker. Those cases included empty arguments, original and embedded placeholders, angle brackets, `example.com`, wrong argument counts, and missing setup with unrelated caller arguments. No network command ran. This establishes bounded shell and guard evidence, not CLI semantics or general bypass resistance. The marking-time and original runs recorded in this paragraph covered an earlier form of the V2 authentication block, whose failed positive control exited with status 1; none was re-run on the current form, which exits with status 3 after a failed positive control.
+DEMONSTRATED: the local shell-syntax and guard checks recorded in this paragraph, re-run at marking time: the five fragments passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0 with no diagnostics. The marking-time guard-only runs rejected 30 invalid cases (unsubstituted placeholders, removed set markers, wrong argument counts, empty values, angle brackets and example.com hosts) with their not-probing messages, and all five substituted controls reached a local stub marker. No network command ran in that marking-time re-run. **Demonstrated here:** the five fenced Bash fragments below passed `bash -n` with Bash 5.3.9 and ShellCheck 0.11.0. Guard-only execution rejected 145 invalid input cases and allowed five substituted controls to reach a local marker. Those cases included empty arguments, original and embedded placeholders, angle brackets, `example.com`, wrong argument counts, and missing setup with unrelated caller arguments. No network command ran. This establishes bounded shell and guard evidence, not CLI semantics or general bypass resistance. The marking-time and original runs recorded in this paragraph covered an earlier form of the V2 authentication block, whose failed positive control exited with status 1; none was re-run on the current form, which exits with status 3 after a failed positive control. Those runs also covered earlier forms of four of the five blocks (the V2 block and three V3 blocks), whose failed hidden password prompt exited with status 2, and of the V3 publisher block, whose failed marker generation exited with status 2; none was re-run on the current forms, which exit with status 3 in those cases.
 
 REASONED: provenance caveat only, from the revision record of this guide; it states what the earlier runs do not prove, and no new check is claimed. The prior guide's reported 14 invalid guard cases and two positive controls concerned its earlier fragments; they are not evidence that the replacement service checks ran.
 
@@ -824,7 +826,7 @@ The first publish is the allowed control. The subsequent operations deliberately
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
-  IFS= read -r -s -t 60 -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
+  IFS= read -r -s -t 60 -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed'; exit 3; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
   export NATS_USER=order-svc || { echo 'credential export failed'; exit 2; }
@@ -888,7 +890,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
-  IFS= read -r -s -t 60 -p 'order-consumer password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
+  IFS= read -r -s -t 60 -p 'order-consumer password: ' pw < /dev/tty || { echo 'password input failed'; exit 3; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
   export NATS_USER=order-consumer || { echo 'credential export failed'; exit 2; }
@@ -924,12 +926,12 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
-  IFS= read -r -s -t 60 -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed'; exit 2; }
+  IFS= read -r -s -t 60 -p 'order-svc password: ' pw < /dev/tty || { echo 'password input failed'; exit 3; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
   export NATS_USER=order-svc || { echo 'credential export failed'; exit 2; }
-  marker=$(date +%s%N) || { echo 'marker generation failed; not publishing'; exit 2; }
-  [ -n "$marker" ] || { echo 'marker generation failed; not publishing'; exit 2; }
+  marker=$(date +%s%N) || { echo 'marker generation failed; not publishing'; exit 3; }
+  [ -n "$marker" ] || { echo 'marker generation failed; not publishing'; exit 3; }
   marker="marker-$marker"
   printf 'Expected delivery: %s\n' "$marker"
   NATS_PASSWORD="$pw" timeout 10s nats --no-context --server "$srv" --timeout 3s \
@@ -970,7 +972,7 @@ The following self-contained request block is also used by V4 and V5. Its last t
   done
   export NATS_CERT="$2" NATS_KEY="$3" NATS_CA="$4"
   srv="nats://$1:4222"
-  IFS= read -r -s -t 60 -p "$5 password: " pw < /dev/tty || { echo 'password input failed'; exit 2; }
+  IFS= read -r -s -t 60 -p "$5 password: " pw < /dev/tty || { echo 'password input failed'; exit 3; }
   printf '\n'
   case "$pw" in ''|*REPLACE_WITH_*|*'<'*|*'>'*|*example.com*) echo 'supply a real password'; exit 2 ;; esac
   export NATS_USER="$5" || { echo 'credential export failed'; exit 2; }
@@ -1319,7 +1321,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "d0b82e96fb0e4d373b237715c2bc615b665605bc46f0dfb3e9a15625a4788bb1",
+  "body_sha256": "c088cba25c6cada75a34a71af692e8db6d88a7041a02a597836f39f1341e6ee8",
   "components": {
     "server": {
       "name": "NATS Server",
