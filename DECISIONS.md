@@ -33,19 +33,24 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     guide that records both statuses with a semicolon and puts "(not a live demonstration of the shipped form)" after
     the reasoned count only; a guide that records one status keeps its header byte for byte. 27 guides and their 27
     plugin copies change, and so do `site/llms-full.txt` and the plugin manifest, 56 files where the ruling says 54,
-    because the ruling counted the guides and their copies and not the two bundles built from them. The homepage
+    the 54 being the guides and their copies, and the two bundles built from them making 56. The homepage
     sentence in `site-src/content.json` says "reasoned from cited vendor sources", and `site/index.html` and its
-    sitemap date follow. `QUALITY.md` says every baseline and allow entry counts against M1 until it is sorted.
+    sitemap date follow. `QUALITY.md` says every entry in the five baseline and allow files counts against M1 on
+    every run, whether or not it has been sorted.
   - The orchestrator's reading, not the maintainer's: the three rulings widen nothing beyond the wording the
     maintainer ruled on 2026-11-12 (#1299). The second ruling leaves the clause "with no deployment run recorded" as
-    the ruling's example has it. The third ruling does not say whether a sorted reasoned waiver should stop counting
-    against M1; the code counts it, so `QUALITY.md` now says so.
+    the ruling's example has it. The third ruling's description says "until each is sorted", which was the
+    orchestrator's summary and does not match the code: the code keeps no record of sorting and counts every entry
+    on every run, sorted or not. `QUALITY.md` states what the code does, as the label "Fix the text to match the code"
+    directs, so a sorted reasoned waiver still counts against M1.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces these rulings, then a pull
     request that restores or changes the texts. That pull request restores the earlier `header()` text and
     regenerates the 27 guides, their plugin copies, `site/llms-full.txt` and the manifest, restores the homepage
     sentence, its `source` note and `site/index.html`, and restores the `QUALITY.md` text, or changes them to match
     the new ruling. It keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md`
-    entry, and records the new ruling here.
+    entry, and records the new ruling here. If the revert pull request uses `git revert -m 1`, that puts back this
+    pull request's `CHANGELOG.md` entry under the date it merged and does not set `VERSION`, `plugin/plugin.json` or
+    `SKILL.md` back.
 - **Maintainer ruling of 2026-11-13 on keeping the card-builder fonts under `.baseline/card-fonts/` (#1303).**
   The question was about template ruling D-103, which allows a site that uses only icons to delete
   `.baseline/card-fonts/`. In an attended session at about 18:51Z the maintainer chose, in an AskUserQuestion, the

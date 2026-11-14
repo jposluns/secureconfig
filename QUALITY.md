@@ -59,9 +59,11 @@ A deferred-work entry records something the guide still owes (a Verify-marking b
 paragraph that would attach to a DEMONSTRATED fence or a step with no concrete command, or an
 over-length claim awaiting a split). A reasoned waiver records a deliberate, reviewed exception (a
 bracket-range or exposure-index allow entry with its reason, or a DEMONSTRATED evidence text
-grandfathered by design). Every entry in the five baseline and allow files counts against M1 until it
-is sorted into one of the two: `tools/gen_guide_quality.py` counts all of them, an allow entry once
-per distinct guide and port, and scores the lead PARTIAL(M1) when the count is not zero.
+grandfathered by design). Every entry in the five baseline and allow files counts against M1 on every
+run, whether or not it has been sorted into one of the two. `tools/gen_guide_quality.py` counts an
+entry in `tools/exposure_index_allowlist.txt` once per distinct guide and port, and every line in
+each of the other four files once, and it ignores the count field in
+`tools/version_basis_sources_baseline.txt`. It scores the lead PARTIAL(M1) when the count is not zero.
 
 ### Group A: Coverage
 
