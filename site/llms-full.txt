@@ -18030,7 +18030,7 @@ REASONED: following block; the production-server listener bind, with the loopbac
 
 ### Verification record
 
-REASONED: what was run on the three blocks above, and on what. None of it was run against a framework production build, a reverse proxy or a deployment.
+REASONED: what was run on the three blocks above, and on what. None of it was run against a framework production build, a reverse proxy or a deployment: bash -n and ShellCheck are syntax checks, and the stub, fixture, tracing and bare-listener runs test the blocks' own guards, classification and secret handling, not a framework's behaviour. No block or claim in this guide is demonstrated; the earlier-form runs below were not repeated on the current forms.
 
 REASONED: the private-route and spoofed-Host block, the first above, is covered in its current form only by bash -n and ShellCheck 0.11.0 syntax checks and by curl-stub runs made while it was written; it has not been run against a deployment.
 
@@ -18181,7 +18181,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "ae1f0cdf5de7f49ae07511eec43780ebb1845926231130908a6e70fa1581d806",
+  "body_sha256": "bff1148814fb78fed5bc3a2ca17d12e1f06e61d54cdca375ced0c4d2b5bc3ba6",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
