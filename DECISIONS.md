@@ -51,6 +51,24 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     entry, and records the new ruling here. If the revert pull request uses `git revert -m 1`, that puts back this
     pull request's `CHANGELOG.md` entry under the date it merged and does not set `VERSION`, `plugin/plugin.json` or
     `SKILL.md` back.
+- **Maintainer rulings of 2026-11-13 on broader "including but not limited to" wording for what the guides cover in the plugin and llms.txt descriptions (#1304).**
+  In an attended session at about 19:50Z the maintainer asked for broader "including but not limited to" wording and then chose,
+  in an AskUserQuestion, the option labelled "Use this version", whose description read "One QA'd PR applies these texts to
+  SKILL.md, plugin.json, always-on.md, and the same phrase in README and llms.txt; CONTRIBUTING/QUALITY scope rules unchanged."
+  The label is quoted exactly except that its closing "(Recommended)" is omitted from the quote. This pull request applies the
+  texts to `plugin/skills/secureconfig/SKILL.md`, `plugin/plugin.json`, `plugin/always-on.md` and `site/llms.txt`. The approved option named README and llms.txt, but README.md is unchanged in this pull request: its intro has no
+  matching list, and its only matching text, line 279, is a scope statement. The maintainer then ruled on README.md and the SKILL.md text: in an attended
+  session at about 23:05Z on 2026-11-13 the maintainer chose, in an AskUserQuestion, the option labelled "Keep both, disclose", whose
+  description read "README line 279 unchanged; SKILL.md exactly as you approved; CHANGELOG, DECISIONS and PR body say plainly that README
+  was left and which names the list dropped." The label is quoted exactly except that its closing "(Predicted)" is omitted from the quote.
+  README.md and the approved SKILL.md text therefore stay unchanged, and this entry, the CHANGELOG and the PR body disclose both.
+  The SKILL.md trigger list no longer names Apache, HAProxy, Traefik, MySQL, MongoDB, RabbitMQ, Streamlit, Firebase, a vector
+  database, an agent builder, an image UI or a dashboard. The scope rules in CONTRIBUTING.md and QUALITY.md are unchanged as the ruling states, and so are CLAUDE.md and AGENTS.md,
+  which the ruling did not name. The revert path is a later maintainer ruling that withdraws or replaces these rulings, then a pull
+  request that restores or changes the four texts to match. That pull request keeps every existing `CHANGELOG.md` and
+  `DECISIONS.md` entry, this one included, adds its own `CHANGELOG.md` entry, and the new ruling is recorded here. If it reverts
+  this one's merge commit with `git revert -m 1`, it puts back this pull request's `CHANGELOG.md` entry, which the revert removes,
+  under the date it merged, and it does not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back to an older value.
 - **Maintainer ruling of 2026-11-13 on keeping the card-builder fonts under `.baseline/card-fonts/` (#1303).**
   The question was about template ruling D-103, which allows a site that uses only icons to delete
   `.baseline/card-fonts/`. In an attended session at about 18:51Z the maintainer chose, in an AskUserQuestion, the

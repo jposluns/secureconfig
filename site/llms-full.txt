@@ -41431,13 +41431,13 @@ These static-hub and operator-hub authentication recipes are alternatives. A `.c
 
 The leaf remotes page says "the URL scheme should be `nats-leaf` or `ws`", so the example uses `nats-leaf`. At v2.15.2 the parser checks only that a remote URL parses (`opts.go` lines 2270 to 2279), and a solicited leaf connection uses TLS when the remote has a `tls {}` block or its TLS flag is set: `tlsRequired := remote.TLS || remote.TLSConfig != nil` (`leafnode.go` line 3668). A `wss://` URL sets that flag: "If the url(s) have the "wss://" scheme, and we don't have a TLS config, mark that we should be using TLS anyway." (lines 490 to 494).
 
-A hub that requires TLS sets it too. When the hub's first INFO says TLS is required, `leafnode.go` sets `remote.TLS = true` (lines 1647 to 1655), and again under `if info.TLSRequired && didSolicit {` (lines 1770 to 1771). Before that, a remote that uses a proxy and has no TLS configuration is closed with "TLS configuration mismatch: Hub requires TLS but leafnode remote is not configured for TLS." (lines 1649 to 1654). This guide found no code in the v2.15.2 files it read that turns TLS on for a `tls://` scheme, and infers that with a `tls://` URL, TLS comes only from a `tls {}` block or a hub that requires it.
+A hub that requires TLS sets it too. When the hub's first INFO says TLS is required, `leafnode.go` sets `remote.TLS = true` (lines 1647 to 1655). That block sits inside `if didSolicit && !c.flags.isSet(handshakeComplete) && !c.isWebsocket() && !remote.TLSHandshakeFirst {` (line 1643), so it does not run for a websocket connection, a connection whose TLS handshake is complete or a remote with `TLSHandshakeFirst` set. The same file also sets it under `if info.TLSRequired && didSolicit {` (lines 1770 to 1771). Before that, a remote that uses a proxy and has no TLS configuration is closed with "TLS configuration mismatch: Hub requires TLS but leafnode remote is not configured for TLS." (lines 1649 to 1654). This guide found no code in the v2.15.2 files it read that turns TLS on for a `tls://` scheme, and infers that with a `tls://` URL, TLS comes only from a `tls {}` block or a hub that requires it.
 
 The remote's `account` selects the **local** account on the leaf. The remotes page does not say which hub account the remote's credentials select; this guide infers that the hub's authentication of those credentials determines it. An outbound-only leaf needs no inbound leaf listener: at v2.15.2 the server starts the leaf accept loop only when a leafnode port is set, and solicits `remotes` separately.
 
 Exposed versus fixed: reachable plaintext or insufficiently authenticated peer links require permitted networks, the link's credentials, and its TLS policy. A successful test on client port 4222 proves nothing about these links.
 
-See the [cluster](https://docs.nats.io/reference/config/cluster/), [gateway](https://docs.nats.io/reference/config/gateway/), [leafnode](https://docs.nats.io/reference/config/leafnodes/), [leaf authorization](https://docs.nats.io/reference/config/leafnodes/authorization/), and [leaf remotes](https://docs.nats.io/reference/config/leafnodes/remotes/) references, the v2.15.2 [remote URL parser](https://github.com/nats-io/nats-server/blob/v2.15.2/server/opts.go#L2270-L2279), [remote TLS requirement](https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L3668), [`wss://` TLS flag](https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L490-L494), hub TLS requirement [on first INFO](https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L1647-L1655) and [in INFO processing](https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L1770-L1771), and [leaf listener start](https://github.com/nats-io/nats-server/blob/v2.15.2/server/server.go#L2552-L2562).
+See the [cluster](https://docs.nats.io/reference/config/cluster/), [gateway](https://docs.nats.io/reference/config/gateway/), [leafnode](https://docs.nats.io/reference/config/leafnodes/), [leaf authorization](https://docs.nats.io/reference/config/leafnodes/authorization/), and [leaf remotes](https://docs.nats.io/reference/config/leafnodes/remotes/) references, the v2.15.2 [remote URL parser](https://github.com/nats-io/nats-server/blob/v2.15.2/server/opts.go#L2270-L2279), [remote TLS requirement](https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L3668), [`wss://` TLS flag](https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L490-L494), hub TLS requirement [on first INFO](https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L1643-L1655) and [in INFO processing](https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L1770-L1771), and [leaf listener start](https://github.com/nats-io/nats-server/blob/v2.15.2/server/server.go#L2552-L2562).
 
 ## 6. Bound resources and process privilege
 
@@ -42305,7 +42305,7 @@ REASONED: scope of the original authoring record and its shell-only evidence. Th
 - Server v2.15.2 standalone consumer-limit check conditions and where the default applies (checked November 2026): https://github.com/nats-io/nats-server/blob/v2.15.2/server/consumer.go#L1152-L1157, https://github.com/nats-io/nats-server/blob/v2.15.2/server/server.go#L1603-L1606 and https://github.com/nats-io/nats-server/blob/v2.15.2/server/opts.go#L6255-L6256
 - Server v2.15.2 auth callout `auth_users` bypass check (checked November 2026): https://github.com/nats-io/nats-server/blob/v2.15.2/server/auth.go#L740-L763
 - Server v2.15.2 leaf remote URL parsing, remote TLS requirement and leaf listener start (checked November 2026): https://github.com/nats-io/nats-server/blob/v2.15.2/server/opts.go#L2270-L2279, https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L3668 and https://github.com/nats-io/nats-server/blob/v2.15.2/server/server.go#L2552-L2562
-- Server v2.15.2 leaf remote TLS flag set by a `wss://` URL and by a hub that requires TLS (checked November 2026): https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L490-L494, https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L1647-L1655 and https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L1770-L1771
+- Server v2.15.2 leaf remote TLS flag set by a `wss://` URL and by a hub that requires TLS (checked November 2026): https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L490-L494, https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L1643-L1655 and https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L1770-L1771
 - 2.15 upgrade guide (rolling documentation, checked November 2026): https://docs.nats.io/release-notes/upgrade-to-2.15
 - Server JetStream limits and `default_max_consumers` (rolling documentation, checked November 2026): https://docs.nats.io/reference/config/jetstream/limits/
 - Securing NATS overview (rolling documentation, checked November 2026): https://docs.nats.io/learn/security/
@@ -42408,7 +42408,7 @@ Claims (full source mapping in the JSON block below):
 - peer-urls (REASONED; server-docs): Match SANs, advertisements and URLs; keep insecure disabled; known-URL certificate checks constrain dynamic growth.
 - leaf (REASONED; server-docs): Conditional 7422 leaf auth/TLS is independent; static password and operator credentials recipes are alternatives.
 - leaf-accounts (REASONED; server-docs, server): Outbound account is local; this guide infers the hub's authentication of remote credentials selects the hub account; v2.15.2 starts no leaf listener without a leafnode port.
-- leaf-url (REASONED; server, server-docs): Use a nats-leaf or ws remote URL scheme as documented; at v2.15.2 the parser checks only that the URL parses, and a remote uses TLS with a tls block, a wss:// URL or a hub requiring TLS; this guide found no code doing so for tls://.
+- leaf-url (REASONED; server, server-docs): Use a nats-leaf or ws remote URL scheme as documented; at v2.15.2 the parser checks only that the URL parses, and a remote uses TLS with a tls block, a wss:// URL or a hub requiring TLS on a solicited connection; this guide found no code doing so for tls://.
 - connection-default (REASONED; server-docs): Documented client-connection default is 65,536; configured limits are capacities, not attempt-rate limits.
 - payload-default (REASONED; server-docs): Documented payload default is 1 MiB; max_payload must not exceed max_pending.
 - runtime-budgets (REASONED; server-docs): Set per-server/account connections, per-client subscriptions, control-line/pending limits and TLS/auth/write deadlines for workload.
@@ -42455,7 +42455,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "d0b82e96fb0e4d373b237715c2bc615b665605bc46f0dfb3e9a15625a4788bb1",
+  "body_sha256": "fee9485fb99ceaaf428abc9e3449e7110d72779cd6860980ced7ea6bce3b6679",
   "components": {
     "server": {
       "name": "NATS Server",
@@ -42477,7 +42477,7 @@ Claims (full source mapping in the JSON block below):
         "s03dd959b42c6": "https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L3668",
         "sb431eca8fd9e": "https://github.com/nats-io/nats-server/blob/v2.15.2/server/server.go#L2552-L2562",
         "sd70de4e4ef21": "https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L490-L494",
-        "sbc4a2a7061bf": "https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L1647-L1655",
+        "sf895e890ef89": "https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L1643-L1655",
         "s0e681c3d165c": "https://github.com/nats-io/nats-server/blob/v2.15.2/server/leafnode.go#L1770-L1771",
         "sa38d47f333f4": "https://github.com/nats-io/nats-server/blob/v2.15.2/server/consumer.go#L1152-L1157",
         "s6e26c3c48215": "https://github.com/nats-io/nats-server/blob/v2.15.2/server/server.go#L1603-L1606",
@@ -42625,7 +42625,7 @@ Claims (full source mapping in the JSON block below):
     "peer-urls": {"text": "Match SANs, advertisements and URLs; keep insecure disabled; known-URL certificate checks constrain dynamic growth.", "components": ["server-docs"], "sources": ["server-docs:s2e1ad079a3bf", "server-docs:s9371709dd080"], "status": "REASONED"},
     "leaf": {"text": "Conditional 7422 leaf auth/TLS is independent; static password and operator credentials recipes are alternatives.", "components": ["server-docs"], "sources": ["server-docs:se29432096847", "server-docs:s812e43517c7c", "server-docs:s65f0d3357c65"], "status": "REASONED"},
     "leaf-accounts": {"text": "Outbound account is local; this guide infers the hub's authentication of remote credentials selects the hub account; v2.15.2 starts no leaf listener without a leafnode port.", "components": ["server-docs", "server"], "sources": ["server-docs:s65f0d3357c65", "server:sb431eca8fd9e"], "status": "REASONED"},
-    "leaf-url": {"text": "Use a nats-leaf or ws remote URL scheme as documented; at v2.15.2 the parser checks only that the URL parses, and a remote uses TLS with a tls block, a wss:// URL or a hub requiring TLS; this guide found no code doing so for tls://.", "components": ["server", "server-docs"], "sources": ["server-docs:s65f0d3357c65", "server:se56a05213c0f", "server:s03dd959b42c6", "server:sd70de4e4ef21", "server:sbc4a2a7061bf", "server:s0e681c3d165c"], "status": "REASONED"},
+    "leaf-url": {"text": "Use a nats-leaf or ws remote URL scheme as documented; at v2.15.2 the parser checks only that the URL parses, and a remote uses TLS with a tls block, a wss:// URL or a hub requiring TLS on a solicited connection; this guide found no code doing so for tls://.", "components": ["server", "server-docs"], "sources": ["server-docs:s65f0d3357c65", "server:se56a05213c0f", "server:s03dd959b42c6", "server:sd70de4e4ef21", "server:sf895e890ef89", "server:s0e681c3d165c"], "status": "REASONED"},
     "connection-default": {"text": "Documented client-connection default is 65,536; configured limits are capacities, not attempt-rate limits.", "components": ["server-docs"], "sources": ["server-docs:s4532e40c78ec"], "status": "REASONED"},
     "payload-default": {"text": "Documented payload default is 1 MiB; max_payload must not exceed max_pending.", "components": ["server-docs"], "sources": ["server-docs:s4532e40c78ec"], "status": "REASONED"},
     "runtime-budgets": {"text": "Set per-server/account connections, per-client subscriptions, control-line/pending limits and TLS/auth/write deadlines for workload.", "components": ["server-docs"], "sources": ["server-docs:se5f31c6269c9", "server-docs:s4532e40c78ec", "server-docs:s077fb5dcad29"], "status": "REASONED"},
@@ -44837,8 +44837,9 @@ MCP-tool lists. v3.3.5's capability arguments define `allow_rpc` and `allow_http
 `#[arg(default_value_os = "")]` default, and neither file defines an `allow_mcp` or `deny_mcp` argument. Their only
 MCP capability target is the HTTP route, `"mcp" => Ok(RouteTarget::Mcp),`. v3.3.5 also defines a `surreal mcp`
 command, `Mcp(McpCommandArguments)`, to "Start the MCP server over stdio for AI assistant integration", behind
-`#[cfg(feature = "mcp")]`. Its arguments type, `McpCommandArguments`, is named through the `cli::mcp` module
-(`use mcp::McpCommandArguments;` at `cli/mod.rs` line 38), whose file, `cli/mcp.rs` or `cli/mcp/mod.rs`, was not
+`#[cfg(feature = "mcp")]`. Its argument type, `McpCommandArguments`, is named through the `cli::mcp` module,
+which `pub(crate) mod mcp;` at `cli/mod.rs` line 10 declares, behind `#[cfg(feature = "mcp")]` at line 9
+(`use mcp::McpCommandArguments;` at line 38), whose file, `cli/mcp.rs` or `cli/mcp/mod.rs`, was not
 read. Whether anything else gates MCP tools at v3.3.5 is not established, because neither that module nor its
 MCP crate was read.
 
@@ -45023,6 +45024,7 @@ shell to run.
 - SurrealDB v3.3.5 capabilities: `--allow-rpc` and `--allow-http` with no MCP-tool list (pinned tag v3.3.5, commit 5c3383fe) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/dbs/mod.rs#L105-L324 and the HTTP route names, with `mcp` as a route: https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/rpc/src/capabilities/mod.rs#L373-L397
 - SurrealDB v3.3.5 `surreal mcp` command, behind `#[cfg(feature = "mcp")]`, whose arguments are named through the `cli::mcp` module (`cli/mcp.rs` or `cli/mcp/mod.rs`), which was not read (pinned tag v3.3.5, commit 5c3383fe) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/cli/mod.rs#L182-L184
 - SurrealDB v3.3.5 `use mcp::McpCommandArguments;`, which names the `surreal mcp` arguments through the `cli::mcp` module (pinned tag v3.3.5, commit 5c3383fe) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/cli/mod.rs#L37-L38
+- SurrealDB v3.3.5 `pub(crate) mod mcp;`, behind `#[cfg(feature = "mcp")]`, which declares the `cli::mcp` module that the `use mcp::McpCommandArguments;` import names (pinned tag v3.3.5, commit 5c3383fe) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/cli/mod.rs#L9-L10
 - SurrealDB CLI, `surreal db sql` (checked November 2026): https://surrealdb.com/docs/reference/cli/db/commands/sql
 - SurrealDB security overview (checked November 2026): https://surrealdb.com/docs/learn/security
 - SurrealDB authentication overview (`DEFINE USER` at root, namespace or database level) (checked November 2026): https://surrealdb.com/docs/learn/security/authentication/overview
@@ -45118,7 +45120,7 @@ Claims (full source mapping in the JSON block below):
 - capability-all (REASONED; docs, pinned): allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. As this guide's reading of v4.0.0 source, deny-all alone leaves every HTTP route, RPC method and MCP tool allowed, as allow-http, allow-rpc and allow-mcp default to all targets; no run confirmed it, so pass explicit allow-http and allow-rpc lists.
 - capability-health (REASONED; pinned, docs): When the Verify block's health check should pass under deny-all, include health in the allow-http list: the HTTP allow getter returns a named list as given, the route parser reads health as the health route, and /health refuses a route that is not allowed, which the HTTP protocol page says answers 403.
 - mcp-advisory (REASONED; advisories): GHSA-cr79-9p8r-p5wx (high; affecting versions below 4.0.0, patched in 4.0.0) reports MCP tool identifier validation permitting statement injection, with arbitrary SQL query execution through MCP tool invocation; it bears on MCP tools staying allowed under deny-all.
-- capability-mcp-3x (REASONED; pinned-3x): The v3.3.5 capability files read define allow-rpc and allow-http with the same empty default but no allow-mcp or deny-mcp list; their only MCP target is the mcp HTTP route. surreal mcp is behind the mcp feature; its arguments are named through the cli::mcp module (use mcp::McpCommandArguments;), which was not read, nor was its MCP crate, so whether anything else gates MCP tools is not established.
+- capability-mcp-3x (REASONED; pinned-3x): The v3.3.5 capability files read define allow-rpc and allow-http with the same empty default but no allow-mcp or deny-mcp list; their only MCP target is the mcp HTTP route. surreal mcp is behind the mcp feature; its argument type is named through the cli::mcp module (pub(crate) mod mcp; at cli/mod.rs:10), which was not read, nor was its MCP crate, so any other gate on MCP tools is not established.
 - capability-net (REASONED; docs): Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF.
 - capability-functions (REASONED; docs): Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances.
 - capability-scripting (REASONED; docs): Embedded scripting defaults off; enable it only when required.
@@ -45139,7 +45141,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e955c8567ffc256dc05bbd2c57e3e72f1a758599118df2ac18ef43472a6ee4e5",
+  "body_sha256": "c179060444828b906cf5cacb86955807c0543649c5bfae8b0724ff762ad1188b",
   "components": {
     "pinned": {
       "name": "SurrealDB server and image",
@@ -45192,6 +45194,7 @@ Claims (full source mapping in the JSON block below):
         "sb555f9745ad7": "https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/rpc/src/capabilities/mod.rs#L373-L397",
         "sd82d608cc2e1": "https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/cli/mod.rs#L182-L184",
         "s5ef899492471": "https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/cli/mod.rs#L37-L38",
+        "s7b36fa5b3416": "https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/cli/mod.rs#L9-L10",
         "s905871ed201e": "https://github.com/surrealdb/surrealdb/releases/tag/v3.3.5"
       }
     },
@@ -45328,7 +45331,7 @@ Claims (full source mapping in the JSON block below):
     "capability-all": {"text": "allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. As this guide's reading of v4.0.0 source, deny-all alone leaves every HTTP route, RPC method and MCP tool allowed, as allow-http, allow-rpc and allow-mcp default to all targets; no run confirmed it, so pass explicit allow-http and allow-rpc lists.", "components": ["docs", "pinned"], "sources": ["docs:sc798cc43c457", "docs:scc00d3d3618d", "pinned:scce5b37cc67e", "pinned:sb983f262eea6", "pinned:s41f93c8f1044", "pinned:s10eff64ec263", "pinned:sc2c677a2fedc"], "status": "REASONED"},
     "capability-health": {"text": "When the Verify block's health check should pass under deny-all, include health in the allow-http list: the HTTP allow getter returns a named list as given, the route parser reads health as the health route, and /health refuses a route that is not allowed, which the HTTP protocol page says answers 403.", "components": ["pinned", "docs"], "sources": ["pinned:s41f93c8f1044", "pinned:s02c701807dae", "pinned:s538897c5bacc", "docs:scc00d3d3618d"], "status": "REASONED"},
     "mcp-advisory": {"text": "GHSA-cr79-9p8r-p5wx (high; affecting versions below 4.0.0, patched in 4.0.0) reports MCP tool identifier validation permitting statement injection, with arbitrary SQL query execution through MCP tool invocation; it bears on MCP tools staying allowed under deny-all.", "components": ["advisories"], "sources": ["advisories:s390dd974a89c"], "status": "REASONED"},
-    "capability-mcp-3x": {"text": "The v3.3.5 capability files read define allow-rpc and allow-http with the same empty default but no allow-mcp or deny-mcp list; their only MCP target is the mcp HTTP route. surreal mcp is behind the mcp feature; its arguments are named through the cli::mcp module (use mcp::McpCommandArguments;), which was not read, nor was its MCP crate, so whether anything else gates MCP tools is not established.", "components": ["pinned-3x"], "sources": ["pinned-3x:s7144f593a339", "pinned-3x:sb555f9745ad7", "pinned-3x:sd82d608cc2e1", "pinned-3x:s5ef899492471"], "status": "REASONED"},
+    "capability-mcp-3x": {"text": "The v3.3.5 capability files read define allow-rpc and allow-http with the same empty default but no allow-mcp or deny-mcp list; their only MCP target is the mcp HTTP route. surreal mcp is behind the mcp feature; its argument type is named through the cli::mcp module (pub(crate) mod mcp; at cli/mod.rs:10), which was not read, nor was its MCP crate, so any other gate on MCP tools is not established.", "components": ["pinned-3x"], "sources": ["pinned-3x:s7144f593a339", "pinned-3x:sb555f9745ad7", "pinned-3x:sd82d608cc2e1", "pinned-3x:s5ef899492471", "pinned-3x:s7b36fa5b3416"], "status": "REASONED"},
     "capability-net": {"text": "Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
     "capability-functions": {"text": "Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
     "capability-scripting": {"text": "Embedded scripting defaults off; enable it only when required.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
