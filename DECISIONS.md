@@ -23,25 +23,25 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   project: keep option 2 as voted, merge #1313 after QA SHIP and green CI; its DECISIONS entry is re-marked as your
   ruling in that PR or the next." The label and description are quoted exactly. The question disclosed that the vote
   request had overstated its premise and that the voters had been sent a correction. No reasoning was recorded beyond
-  the choice. This entry replaces the one that stood under "Proxy decisions awaiting maintainer review", and the vote
-  history below is background to the ruling.
+  the choice. This entry takes the place of the proxy-decision entry that earlier rounds of this pull request drafted
+  under "Proxy decisions awaiting maintainer review", and the vote history below is background to the ruling.
   - Background: the unattended vote. It was decided at 2026-11-14T11:08:40Z, when the second vote arrived, under the
     unattended decision rule of 2026-10-31, which the first 2026-11-11 entry in the proxy section states. The question
-    went to the D-1096 vote at 11:08:16Z, after the source check that the maintainer's 2026-11-13 ruling called for (the
-    request to lab_infra is 20261114T110816Z.from-secureconfig.e7af69e459e4.msg, with the guardrails and grc copies at
-    11:08:24Z and 11:08:28Z). The options, paraphrased rather than quoted: option 1, marked as the predicted option, pins
-    `ssr_mode=False` in the TLS example with a one-line comment citing the source lines. Option 2, marked as best for
-    the project and recommended, is that pin plus a sourced sentence that replaces the guide's "has not checked the
-    behaviour with SSR on" disclaimer, and the request words that sentence as "stating that with SSR on the public port
-    is a plain-HTTP Node proxy".
+    went to the D-1096 vote at 11:08:16Z, after the source check that the maintainer's 2026-11-13 ruling called for
+    (the request to lab_infra is 20261114T110816Z.from-secureconfig.e7af69e459e4.msg, with the guardrails and grc
+    copies at 11:08:24Z and 11:08:28Z). The options, paraphrased rather than quoted: option 1, marked as the predicted
+    option, pins `ssr_mode=False` in the TLS example with a one-line comment citing the source lines. Option 2, marked
+    as best for the project and recommended, is that pin plus a sourced sentence that replaces the guide's "has not
+    checked the behaviour with SSR on" disclaimer, and the request words that sentence as "stating that with SSR on
+    the public port is a plain-HTTP Node proxy".
   - The votes, as recorded in the orchestrator's records. The lab_infra vote was for option 2 at 11:08:34Z, with
     reasoning that, in paraphrase, a stated unknown should be replaced by a sourced fact, and set no condition
     (20261114T110834Z.from-lab_infra.6c7e07ed41df.msg). The guardrails vote was for option 2 at 11:08:40Z, with
     reasoning that, in paraphrase, the maintainer takes the more complete, better-documented fix when the gap is
     minutes, and a sourced statement beats an unverified one (20261114T110840Z.from-guardrails.4380abc73abf.msg). Its
     condition is that the pull request's QA confirms blocks.py lines 3036-3037 and 3326-3328 and proxy_index.js line 56
-    at gradio@6.31.0 before merge. Since lab_infra and guardrails agreed, grc's vote was not needed under the unattended
-    decision rule of 2026-10-31. grc's vote is recorded, for option 2 at 11:08:55Z
+    at gradio@6.31.0 before merge. Since lab_infra and guardrails agreed, grc's vote was not needed under the
+    unattended decision rule of 2026-10-31. grc's vote is recorded, for option 2 at 11:08:55Z
     (20261114T110855Z.from-grc.2d294771b7c5.msg), with reasoning that, in paraphrase, a sourced statement of the actual
     behaviour is more accurate and tells the reader why the pin matters. Its condition is that QA re-reads the cited
     gradio@6.31.0 lines at that commit before it lands. The outcome was option 2.
@@ -63,20 +63,22 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     source, guardrails said the vote rests on the stated premise, and grc said it had not verified the lines itself.
     secureconfig's own source findings, written before the vote, already recorded that Node is kept only if its startup
     check passes and that the fallback can leave Python only on the internal port. The request mentioned a "Node fails"
-    fallback but left those conditions out and stated the premise as certain. The correction notices of 15:02Z also
-    framed the conditionality as a QA finding, and it was not new information: QA flagged the definite wording.
-  - The shipped text, which says Gradio tries to start Node and can leave Python only on the internal port, narrows
-    option 2's phrase "the public port is a plain-HTTP Node proxy" and does not go beyond it. The pin is still
+    fallback but left those conditions out and stated the premise as certain. The correction notices of 15:02Z
+    (below) framed the conditionality as a QA finding, and it was not new information: QA flagged the definite
+    wording.
+  - The shipped text narrows option 2's phrase "the public port is a plain-HTTP Node proxy" to the case where Node
+    starts and passes its check, and adds the fallback outcomes (Python moved onto the user-facing port with TLS, or
+    left only on the internal port), which secureconfig's findings recorded before the vote. The pin is still
     justified, because SSR can put plain HTTP on the public port. QA re-read the cited lines at the 6.31.0 tag,
     meeting the guardrails and grc conditions as written. secureconfig sent the voters a correction notice on
     2026-11-14, to lab_infra at 15:02:09Z, guardrails at 15:02:12Z and grc at 15:02:16Z, and option 2 stood unless a
     voter revised it; none did.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
-    that restores the earlier example, disclaimer sentence and `tls` claim, or changes them to match the new ruling,
-    and regenerates what derives from them. It keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds
-    its own `CHANGELOG.md` entry, and records the new ruling here. If the revert pull request uses `git revert -m 1`,
-    that puts back this pull request's `CHANGELOG.md` entry under the date it merged and does not set `VERSION`,
-    `plugin/plugin.json` or `SKILL.md` back.
+    that restores the earlier example, disclaimer sentence, `tls` claim and Sources items, or changes them to match the
+    new ruling, and regenerates what derives from them. It keeps every existing entry in `CHANGELOG.md` and
+    `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here. If the revert pull request uses
+    `git revert -m 1`, that puts back this pull request's `CHANGELOG.md` entry under the date it merged and does not
+    set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
 - **Maintainer rulings of 2026-11-13 on the REASONED wording in the mixed-guide header, the homepage sentence and the M1 text in `QUALITY.md` (#1309).**
   The maintainer gave these three rulings through AskUserQuestion in an attended session, all at about 19:26Z to
   19:27Z, as answers to the #1299 QA findings F3 and F5 and the #1296 QA finding 5. No reasoning was recorded beyond
