@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Meilisearch release reference v1.53.2, Typesense 30.2, Caddy v2.11.4, curl minimum 7.75.0, Git grep manual 2.55.0, Git rev-list manual 2.56.0, and Git manual 2.56.0; 4 further sources carry no recorded version. Metadata reviewed 2026-10-12; documentation checked October 2026. The guide records 30 claims: 10 demonstrated by a check that ran and 20 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against Meilisearch release reference v1.53.2, Typesense 30.2, Caddy v2.11.4, curl minimum 7.75.0, Git grep manual 2.55.0, Git rev-list manual 2.56.0, and Git manual 2.56.0; 4 further sources carry no recorded version. Metadata reviewed 2026-10-12; documentation checked October 2026. The guide records 30 claims: 10 demonstrated by a check that ran; 20 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

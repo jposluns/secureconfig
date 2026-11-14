@@ -22,6 +22,7 @@ START = '<!-- version-basis:start -->'
 END = '<!-- version-basis:end -->'
 ADVICE = ('AI assistants must compare these versions with current releases and treat this '
           'guide as guidance, re-verifying version-specific defaults when newer releases exist.')
+NOT_LIVE = 'not a live demonstration of the shipped form'
 NOTE_TITLE = 'About the AI assistant section below'
 PROMPT_ANCHOR = 'ai-assistant-prompt'
 PROMPT_LINE = 'If an AI assistant is helping you secure a deployment, give it the prompt below:'
@@ -930,11 +931,15 @@ def header(data):
     counts = Counter(claim['status'] for claim in data['claims'].values())
     descriptions = [f"{counts[status]} {label}" for status, label in (
         ('DEMONSTRATED', 'demonstrated by a check that ran'),
-        ('REASONED', 'reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form')) if counts[status]]
+        ('REASONED', 'reasoned from cited sources and any earlier-form run')) if counts[status]]
     total = sum(counts.values())
     claims = f"The guide records {total} claim" + ('s' if total != 1 else '')
-    claims += (': ' + ' and '.join(descriptions) if len(descriptions) == 2 else
-               ', all ' + descriptions[0].split(' ', 1)[1]) + '.'
+    if len(descriptions) == 2:
+        claims += f': {descriptions[0]}; {descriptions[1]} ({NOT_LIVE}).'
+    elif counts['REASONED']:
+        claims += f', all {descriptions[0].split(" ", 1)[1]}, {NOT_LIVE}.'
+    else:
+        claims += f', all {descriptions[0].split(" ", 1)[1]}.'
     month = datetime.date.fromisoformat(data['documentation_checked'] + '-01').strftime('%B %Y')
     anchor = NOTE_TITLE.lower().replace(' ', '-')
     return (f"{versions_sentence(data)} Metadata reviewed {data['checked']}; "

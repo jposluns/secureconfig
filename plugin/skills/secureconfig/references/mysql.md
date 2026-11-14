@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against MySQL reference 8.4, 8.0, 9.7, and 26.7, MySQL Docker package mysql-8.4.9, and MariaDB package source mariadb-11.8.9; 2 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 55 claims: 2 demonstrated by a check that ran and 53 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against MySQL reference 8.4, 8.0, 9.7, and 26.7, MySQL Docker package mysql-8.4.9, and MariaDB package source mariadb-11.8.9; 2 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 55 claims: 2 demonstrated by a check that ran; 53 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
