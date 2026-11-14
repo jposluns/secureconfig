@@ -1178,8 +1178,8 @@ that blocks progress is taken by majority of three predictions of what the maint
 lab_infra and guardrails, given the context through inbox-send, and the orchestrator's own. Each such decision is
 recorded with its question, the three predictions and its outcome, for the maintainer's later review. In the
 predictions quoted below, words in square brackets replace a pronoun in the quoted reasoning. The two proxy
-decisions of 2026-11-11 and the one of 2026-11-14 after them were taken under a later rule, the unattended decision rule of
-2026-10-31, which the first of them states.
+decisions of 2026-11-11 and the one of 2026-11-14 after them were taken under a later rule, the unattended
+decision rule of 2026-10-31, which the first of them states.
 
 - **Proxy decision of 2026-10-27 on TODO 1.383 closure, for the maintainer's later review (#1002).** Decided at
   2026-10-27T23:11:19Z under that directive. The outcome, as the record reads:
@@ -1336,27 +1336,45 @@ decisions of 2026-11-11 and the one of 2026-11-14 after them were taken under a 
   review: a different ruling changes or drops the definition change and the consistency check before they land, or
   replaces them after.
 - **Proxy decision of 2026-11-14 on pinning `ssr_mode=False` in the `gradio.md` TLS example, for the maintainer's later
-  review (#1313).** Decided at 2026-11-14T11:08:40Z, when the second vote arrived, under D-UNATTENDED-VOTE-V2, the
-  unattended decision rule of 2026-10-31. The question went to the D-1096 vote at about 11:08Z, after the source check
-  that the maintainer's 2026-11-13 ruling called for. The options, paraphrased rather than quoted: option 1, marked as
-  the predicted option, pins `ssr_mode=False` in the TLS example with a comment. Option 2, marked as best for the
-  project and recommended, is that pin plus a sourced sentence that replaces the guide's "has not checked the behaviour
-  with SSR on" disclaimer. The votes, as recorded in `notes.md`: lab_infra voted for option 2 at 11:08:34Z, with
-  reasoning that, in paraphrase, a stated unknown should be replaced by a sourced fact, and set no condition.
-  guardrails voted for option 2 at 11:08:40Z, on the condition that the pull request's QA confirms blocks.py lines
-  3036-3037 and 3326-3328 and proxy_index.js line 56 at gradio@6.31.0 before merge. Since lab_infra and guardrails
-  agreed, grc's vote was not needed under D-UNATTENDED-VOTE-V2; it is recorded, for option 2 at 11:08:55Z, with the
-  condition that QA re-reads the cited gradio@6.31.0 lines at that commit before it lands. The outcome is option 2.
+  review (#1313).** Decided at 2026-11-14T11:08:40Z, when the second vote arrived, under the unattended decision rule
+  of 2026-10-31 that the entries above state. The question went to the D-1096 vote at 11:08:16Z, after the source check
+  that the maintainer's 2026-11-13 ruling called for (the request to lab_infra is
+  20261114T110816Z.from-secureconfig.e7af69e459e4.msg, with the guardrails and grc copies at 11:08:24Z and 11:08:28Z).
+  The options, paraphrased rather than quoted: option 1, marked as the predicted option, pins `ssr_mode=False` in the
+  TLS example with a one-line comment citing the source lines. Option 2, marked as best for the project and
+  recommended, is that pin plus a sourced sentence that replaces the guide's "has not checked the behaviour with SSR
+  on" disclaimer. The votes are as recorded in `notes.md`. The lab_infra vote was for option 2 at 11:08:34Z, with
+  reasoning that, in paraphrase, a stated unknown should be replaced by a sourced fact, and set no condition
+  (20261114T110834Z.from-lab_infra.6c7e07ed41df.msg). The guardrails vote was for option 2 at 11:08:40Z, with
+  reasoning that, in paraphrase, the maintainer takes the more complete, better-documented fix when the gap is minutes, and a sourced
+  statement beats an unverified one (20261114T110840Z.from-guardrails.4380abc73abf.msg). Its condition is that the
+  pull request's QA confirms blocks.py lines 3036-3037 and 3326-3328 and proxy_index.js line 56 at gradio@6.31.0
+  before merge. Since lab_infra and guardrails agreed, grc's vote was not needed under the unattended decision rule
+  of 2026-10-31. It is recorded, for option 2 at 11:08:55Z (20261114T110855Z.from-grc.2d294771b7c5.msg), with
+  reasoning that, in paraphrase, a sourced statement of the actual behaviour is more accurate and tells the reader
+  why the pin matters. Its condition is that QA re-reads the cited gradio@6.31.0 lines at that commit before it
+  lands. The outcome is option 2.
   Its effect, applied in the same change as this entry: the `gradio.md` TLS example adds `ssr_mode=False,` with a
-  one-line comment, and the disclaimer sentence becomes a sourced statement. Outside dev mode, with SSR on and Node
-  available, Gradio 6.31.0 can move Python, still with TLS, to an internal port and start a Node proxy on the
-  user-facing port that reaches Python over plain `http://` (blocks.py lines 3326-3328 and 3500-3506; `proxy_index.js`
-  lines 1, 22 and 56). Node is kept only if its startup check passes (`HEAD /` below 500 within 30 seconds,
-  `node_server.py` lines 183 and 265-281), otherwise Python returns to the user-facing port with TLS (blocks.py lines
-  3518-3529), and what the SvelteKit handler answers is not established. SSR turns on with `ssr_mode=True` or
+  one-line comment that cites blocks.py lines 3326-3328, and the disclaimer sentence becomes a sourced statement.
+  Outside dev mode, with SSR on and Node available, Gradio 6.31.0 can move Python, still with TLS, to an internal
+  port and try to start a Node proxy on the user-facing port that reaches Python over plain `http://` (blocks.py lines
+  3326-3328 and 3500-3506; `proxy_index.js` lines 1, 22 and 56). Node is kept only if its startup check passes
+  (`HEAD /` below 500 within 30 seconds, `node_server.py` lines 183 and 265-281), and what the SvelteKit handler
+  answers is not established. If Node is not kept, Gradio tries to move Python, with TLS, back to the user-facing
+  port (blocks.py lines 3518-3529); if that port is not free or is lost in a race, Python stays only on the internal
+  port and Gradio warns (blocks.py lines 3537-3544, 3875-3877 and 3890-3897). SSR turns on with `ssr_mode=True` or
   `GRADIO_SSR_MODE=true`, and an explicit `ssr_mode=False` overrides the variable (blocks.py lines 3035-3039). The
   Sources section gains the Node proxy and node_server sources at the 6.31.0 tag, and the `tls` claim states the pin
   and its reason. The findings are in the orchestrator's private plan and were read from source only; no run was made.
+  The vote request stated the premise as certain ("With SSR on, a Node proxy serves the user-facing port over plain
+  HTTP"), and all three voters relied on that summary: lab_infra did not re-read the source, guardrails said the vote
+  rests on the stated premise, and grc said it had not verified the lines itself. QA later found the Node path
+  conditional (the startup check, then the fallback, which can itself fail). So the shipped text, which says Gradio
+  tries to start Node and can leave Python only on the internal port, goes beyond option 2's wording above, and the
+  pin is still justified, because SSR can put plain HTTP on the public port. QA re-read the cited lines at the 6.31.0
+  tag, meeting the guardrails and grc conditions as written. secureconfig sent the voters a correction notice on
+  2026-11-14, to lab_infra at 15:02:09Z, guardrails at 15:02:12Z and grc at 15:02:16Z, and option 2 stands unless a
+  voter revises it.
   Like the entries above, this decision is not a maintainer ruling and awaits the maintainer's ratification, and none
   is recorded yet. The revert path is the maintainer's review: a different ruling withdraws or replaces this vote, and
   a pull request then restores the earlier example, disclaimer sentence and `tls` claim, or changes them to match the
