@@ -35,7 +35,8 @@ THE CASES (numbered as in the implementation plan, which is not in this reposito
       of its PID, judged only after a bounded wait for the files an unstopped section writes.
   T10 a section that writes to stdout and stderr in turn prints them in the same order as serial.
   T11 (the part that needs no real suite) the normaliser of the differential run rewrites or drops
-      only the fields and lines it names (the job notice in its TERM, KILL, HUP and ABRT forms);
+      only the fields and lines it names (the job notice in its TERM, KILL, HUP, ABRT, "I/O
+      possible" and "Real-time signal N" forms);
       the differential itself is below.
   T12 the file's shape: 1 `# preflight` line before the first section, 1 `fail=0` before it, the
       `# exclusive:` lines name sections, `# depends:` stays the only line tools/select_gates.py
@@ -86,10 +87,11 @@ DIFFERENTIAL_NORMALISE = (
     # The job notice bash prints, only for the serial `--sections` run, when the shell running the
     # cut copy dies by a signal: a line dropped, not rewritten. For TERM it is the bare notice
     # ("Terminated   bash -c '. /dev/fd/3' ..."); for KILL, HUP, ABRT and the others bash puts the
-    # script's name, a line number and the PID before it ("<script>: line 466: 1234 Killed   ..."),
-    # and ABRT adds "(core dumped)"; INT prints none. Only a notice for this exact command line is
-    # dropped. The parallel run prints none, and the exit status is the same in both.
-    (re.compile(r"^(?:\S.*: line [0-9]+: [0-9]+ )?[A-Z][A-Za-z0-9 ]*? +(?:\(core dumped\) )?"
+    # script's name, a line number and the PID before it ("<script>: line 485: 1234 Killed   ..."),
+    # and ABRT adds "(core dumped)"; INT prints none. The description is bash's text for the signal,
+    # so it may hold "/" or "-" ("I/O possible", "Real-time signal 3"). Only a notice for this exact
+    # command line is dropped. The parallel run prints none, and the exit status is the same.
+    (re.compile(r"^(?:\S.*: line [0-9]+: [0-9]+ )?[A-Z][A-Za-z0-9 /-]*? +(?:\(core dumped\) )?"
                 r"bash -c '\. /dev/fd/3' \"\$PWD/tools/run_all_checks\.sh\" 3<<< \"\$script\"$"), None),
 )
 
@@ -670,12 +672,15 @@ def t11_normaliser():
           and normalise("Ran 118 tests in 288.973s") != normalise("Ran 117 tests in 288.973s"),
           normalise("Ran 118 tests in 288.973s"))
     command = "bash -c '. /dev/fd/3' \"$PWD/tools/run_all_checks.sh\" 3<<< \"$script\""
-    # The forms bash 5 printed for the serial --sections run in the stand-in harness.
+    # The forms bash 5 printed for the serial --sections run in the stand-in harness, except
+    # RTMIN, which is written from bash's "Real-time signal N" description and was not observed.
     notices = (
         ("TERM", f"Terminated                 {command}"),
-        ("KILL", f"/var/tmp/tmpfoankz4g/tools/run_all_checks.sh: line 466: 1546593 Killed                     {command}"),
-        ("HUP", f"/var/tmp/tmpr4bf6bbz/tools/run_all_checks.sh: line 466: 1547209 Hangup                     {command}"),
-        ("ABRT", f"/var/tmp/tmp75kjtsgn/tools/run_all_checks.sh: line 466: 1548285 Aborted                    (core dumped) {command}"),
+        ("KILL", f"/var/tmp/tmpfoankz4g/tools/run_all_checks.sh: line 485: 1546593 Killed                     {command}"),
+        ("HUP", f"/var/tmp/tmpr4bf6bbz/tools/run_all_checks.sh: line 485: 1547209 Hangup                     {command}"),
+        ("ABRT", f"/var/tmp/tmp75kjtsgn/tools/run_all_checks.sh: line 485: 1548285 Aborted                    (core dumped) {command}"),
+        ("IO", f"/var/tmp/tmpq3x9d1aa/tools/run_all_checks.sh: line 485: 1549001 I/O possible                {command}"),
+        ("RTMIN", f"/var/tmp/tmpq3x9d1bb/tools/run_all_checks.sh: line 485: 1549102 Real-time signal 3            {command}"),
     )
     for sig, notice in notices:
         check(failures, f"T11 the serial job notice for a cut copy killed by {sig} is dropped",

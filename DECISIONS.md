@@ -18,8 +18,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 ## Rulings
 
 - **Maintainer ruling of 2026-11-13 on the gate suite's speed: a parallel runner, planned as its own pull request (#1312).**
-  The maintainer gave this ruling through AskUserQuestion in an attended session at about 19:25Z, as the answer on
-  whether to run the gate suite's sections in parallel. No reasoning was recorded beyond the choice, and the notes
+  The maintainer gave this ruling through AskUserQuestion in an attended session at about 19:25Z, on the topic
+  "suite speed"; the question's own wording was not recorded. No reasoning was recorded beyond the choice, and the notes
   recorded only the chosen option, not the other options offered. The label and description are quoted exactly:
   the maintainer chose "Plan it as its own PR (Recommended)", whose description read "A worker maps section dependencies (the # depends: lines) and proposes a parallel runner that keeps output order and exit status identical; full QA before merge. Predicted choice."
   - Effect, applied in the same change as this entry. `tools/run_all_checks.sh` gains an opt-in parallel mode,
@@ -35,18 +35,20 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     server, and the `gate-runners` section also runs the new test. Output
     order and lines are identical apart from 3 fields that differ between any 2 runs: the credential scanner's elapsed
     time and sampling counts, and unittest's elapsed times. On 2 failing paths the lines differ as well. Under
-    `--sections`, a section killed by a signal makes the serial run print bash's job notice for its child shell,
+    `--sections`, a section killed by a signal other than INT makes the serial run print bash's job notice for its child shell,
     which the parallel run does not print. And a diagnostic that bash itself prints from inside a section, such as
     an unbound variable or a command not found, names another file or line, because each section runs from its own
     temporary script. The exit status is the same in every case tested, a fatal shell error in a section included:
-    1 in a whole run and 127 under `--sections`, in both modes.
+    an unbound variable gives 1 in a whole run and 127 under `--sections`, and a syntax error gives 2 in both, in
+    both modes.
   - The orchestrator's calls, not the maintainer's: the default is off, CI is unchanged, and the `version-basis`
-    section is not split, so a later pull request can change each of them.
+    section is not split, so a later pull request can change each of them. Also the orchestrator's call: a revert
+    pull request keeps the overflow section's repeated TERM unless a later ruling says otherwise, because without it
+    the case in `tools/test_gate_runners.py` waits 60 seconds again.
   - Revert. Unsetting `SECURECONFIG_SUITE_JOBS`, or setting it to `1`, runs the serial suite with no revert. The
     revert path for the code is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
     that removes the parallel mode, its test and its documentation, or changes them to match the new ruling. It
-    keeps the overflow section's repeated TERM unless that ruling says otherwise, because without it the case in
-    `tools/test_gate_runners.py` waits 60 seconds again. It keeps every existing entry in `CHANGELOG.md` and
+    keeps every existing entry in `CHANGELOG.md` and
     `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here. If the revert pull request
     uses `git revert -m 1`, that puts back this pull request's `CHANGELOG.md` entry under the date it merged and does
     not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.

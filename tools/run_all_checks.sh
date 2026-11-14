@@ -41,10 +41,10 @@
 # one before it have finished, so the output holds the same lines in the same order as the serial
 # run, with a section's text never split. The status equals the serial run's: 1 when any section
 # set fail=1, else 0, and the summary is this file's own. A section that exits without finishing
-# (llms-full and plugin exit 1 when a restore fails, and a fatal shell error such as an unbound
-# variable ends a section with 1, or with 127 under --sections) or is killed by a signal ends the
-# run the way it ends the serial one: its output is the last printed, no later section's output
-# and no summary follow, and the status is its exit status, or its signal: re-raised on this
+# (llms-full and plugin exit 1 when a restore fails; an unbound variable ends a section with 1, or
+# with 127 under --sections, and a syntax error ends it with 2 in both modes and both run shapes)
+# or is killed by a signal ends the run the way it ends the serial one: its output is the last
+# printed, no later section's output and no summary follow, and the status is its exit status, or its signal: re-raised on this
 # shell for the whole run, 128 plus the signal under --sections. HUP, INT and TERM sent to this
 # shell stop every section's process group and are re-raised. The parser preflight runs first, in
 # the foreground, in both modes. A section that rewrites the working tree in place is named by an
@@ -63,7 +63,7 @@
 # none; the comparison leaves that line out and the status is the same. And a diagnostic that
 # bash itself prints from inside a section (an unbound variable, a command not found) names
 # another file or line: this file's name and line in a whole serial run and "/dev/fd/3" with
-# this file's line under --sections, but the section's temporary script in a whole parallel run
+# the line in the serial run's cut copy, not this file's line, under --sections, but the section's temporary script in a whole parallel run
 # and "/dev/fd/3" with another line under --sections; that line is not left out.
 # depends: generated-committed: llms-full plugin
 # exclusive: llms-full plugin
