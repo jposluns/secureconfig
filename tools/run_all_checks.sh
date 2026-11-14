@@ -52,7 +52,10 @@
 # Output identity between the two modes means the same lines in the same order and the same
 # status, with 3 classes of line left out: the credential scanner's elapsed-time line
 # ("... took N.NN s"), its sampling counts ("sampling reads: ..."), and unittest's
-# "Ran N tests in N.NNNs" lines. tools/test_parallel_suite.py --differential compares them.
+# "Ran N tests in N.NNNs" lines. tools/test_parallel_suite.py --differential compares them. In
+# one abnormal case the 2 modes also differ in one line: when a section is killed by a signal under
+# --sections, the serial run's parent shell prints bash's job notice for its child shell
+# ("Terminated   bash -c ..."), and the parallel run prints none; the status is the same.
 # depends: generated-committed: llms-full plugin
 # exclusive: llms-full plugin
 set -uo pipefail

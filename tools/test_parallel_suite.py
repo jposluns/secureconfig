@@ -32,6 +32,8 @@ THE CASES (the plan's numbers, plans/impl-parallel-suite-20261114.md):
       folder and are re-raised, including a TERM sent between a section's launch and the record
       of its PID.
   T10 a section that writes to stdout and stderr in turn prints them in the same order as serial.
+  T11 (the part that needs no real suite) the normaliser of the differential run leaves out only the
+      line classes it names; the differential itself is below.
   T12 the file's shape: 1 `# preflight` line before the first section, 1 `fail=0` before it, the
       `# exclusive:` lines name sections, `# depends:` stays the only line tools/select_gates.py
       reads, and a driver without its markers refuses instead of skipping the preflight.
@@ -76,6 +78,10 @@ DIFFERENTIAL_NORMALISE = (
      r"\1<elapsed>s\2<counts>"),
     # unittest's elapsed time; the test count stays compared.
     (re.compile(r"^(Ran [0-9]+ tests? in )[0-9.]+s$"), r"\1<elapsed>s"),
+    # The job notice bash prints, only for the serial `--sections` run, when the shell running the
+    # cut copy dies by a signal ("Terminated   bash -c '. /dev/fd/3' ..."): a line dropped, not
+    # rewritten. The parallel run prints none, and the exit status is the same in both.
+    (re.compile(r"^(Terminated|Killed|Hangup|Interrupt) +bash -c '\. /dev/fd/3' .*$"), None),
 )
 
 
@@ -531,8 +537,31 @@ def t13_select_gates():
     return failures
 
 
+def t11_normaliser():
+    """The line classes DIFFERENTIAL_NORMALISE leaves out, and nothing else, on recorded lines."""
+    failures = []
+    scan = ("  ok    credential scan: 315 cases; 0 skips; {t}s; {{'CHECK': 19, 'FOUND': 164}}; "
+            "sampling reads: {c} cmdline, 5 environ, 1 denied")
+    same = (normalise(scan.format(t="36.30", c="50948")) == normalise(scan.format(t="35.57", c="1"))
+            and "36.30" not in normalise(scan.format(t="36.30", c="50948"))
+            and "'FOUND': 164" in normalise(scan.format(t="36.30", c="50948")))
+    check(failures, "T11 the scanner's elapsed time and sampling counts are left out, its case counts "
+          "are not", same, normalise(scan.format(t="36.30", c="50948")))
+    check(failures, "T11 unittest's elapsed time is left out and its test count is not",
+          normalise("Ran 118 tests in 288.973s") == normalise("Ran 118 tests in 279.186s")
+          and normalise("Ran 118 tests in 288.973s") != normalise("Ran 117 tests in 288.973s"),
+          normalise("Ran 118 tests in 288.973s"))
+    notice = "Terminated                 bash -c '. /dev/fd/3' \"$PWD/tools/run_all_checks.sh\" 3<<< \"$script\""
+    check(failures, "T11 the serial job notice for a killed cut copy is dropped",
+          normalise(f"== a ==\n{notice}\n== b ==") == "== a ==\n== b ==", normalise(notice))
+    for line in ("  ok    commit 4d110e793449: x", "  FAIL  walker failed", "Ran 118 tests",
+                 "Terminated by the user", "  ok    credential scan: 315 cases"):
+        check(failures, f"T11 {line!r} is compared as is", normalise(line) == line, normalise(line))
+    return failures
+
+
 CASES = (t1_order, t2_concurrency, t3_status, t4_preflight, t5_refusals, t6_dependencies,
-         t7_exclusive, t8_abort, t9_signals, t10_merged, t12_shape, t13_select_gates)
+         t7_exclusive, t8_abort, t9_signals, t10_merged, t11_normaliser, t12_shape, t13_select_gates)
 
 
 def normalise(output):
@@ -540,8 +569,14 @@ def normalise(output):
     lines = []
     for line in output.split("\n"):
         for pattern, repl in DIFFERENTIAL_NORMALISE:
-            line = pattern.sub(repl, line)
-        lines.append(line)
+            if repl is None:
+                if pattern.match(line):
+                    line = None
+                    break
+            else:
+                line = pattern.sub(repl, line)
+        if line is not None:
+            lines.append(line)
     return "\n".join(lines)
 
 
@@ -559,9 +594,27 @@ def run_real(root, jobs, args=(), env_extra=None):
 
 def differential(jobs="8"):
     """T11: the real suite on this tree, serial and parallel, compared after normalise()."""
+    def tree_state():
+        """git status and the hash of every tracked and untracked file, ignoring ignored ones."""
+        files = subprocess.run(["git", "ls-files", "-co", "--exclude-standard", "-z"], cwd=ROOT,
+                               stdout=subprocess.PIPE, check=True).stdout.split(b"\0")
+        hashed = subprocess.run(["git", "hash-object", "--stdin-paths"], cwd=ROOT, check=True,
+                                input=b"\n".join(f for f in files if f), stdout=subprocess.PIPE).stdout
+        return hashed
+
+    before = tree_state()
     src, sout, st = run_real(ROOT, None)
+    middle = tree_state()
     prc, pout, pt = run_real(ROOT, jobs)
-    print(f"serial {st:.0f} s exit {src}; parallel (JOBS={jobs}) {pt:.0f} s exit {prc}")
+    after = tree_state()
+    print(f"serial {st:.0f} s exit {src}; parallel (JOBS={jobs}) {pt:.0f} s exit {prc}; load "
+          f"{open('/proc/loadavg').read().split()[0]} at the end")
+    if not (before == middle == after):
+        print("  FAIL  the tracked and untracked files differ after a run: "
+              f"before/serial {before == middle}, serial/parallel {middle == after}")
+        return 1
+    print("  ok    every tracked and untracked file hashes the same before, after the serial run and "
+          "after the parallel run (the write audit)")
     a, b = normalise(sout).split("\n"), normalise(pout).split("\n")
     diff = [(i, x, y) for i, (x, y) in enumerate(zip(a, b)) if x != y]
     if src != prc or len(a) != len(b) or diff:
