@@ -75,7 +75,7 @@ open-webui.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	e51d97b1051005da6b
 openclaw.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	3815828c34fddbe3481c810f921965b3f1674da163f7c8be62897a3f0559c203	2026-11-10	tool	current
 paas.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	59a1f9107da1ac7bb86982f00ceb93add040c3349f356cb1707e55b0e5f3d0b0	2026-11-10	tool	current
 php.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	68ff4db5978b00e023f86d75f52ae8a48964384416a045a2150ad4d7e7d12941	2026-11-10	tool	current
-pocketbase.md	C	PARTIAL(M1)	?	?	?	GAP(D3)	?	?	PARTIAL(G1)	?	?	MINOR-GAPS	9701976bbd96ccc878a6c91eb6575b485f6dc489c4e337731b65247e67308b6d	2026-11-10	tool	current
+pocketbase.md	C	PARTIAL(M1)	?	?	?	GAP(D3)	?	?	PARTIAL(G1)	?	?	MINOR-GAPS	80c1694aa1674d9611e73b22886f6b1fe569df6fa74af23d92427de29e95882a	2026-11-10	tool	current
 postgresql.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	8dfdaa5890bde912d02bc09c4b2deb85d5a5f6b4cd58956274ad0ea39a47a7a9	2026-11-10	tool	current
 python.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	32048bf47a61a7c8b01bac34c0340deac63450b4ec8c9ec1af63b2a43d00b065	2026-11-10	tool	current
 rabbitmq.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	827e8f253c2455dc18dc845a54d8015cd0eea915fc6eb6ac13ae7ee913a06d5a	2026-11-10	tool	current

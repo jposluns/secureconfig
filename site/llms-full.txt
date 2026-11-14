@@ -74958,7 +74958,8 @@ except to API-key or privileged requesters, and, for a request without a transac
 document itself is then fetched through the database layer. With an API key, the request's role
 and scopes come from the key, and at 2.7.0 every key also holds the `public` scope; a standard,
 ephemeral or `dynamic` project key for the same project sets the current authorization status to
-disabled. So do admin-mode console sessions, except on the console project's `/v1/projects` and
+disabled. So do user sessions on the console project that act on an organization, and
+admin-mode user sessions on other projects, except on the console project's `/v1/projects` and
 `/v1/projects/:projectId` routes and GET requests to the `/v1/organization/projects` routes, which
 enable it. An OAuth2 key with the `owner` role on an admin-mode request by a user to a project
 other than the console also sets it to disabled. Route scope validation still applies to every requester. At 2.7.0 a request with an
@@ -74972,6 +74973,7 @@ See the
 [document fetch](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L105-L132),
 [role classification](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Utopia/Database/Documents/User.php#L82-L116),
 [API-key role and authorization status](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L146-L167),
+[admin-branch condition](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L300-L304),
 [admin-mode authorization status](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L328-L361),
 [OAuth2 owner key status](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L402-L411),
 [request role assignment](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L396-L400),
@@ -75370,7 +75372,8 @@ Set a unique `_APP_OPENSSL_KEY_V1` **before storing production data**. At 2.7.0 
 default is empty, and a fresh install generates it: the install task passes every `token` variable
 except `_APP_JOBS_SECRET` through `EncryptionKey::resolve`, which replaces an empty or
 `your-secret-key` value only when secrets are generated, which is for neither an existing
-installation nor an upgrade. It passes `_APP_JOBS_SECRET`, also a `token` variable, through
+installation nor an upgrade. It passes `_APP_JOBS_SECRET`, also a `token` variable in its
+[pinned entry](https://github.com/appwrite/appwrite/blob/2.7.0/app/config/variables.php#L1496-L1502), through
 `JobsSecret::resolve`, which takes no generation flag and replaces such a value whether or not
 secrets are generated. The 2.4.0
 release notes say "Fresh installs generate `_APP_OPENSSL_KEY_V1` instead of using
@@ -75803,6 +75806,7 @@ The PocketBase source items cite its author's forge at the v0.41.1 tag, as `rev=
 - [Appwrite email delivery (rolling documentation, checked November 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/email).
 - [Appwrite self-hosted backups and encryption-key preservation (rolling documentation, checked November 2026)](https://appwrite.io/docs/advanced/self-hosting/production/backups).
 - [Appwrite 2.7.0 configuration defaults, console URL, key versions and executor secret (checked November 2026)](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/app/config/variables.php).
+- [Appwrite 2.7.0 `_APP_JOBS_SECRET` variable and its token filter (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/app/config/variables.php#L1496-L1502).
 - [Appwrite 2.7.0 development environment and placeholder secrets (checked November 2026)](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/.env).
 - [Appwrite 2.7.0 console registration handler (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Account/Http/Account/Create.php#L109-L134).
 - [Appwrite console MFA enrollment and recovery codes (rolling documentation, checked November 2026)](https://appwrite.io/docs/advanced/security/mfa).
@@ -75841,6 +75845,7 @@ The PocketBase source items cite its author's forge at the v0.41.1 tag, as `rev=
 - [Appwrite 2.7.0 OAuth2 owner key authorization status (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L402-L411).
 - [Appwrite 2.7.0 request role assignment (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L396-L400).
 - [Appwrite 2.7.0 route scope validation (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L557-L561).
+- [Appwrite 2.7.0 admin-branch condition (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L300-L304).
 - [Appwrite 2.7.0 collection permission and documentSecurity handoff (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L230-L236).
 - [Appwrite 2.7.0 database pool DSN fallbacks and connections (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/app/init/registers.php#L45-L99).
 - [Appwrite 2.7.0 database adapter mapping (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/app/init/registers.php#L239-L252).
@@ -75974,11 +75979,11 @@ Claims (full source mapping in the JSON block below):
 - appwrite-permissions (REASONED; appwrite, appwrite-docs): Collection and document grants are additive according to legacy documentation; documentSecurity defaults false in Appwrite 2.7.0 and must be enabled for document grants. The pinned parameter description states the need for one permission level.
 - appwrite-creation (REASONED; appwrite, appwrite-docs, utopia-php-database): For null or omitted document permissions, the pinned aggregate helper preserves null before the handler assigns read/update/delete user grants to a nonprivileged requester with a user ID, or an empty list otherwise. API-key classification skips role validation but does not itself determine the default list. Use specific users/teams for private data.
 - appwrite-read-path (REASONED; appwrite): Document GET classifies requesters by authorization role (keys; owner/developer/admin privileged), reports disabled databases/collections as not found to others and, without a transaction ID, fetches through the database layer, which gets collection permissions and documentSecurity at collection creation. With one, staged creates come from the pending transaction's logs.
-- appwrite-requester (REASONED; appwrite): With an API key the request role and scopes come from the key, plus public at 2.7.0; a standard, ephemeral or dynamic project key for the same project sets the current authorization status to disabled, as do admin-mode console sessions outside the console and organization project read routes, while route scope validation applies to every requester.
+- appwrite-requester (REASONED; appwrite): With an API key the request role and scopes come from the key, plus public at 2.7.0; a standard, ephemeral or dynamic project key for the same project disables authorization checks, as does a user session on the console project with an organization or in admin mode on another, except console /v1/projects and GET /v1/organization/projects routes; route scope validation applies to every requester.
 - appwrite-keys (REASONED; appwrite, appwrite-docs): Properly scoped server API keys bypass resource permissions but still obey operation scopes; treat keys.write as admin-equivalent: release notes since 2.6.2 say a key cannot grant scopes it does not hold, which the served page does not reflect, but the 2.7.0 key handlers were not read. Keys never belong in clients.
 - appwrite-key-creation (REASONED; appwrite-docs): The served API keys page says creating API keys with the Project API is deprecated as of 17 August 2026 and long-lived keys are created in the Console, while the Project API can still list, update and delete keys and issue ephemeral keys.
 - appwrite-encryption (REASONED; appwrite, appwrite-docs): Fresh 2.7.0 installs generate _APP_OPENSSL_KEY_V1 while existing and upgraded installs keep their stored value, so replace a remaining your-secret-key placeholder before production data; preserve every key version that still decrypts data, since loss strands encrypted secrets.
-- appwrite-jobs-secret (REASONED; appwrite): At 2.7.0 the install task passes _APP_JOBS_SECRET through JobsSecret::resolve, which takes no generation flag and replaces an empty or your-secret-key value whether or not secrets are generated, unlike the other token variables, which go through EncryptionKey::resolve.
+- appwrite-jobs-secret (REASONED; appwrite): At 2.7.0 variables.php gives _APP_JOBS_SECRET the filter token (L1502), and the install task passes it through JobsSecret::resolve, which takes no generation flag and replaces an empty or your-secret-key value whether or not secrets are generated, unlike the other token variables, which go through EncryptionKey::resolve.
 - appwrite-backups (REASONED; appwrite-docs): Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation.
 - appwrite-abuse (REASONED; appwrite, appwrite-docs): _APP_OPTIONS_ABUSE defaults enabled but dev env disables it; server API-key and owner, developer or admin requests are exempt, so test with ordinary clients.
 - appwrite-smtp (REASONED; appwrite, appwrite-docs): SMTP host/port/secure/username/password default empty and empty host disables sending; configure the provider and confirm message receipt/use.
@@ -76029,7 +76034,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-11",
-  "body_sha256": "9701976bbd96ccc878a6c91eb6575b485f6dc489c4e337731b65247e67308b6d",
+  "body_sha256": "80c1694aa1674d9611e73b22886f6b1fe569df6fa74af23d92427de29e95882a",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -76059,6 +76064,7 @@ Claims (full source mapping in the JSON block below):
       "basis": "2.7.0",
       "sources": {
         "s6bb4fe4aeed0": "https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/app/config/variables.php",
+        "sb638bea17ced": "https://github.com/appwrite/appwrite/blob/2.7.0/app/config/variables.php#L1496-L1502",
         "s2ce76c61491b": "https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/.env",
         "sd96c9b2ddc30": "https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Account/Http/Account/Create.php#L109-L134",
         "s535fef1a5540": "https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/app/controllers/shared/api.php",
@@ -76080,6 +76086,7 @@ Claims (full source mapping in the JSON block below):
         "s9323f9f7f883": "https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L402-L411",
         "seae8fbd82294": "https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L396-L400",
         "s02d278fc618d": "https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L557-L561",
+        "s66a45971900a": "https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L300-L304",
         "s4a5ab116894c": "https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L230-L236",
         "s298b295bc4a2": "https://github.com/appwrite/appwrite/blob/2.7.0/app/init/registers.php#L45-L99",
         "s90d9a92f0ed4": "https://github.com/appwrite/appwrite/blob/2.7.0/app/init/registers.php#L239-L252",
@@ -76276,11 +76283,11 @@ Claims (full source mapping in the JSON block below):
     "appwrite-permissions": {"text": "Collection and document grants are additive according to legacy documentation; documentSecurity defaults false in Appwrite 2.7.0 and must be enabled for document grants. The pinned parameter description states the need for one permission level.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:sd13079dcf7cd", "appwrite-docs:s58ad28816c5d"], "status": "REASONED"},
     "appwrite-creation": {"text": "For null or omitted document permissions, the pinned aggregate helper preserves null before the handler assigns read/update/delete user grants to a nonprivileged requester with a user ID, or an empty list otherwise. API-key classification skips role validation but does not itself determine the default list. Use specific users/teams for private data.", "components": ["appwrite", "appwrite-docs", "utopia-php-database"], "sources": ["appwrite:s389cba971534", "appwrite:sababfed68086", "appwrite:s1af8437dd494", "appwrite-docs:sa0bd132f7968", "appwrite:s8222d84642bc", "utopia-php-database:s84fe9d3d1ab5"], "status": "REASONED"},
     "appwrite-read-path": {"text": "Document GET classifies requesters by authorization role (keys; owner/developer/admin privileged), reports disabled databases/collections as not found to others and, without a transaction ID, fetches through the database layer, which gets collection permissions and documentSecurity at collection creation. With one, staged creates come from the pending transaction's logs.", "components": ["appwrite"], "sources": ["appwrite:sbf22f36f3eaf", "appwrite:sfa704d5d52d2", "appwrite:s781b997e5328", "appwrite:s4704dc36131d", "appwrite:s4a5ab116894c", "appwrite:s32cdcbef66a2", "appwrite:sfe2ab69d5301", "appwrite:s20b34941cb2a"], "status": "REASONED"},
-    "appwrite-requester": {"text": "With an API key the request role and scopes come from the key, plus public at 2.7.0; a standard, ephemeral or dynamic project key for the same project sets the current authorization status to disabled, as do admin-mode console sessions outside the console and organization project read routes, while route scope validation applies to every requester.", "components": ["appwrite"], "sources": ["appwrite:s9c364b4988f9", "appwrite:sdc161a81e5f1", "appwrite:seae8fbd82294", "appwrite:s02d278fc618d"], "status": "REASONED"},
+    "appwrite-requester": {"text": "With an API key the request role and scopes come from the key, plus public at 2.7.0; a standard, ephemeral or dynamic project key for the same project disables authorization checks, as does a user session on the console project with an organization or in admin mode on another, except console /v1/projects and GET /v1/organization/projects routes; route scope validation applies to every requester.", "components": ["appwrite"], "sources": ["appwrite:s9c364b4988f9", "appwrite:s66a45971900a", "appwrite:sdc161a81e5f1", "appwrite:seae8fbd82294", "appwrite:s02d278fc618d"], "status": "REASONED"},
     "appwrite-keys": {"text": "Properly scoped server API keys bypass resource permissions but still obey operation scopes; treat keys.write as admin-equivalent: release notes since 2.6.2 say a key cannot grant scopes it does not hold, which the served page does not reflect, but the 2.7.0 key handlers were not read. Keys never belong in clients.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s535fef1a5540", "appwrite-docs:saa37bb5d4d7e", "appwrite:s4d8a36b7651f", "appwrite:sc92fc6843e8a", "appwrite:s77e2ce52136f"], "status": "REASONED"},
     "appwrite-key-creation": {"text": "The served API keys page says creating API keys with the Project API is deprecated as of 17 August 2026 and long-lived keys are created in the Console, while the Project API can still list, update and delete keys and issue ephemeral keys.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:saa37bb5d4d7e"], "status": "REASONED"},
     "appwrite-encryption": {"text": "Fresh 2.7.0 installs generate _APP_OPENSSL_KEY_V1 while existing and upgraded installs keep their stored value, so replace a remaining your-secret-key placeholder before production data; preserve every key version that still decrypts data, since loss strands encrypted secrets.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s6bb4fe4aeed0", "appwrite:s8208896c2c22", "appwrite:s2851b656753a", "appwrite:s296ddae6efd8", "appwrite:sf22fdc1ed786", "appwrite:sc92fc6843e8a", "appwrite-docs:s256ef73f7b85"], "status": "REASONED"},
-    "appwrite-jobs-secret": {"text": "At 2.7.0 the install task passes _APP_JOBS_SECRET through JobsSecret::resolve, which takes no generation flag and replaces an empty or your-secret-key value whether or not secrets are generated, unlike the other token variables, which go through EncryptionKey::resolve.", "components": ["appwrite"], "sources": ["appwrite:sd987a4f33938", "appwrite:s2851b656753a"], "status": "REASONED"},
+    "appwrite-jobs-secret": {"text": "At 2.7.0 variables.php gives _APP_JOBS_SECRET the filter token (L1502), and the install task passes it through JobsSecret::resolve, which takes no generation flag and replaces an empty or your-secret-key value whether or not secrets are generated, unlike the other token variables, which go through EncryptionKey::resolve.", "components": ["appwrite"], "sources": ["appwrite:sb638bea17ced", "appwrite:sd987a4f33938", "appwrite:s2851b656753a"], "status": "REASONED"},
     "appwrite-backups": {"text": "Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s256ef73f7b85"], "status": "REASONED"},
     "appwrite-abuse": {"text": "_APP_OPTIONS_ABUSE defaults enabled but dev env disables it; server API-key and owner, developer or admin requests are exempt, so test with ordinary clients.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s6bb4fe4aeed0", "appwrite:s2ce76c61491b", "appwrite:s535fef1a5540", "appwrite-docs:s000d05106450"], "status": "REASONED"},
     "appwrite-smtp": {"text": "SMTP host/port/secure/username/password default empty and empty host disables sending; configure the provider and confirm message receipt/use.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s6bb4fe4aeed0", "appwrite-docs:s38a1efa0c7d2"], "status": "REASONED"},
