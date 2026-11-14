@@ -18,7 +18,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-11-14
 
-- surrealdb.md: the #1226 QA LOW (L1 and L4). The guide now cites `pub(crate) mod mcp;` at v3.3.5 `cli/mod.rs` line 10, behind `#[cfg(feature = "mcp")]` at line 9, as the declaration that makes `mcp::` the `cli::mcp` module, in the prose, a new Sources bullet, the `capability-mcp-3x` claim, its JSON claim and the source map, and reads "Its argument type" for "Its arguments type". The claim stays REASONED and says nothing new about the unread `cli/mcp.rs` (#1307)
+- surrealdb.md: the #1226 QA LOW (L1 and L4). The guide's prose cites v3.3.5 `cli/mod.rs` line 9 (the `#[cfg(feature = "mcp")]` gate) and line 10 (`pub(crate) mod mcp;`, the declaration that makes `mcp::` the `cli::mcp` module), plus line 38 (`use mcp::McpCommandArguments;`). The `capability-mcp-3x` claim, in its prose and JSON forms, cites line 10 only, and its closing clause was reworded to fit 400 characters. A new Sources bullet is pinned to lines 9 to 10, and the source map gains that anchor. The prose reads "Its argument type" for "Its arguments type". The claim stays REASONED and says nothing new about the unread `cli/mcp.rs` (#1307)
 
 ## 2026-11-13
 
