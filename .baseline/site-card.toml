@@ -1,4 +1,4 @@
-# The site's own data file for .baseline/build_card.js (baseline 1.12.4), written from the
+# The site's own data file for .baseline/build_card.js (baseline 1.13.0), written from the
 # template's tools/site-card.example.toml, which is not copied. Paths are relative to this file.
 # Only the icons are built, with --icons-only, which reads site, logo, favicon and touch_bg; with
 # no logo the builder writes site/favicon.ico's source, secureconfig-favicon.ico, and no touch icon.
