@@ -17,6 +17,40 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-11-13 on the REASONED wording in the mixed-guide header, the homepage sentence and the M1 text in `QUALITY.md` (#1309).**
+  The maintainer gave these three rulings through AskUserQuestion in an attended session, all at about 19:26Z to
+  19:27Z, as answers to the #1299 QA findings F3 and F5 and the #1296 QA finding 5. No reasoning was recorded beyond
+  the choices, and the notes recorded only the chosen options, not the other options offered. The first chose the
+  option labelled "Split into two clauses", whose description read "e.g. '1 demonstrated by a check that ran; 52
+  reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form)'. Regenerate
+  all 54 files in one QA'd PR. Predicted choice." The second chose "Align with ruled wording", whose description read
+  "e.g. 'The checklist's steps are reasoned from cited vendor sources, with no deployment run recorded'; one small
+  QA'd PR with the site rebuild. Predicted choice." The third chose "Fix the text to match the code", whose
+  description read "QUALITY.md says all allowlist entries count against M1 until each is sorted into deferred work
+  or a reasoned waiver; small QA'd PR. Predicted choice: the statement is false today, and the sort is unfinished."
+  The labels and descriptions are quoted exactly except that each label's closing "(Recommended)" is omitted.
+  - Effect, applied in the same change as this entry. `tools/version_basis.py` `header()` joins the two counts of a
+    guide that records both statuses with a semicolon and puts "(not a live demonstration of the shipped form)" after
+    the reasoned count only; a guide that records one status keeps its header byte for byte. 27 guides and their 27
+    plugin copies change, and so do `site/llms-full.txt` and the plugin manifest, 56 files where the ruling says 54,
+    the 54 being the guides and their copies, and the two bundles built from them making 56. The homepage
+    sentence in `site-src/content.json` says "reasoned from cited vendor sources", and `site/index.html` and its
+    sitemap date follow. `QUALITY.md` says every entry in the five baseline and allow files counts against M1 on
+    every run, whether or not it has been sorted.
+  - The orchestrator's reading, not the maintainer's: the three rulings widen nothing beyond the wording the
+    maintainer ruled on 2026-11-12 (#1299). The second ruling leaves the clause "with no deployment run recorded" as
+    the ruling's example has it. The third ruling's description says "until each is sorted", which was the
+    orchestrator's summary and does not match the code: the code keeps no record of sorting and counts every entry
+    on every run, sorted or not. `QUALITY.md` states what the code does, as the label "Fix the text to match the code"
+    directs, so a sorted reasoned waiver still counts against M1.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces these rulings, then a pull
+    request that restores or changes the texts. That pull request restores the earlier `header()` text and
+    regenerates the 27 guides, their plugin copies, `site/llms-full.txt` and the manifest, restores the homepage
+    sentence, its `source` note and `site/index.html`, and restores the `QUALITY.md` text, or changes them to match
+    the new ruling. It keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md`
+    entry, and records the new ruling here. If the revert pull request uses `git revert -m 1`, that puts back this
+    pull request's `CHANGELOG.md` entry under the date it merged and does not set `VERSION`, `plugin/plugin.json` or
+    `SKILL.md` back.
 - **Maintainer rulings of 2026-11-13 on broader "including but not limited to" wording for what the guides cover in the plugin and llms.txt descriptions (#1304).**
   In an attended session at about 19:50Z the maintainer asked for broader "including but not limited to" wording and then chose,
   in an AskUserQuestion, the option labelled "Use this version", whose description read "One QA'd PR applies these texts to

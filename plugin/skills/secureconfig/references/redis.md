@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Redis configuration 6.0.20, 6.2.14, 6.2.0, 7.0.15, 8.2.1, and 8.6.0, Redis HA source 8.10.1, Redis image tag v8.10.2, and Redis compiled defaults 7.4.8 and 8.10.2; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 59 claims: 1 demonstrated by a check that ran and 58 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against Redis configuration 6.0.20, 6.2.14, 6.2.0, 7.0.15, 8.2.1, and 8.6.0, Redis HA source 8.10.1, Redis image tag v8.10.2, and Redis compiled defaults 7.4.8 and 8.10.2; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 59 claims: 1 demonstrated by a check that ran; 58 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

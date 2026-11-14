@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against PocketBase v0.41.1, Appwrite 2.7.0, utopia-php/database 10.1.0, and curl curl-8_14_1; 2 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked November 2026. The guide records 91 claims: 2 demonstrated by a check that ran and 89 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against PocketBase v0.41.1, Appwrite 2.7.0, utopia-php/database 10.1.0, and curl curl-8_14_1; 2 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked November 2026. The guide records 91 claims: 2 demonstrated by a check that ran; 89 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

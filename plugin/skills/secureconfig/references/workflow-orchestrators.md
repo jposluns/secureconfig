@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Prefect Basic Auth minimum 3.1.8, Dagster OSS 1.13.24, Apache Airflow 3.3.2, Temporal Go SDK codec source v1.28.0, Flower v2.2.0, Argo Workflows v3.7.18 and v4.1.4, Prefect Blocks source 3.1.8, and Apache Airflow historical configuration 2.11.0, plus 10 more recorded bases; 1 further source is pinned to a commit and 7 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 62 claims: 3 demonstrated by a check that ran and 59 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against Prefect Basic Auth minimum 3.1.8, Dagster OSS 1.13.24, Apache Airflow 3.3.2, Temporal Go SDK codec source v1.28.0, Flower v2.2.0, Argo Workflows v3.7.18 and v4.1.4, Prefect Blocks source 3.1.8, and Apache Airflow historical configuration 2.11.0, plus 10 more recorded bases; 1 further source is pinned to a commit and 7 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 62 claims: 3 demonstrated by a check that ran; 59 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

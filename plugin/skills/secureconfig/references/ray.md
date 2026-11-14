@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Ray pinned source ray-2.58.0, Ray token authentication introduction 2.52.0, KubeRay chart v1.7.0, KubeRay authentication source v1.6.0, KubeRay prior RayCluster types v1.5.0, CPython WSGI server v3.11.0, and curl minimum write-out version 7.75.0; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 46 claims: 1 demonstrated by a check that ran and 45 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against Ray pinned source ray-2.58.0, Ray token authentication introduction 2.52.0, KubeRay chart v1.7.0, KubeRay authentication source v1.6.0, KubeRay prior RayCluster types v1.5.0, CPython WSGI server v3.11.0, and curl minimum write-out version 7.75.0; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 46 claims: 1 demonstrated by a check that ran; 45 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

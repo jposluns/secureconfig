@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Cockpit 368, Webmin 2.670, Proxmox VE 9.2 docs 9.2.12, pve-manager 9.2.20, Usermin 2.570, and systemd v262; 3 further sources are pinned to a commit. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 38 claims: 4 demonstrated by a check that ran and 34 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against Cockpit 368, Webmin 2.670, Proxmox VE 9.2 docs 9.2.12, pve-manager 9.2.20, Usermin 2.570, and systemd v262; 3 further sources are pinned to a commit. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 38 claims: 4 demonstrated by a check that ran; 34 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
