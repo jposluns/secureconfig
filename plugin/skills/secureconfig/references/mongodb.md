@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against MongoDB bind source r8.0.32 and MongoDB documentation 8.0; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 81 claims: 1 demonstrated by a check that ran and 80 reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against MongoDB bind source r8.0.32 and MongoDB documentation 8.0; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 81 claims: 1 demonstrated by a check that ran; 80 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

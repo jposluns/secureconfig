@@ -1955,7 +1955,12 @@ class TwoSectionTests(unittest.TestCase):
         data = fixture()
         self.assertIn('1 claim, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.', vb.header(data))
         data['claims']['other'] = dict(data['claims']['control'], status='DEMONSTRATED')
-        self.assertIn('2 claims: 1 demonstrated by a check that ran and 1 reasoned', vb.header(data))
+        mixed = vb.header(data)
+        self.assertIn('2 claims: 1 demonstrated by a check that ran; 1 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).', mixed)
+        self.assertNotIn('check that ran and', mixed)
+        self.assertNotIn(', not a live demonstration', mixed)
+        many = vb.header(dict(data, claims=dict(data['claims'], **{f'more{i}': dict(data['claims']['control']) for i in range(51)})))
+        self.assertIn('53 claims: 1 demonstrated by a check that ran; 52 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).', many)
         data['claims']['control']['status'] = 'DEMONSTRATED'
         self.assertIn('2 claims, all demonstrated by a check that ran.', vb.header(data))
         def components(pairs):

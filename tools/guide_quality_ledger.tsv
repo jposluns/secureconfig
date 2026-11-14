@@ -64,7 +64,7 @@ java.md	D3	PARTIAL	no		15 item(s) dated later than the heading; meaning unstated
 java.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
 jupyter.md	D3	PARTIAL	no		41 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 jupyter.md	G1	PARTIAL	no		8 sentence(s) repeated, max 20 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
-kafka.md	G1	PARTIAL	no		11 sentence(s) repeated, max 16 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+kafka.md	G1	PARTIAL	no		10 sentence(s) repeated, max 16 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 kubernetes.md	M1	PARTIAL	no		1 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
 lighttpd.md	M1	PARTIAL	no		4 entries across the five baseline and allow files, to sort into deferred work and reasoned waivers	sort each entry into a deferred-work item or a reasoned waiver, then score M1		2026-11-10		computed
 lighttpd.md	D3	PARTIAL	no		38 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
