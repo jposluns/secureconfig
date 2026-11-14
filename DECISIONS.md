@@ -17,7 +17,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
-- **Maintainer ruling of 2026-11-14 that the waiver ruling governs M1, so a reasoned waiver passes M1 everywhere.**
+- **Maintainer ruling of 2026-11-14 that the waiver ruling governs M1, so a reasoned waiver passes M1 everywhere (#1318).**
   The maintainer gave this ruling through AskUserQuestion in an attended session at about 18:44Z that day, to settle
   the conflict between the two rulings below. The question quoted lines 62 to 66 of `QUALITY.md` and disclosed the
   orchestrator's error that this entry records. No reasoning was recorded beyond the choice, and the notes recorded
@@ -50,7 +50,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here. If
     the revert pull request uses `git revert -m 1`, that puts back this pull request's `CHANGELOG.md` entry under the
     date it merged and does not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
-- **Maintainer ruling of 2026-11-14 accepting the reading of the 2026-11-13 M1 ruling that #1309 applied, superseded on M1 by the ruling above.**
+- **Maintainer ruling of 2026-11-14 accepting the reading of the 2026-11-13 M1 ruling that #1309 applied, superseded on M1 by the ruling above (#1318).**
   The maintainer gave this ruling through AskUserQuestion in an attended session at about 16:15Z that day. No
   reasoning was recorded beyond the choice, and the notes recorded only the chosen option, not the other options
   offered. The label and description are quoted exactly:
@@ -67,7 +67,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here. If the
     revert pull request uses `git revert -m 1`, that puts back this pull request's `CHANGELOG.md` entry under the
     date it merged and does not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
-- **Maintainer ruling of 2026-11-14 on whether a reasoned waiver passes M1 in `QUALITY.md`.**
+- **Maintainer ruling of 2026-11-14 on whether a reasoned waiver passes M1 in `QUALITY.md` (#1318).**
   The maintainer gave this ruling through AskUserQuestion in an attended session at about 16:07Z that day. No
   reasoning was recorded beyond the choice, and the notes recorded only the chosen option, not the other options
   offered. The label and description are quoted exactly:
