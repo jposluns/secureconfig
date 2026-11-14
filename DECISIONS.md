@@ -23,8 +23,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   SKILL.md, plugin.json, always-on.md, and the same phrase in README and llms.txt; CONTRIBUTING/QUALITY scope rules unchanged."
   The label is quoted exactly except that its closing "(Recommended)" is omitted from the quote. This pull request applies the
   texts to `plugin/skills/secureconfig/SKILL.md`, `plugin/plugin.json`, `plugin/always-on.md` and `site/llms.txt`. The approved option named README and llms.txt, but README.md is unchanged in this pull request: its intro has no
-  matching list, and its only matching text, line 279, is a scope statement. Whether to change README.md is a pending question to the
-  maintainer. The scope rules in CONTRIBUTING.md and QUALITY.md are unchanged as the ruling states, and so are CLAUDE.md and AGENTS.md,
+  matching list, and its only matching text, line 279, is a scope statement. The maintainer then ruled on README.md: in an attended
+  session at about 23:05Z on 2026-11-13 the maintainer chose, in an AskUserQuestion, the option labelled "Keep both, disclose", whose
+  description read "README line 279 unchanged; SKILL.md exactly as you approved; CHANGELOG, DECISIONS and PR body say plainly that README
+  was left and which names the list dropped." The label is quoted exactly except that its closing "(Predicted)" is omitted from the quote.
+  README.md and the approved SKILL.md text therefore stay unchanged, and this entry, the CHANGELOG and the PR body disclose both. The scope rules in CONTRIBUTING.md and QUALITY.md are unchanged as the ruling states, and so are CLAUDE.md and AGENTS.md,
   which the ruling did not name. The revert path is to revert this pull request's merge commit, or a later maintainer ruling that picks
   other wording, then a pull request that restores or changes the four texts to match.
 
