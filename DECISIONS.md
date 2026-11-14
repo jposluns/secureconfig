@@ -32,9 +32,10 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     Verify-marking, claim-length and version-basis Sources baselines, and counts an entry in
     `tools/bracket_ranges_allow.txt` or `tools/exposure_index_allowlist.txt` only when its reason is empty.
     `tools/test_guide_quality.py` gains cases for both, and two existing allowlist cases now use lines with no reason.
-    `tools/guide_quality.tsv` is not regenerated in this change, so a guide whose only entries are reasoned waivers
-    scores P on M1 when the script next runs. The GATE class definition in `QUALITY.md` now says the same: the cell
-    is PASS when the suite is green and the guide has no deferred-work entry and every waiver it has carries a reason.
+    `tools/guide_quality.tsv`, `tools/guide_quality_ledger.tsv` and the Quality page are regenerated in this change,
+    so a guide whose only entries are reasoned waivers now scores P on M1. The GATE class definition in `QUALITY.md`
+    now says the same: the cell is PASS when the suite is green and the guide has no deferred-work entry and every
+    waiver it has carries a reason.
   - The orchestrator's error. The question that led to the ruling of about 16:15Z below said that the waiver ruling
     "is consistent with" #1309's text. That was false: #1309's paragraph said that every entry in the five baseline
     and allow files counts against M1, a reasoned waiver included, while the waiver ruling passes a reasoned waiver.
