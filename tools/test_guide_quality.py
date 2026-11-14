@@ -217,8 +217,8 @@ def main():
     check("the exact guide field counts, each duplicate once, comment lines never",
           gen.m1_count("docker.md", FILES) == 2)
     check("a suffix of another guide's name is not an M1 entry", gen.m1_count("host.md", FILES) == 0)
-    check("an allowlist guide field counts",
-          gen.m1_count("docker.md", {allow: "docker.md 80  # x\n"}) == 1)
+    check("an allowlist guide field with no reason counts",
+          gen.m1_count("docker.md", {allow: "docker.md 80\n"}) == 1)
     check("a commented-out allowlist line does not count",
           gen.m1_count("docker.md", {allow: "#docker.md 80\n"}) == 0)
     check("a whitespace-only allowlist line names no guide", gen.entry_guide(allow, "   ") is None)
@@ -247,11 +247,43 @@ def main():
             ("a line with no port", "docker.md  # r\n", 0),
             ("a line with three tokens", "docker.md 80 81\n", 0),
             ("a line with a non-numeric port", "docker.md http\n", 0),
-            ("a duplicated guide and port pair", "docker.md 80  # a\ndocker.md 80  # b\n", 1),
+            ("a duplicated guide and port pair", "docker.md 80\ndocker.md 80\n", 1),
             ("two ports for one guide", "docker.md 80\ndocker.md 81\n", 2)]:
         got = gen.m1_count("docker.md", {allow: text})
         check(f"M1 counts {label} as the gate does ({expected})",
               got == gate_count("docker.md", text) == expected)
+
+    # M1 under the maintainer's rulings of 2026-11-14 (QUALITY.md M1): deferred-work entries and
+    # waivers without a reason count, and a reasoned waiver does not. The reasoned-waiver cases
+    # FAIL on the #1309 behaviour, which counted every entry in the five files.
+    bracket = gen.BRACKET_ALLOW
+    span, block = "sha256:" + "0" * 64, "sha256:" + "1" * 64
+    reasoned_bracket = f"docker.md\t{span}\t{block}\ta JSON request body, not a pattern\n"
+    check("each of the five files is deferred work or a waiver, and none is both",
+          set(gen.BASELINES) == gen.DEFERRED_WORK | gen.WAIVERS
+          and not gen.DEFERRED_WORK & gen.WAIVERS)
+    check("a reasoned allowlist waiver is not an M1 entry",
+          gen.m1_count("docker.md", {allow: "docker.md 80  # outbound: not a listener\n"}) == 0)
+    check("a reasoned bracket-range waiver is not an M1 entry",
+          gen.m1_count("docker.md", {bracket: reasoned_bracket}) == 0)
+    for label, text in [("no `#`", "docker.md 80\n"), ("nothing after `#`", "docker.md 80  #\n"),
+                        ("only spaces after `#`", "docker.md 80  #   \n")]:
+        check(f"an allowlist waiver with {label} is an M1 entry",
+              gen.m1_count("docker.md", {allow: text}) == 1)
+    check("an allowlist pair counts once when any of its lines has no reason",
+          gen.m1_count("docker.md", {allow: "docker.md 80  # r\ndocker.md 80\ndocker.md 80\n"})
+          == 1)
+    for label, text in [("no reason field", f"docker.md\t{span}\t{block}\n"),
+                        ("an empty reason field", f"docker.md\t{span}\t{block}\t\n"),
+                        ("a whitespace-only reason", f"docker.md\t{span}\t{block}\t  \n")]:
+        check(f"a bracket-range waiver with {label} is an M1 entry",
+              gen.m1_count("docker.md", {bracket: text}) == 1)
+    check("only the unreasoned bracket-range line of the guide counts",
+          gen.m1_count("docker.md", {bracket: reasoned_bracket + f"docker.md\t{span}\t{block}\n"
+                                     + f"ghost.md\t{span}\t{block}\n"}) == 1)
+    for path in sorted(gen.DEFERRED_WORK):
+        check(f"a {path} entry is deferred work and counts, whatever its other fields",
+              gen.m1_count("docker.md", {path: "docker.md\tx\t1\tkept by design\n"}) == 1)
 
     # m1() maps the count to its cell; ROOT is swapped for an in-memory tree, so nothing is written.
     class _Text:
@@ -271,6 +303,13 @@ def main():
         check("no M1 entries is P", gen.m1("free-certificates.md") == ("P", 0))
         check("M1 entries are PARTIAL(M1) with their count",
               gen.m1("docker.md") == ("PARTIAL(M1)", 2))
+        waived = {allow: "docker.md 80  # outbound: not a listener\n", bracket: reasoned_bracket}
+        gen.ROOT = _Root(waived)
+        check("a guide whose only entries are reasoned waivers is P on M1",
+              gen.m1("docker.md") == ("P", 0))
+        gen.ROOT = _Root({**waived, claims: "docker.md\tauth\t617\n"})
+        check("a deferred-work entry beside reasoned waivers is PARTIAL(M1) with count 1",
+              gen.m1("docker.md") == ("PARTIAL(M1)", 1))
     finally:
         gen.ROOT = real_root
 
