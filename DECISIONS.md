@@ -43,8 +43,12 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   - The orchestrator's calls, not the maintainer's: which files hold deferred work and which hold waivers, read from
     each file's header and fields. The three baselines have no reason field, so an entry kept in the Verify-marking
     baseline by design, such as one that carries the evidence for a DEMONSTRATED claim, counts as a waiver without a
-    reason. An allowlist guide and port pair counts when any of its lines has no reason. The script still does not
-    read the `guard-conventions: allow` lines in the guides. A later pull request can change each of these.
+    reason. The maintainer confirmed that call on 2026-11-14 in an attended session at about 21:59Z, choosing "Count
+    them for now (Recommended)", whose description read "Predicted: merge #1318 as is (every Verify-marking baseline
+    entry counts against M1); a TODO row adds an optional reason field to that baseline later, after which reasoned
+    by-design entries would pass." An allowlist guide and port pair counts when any of its lines has no reason. The
+    script still does not read the `guard-conventions: allow` lines in the guides. A later pull request can change
+    each of these.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
     that restores the earlier M1 text in `QUALITY.md`, the earlier count in `tools/gen_guide_quality.py` and the
     earlier cases in `tools/test_guide_quality.py`, or changes them to match the new ruling. It keeps every existing
