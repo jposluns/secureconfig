@@ -82,7 +82,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     settles the conflict in this ruling's favour.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
     that restores the earlier M1 requirement in `QUALITY.md`, or changes it to match the new ruling. A change to
-    how `tools/gen_guide_quality.py` counts follows the revert path of the 18:44Z entry above. It keeps every
+    how `tools/gen_guide_quality.py` counts follows the revert path of the 18:44Z entry above. That pull request keeps every
     existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new
     ruling here. If the revert pull request uses `git revert -m 1`, that puts back this pull request's
     `CHANGELOG.md` entry under the date it merged and does not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.

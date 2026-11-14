@@ -58,11 +58,11 @@ in any baseline or allow file, every waiver for the guide carries a reason, and 
 
 A deferred-work entry records something the guide still owes (a Verify-marking baseline entry for a
 paragraph that would attach to a DEMONSTRATED fence or a step with no concrete command, or an
-over-length claim awaiting a split). A reasoned waiver records a deliberate, reviewed exception (a
-bracket-range or exposure-index allow entry with its reason, or a DEMONSTRATED evidence text
-grandfathered by design). Only deferred-work entries and waivers without a reason count against M1,
-so a reasoned waiver passes M1. `tools/gen_guide_quality.py` sorts an entry by the file that holds
-it. Every entry in `tools/verify_marking_baseline.txt`, `tools/claim_length_baseline.txt` and
+over-length claim awaiting a split). A reasoned waiver is a deliberate, reviewed exception recorded
+with its reason: a bracket-range or exposure-index allow entry whose reason is filled in. Only
+deferred-work entries and waivers without a reason count against M1, so a reasoned waiver passes
+M1. `tools/gen_guide_quality.py` sorts an entry by the file that holds it. Every entry in
+`tools/verify_marking_baseline.txt`, `tools/claim_length_baseline.txt` and
 `tools/version_basis_sources_baseline.txt` is deferred work and counts once, and the script ignores
 the count field in the first and last of these. None of the three has a reason field, so an entry
 kept there for a DEMONSTRATED evidence text grandfathered by design is a waiver without a reason and
