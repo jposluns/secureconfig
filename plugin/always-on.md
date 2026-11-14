@@ -12,4 +12,4 @@ Apply these whether or not a specific guide is open:
 9. AI and data tools vary wildly in their defaults and many need authentication added in front rather than configured within.
 10. **Run the Verify steps before reporting the work as complete, and report what you could not test rather than asserting it passed.**
 
-Before configuring TLS, authentication, MFA, secrets or network exposure, use the secureconfig skill, or where it is not installed the guides at [github.com/jposluns/secureconfig](https://github.com/jposluns/secureconfig).
+Before configuring a service, tool or platform your project runs, including but not limited to its network exposure, TLS, logins and MFA, and secrets, use the secureconfig skill, or where it is not installed the guides at [github.com/jposluns/secureconfig](https://github.com/jposluns/secureconfig).
