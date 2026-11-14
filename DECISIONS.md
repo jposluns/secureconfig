@@ -30,11 +30,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   README.md and the approved SKILL.md text therefore stay unchanged, and this entry, the CHANGELOG and the PR body disclose both.
   The SKILL.md trigger list no longer names Apache, HAProxy, Traefik, MySQL, MongoDB, RabbitMQ, Streamlit, Firebase, a vector
   database, an agent builder, an image UI or a dashboard. The scope rules in CONTRIBUTING.md and QUALITY.md are unchanged as the ruling states, and so are CLAUDE.md and AGENTS.md,
-  which the ruling did not name. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull
-  request that restores or changes the four texts to match. If that pull request reverts this one's merge commit with
-  `git revert -m 1`, it keeps the current `VERSION`, `plugin/plugin.json` and `SKILL.md` versions and every `DECISIONS.md` entry,
-  this one included. It also puts back this pull request's `CHANGELOG.md` entry under 2026-11-14, its merge date, which the revert removes,
-  because the CHANGELOG records every merged pull request.
+  which the ruling did not name. The revert path is a later maintainer ruling that withdraws or replaces these rulings, then a pull
+  request that restores or changes the four texts to match. That pull request keeps every existing `CHANGELOG.md` and
+  `DECISIONS.md` entry, this one included, adds its own `CHANGELOG.md` entry, and the new ruling is recorded here. If it reverts
+  this one's merge commit with `git revert -m 1`, it puts back this pull request's `CHANGELOG.md` entry, which the revert removes,
+  under the date it merged, and it does not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back to an older value.
 - **Maintainer ruling of 2026-11-13 on keeping the card-builder fonts under `.baseline/card-fonts/` (#1303).**
   The question was about template ruling D-103, which allows a site that uses only icons to delete
   `.baseline/card-fonts/`. In an attended session at about 18:51Z the maintainer chose, in an AskUserQuestion, the
