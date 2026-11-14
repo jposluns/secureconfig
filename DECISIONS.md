@@ -33,9 +33,21 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   which the ruling did not name. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull
   request that restores or changes the four texts to match. If that pull request reverts this one's merge commit with
   `git revert -m 1`, it keeps the current `VERSION`, `plugin/plugin.json` and `SKILL.md` versions and every `DECISIONS.md` entry,
-  this one included. It also puts back this pull request's `CHANGELOG.md` entry under 2026-11-13, which the revert removes,
+  this one included. It also puts back this pull request's `CHANGELOG.md` entry under 2026-11-14, its merge date, which the revert removes,
   because the CHANGELOG records every merged pull request.
-
+- **Maintainer ruling of 2026-11-13 on keeping the card-builder fonts under `.baseline/card-fonts/` (#1303).**
+  The question was about template ruling D-103, which allows a site that uses only icons to delete
+  `.baseline/card-fonts/`. In an attended session at about 18:51Z the maintainer chose, in an AskUserQuestion, the
+  option labelled "Keep them for now", whose description read "The adoption PR stays a pure 1.13.0 copy; deleting
+  the fonts can be a separate small PR later if wanted. Predicted choice." The label and description are quoted
+  exactly except that the label's closing "(Recommended)" is omitted. This pull request applies the ruling: the four
+  card-font files stay copied and pinned. The revert path is a later maintainer ruling to delete them, then a pull
+  request. That pull request removes the four files and their entries in `.baseline/pin.toml` and
+  `scripts/copy-baseline.py`, and their cases in `tools/test_baseline_pin.py`. It also changes every other mention
+  of them, such as those in `NOTICE` (not its template text), `CLAUDE.md`, `AGENTS.md`, `README.md`,
+  `CONTRIBUTING.md` and `site-src/content.json`, with the generated files rebuilt. It edits no other pinned template
+  file and no existing entry in `CHANGELOG.md` or `DECISIONS.md`; it adds its own `CHANGELOG.md` entry, and the
+  deletion ruling is recorded here.
 - **Maintainer ruling of 2026-11-13 on the `ssl_verify=False` line in `gradio.md` (#1302), withdrawing the 2026-11-12 choice "Drop it, explain when".**
   In an attended session at about 12:18Z the maintainer chose, in an AskUserQuestion, the option labelled "Keep flag,
   fix the text", whose description read "Block keeps ssl_verify=False; its comment and sentence state the source fact
