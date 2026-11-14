@@ -17,6 +17,27 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Unattended D-1096 vote of 2026-11-14 on pinning `ssr_mode=False` in the `gradio.md` TLS example (#PRNUM).**
+  With the fleet unattended, secureconfig sent the question under D-1096 at 11:08Z on 2026-11-14, with two options as
+  written in `notes.md`. Option 1 was to pin `ssr_mode=False` in the TLS example with a comment. Option 2 was that pin
+  plus a sourced sentence replacing the guide's "has not checked the behaviour with SSR on" disclaimer. lab_infra
+  (11:08:34Z), guardrails (11:08:40Z) and grc (11:08:55Z) each chose option 2, and each conditioned its vote on QA
+  re-reading the cited gradio@6.31.0 lines. This is recorded for the maintainer's review. It follows the
+  maintainer's 2026-11-13 ruling to check the source and then decide.
+  - Effect, applied in the same change as this entry. The `gradio.md` TLS example adds `ssr_mode=False,` with a
+    one-line comment. The disclaimer sentence becomes a sourced statement. With SSR on and Node available, Gradio
+    6.31.0 runs a Node proxy as the front server on the user-facing port over plain HTTP and Python keeps TLS only on
+    an internal port (blocks.py lines 3326-3328; `js/app/proxy_index.js` line 56). SSR turns on with
+    `ssr_mode=True` or `GRADIO_SSR_MODE=true`, and an explicit `ssr_mode=False` overrides the variable (blocks.py
+    lines 3035-3039). The Sources section gains the Node proxy source at the 6.31.0 tag, and the `tls` claim states the pin
+    and its reason in place of "this guide has not checked SSR on". The findings are in the orchestrator's private
+    plan and were read from source only; no run was made, so whether Node starts against a TLS backend is not
+    established.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this vote, then a pull request
+    that restores or changes the texts. That pull request restores the earlier example and disclaimer sentence and
+    the `tls` claim, or changes them to match the new ruling, and regenerates what derives from them. It keeps every
+    existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new
+    ruling here.
 - **Maintainer rulings of 2026-11-13 on the REASONED wording in the mixed-guide header, the homepage sentence and the M1 text in `QUALITY.md` (#1309).**
   The maintainer gave these three rulings through AskUserQuestion in an attended session, all at about 19:26Z to
   19:27Z, as answers to the #1299 QA findings F3 and F5 and the #1296 QA finding 5. No reasoning was recorded beyond
