@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against PocketBase v0.41.1, Appwrite 2.7.0, utopia-php/database 10.1.0, and curl curl-8_14_1; 2 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked November 2026. The guide records 91 claims: 2 demonstrated by a check that ran; 89 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
+Written against PocketBase v0.41.1, Appwrite 2.7.0, utopia-php/database 10.1.0, and curl curl-8_14_1; 2 further sources carry no recorded version. Metadata reviewed 2026-11-05; documentation checked November 2026. The guide records 92 claims: 2 demonstrated by a check that ran; 90 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -377,7 +377,7 @@ See the
 [role classification](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Utopia/Database/Documents/User.php#L82-L116),
 [API-key role and authorization status](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L146-L167),
 [admin-mode authorization status](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L328-L361),
-[OAuth2 owner key status](https://raw.githubusercontent.com/appwrite/appwrite/2.7.0/app/controllers/shared/api.php),
+[OAuth2 owner key status](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L402-L411),
 [request role assignment](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L396-L400),
 [route scope validation](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L557-L561),
 [collection permission handoff](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L230-L236), and the
@@ -1242,6 +1242,7 @@ The PocketBase source items cite its author's forge at the v0.41.1 tag, as `rev=
 - [Appwrite 2.7.0 privileged and key role classification (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Utopia/Database/Documents/User.php#L82-L116).
 - [Appwrite 2.7.0 API-key role, scopes, and authorization status (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L146-L167).
 - [Appwrite 2.7.0 admin-mode roles and authorization status (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L328-L361).
+- [Appwrite 2.7.0 OAuth2 owner key authorization status (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L402-L411).
 - [Appwrite 2.7.0 request role assignment (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L396-L400).
 - [Appwrite 2.7.0 route scope validation (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L557-L561).
 - [Appwrite 2.7.0 collection permission and documentSecurity handoff (checked November 2026)](https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L230-L236).
@@ -1381,6 +1382,7 @@ Claims (full source mapping in the JSON block below):
 - appwrite-keys (REASONED; appwrite, appwrite-docs): Properly scoped server API keys bypass resource permissions but still obey operation scopes; treat keys.write as admin-equivalent: release notes since 2.6.2 say a key cannot grant scopes it does not hold, which the served page does not reflect, but the 2.7.0 key handlers were not read. Keys never belong in clients.
 - appwrite-key-creation (REASONED; appwrite-docs): The served API keys page says creating API keys with the Project API is deprecated as of 17 August 2026 and long-lived keys are created in the Console, while the Project API can still list, update and delete keys and issue ephemeral keys.
 - appwrite-encryption (REASONED; appwrite, appwrite-docs): Fresh 2.7.0 installs generate _APP_OPENSSL_KEY_V1 while existing and upgraded installs keep their stored value, so replace a remaining your-secret-key placeholder before production data; preserve every key version that still decrypts data, since loss strands encrypted secrets.
+- appwrite-jobs-secret (REASONED; appwrite): At 2.7.0 the install task passes _APP_JOBS_SECRET through JobsSecret::resolve, which takes no generation flag and replaces an empty or your-secret-key value whether or not secrets are generated, unlike the other token variables, which go through EncryptionKey::resolve.
 - appwrite-backups (REASONED; appwrite-docs): Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation.
 - appwrite-abuse (REASONED; appwrite, appwrite-docs): _APP_OPTIONS_ABUSE defaults enabled but dev env disables it; server API-key and owner, developer or admin requests are exempt, so test with ordinary clients.
 - appwrite-smtp (REASONED; appwrite, appwrite-docs): SMTP host/port/secure/username/password default empty and empty host disables sending; configure the provider and confirm message receipt/use.
@@ -1431,7 +1433,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-11",
-  "body_sha256": "798578697fb83a927482162ef9ffcbe4f908f03b5f1ec5f4df82a1af98f9fe4f",
+  "body_sha256": "9701976bbd96ccc878a6c91eb6575b485f6dc489c4e337731b65247e67308b6d",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -1479,6 +1481,7 @@ Claims (full source mapping in the JSON block below):
         "s4704dc36131d": "https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Utopia/Database/Documents/User.php#L82-L116",
         "s9c364b4988f9": "https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L146-L167",
         "sdc161a81e5f1": "https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L328-L361",
+        "s9323f9f7f883": "https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L402-L411",
         "seae8fbd82294": "https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L396-L400",
         "s02d278fc618d": "https://github.com/appwrite/appwrite/blob/2.7.0/app/controllers/shared/api.php#L557-L561",
         "s4a5ab116894c": "https://github.com/appwrite/appwrite/blob/2.7.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L230-L236",
@@ -1681,6 +1684,7 @@ Claims (full source mapping in the JSON block below):
     "appwrite-keys": {"text": "Properly scoped server API keys bypass resource permissions but still obey operation scopes; treat keys.write as admin-equivalent: release notes since 2.6.2 say a key cannot grant scopes it does not hold, which the served page does not reflect, but the 2.7.0 key handlers were not read. Keys never belong in clients.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s535fef1a5540", "appwrite-docs:saa37bb5d4d7e", "appwrite:s4d8a36b7651f", "appwrite:sc92fc6843e8a", "appwrite:s77e2ce52136f"], "status": "REASONED"},
     "appwrite-key-creation": {"text": "The served API keys page says creating API keys with the Project API is deprecated as of 17 August 2026 and long-lived keys are created in the Console, while the Project API can still list, update and delete keys and issue ephemeral keys.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:saa37bb5d4d7e"], "status": "REASONED"},
     "appwrite-encryption": {"text": "Fresh 2.7.0 installs generate _APP_OPENSSL_KEY_V1 while existing and upgraded installs keep their stored value, so replace a remaining your-secret-key placeholder before production data; preserve every key version that still decrypts data, since loss strands encrypted secrets.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s6bb4fe4aeed0", "appwrite:s8208896c2c22", "appwrite:s2851b656753a", "appwrite:s296ddae6efd8", "appwrite:sf22fdc1ed786", "appwrite:sc92fc6843e8a", "appwrite-docs:s256ef73f7b85"], "status": "REASONED"},
+    "appwrite-jobs-secret": {"text": "At 2.7.0 the install task passes _APP_JOBS_SECRET through JobsSecret::resolve, which takes no generation flag and replaces an empty or your-secret-key value whether or not secrets are generated, unlike the other token variables, which go through EncryptionKey::resolve.", "components": ["appwrite"], "sources": ["appwrite:sd987a4f33938", "appwrite:s2851b656753a"], "status": "REASONED"},
     "appwrite-backups": {"text": "Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s256ef73f7b85"], "status": "REASONED"},
     "appwrite-abuse": {"text": "_APP_OPTIONS_ABUSE defaults enabled but dev env disables it; server API-key and owner, developer or admin requests are exempt, so test with ordinary clients.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s6bb4fe4aeed0", "appwrite:s2ce76c61491b", "appwrite:s535fef1a5540", "appwrite-docs:s000d05106450"], "status": "REASONED"},
     "appwrite-smtp": {"text": "SMTP host/port/secure/username/password default empty and empty host disables sending; configure the provider and confirm message receipt/use.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s6bb4fe4aeed0", "appwrite-docs:s38a1efa0c7d2"], "status": "REASONED"},
