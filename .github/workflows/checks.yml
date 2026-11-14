@@ -42,7 +42,10 @@ name: Checks
 # starts on a push to main. The whole suite runs with no argument weekly on Mondays at 06:00 UTC,
 # on the default branch, and on demand from the Actions tab (workflow_dispatch), which a release
 # requires on its target, so a release targets the merge of #1194 or a later one. A local run
-# can do either.
+# can do either. tools/run_all_checks.sh also has an opt-in parallel mode, SECURECONFIG_SUITE_JOBS
+# above 1, which buffers each section's output and prints it in the script's order with the same
+# status. This workflow sets no such variable, so every run here is serial; enabling it here is a
+# separate change.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]

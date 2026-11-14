@@ -32,10 +32,363 @@
 #
 # generated-committed skips its own rebuild on a clean tree because the llms-full and plugin
 # sections before it already rebuilt HEAD.
+#
+# Parallel mode (opt-in). SECURECONFIG_SUITE_JOBS=N, a whole number from 1 to 64, runs up to N
+# sections at once. Unset or 1 is the serial run below, unchanged and the reference. Any other
+# value is refused with status 2 before any gate runs, and so is an empty one. Each section runs in
+# its own bash process and its own process group with its standard output and standard error
+# merged into one buffer, and the buffers print in this file's order as each section and every
+# one before it have finished, so the output holds the same lines in the same order as the serial
+# run, with a section's text never split. The status equals the serial run's: 1 when any section
+# set fail=1, else 0, and the summary is this file's own. A section that exits without finishing
+# (llms-full and plugin exit 1 when a restore fails) or is killed by a signal ends the run the
+# way it ends the serial one: its output is the last printed, no later section's output and no
+# summary follow, and the status is its exit status or its signal re-raised on this shell. HUP, INT and TERM sent to this
+# shell stop every section's process group and are re-raised. The parser preflight runs first, in
+# the foreground, in both modes. A section that rewrites the working tree in place is named by an
+# `# exclusive:` line, runs alone, and runs before the others; a `# depends:` line also orders
+# its subject after its needs. SECURECONFIG_SUITE_TIMES, when it names a file, gets one
+# `<section> <start> <end> <status>` row per section (epoch seconds) and the output does not change.
+# Output identity between the two modes means the same lines in the same order and the same
+# status, with 3 classes of line left out: the credential scanner's elapsed-time line
+# ("... took N.NN s"), its sampling counts ("sampling reads: ..."), and unittest's
+# "Ran N tests in N.NNNs" lines. tools/test_parallel_suite.py --differential compares them.
 # depends: generated-committed: llms-full plugin
+# exclusive: llms-full plugin
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 2
+
+suite_jobs=${SECURECONFIG_SUITE_JOBS-1}
+suite_jobs_ok=""
+case $suite_jobs in
+  ''|*[!0-9]*|0*) ;;
+  *) if [ "${#suite_jobs}" -le 2 ] && [ "$suite_jobs" -le 64 ]; then suite_jobs_ok=1; fi ;;
+esac
+if [ -z "$suite_jobs_ok" ]; then
+  printf "  FAIL  SECURECONFIG_SUITE_JOBS is '%s', not a whole number from 1 to 64; no gate ran\n" "$suite_jobs"
+  exit 2
+fi
+
+# The parallel scheduler. It runs only for SECURECONFIG_SUITE_JOBS above 1, and then replaces the
+# serial run below from the point where that run would start. It reads this file's own text for
+# the helpers, the parser preflight, the sections and the summary, so each is the serial code.
+par_dir=""
+par_starting=""
+par_signal=""
+par_selected=""
+par_abort=-1
+par_next=0
+par_n=0
+par_names=()
+par_state=()
+par_pid=()
+par_rc=()
+par_t0=()
+par_t1=()
+par_excl=()
+par_need=()
+declare -A par_idx=()
+
+par_cleanup() {
+  if [ -n "$par_dir" ]; then
+    rm -rf "$par_dir"
+    par_dir=""
+  fi
+}
+
+# Stop every running section above index $1 (-1: all): TERM to its process group, up to 5 seconds
+# for the group to end, then KILL for what is left, and reap it.
+par_stop_from() {
+  local i _ stopping=()
+  for ((i = 0; i < par_n; i++)); do
+    if [ "$i" -gt "$1" ] && [ "${par_state[i]}" = run ]; then
+      kill -s TERM -- "-${par_pid[i]}" 2>/dev/null
+      stopping+=("$i")
+    fi
+  done
+  for i in "${stopping[@]}"; do
+    for _ in $(seq 50); do
+      kill -0 -- "-${par_pid[i]}" 2>/dev/null || break
+      sleep 0.1
+    done
+    kill -s KILL -- "-${par_pid[i]}" 2>/dev/null
+    wait "${par_pid[i]}" 2>/dev/null
+    par_state[i]=killed
+  done
+}
+
+par_die() {
+  trap - HUP INT TERM
+  par_cleanup
+  kill -s "$1" "$BASHPID"
+}
+
+# A signal that arrives while a launch is under way, before its PID is recorded, is held in
+# par_signal and acted on once the PID is recorded, as the overflow section does.
+# shellcheck disable=SC2329  # only the HUP, INT and TERM trap strings below call it, unseen by shellcheck
+par_trap() {
+  par_signal=$1
+  if [ -z "$par_starting" ]; then
+    par_stop_from -1
+    par_die "$1"
+  fi
+}
+
+par_started() {
+  par_starting=""
+  if [ -n "$par_signal" ]; then
+    par_stop_from -1
+    par_die "$par_signal"
+  fi
+}
+
+par_launch() {
+  local i=$1 name=${par_names[$1]}
+  par_starting=1
+  # Job control puts the section in a process group of its own, which bash sets in the parent as
+  # well as the child, so the group exists when the PID is recorded and a signal can reach it.
+  set -m
+  bash "$par_dir/$name.sh" > "$par_dir/$name.out" 2>&1 < /dev/null &
+  par_pid[i]=$!
+  set +m
+  par_state[i]=run
+  par_t0[i]=$EPOCHREALTIME
+  par_started
+}
+
+par_ready() {
+  local need
+  for need in ${par_need[$1]}; do
+    [ "${par_state[${par_idx[$need]}]}" = finished ] || return 1
+  done
+}
+
+# Start what may start. An exclusive section starts only with nothing running, and while one is
+# ready no other section starts, so the exclusive sections run first and each runs alone. Then
+# the others start in this file's order up to the job limit. Nothing above an aborting section starts.
+par_schedule() {
+  local i running=0
+  for ((i = 0; i < par_n; i++)); do
+    if [ "${par_state[i]}" = run ]; then
+      running=$((running + 1))
+    fi
+  done
+  for ((i = 0; i < par_n; i++)); do
+    [ "${par_excl[i]}" = 1 ] && [ "${par_state[i]}" = pending ] || continue
+    if [ "$par_abort" -ge 0 ] && [ "$i" -gt "$par_abort" ]; then continue; fi
+    par_ready "$i" || continue
+    if [ "$running" -eq 0 ]; then
+      par_launch "$i"
+    fi
+    return
+  done
+  for ((i = 0; i < par_n; i++)); do
+    [ "${par_excl[i]}" = 1 ] && [ "${par_state[i]}" = run ] && return
+  done
+  for ((i = 0; i < par_n && running < suite_jobs; i++)); do
+    [ "${par_excl[i]}" = 0 ] && [ "${par_state[i]}" = pending ] || continue
+    if [ "$par_abort" -ge 0 ] && [ "$i" -gt "$par_abort" ]; then continue; fi
+    par_ready "$i" || continue
+    par_launch "$i"
+    running=$((running + 1))
+  done
+}
+
+par_running() {
+  local i
+  for ((i = 0; i < par_n; i++)); do
+    [ "${par_state[i]}" = run ] && return 0
+  done
+  return 1
+}
+
+# Wait for one section to end and record how. A section that ended without writing its status
+# file did not finish: it ran `exit N` or a signal killed it.
+par_reap() {
+  local pid="" rc i found=""
+  wait -n -p pid 2>/dev/null
+  rc=$?
+  [ -n "$pid" ] || return 0
+  for ((i = 0; i < par_n; i++)); do
+    if [ "${par_pid[i]:-}" = "$pid" ] && [ "${par_state[i]}" = run ]; then
+      found=$i
+    fi
+  done
+  [ -n "$found" ] || return 0
+  par_state[found]=finished
+  par_rc[found]=$rc
+  par_t1[found]=$EPOCHREALTIME
+  if [ ! -f "$par_dir/${par_names[found]}.status" ]; then
+    if [ "$par_abort" -lt 0 ] || [ "$found" -lt "$par_abort" ]; then
+      par_abort=$found
+      par_stop_from "$found"
+    fi
+  fi
+}
+
+# Print finished sections in this file's order. A section that did not finish ends the run, the
+# way it ends the serial one.
+par_flush() {
+  local i name status
+  while [ "$par_next" -lt "$par_n" ] && [ "${par_state[par_next]}" = finished ]; do
+    i=$par_next
+    name=${par_names[i]}
+    cat "$par_dir/$name.out"
+    if [ -n "${SECURECONFIG_SUITE_TIMES:-}" ]; then
+      printf '%s %s %s %s\n' "$name" "${par_t0[i]}" "${par_t1[i]}" "${par_rc[i]}" >> "$SECURECONFIG_SUITE_TIMES"
+    fi
+    if [ ! -f "$par_dir/$name.status" ]; then
+      par_stop_from -1
+      trap - HUP INT TERM
+      par_cleanup
+      status=${par_rc[i]}
+      # A whole serial run is one shell, which a signal kills; --sections runs the sections in a
+      # child shell, and the parent exits with its status, 128 plus the signal. Same here.
+      if [ -z "$par_selected" ] && [ "$status" -gt 128 ] && [ "$status" -lt 193 ]; then
+        kill -s "$((status - 128))" "$BASHPID"
+      fi
+      exit "$status"
+    fi
+    read -r status < "$par_dir/$name.status"
+    if [ "$status" != 0 ]; then
+      fail=1
+    fi
+    par_next=$((par_next + 1))
+  done
+}
+
+# par_run LIST SELECTED: run the sections of the comma list LIST (this file's sections, in this
+# file's order, once the front end chose them) with up to suite_jobs at a time. SELECTED is
+# the list --sections named, for the summary, and empty for the whole run.
+par_run() {
+  local list=$1 known need subject line name i n ordered cycle progress preflight_text helper_text
+  if [ "${BASH_VERSINFO[0]}" -lt 5 ] || { [ "${BASH_VERSINFO[0]}" -eq 5 ] && [ "${BASH_VERSINFO[1]}" -lt 1 ]; }; then
+    printf '  FAIL  SECURECONFIG_SUITE_JOBS above 1 needs bash 5.1 or later (wait -n -p); no gate ran\n'
+    exit 2
+  fi
+  # Not written as the helpers' own line: tools/test_secrets_scan.py takes the helpers from the first such line.
+  fail=$((0))
+  par_selected=$2
+  known=$(sed -n 's/^# section: \([a-z0-9-]*\)$/\1/p' tools/run_all_checks.sh)
+  par_names=()
+  while read -r name; do
+    case ",$list," in *",$name,"*) par_names+=("$name") ;; esac
+  done <<< "$known"
+  par_n=${#par_names[@]}
+  for ((i = 0; i < par_n; i++)); do
+    par_idx[${par_names[i]}]=$i
+    par_state[i]=pending
+    par_excl[i]=0
+    par_need[i]=""
+  done
+  # The `# exclusive:` and `# depends:` lines, read as fail-closed as the front end reads them.
+  while read -r line; do
+    case $line in
+      [a-z0-9]*) ;;
+      *)
+        printf "  FAIL  the '# exclusive: %s' line of tools/run_all_checks.sh is not 'NAME...'; no gate ran\n" "$line"
+        exit 2 ;;
+    esac
+    for name in $line; do
+      case $name in *[!a-z0-9-]*) name="" ;; esac
+      if [ -z "$name" ] || ! grep -qxF -- "$name" <<< "$known"; then
+        printf "  FAIL  an '# exclusive:' line of tools/run_all_checks.sh names '%s', which is not a section of it; no gate ran\n" "$name"
+        exit 2
+      fi
+      if [ -n "${par_idx[$name]:-}" ]; then
+        par_excl[${par_idx[$name]}]=1
+      fi
+    done
+  done < <(sed -n 's/^# exclusive: //p' tools/run_all_checks.sh)
+  while read -r line; do
+    case $line in
+      [a-z0-9]*': '[a-z0-9]*) ;;
+      *)
+        printf "  FAIL  the '# depends: %s' line of tools/run_all_checks.sh is not 'NAME: NEED...'; no gate ran\n" "$line"
+        exit 2 ;;
+    esac
+    subject=${line%%: *}
+    for need in ${line#*: }; do
+      if ! grep -qxF -- "$need" <<< "$known"; then
+        printf "  FAIL  a '# depends:' line of tools/run_all_checks.sh needs '%s', which is not a section of it; no gate ran\n" "$need"
+        exit 2
+      fi
+      if [ -n "${par_idx[$subject]:-}" ]; then
+        if [ -z "${par_idx[$need]:-}" ]; then
+          printf "  FAIL  a '# depends:' line of tools/run_all_checks.sh needs '%s', which is not selected; no gate ran\n" "$need"
+          exit 2
+        fi
+        par_need[${par_idx[$subject]}]+=" $need"
+      fi
+    done
+  done < <(sed -n 's/^# depends: //p' tools/run_all_checks.sh)
+  # A cycle among the needs would leave a section that never starts.
+  cycle=" "
+  progress=1
+  while [ "$progress" = 1 ]; do
+    progress=""
+    for ((i = 0; i < par_n; i++)); do
+      case $cycle in *" $i "*) continue ;; esac
+      ordered=1
+      for need in ${par_need[i]}; do
+        case $cycle in *" ${par_idx[$need]} "*) ;; *) ordered="" ;; esac
+      done
+      if [ -n "$ordered" ]; then
+        cycle+="$i "
+        progress=1
+      fi
+    done
+  done
+  n=0
+  for i in $cycle; do n=$((n + 1)); done
+  if [ "$n" -ne "$par_n" ]; then
+    printf '  FAIL  the "# depends:" lines of tools/run_all_checks.sh hold a cycle; no gate ran\n'
+    exit 2
+  fi
+  # The preflight is the serial text, run first in the foreground; its exit 2 ends the run here.
+  # An empty preflight or helper block would run the sections without them, so it is refused.
+  preflight_text=$(awk '/^# preflight$/ { p = 1; next } /^# section: / { exit } p' tools/run_all_checks.sh)
+  helper_text=$(awk '/^fail=0$/ { p = 1 } /^# preflight$/ { p = 0 } p' tools/run_all_checks.sh)
+  if ! grep -q '^echo "== gate parser preflight' <<< "$preflight_text" || ! grep -q '^bad()' <<< "$helper_text"; then
+    printf '  FAIL  tools/run_all_checks.sh has no "# preflight" line above the parser preflight or no helper block before it; no gate ran\n'
+    exit 2
+  fi
+  eval "$preflight_text"
+  par_dir=$(mktemp -d) || { printf '  FAIL  mktemp could not create a folder for the sections; no gate ran\n'; exit 2; }
+  trap par_cleanup EXIT
+  trap 'par_trap HUP' HUP
+  trap 'par_trap INT' INT
+  trap 'par_trap TERM' TERM
+  printf '%s\n' "$helper_text" > "$par_dir/helpers"
+  awk -v dir="$par_dir" -v want=",$list," '
+    /^# section: / { keep = index(want, "," substr($0, 12) ",") > 0; if (out != "") close(out); out = dir "/" substr($0, 12) ".body" }
+    /^# end of sections$/ { keep = 0 }
+    keep { print > out }
+  ' tools/run_all_checks.sh
+  for name in "${par_names[@]}"; do
+    {
+      printf 'set -uo pipefail\ncd %q || exit 2\nunset SECURECONFIG_SUITE_JOBS\n' "$PWD"
+      cat "$par_dir/helpers" "$par_dir/$name.body"
+      # shellcheck disable=SC2016  # the section's own shell expands $fail, not this one
+      printf 'printf "%%s\\n" "$fail" > %q\n' "$par_dir/$name.status"
+    } > "$par_dir/$name.sh"
+  done
+  while [ "$par_next" -lt "$par_n" ]; do
+    par_schedule
+    par_flush
+    [ "$par_next" -lt "$par_n" ] || break
+    if ! par_running; then
+      printf '  FAIL  the parallel scheduler has a section it cannot start; this is a bug in tools/run_all_checks.sh\n'
+      par_stop_from -1
+      exit 2
+    fi
+    par_reap
+  done
+  par_cleanup
+  selected_sections=$par_selected
+  eval "$(awk '/^# end of sections$/ { p = 1; next } p' tools/run_all_checks.sh)"
+}
 
 selected_sections=""
 if [ "$#" -gt 0 ]; then
@@ -102,10 +455,16 @@ if [ "$#" -gt 0 ]; then
     printf 'Sections added: %s, which a named section depends on\n' "${added#,}"
   fi
   printf 'Sections selected: %s\n' "$list"
+  if [ "$suite_jobs" -gt 1 ]; then
+    par_run "$list" "$list"
+  fi
   # A fresh bash sources the cut copy with this file as its $0 and no arguments, so the cd above
   # lands in the same tree and the copy runs straight through.
   bash -c '. /dev/fd/3' "$PWD/tools/run_all_checks.sh" 3<<< "$script"
   exit $?
+fi
+if [ "$suite_jobs" -gt 1 ]; then
+  par_run "$(sed -n 's/^# section: \([a-z0-9-]*\)$/\1/p' tools/run_all_checks.sh | tr '\n' ',')" ""
 fi
 
 fail=0
@@ -154,6 +513,7 @@ run_gate() {
   fi
 }
 
+# preflight
 echo "== gate parser preflight: this python3 has the pinned markdown-it-py =="
 # Several gates below need the markdown-it-py that tools/requirements-gates.txt pins. On a host
 # whose python3 has another release, each of them printed its own FAIL line and traceback, which
@@ -1506,6 +1866,19 @@ else
   printf '%s\n' "$gate_runners"
   bad "test_gate_runners.py failed"
 fi
+# tools/test_parallel_suite.py runs the parallel mode of this file (SECURECONFIG_SUITE_JOBS above
+# 1) on stand-in sections; its docstring lists the cases. It runs no real gate. The differential
+# run of the real suite in both modes is its --differential option, which no gate runs.
+if parallel_tests=$(python3 -I -B tools/test_parallel_suite.py 2>&1); then
+  printf '%s\n' "$parallel_tests"
+  if grep -q '^  FAIL  ' <<< "$parallel_tests" ||
+     ! grep -qE '^  ok    [0-9]+ groups of cases of the parallel mode of run_all_checks\.sh ' <<< "$parallel_tests"; then
+    bad "test_parallel_suite.py exited 0 without a clean ok result"
+  fi
+else
+  printf '%s\n' "$parallel_tests"
+  bad "test_parallel_suite.py failed"
+fi
 
 # section: select-gates-tests
 echo "== the pull-request gate selector maps paths to sections and fails safe =="
@@ -1659,15 +2032,27 @@ overflow_die() {
   trap - HUP INT TERM
   kill -s "$1" "$BASHPID"
 }
+# Stop the background process $1: TERM, repeated every tenth of a second for up to 5 seconds while it
+# runs, then KILL, then reap it. One TERM is not enough: a process forked a moment ago, before it
+# has replaced the signal handlers it inherited from this shell, takes the TERM into its inherited
+# handler and carries on, so a stop right after a launch would wait for a server that never ends.
+overflow_kill() {
+  local _
+  for _ in $(seq 50); do
+    kill "$1" 2>/dev/null || break
+    sleep 0.1
+    kill -0 "$1" 2>/dev/null || break
+  done
+  kill -s KILL "$1" 2>/dev/null
+  wait "$1" 2>/dev/null
+}
 overflow_stop() {
   if [ -n "$overflow_check_pid" ]; then
-    kill "$overflow_check_pid" 2>/dev/null
-    wait "$overflow_check_pid" 2>/dev/null
+    overflow_kill "$overflow_check_pid"
     overflow_check_pid=""
   fi
   if [ -n "$overflow_pid" ]; then
-    kill "$overflow_pid" 2>/dev/null
-    wait "$overflow_pid" 2>/dev/null
+    overflow_kill "$overflow_pid"
     overflow_pid=""
   fi
   if [ -n "$overflow_dir" ]; then

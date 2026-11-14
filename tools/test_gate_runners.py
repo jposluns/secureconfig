@@ -79,7 +79,12 @@ running afterwards, that the HUP, INT and TERM traps are reset, and that the EXI
     stops both too, and the suite dies by that INT;
   - a TERM the section's shell sends itself between the launch of the server, or of the check,
     and the record of its PID (a `kill` written into the section just before that record) still
-    stops what was launched, and the shell dies by that TERM after the EXIT trap.
+    stops what was launched, and the shell dies by that TERM after the EXIT trap, within
+    STOP_SECONDS (a process forked just before the TERM can take it into the handler it inherited
+    and carry on, so the section's overflow_kill repeats the TERM and then sends KILL).
+Every child's environment pins SECURECONFIG_SUITE_JOBS=1, so a setting inherited from the caller
+never turns a `--sections` case parallel, and every wait is multiplied by
+SECURECONFIG_TEST_LOAD_SCALE (default 1) for a loaded host.
 
 --SECTIONS: tools/run_all_checks.sh is copied into a scratch tree and run with bash, with a stand-in
 python3 first on PATH that records each call, prints an ok line (the parser preflight's included)
@@ -117,6 +122,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SUITE = ROOT / "tools" / "run_all_checks.sh"
 BUILD = ROOT / "scripts" / "pages-build.sh"
+# Every wait below is multiplied by this, so a host under heavy load (the parallel suite makes that
+# the normal case) is given longer by setting SECURECONFIG_TEST_LOAD_SCALE, never by running a
+# failed case again. The default is 1.
+SCALE = float(os.environ.get("SECURECONFIG_TEST_LOAD_SCALE", "1"))
+# A shell given a TERM between a launch and the record of its PID stops what it launched within
+# a few seconds; this many seconds (before SCALE) is the most a case may take, which a stop that
+# waited for a process that took the TERM and carried on (60 s for the stand-in check) exceeds.
+STOP_SECONDS = 30
 HELPER = re.compile(r"^(?:ok|bad)\(\)\s+\{.*\}$", re.M)
 RUN_GATE = re.compile(r"^run_gate\(\) \{\n.*?^\}$", re.M | re.S)
 # A gate call: `python3 -I -B`, a .py file and its arguments, up to a shell operator or line end.
@@ -441,7 +454,7 @@ def sections_failures():
         log = d / "calls.log"
         for args, want_rc, needs, refuses, want_calls, fail in SECTIONS_CASES:
             log.write_text("", encoding="utf-8")
-            env = dict(os.environ, PATH=f"{d / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}",
+            env = dict(os.environ, SECURECONFIG_SUITE_JOBS="1", PATH=f"{d / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}",
                        STANDIN_LOG=str(log), STANDIN_FAIL=fail)
             r = subprocess.run(["bash", str(d / "tools" / "run_all_checks.sh"), *args],
                                capture_output=True, text=True, timeout=60, env=env)
@@ -479,7 +492,7 @@ def run_gate_failures():
     script = "fail=0\n" + source + 'run_gate stand-in bash -c "$STANDIN_GATE"\nprintf "fail=%s\\n" "$fail"\n'
     for gate, want_fail, needs, refuses in RUN_GATE_CASES:
         r = subprocess.run(["bash", "-c", script], capture_output=True, text=True, timeout=60,
-                           env=dict(os.environ, STANDIN_GATE=gate))
+                           env=dict(os.environ, SECURECONFIG_SUITE_JOBS="1", STANDIN_GATE=gate))
         out = r.stdout + r.stderr
         lines = out.rstrip("\n").split("\n")
         got_fail = lines[-1] == "fail=1"
@@ -507,7 +520,7 @@ def build(script_text, version, fail=""):
         standin.chmod(0o755)
         log = d / "calls.log"
         log.write_text("", encoding="utf-8")
-        env = dict(os.environ, PATH=f"{d / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}",
+        env = dict(os.environ, SECURECONFIG_SUITE_JOBS="1", PATH=f"{d / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}",
                    STANDIN_LOG=str(log), STANDIN_VERSION=version, STANDIN_PYTHON=sys.executable,
                    STANDIN_FAIL=fail)
         r = subprocess.run(["bash", str(d / "scripts" / "pages-build.sh")], capture_output=True,
@@ -608,7 +621,7 @@ def palette_block_failures():
         for gate, want_fail, needs, refuses in PALETTE_CASES:
             log.write_text("", encoding="utf-8")
             r = subprocess.run(["bash", "-c", script], capture_output=True, text=True, timeout=60,
-                               env=dict(os.environ, STANDIN_GATE=gate, STANDIN_LOG=str(log)))
+                               env=dict(os.environ, SECURECONFIG_SUITE_JOBS="1", STANDIN_GATE=gate, STANDIN_LOG=str(log)))
             out = r.stdout + r.stderr
             lines = out.rstrip("\n").split("\n")
             calls = log.read_text(encoding="utf-8").splitlines()
@@ -704,7 +717,7 @@ def run_in_group(argv, d, env):
     p = subprocess.Popen(argv, cwd=d, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                          env=env, start_new_session=True)
     try:
-        stdout, stderr = p.communicate(timeout=120)
+        stdout, stderr = p.communicate(timeout=120 * SCALE)
     except subprocess.TimeoutExpired:
         os.killpg(p.pid, signal.SIGKILL)
         stdout, stderr = p.communicate()
@@ -715,14 +728,14 @@ def run_in_group(argv, d, env):
 def started_late(d, names):
     """Wait up to 2 seconds for each of names under d, which a process forked just before a signal
     writes when it is not stopped first; then the stand-ins under d that still run."""
-    deadline = time.monotonic() + 2
+    deadline = time.monotonic() + 2 * SCALE
     while not all((d / n).exists() for n in names) and time.monotonic() < deadline:
         time.sleep(0.05)
     return survivors(d, stop=False)
 
 
 def overflow_env(d, browser, gate, require):
-    return dict(os.environ, PATH=f"{d / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}",
+    return dict(os.environ, SECURECONFIG_SUITE_JOBS="1", PATH=f"{d / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}",
                 STANDIN_LOG=str(d / "calls.log"), STANDIN_BROWSER=str(browser),
                 STANDIN_GATE=gate, STANDIN_PYTHON=sys.executable,
                 STANDIN_SERVER_PID=str(d / "server.pid"), STANDIN_CHECK_PID=str(d / "check.pid"),
@@ -815,7 +828,7 @@ def interrupt(d, argv, env, ready, group_int=False):
     p = subprocess.Popen(argv, cwd=d, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                          text=True, env=env, start_new_session=True)
     try:
-        deadline = time.monotonic() + 60
+        deadline = time.monotonic() + 60 * SCALE
         while running(d / ready) is None and p.poll() is None and time.monotonic() < deadline:
             time.sleep(0.05)
         if p.poll() is None:
@@ -826,16 +839,16 @@ def interrupt(d, argv, env, ready, group_int=False):
         # What still runs once the suite's own PID has exited, before its output is read to the
         # end (a shell it left behind would hold that output open).
         try:
-            p.wait(timeout=60)
+            p.wait(timeout=60 * SCALE)
             left = survivors(d, stop=False)
         except subprocess.TimeoutExpired:
             left = survivors(d, stop=False) + ["the suite"]
             os.killpg(p.pid, signal.SIGKILL)
-        deadline = time.monotonic() + 5
+        deadline = time.monotonic() + 5 * SCALE
         while survivors(d, stop=False) and time.monotonic() < deadline:
             time.sleep(0.1)
         survivors(d)
-        out, _ = p.communicate(timeout=120)
+        out, _ = p.communicate(timeout=120 * SCALE)
         return p.returncode, out, left
     finally:
         survivors(d)
@@ -904,14 +917,19 @@ def overflow_signal_failures(script, pages):
         try:
             overflow_tree(d, pages)
             overflow_bin(d)
+            started = time.monotonic()
             rc, stdout, stderr = run_in_group([bash, "-c", injected], d,
                                               overflow_env(d, 0, "sleep 60", ""))
+            took = time.monotonic() - started
             left = started_late(d, names)
-            if rc != -signal.SIGTERM or left or EXIT_TRAP not in stdout:
+            if (rc != -signal.SIGTERM or left or EXIT_TRAP not in stdout
+                    or took > STOP_SECONDS * SCALE):
                 failures.append(f"overflow section, a TERM between the launch of {launch} and "
                                 f"the record of its PID: expected death by TERM after the EXIT "
-                                f"trap and nothing left running; got exit {rc}, {left!r} still "
-                                f"running: {stdout + stderr!r}")
+                                f"trap, nothing left running and no more than "
+                                f"{STOP_SECONDS * SCALE:g} s; got exit {rc} after {took:.1f} s, "
+                                f"{left!r} still running, files {sorted(p.name for p in d.iterdir())!r}: "
+                                f"{stdout + stderr!r}")
         finally:
             survivors(d)
             shutil.rmtree(d, ignore_errors=True)
