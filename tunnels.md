@@ -272,7 +272,7 @@ REASONED: following block; the ssh -R check follows the cited OpenSSH sshd_confi
 - frps login auth-key comparison (pinned tag v0.72.0, checked November 2026; empty-token acceptance is REASONED with the configuration and key derivation): https://github.com/fatedier/frp/blob/v0.72.0/pkg/auth/token.go#L64-L69
 - frp auth-key derivation from token and timestamp (pinned tag v0.72.0, checked November 2026; predictable empty-token keys are REASONED from this implementation): https://github.com/fatedier/frp/blob/v0.72.0/pkg/util/util/util.go#L50-L56
 - go-oidc ID token verifier, no audience check when `SkipClientIDCheck` is set, otherwise a nonempty `ClientID` that the token's audience must contain (pinned tag v3.21.0, checked November 2026): https://github.com/coreos/go-oidc/blob/v3.21.0/oidc/verify.go#L248-L257
-- frp compare diff from v0.71.0 to v0.72.0: its `go.mod` hunk moves `github.com/coreos/go-oidc/v3` from v3.18.0 to v3.21.0, and its `client/connector.go` (L111-L117, L198-L203) and `pkg/transport/tls.go` (L182-L185, L188-L189, L194-L195) hunks give frpc's `trustedCaFile` verification (tags v0.71.0 and v0.72.0, checked November 2026): https://github.com/fatedier/frp/compare/v0.71.0...v0.72.0
+- frp compare diff from v0.71.0 to v0.72.0: its `go.mod` hunk moves `github.com/coreos/go-oidc/v3` from v3.18.0 to v3.21.0, and its `client/connector.go` (L111-L117, L198-L203) and `pkg/transport/tls.go` (L182-L185, L188-L189, L194-L195) hunks show `trustedCaFile` settings, not the handshake (tags v0.71.0 and v0.72.0, checked November 2026): https://github.com/fatedier/frp/compare/v0.71.0...v0.72.0
 - frpc `transport.tls.useSystemCa` field and its comment: verification using system CAs, supported only in frpc's `transport.tls`, and no verification with neither trust source (pinned tag v0.72.0, checked November 2026): https://github.com/fatedier/frp/blob/v0.72.0/pkg/config/v1/common.go#L102-L105
 - frp OIDC auth setter (`NewOidcAuthSetter`, taking `AuthOIDCClientConfig`) builds a `golang.org/x/oauth2/clientcredentials` configuration from the client ID, client secret, scope and token endpoint URL (pinned tag v0.72.0, checked November 2026): https://github.com/fatedier/frp/blob/v0.72.0/pkg/auth/oidc.go#L132-L152
 
@@ -350,7 +350,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "f7a3bdde39293702fdf7bb3980f894afe61857f8dbe7c83d6deecbdb6ad36a4e",
+  "body_sha256": "42d220780a665cebedfb72d848857849e10ce73b54e67bbd7517d65343122259",
   "components": {
     "frps": {
       "name": "frps source",

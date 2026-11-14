@@ -18,7 +18,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-11-14
 
-- tunnels.md: the two LOW findings from the #1231 QA. The sentence on the client's `transport.tls.trustedCaFile` now says the cited frp lines show settings, not the handshake, cites `pkg/config/v1/common.go` L102-L105 at v0.72.0 for the neither-source default, and labels as this guide's reading that Go's TLS client then checks the server certificate against `RootCAs` when `InsecureSkipVerify` is false. The source `sebaf70b5f00f` (the client OIDC setter, `pkg/auth/oidc.go` L132-L152) moves from the `frps` component to `frpc`, and the `frp-oidc` claim lists `frpc` and cites `frpc:sebaf70b5f00f`, with its text unchanged. Reading of the cited files at v0.72.0, nothing built or run. (#1306)
+- tunnels.md: the two LOW findings from the #1231 QA. The sentence on the client's `transport.tls.trustedCaFile` now says the cited frp lines show settings, not the handshake, cites `pkg/config/v1/common.go` L102-L105 at v0.72.0 for the neither-source default, and labels as this guide's reading that Go's TLS client then checks the server certificate against `RootCAs` when `InsecureSkipVerify` is false. The source `sebaf70b5f00f` (the client OIDC setter, `pkg/auth/oidc.go` L132-L152) moves from the `frps` component to `frpc`, and the `frp-oidc` claim lists `frpc` and cites `frpc:sebaf70b5f00f`, with its text unchanged. The frp compare diff Sources item and TODO 1.437 no longer say the hunks give the `trustedCaFile` verification: they show the setting passed to frp's TLS configuration, not the handshake. Reading of the cited files at v0.72.0, nothing built or run. (#1306)
 
 ## 2026-11-13
 
