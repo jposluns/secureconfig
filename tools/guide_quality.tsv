@@ -68,7 +68,7 @@ nginx.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	8a4ab478aaaa2
 nodejs.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	c50b3aeebd7579f769a7964691ef7cea4fd9de42c9c33d24bd64f898df966181	2026-11-10	tool	current
 nomad-consul.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	ae1c84224571043cfac59f7ef6afdcacb0c70a0d70bb3f909794310bbefc136c	2026-11-10	tool	current
 object-storage.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	139bbd5d2de5d6cc80a68540c09848087e17cb4f633455a6f0c0d41641bdd015	2026-11-10	tool	current
-observability-components.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	441ffdd2b896159a7c9044785b1ef1956ea1a11fd556afcb8b299c7bc91693b5	2026-11-10	tool	current
+observability-components.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	9dce261efb106d26f5d7e81ddd5d6fb9911c2b158adf9ec9f19c2431fd37c4d3	2026-11-10	tool	current
 oidc-integration.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	6333a88ccbfb517faafea9d5e52afb55889b80c72c36be40705e0e4a3cf17427	2026-11-10	tool	current
 ollama.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	d4001588908bdf2723fb2ae68911a612a4680bb06f230088e472c8ff48efbc36	2026-11-10	tool	current
 open-webui.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	e51d97b1051005da6ba4d083b5949d60a91a1cb1e0910407c333aad9e2c6b281	2026-11-10	tool	current
