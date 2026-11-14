@@ -43,7 +43,7 @@ identity-providers.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	fdbefe28b0
 image-gen-uis.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	77f39e9fc5ca0eaf69041d34459158440c099ae09bc07ffe0fe7fc939a6e8285	2026-11-10	tool	current
 java.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	48f596a614667a2f4284f778f9ce929ff800155978d0bfec39ad85686d335fcc	2026-11-10	tool	current
 jupyter.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	e2f48a37fb32ee9376df6c9543b5a8a26dc5029aa810a1e000537543ea44116f	2026-11-10	tool	current
-kafka.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	b86d12562deca2e07393afb2fbdedbe18418c02694891261c1581d5986335e19	2026-11-10	tool	current
+kafka.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	9799cb1c99adc241c954f4fb09642e7696c996bde868a0ba0f093eaf76be7fee	2026-11-10	tool	current
 kubernetes.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	08dbbdd50a94f03ed62e67c53f597cce1df7cbf385c8ff1c300c0dc0d0f2d215	2026-11-10	tool	current
 lighttpd.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	b408b44fee9507e7328eb4a7d86dc8f89df051aa27999d49be595a175d7c2be0	2026-11-10	tool	current
 litellm.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	7387fed7b27ae09d4fe2e2aee7e98347ae2f6366ea0b63f192b2562863424a15	2026-11-10	tool	current
@@ -61,7 +61,7 @@ mongodb.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	1bb9e73717f13c924ac93
 mosquitto.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	1a338374bc949536319551bfd205fe9cee9b44986c2d2bb5521ddf90c2955941	2026-11-10	tool	current
 mysql.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f2d816e86442c44d0bb64fc147557151ea41ddccb731d3992fb1f870244bc5ba	2026-11-10	tool	current
 n8n.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	2e25f725b4d85b468b3b227e86c8d369ffe93954210f0793ff250c24cbc44c96	2026-11-10	tool	current
-nats.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	c088cba25c6cada75a34a71af692e8db6d88a7041a02a597836f39f1341e6ee8	2026-11-10	tool	current
+nats.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	b3ca59507c7485be88263426a2a71228222ef84c634aa7f16c6dae78020047a4	2026-11-10	tool	current
 neo4j.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	a5bae35dce475f51d51a0897f48af22dc879fa254260e5b604de23c48c7051ce	2026-11-10	tool	current
 nextjs.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	b108993995a4c20ab2cc52ad62f6d0153d1eeb233e9f9f1367ccffead5951804	2026-11-10	tool	current
 nginx.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	8a4ab478aaaa2f58804b00b20a1d83e38acc7de0be9fdb5c2a6d95cdf256af1c	2026-11-10	tool	current
@@ -81,10 +81,10 @@ python.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	32048bf47a61
 rabbitmq.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	827e8f253c2455dc18dc845a54d8015cd0eea915fc6eb6ac13ae7ee913a06d5a	2026-11-10	tool	current
 ray.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	20627523910cb5b9e66607932b0490ab17d6041e9c4ad3639fb8e919c294110b	2026-11-10	tool	current
 realtime-voice-infra.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	947dd0ffdcd7f172c3be537a86676afcf5313ce714ed3fe63097825b1106293c	2026-11-10	tool	current
-realtime-webhooks.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	a00baa44ec883023752d5fec37dcf701ada7440262eca2a8f05e6c178b3829e1	2026-11-10	tool	current
+realtime-webhooks.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	406f7ed9f7e018166c3259cb973b83d2b3daae8c16008540473cd3e0d52a0b1d	2026-11-10	tool	current
 redis.md	S	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	fa2cae058289856b567209194eda26b4e7b97d426b3f84f8c113132b92e5d0f3	2026-11-10	tool	current
 ruby.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	5abe45766cdb5cb3239379744dc7afee97dda1f3115d12d146a5a59e1672ca5c	2026-11-10	tool	current
-search-engines.md	C	PARTIAL(M1)	?	?	?	GAP(D3)	?	?	PARTIAL(G1)	?	?	MINOR-GAPS	8d0baee5e1356c1df0fd59f0093be7741252762e9619a375600b81e7a5b1ddae	2026-11-10	tool	current
+search-engines.md	C	PARTIAL(M1)	?	?	?	GAP(D3)	?	?	PARTIAL(G1)	?	?	MINOR-GAPS	1ac70626228fd4b2c7f87ca16830e37d81cc31486dc05c714a3869baebd6312b	2026-11-10	tool	current
 secrets.md	X	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	f0f57bfca4dfee70d7a2e00fdd1347991de7050b161f80142f3da893370d3060	2026-11-10	tool	current
 self-hosted-ci-runners.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	2cc98970efba9b419c804f38bf722b88e7fb41263ab7677c3c260e6734512247	2026-11-10	tool	current
 self-hosted-error-trackers.md	C	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	44db64de9642a0f626974f6c1896e099069200efe0abd67eb0479e6effaab848	2026-11-10	tool	current
