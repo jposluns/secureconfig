@@ -17,6 +17,68 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-14 ratifying the unattended proxy decision on pinning `ssr_mode=False` in the `gradio.md` TLS example (#1313).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:46Z. The
+  maintainer chose the option labelled "Ratify it (Recommended)", whose description read "Predicted and best for the
+  project: keep option 2 as voted, merge #1313 after QA SHIP and green CI; its DECISIONS entry is re-marked as your
+  ruling in that PR or the next." The label and description are quoted exactly. The question disclosed that the vote
+  request had overstated its premise and that the voters had been sent a correction. No reasoning was recorded beyond
+  the choice. This entry takes the place of the proxy-decision entry that earlier rounds of this pull request drafted
+  under "Proxy decisions awaiting maintainer review", and the vote history below is background to the ruling.
+  - Background: the unattended vote. It was decided at 2026-11-14T11:08:40Z, when the second vote arrived, under the
+    unattended decision rule of 2026-10-31, which the first 2026-11-11 entry in the proxy section states. The question
+    went to the D-1096 vote at 11:08:16Z, after the source check that the maintainer's 2026-11-13 ruling called for
+    (the request to lab_infra is 20261114T110816Z.from-secureconfig.e7af69e459e4.msg, with the guardrails and grc
+    copies at 11:08:24Z and 11:08:28Z). The options, paraphrased rather than quoted: option 1, marked as the predicted
+    option, pins `ssr_mode=False` in the TLS example with a one-line comment citing the source lines. Option 2, marked
+    as best for the project and recommended, is that pin plus a sourced sentence that replaces the guide's "has not
+    checked the behaviour with SSR on" disclaimer, and the request words that sentence as "stating that with SSR on
+    the public port is a plain-HTTP Node proxy".
+  - The votes, as recorded in the orchestrator's records. The lab_infra vote was for option 2 at 11:08:34Z, with
+    reasoning that, in paraphrase, a stated unknown should be replaced by a sourced fact, and set no condition
+    (20261114T110834Z.from-lab_infra.6c7e07ed41df.msg). The guardrails vote was for option 2 at 11:08:40Z, with
+    reasoning that, in paraphrase, the maintainer takes the more complete, better-documented fix when the gap is
+    minutes, and a sourced statement beats an unverified one (20261114T110840Z.from-guardrails.4380abc73abf.msg). Its
+    condition is that the pull request's QA confirms blocks.py lines 3036-3037 and 3326-3328 and proxy_index.js line 56
+    at gradio@6.31.0 before merge. Since lab_infra and guardrails agreed, grc's vote was not needed under the
+    unattended decision rule of 2026-10-31. grc's vote is recorded, for option 2 at 11:08:55Z
+    (20261114T110855Z.from-grc.2d294771b7c5.msg), with reasoning that, in paraphrase, a sourced statement of the actual
+    behaviour is more accurate and tells the reader why the pin matters. Its condition is that QA re-reads the cited
+    gradio@6.31.0 lines at that commit before it lands. The outcome was option 2.
+  - Effect, applied in the same change as this entry: the `gradio.md` TLS example adds `ssr_mode=False,` with a
+    one-line comment that cites blocks.py lines 3326-3328 and proxy_index.js line 56, and the disclaimer sentence
+    becomes a sourced statement. Outside dev mode, with SSR on and Node available, Gradio 6.31.0 can move Python, still
+    with TLS, to an internal port and try to start a Node proxy on the user-facing port that reaches Python over plain
+    `http://` (blocks.py lines 3326-3328 and 3500-3506; `proxy_index.js` lines 1, 22 and 56). Node is kept only if its
+    startup check passes (`HEAD /` below 500 within 30 seconds, `node_server.py` lines 183 and 265-281), and what the
+    SvelteKit handler answers is not established. If Node is not kept, Gradio tries to move Python, with TLS, onto the
+    user-facing port (blocks.py lines 3518-3529); if that port is not free or is lost in a race, Python stays only on
+    the internal port and Gradio warns (blocks.py lines 3537-3544, 3875-3877 and 3890-3897). SSR turns on with
+    `ssr_mode=True` or `GRADIO_SSR_MODE=true`, and an explicit `ssr_mode=False` overrides the variable (blocks.py lines
+    3035-3039). The Sources section gains the Node proxy and node_server sources at the 6.31.0 tag, and the `tls` claim
+    states the pin and its reason. The findings are in the orchestrator's private plan and were read from source only;
+    no run was made.
+  - The premise and the correction. The vote request stated the premise as certain ("With SSR on, a Node proxy serves
+    the user-facing port over plain HTTP"). All three voters relied on that summary. lab_infra did not re-read the
+    source, guardrails said the vote rests on the stated premise, and grc said it had not verified the lines itself.
+    secureconfig's own source findings, written before the vote, already recorded that Node is kept only if its startup
+    check passes and that the fallback can leave Python only on the internal port. The request mentioned a "Node fails"
+    fallback but left those conditions out and stated the premise as certain. The correction notices of 15:02Z
+    (below) framed the conditionality as a QA finding, and it was not new information: QA flagged the definite
+    wording.
+  - The shipped text narrows option 2's phrase "the public port is a plain-HTTP Node proxy" to the case where Node
+    starts and passes its check, and adds the fallback outcomes (Python moved onto the user-facing port with TLS, or
+    left only on the internal port), which secureconfig's findings recorded before the vote. The pin is still
+    justified, because SSR can put plain HTTP on the public port. QA re-read the cited lines at the 6.31.0 tag,
+    meeting the guardrails and grc conditions as written. secureconfig sent the voters a correction notice on
+    2026-11-14, to lab_infra at 15:02:09Z, guardrails at 15:02:12Z and grc at 15:02:16Z, and option 2 stood unless a
+    voter revised it; none did.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
+    that restores the earlier example, disclaimer sentence, `tls` claim and Sources items, or changes them to match the
+    new ruling, and regenerates what derives from them. It keeps every existing entry in `CHANGELOG.md` and
+    `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here. If the revert pull request uses
+    `git revert -m 1`, that puts back this pull request's `CHANGELOG.md` entry under the date it merged and does not
+    set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
 - **Maintainer ruling of 2026-11-13 on the gate suite's speed: a parallel runner, planned as its own pull request (#1312).**
   The maintainer gave this ruling through AskUserQuestion in an attended session at about 19:25Z, on the topic
   "suite speed"; the question's own wording was not recorded. No reasoning was recorded beyond the choice, and the notes
