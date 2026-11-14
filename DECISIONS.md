@@ -17,6 +17,39 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-13 on the gate suite's speed: a parallel runner, planned as its own pull request (#1312).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session at about 19:25Z, as the answer on
+  whether to run the gate suite's sections in parallel. No reasoning was recorded beyond the choice, and the notes
+  recorded only the chosen option, not the other options offered. The label and description are quoted exactly:
+  the maintainer chose "Plan it as its own PR (Recommended)", whose description read "A worker maps section dependencies (the # depends: lines) and proposes a parallel runner that keeps output order and exit status identical; full QA before merge. Predicted choice."
+  - Effect, applied in the same change as this entry. `tools/run_all_checks.sh` gains an opt-in parallel mode,
+    `SECURECONFIG_SUITE_JOBS=N` with N a whole number from 1 to 64. It is off by default: unset or `1` is the serial
+    run, and CI sets nothing, so the `gates` check stays serial. At N above 1 each section runs in its own bash
+    process and process group, and the output is buffered and printed in the file's order. A new `# exclusive:` line
+    runs `llms-full` and `plugin`, which rewrite the working tree in place, first and alone, and `generated-committed`
+    runs after them, per its `# depends:` line. `tools/test_parallel_suite.py`, run by the `gate-runners` section,
+    tests the mode on stand-in sections against the serial run of the same text.
+  - Where it departs from the ruling's words. The serial run is not untouched: the overflow section's stop now
+    repeats its TERM for up to 5 seconds and then sends KILL to a process still running, which fixes a 60-second
+    wait seen under load in `tools/test_gate_runners.py` and a hang inferred, not observed, for its stand-in
+    server, and the `gate-runners` section also runs the new test. Output
+    order and lines are identical apart from 3 fields that differ between any 2 runs: the credential scanner's elapsed
+    time and sampling counts, and unittest's elapsed times. On 2 failing paths the lines differ as well. Under
+    `--sections`, a section killed by a signal makes the serial run print bash's job notice for its child shell,
+    which the parallel run does not print. And a diagnostic that bash itself prints from inside a section, such as
+    an unbound variable or a command not found, names another file or line, because each section runs from its own
+    temporary script. The exit status is the same in every case tested, a fatal shell error in a section included:
+    1 in a whole run and 127 under `--sections`, in both modes.
+  - The orchestrator's calls, not the maintainer's: the default is off, CI is unchanged, and the `version-basis`
+    section is not split, so a later pull request can change each of them.
+  - Revert. Unsetting `SECURECONFIG_SUITE_JOBS`, or setting it to `1`, runs the serial suite with no revert. The
+    revert path for the code is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
+    that removes the parallel mode, its test and its documentation, or changes them to match the new ruling. It
+    keeps the overflow section's repeated TERM unless that ruling says otherwise, because without it the case in
+    `tools/test_gate_runners.py` waits 60 seconds again. It keeps every existing entry in `CHANGELOG.md` and
+    `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here. If the revert pull request
+    uses `git revert -m 1`, that puts back this pull request's `CHANGELOG.md` entry under the date it merged and does
+    not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
 - **Maintainer rulings of 2026-11-13 on the REASONED wording in the mixed-guide header, the homepage sentence and the M1 text in `QUALITY.md` (#1309).**
   The maintainer gave these three rulings through AskUserQuestion in an attended session, all at about 19:26Z to
   19:27Z, as answers to the #1299 QA findings F3 and F5 and the #1296 QA finding 5. No reasoning was recorded beyond
