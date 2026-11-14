@@ -392,9 +392,13 @@ Then run `python3 tools/version_basis.py --write`, `python3 tools/version_basis.
 unset or `1` is the serial run, which stays the reference. The output holds the same lines in the
 same order and the status is the same, because each section's output is buffered and printed in
 the script's order once it and every section before it finish. A section run alone, `llms-full`
-and `plugin`, which rewrite the working tree in place, runs first. The only lines that differ
-between 2 runs of either mode are the credential scanner's elapsed time and sampling counts and
-unittest's elapsed times. `python3 tools/test_parallel_suite.py --differential` compares the 2
+and `plugin`, which rewrite the working tree in place, runs first. On a passing run, the only
+lines that differ between 2 runs of either mode are the credential scanner's line, in its elapsed
+time and sampling counts, and unittest's elapsed times. On 2 failing paths the modes differ in
+more. Under `--sections`, a section killed by a signal makes the serial run print bash's job notice
+for its child shell, which the parallel run does not print. And a diagnostic that bash itself
+prints from inside a section, such as an unbound variable or a command not found, names another
+file or line. `python3 tools/test_parallel_suite.py --differential` compares the 2
 modes on the real tree and doubles the cost of a run, so no gate runs it. Use `python3 tools/version_basis.py --check vault.md` for a single enrolled guide. Review the source
 and generated diffs together. Verify mappings use the same fence-level declaration and attachment grammar as the Verify-marking
 gate. Every mapped claim must agree with its fence's declaration; later per-command comments do not

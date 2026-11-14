@@ -34,28 +34,37 @@
 # sections before it already rebuilt HEAD.
 #
 # Parallel mode (opt-in). SECURECONFIG_SUITE_JOBS=N, a whole number from 1 to 64, runs up to N
-# sections at once. Unset or 1 is the serial run below, unchanged and the reference. Any other
+# sections at once. Unset or 1 is the serial run below, which stays the reference. Any other
 # value is refused with status 2 before any gate runs, and so is an empty one. Each section runs in
 # its own bash process and its own process group with its standard output and standard error
 # merged into one buffer, and the buffers print in this file's order as each section and every
 # one before it have finished, so the output holds the same lines in the same order as the serial
 # run, with a section's text never split. The status equals the serial run's: 1 when any section
 # set fail=1, else 0, and the summary is this file's own. A section that exits without finishing
-# (llms-full and plugin exit 1 when a restore fails) or is killed by a signal ends the run the
-# way it ends the serial one: its output is the last printed, no later section's output and no
-# summary follow, and the status is its exit status or its signal re-raised on this shell. HUP, INT and TERM sent to this
+# (llms-full and plugin exit 1 when a restore fails, and a fatal shell error such as an unbound
+# variable ends a section with 1, or with 127 under --sections) or is killed by a signal ends the
+# run the way it ends the serial one: its output is the last printed, no later section's output
+# and no summary follow, and the status is its exit status, or its signal: re-raised on this
+# shell for the whole run, 128 plus the signal under --sections. HUP, INT and TERM sent to this
 # shell stop every section's process group and are re-raised. The parser preflight runs first, in
 # the foreground, in both modes. A section that rewrites the working tree in place is named by an
 # `# exclusive:` line, runs alone, and runs before the others; a `# depends:` line also orders
 # its subject after its needs. SECURECONFIG_SUITE_TIMES, when it names a file, gets one
-# `<section> <start> <end> <status>` row per section (epoch seconds) and the output does not change.
+# `<section> <start> <end> <status>` row per section (epoch seconds) in parallel mode only, and
+# the output does not change.
 # Output identity between the two modes means the same lines in the same order and the same
-# status, with 3 classes of line left out: the credential scanner's elapsed-time line
-# ("... took N.NN s"), its sampling counts ("sampling reads: ..."), and unittest's
-# "Ran N tests in N.NNNs" lines. tools/test_parallel_suite.py --differential compares them. In
-# one abnormal case the 2 modes also differ in one line: when a section is killed by a signal under
-# --sections, the serial run's parent shell prints bash's job notice for its child shell
-# ("Terminated   bash -c ..."), and the parallel run prints none; the status is the same.
+# status, with 3 fields rewritten to placeholders before the comparison: the elapsed time and the
+# sampling counts in the credential scanner's one "credential scan: ..." line, and the elapsed
+# time in unittest's "Ran N tests in N.NNNs" lines. tools/test_parallel_suite.py --differential
+# compares them. On 2 failing paths the modes also differ in lines. When a section is killed by a
+# signal under --sections, the serial run's parent shell prints bash's job notice for its child
+# shell ("Terminated   bash -c ..." for TERM, and for KILL, HUP and other signals the same notice
+# after this file's name, a line number and a PID; none for INT), and the parallel run prints
+# none; the comparison leaves that line out and the status is the same. And a diagnostic that
+# bash itself prints from inside a section (an unbound variable, a command not found) names
+# another file or line: this file's name and line in a whole serial run and "/dev/fd/3" with
+# this file's line under --sections, but the section's temporary script in a whole parallel run
+# and "/dev/fd/3" with another line under --sections; that line is not left out.
 # depends: generated-committed: llms-full plugin
 # exclusive: llms-full plugin
 set -uo pipefail
@@ -101,9 +110,9 @@ par_cleanup() {
 }
 
 # Stop every running section above index $1 (-1: all): TERM to its process group, up to 5 seconds
-# for the group to end, then KILL for what is left, and reap it.
+# for the group to end, then KILL for a group still there, and reap it.
 par_stop_from() {
-  local i _ stopping=()
+  local i _ gone stopping=()
   for ((i = 0; i < par_n; i++)); do
     if [ "$i" -gt "$1" ] && [ "${par_state[i]}" = run ]; then
       kill -s TERM -- "-${par_pid[i]}" 2>/dev/null
@@ -111,11 +120,13 @@ par_stop_from() {
     fi
   done
   for i in "${stopping[@]}"; do
+    gone=""
     for _ in $(seq 50); do
-      kill -0 -- "-${par_pid[i]}" 2>/dev/null || break
+      kill -0 -- "-${par_pid[i]}" 2>/dev/null || { gone=1; break; }
       sleep 0.1
     done
-    kill -s KILL -- "-${par_pid[i]}" 2>/dev/null
+    # KILL only a group that was still there when the wait ran out, never a group already gone.
+    [ -n "$gone" ] || kill -s KILL -- "-${par_pid[i]}" 2>/dev/null
     wait "${par_pid[i]}" 2>/dev/null
     par_state[i]=killed
   done
@@ -151,8 +162,16 @@ par_launch() {
   par_starting=1
   # Job control puts the section in a process group of its own, which bash sets in the parent as
   # well as the child, so the group exists when the PID is recorded and a signal can reach it.
+  # Under --sections the serial run sources its cut copy from a fresh bash, so each section is
+  # sourced the same way here: a fatal shell error (an unbound variable under set -u) then ends
+  # it with the same status, 127, as it ends that copy. The whole run's sections run as scripts,
+  # as the whole serial run does, and such an error ends them with 1 in both.
   set -m
-  bash "$par_dir/$name.sh" > "$par_dir/$name.out" 2>&1 < /dev/null &
+  if [ -n "$par_selected" ]; then
+    bash -c '. /dev/fd/3' "$PWD/tools/run_all_checks.sh" 3< "$par_dir/$name.sh" > "$par_dir/$name.out" 2>&1 < /dev/null &
+  else
+    bash "$par_dir/$name.sh" > "$par_dir/$name.out" 2>&1 < /dev/null &
+  fi
   par_pid[i]=$!
   set +m
   par_state[i]=run
@@ -2036,17 +2055,18 @@ overflow_die() {
   kill -s "$1" "$BASHPID"
 }
 # Stop the background process $1: TERM, repeated every tenth of a second for up to 5 seconds while it
-# runs, then KILL, then reap it. One TERM is not enough: a process forked a moment ago, before it
+# runs, then KILL if it still runs, then reap it. One TERM is not enough: a process forked a moment ago, before it
 # has replaced the signal handlers it inherited from this shell, takes the TERM into its inherited
 # handler and carries on, so a stop right after a launch would wait for a server that never ends.
 overflow_kill() {
-  local _
+  local _ gone=""
   for _ in $(seq 50); do
-    kill "$1" 2>/dev/null || break
+    kill "$1" 2>/dev/null || { gone=1; break; }
     sleep 0.1
-    kill -0 "$1" 2>/dev/null || break
+    kill -0 "$1" 2>/dev/null || { gone=1; break; }
   done
-  kill -s KILL "$1" 2>/dev/null
+  # KILL only a process that was still there when the wait ran out, never one already gone.
+  [ -n "$gone" ] || kill -s KILL "$1" 2>/dev/null
   wait "$1" 2>/dev/null
 }
 overflow_stop() {

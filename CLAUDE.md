@@ -107,8 +107,8 @@ later one. A local run can do either: with no argument the suite runs every sect
 `--sections NAME[,NAME...]` the named ones and their prerequisites, refusing an unknown name or one holding
 anything but letters, digits and hyphens.
 `SECURECONFIG_SUITE_JOBS=N`, a whole number from 1 to 64, is an opt-in parallel mode of the same
-script for either run. Unset or `1` is the serial run, which is unchanged and is the reference; CI
-sets nothing, so it stays serial. At N above 1 each section runs in its own bash process and
+script for either run. Unset or `1` is the serial run, which is the reference; CI sets nothing,
+so it stays serial. At N above 1 each section runs in its own bash process and
 process group, with its standard output and standard error merged into one buffer, and the
 buffers print in the file's order as each section and every one before it finish, so the output
 holds the same lines in the same order and the status is the same. The summary is the same code.
@@ -117,8 +117,11 @@ each alone (the `# exclusive:` line of the script), and `generated-committed` ru
 (its `# depends:` line). A section that exits early or dies by a signal ends the run as in the
 serial one, and HUP, INT and TERM stop every section's process group and are re-raised. Any other
 value, an empty one included, is refused with status 2 before any gate runs. Output identity
-leaves out 3 kinds of line that vary between any 2 runs: the credential scanner's elapsed time and
-sampling counts, and unittest's elapsed times.
+sets aside 3 fields that vary between any 2 runs: the credential scanner's elapsed time and
+sampling counts, and unittest's elapsed times. On 2 failing paths the lines differ too. Under
+`--sections`, a section killed by a signal makes the serial run print bash's job notice for its
+child shell, which the parallel run does not print. And a diagnostic that bash itself prints from
+inside a section, such as an unbound variable or a command not found, names another file or line.
 Every gate in the suite, in either mode, is deterministic and offline: no gate reaches the
 network, so no outside service can change a gate's answer. The `gates` job that runs it is not
 offline. Before the suite starts, `.github/workflows/checks.yml` fetches its pinned actions, Python,

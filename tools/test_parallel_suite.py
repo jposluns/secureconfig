@@ -12,10 +12,10 @@ cuts that only the real tree can answer (every section's body runs as its own ba
 the differential run below. Each case compares the parallel run with the serial run of the same
 tree where the claim is "the same as serial".
 
-THE CASES (the plan's numbers, plans/impl-parallel-suite-20261114.md):
+THE CASES (numbered as in the implementation plan, which is not in this repository):
   T1  output order: a slow first section does not move the output; jobs=4 and jobs=1 give the same
       bytes, in the file's order.
-  T2  concurrency: with jobs=4 two sections overlap; unset, 1 and the preflight-only case never.
+  T2  concurrency: with jobs=4 two sections overlap; unset and 1 never.
   T3  exit status: all pass is 0 and "All gates passed."; each position failing is 1 and "One or
       more gates failed."; --sections gives the selected-pass line; every output equals serial's.
   T4  a preflight refusal: status 2, only the preflight's lines, no section started, both modes.
@@ -27,17 +27,22 @@ THE CASES (the plan's numbers, plans/impl-parallel-suite-20261114.md):
       section waits for every running section, and nothing new starts meanwhile.
   T8  an early abort (a section running `exit 1`) and a signal death of a section end the run as
       the serial run ends: output through that section only, no summary, the same status; later
-      sections are killed; an earlier slow section is still printed first.
+      sections are killed; an earlier slow section is still printed first. Under --sections a
+      death by TERM, KILL or HUP is 128 plus the signal in both modes, and an unbound variable in a
+      section is 1 in a whole run and 127 under --sections in both modes.
   T9  HUP, INT and TERM sent to the driver kill every section's process group, remove its temp
       folder and are re-raised, including a TERM sent between a section's launch and the record
-      of its PID.
+      of its PID, judged only after a bounded wait for the files an unstopped section writes.
   T10 a section that writes to stdout and stderr in turn prints them in the same order as serial.
-  T11 (the part that needs no real suite) the normaliser of the differential run leaves out only the
-      line classes it names; the differential itself is below.
+  T11 (the part that needs no real suite) the normaliser of the differential run rewrites or drops
+      only the fields and lines it names (the job notice in its TERM, KILL, HUP and ABRT forms);
+      the differential itself is below.
   T12 the file's shape: 1 `# preflight` line before the first section, 1 `fail=0` before it, the
       `# exclusive:` lines name sections, `# depends:` stays the only line tools/select_gates.py
       reads, and a driver without its markers refuses instead of skipping the preflight.
   T13 tools/select_gates.py reads the `# depends:` lines only (the `# exclusive:` line is not one).
+  T16 SECURECONFIG_SUITE_TIMES gets one row per section in parallel mode and none in serial mode,
+      changes no output, and a caller's setting never reaches these stand-in runs.
 
 NOT HERE (run by hand, see main's --differential and --inject, because each runs the real suite
 and so doubles its cost, which no gate pays): T11, the output identity of the real suite in both
@@ -79,9 +84,13 @@ DIFFERENTIAL_NORMALISE = (
     # unittest's elapsed time; the test count stays compared.
     (re.compile(r"^(Ran [0-9]+ tests? in )[0-9.]+s$"), r"\1<elapsed>s"),
     # The job notice bash prints, only for the serial `--sections` run, when the shell running the
-    # cut copy dies by a signal ("Terminated   bash -c '. /dev/fd/3' ..."): a line dropped, not
-    # rewritten. The parallel run prints none, and the exit status is the same in both.
-    (re.compile(r"^(Terminated|Killed|Hangup|Interrupt) +bash -c '\. /dev/fd/3' .*$"), None),
+    # cut copy dies by a signal: a line dropped, not rewritten. For TERM it is the bare notice
+    # ("Terminated   bash -c '. /dev/fd/3' ..."); for KILL, HUP, ABRT and the others bash puts the
+    # script's name, a line number and the PID before it ("<script>: line 466: 1234 Killed   ..."),
+    # and ABRT adds "(core dumped)"; INT prints none. Only a notice for this exact command line is
+    # dropped. The parallel run prints none, and the exit status is the same in both.
+    (re.compile(r"^(?:\S.*: line [0-9]+: [0-9]+ )?[A-Z][A-Za-z0-9 ]*? +(?:\(core dumped\) )?"
+                r"bash -c '\. /dev/fd/3' \"\$PWD/tools/run_all_checks\.sh\" 3<<< \"\$script\"$"), None),
 )
 
 
@@ -131,6 +140,8 @@ class Tree:
                    STANDIN_EVENTS=str(self.d / "events"), STANDIN_DIR=str(self.d),
                    TMPDIR=str(self.d / "tmp"))
         env.pop("SECURECONFIG_SUITE_JOBS", None)
+        # A caller's timing file is the caller's: these stand-in runs never add rows to it.
+        env.pop("SECURECONFIG_SUITE_TIMES", None)
         if jobs is not None:
             env["SECURECONFIG_SUITE_JOBS"] = jobs
         env.update(extra or {})
@@ -174,6 +185,12 @@ class Tree:
         return found
 
     def close(self):
+        launched = self.d / "launched.pid"
+        if launched.exists():
+            try:
+                os.killpg(int(launched.read_text(encoding="utf-8")), signal.SIGKILL)
+            except (OSError, ValueError):
+                pass
         for p in sorted(self.d.glob("*.pid")) + sorted(self.d.glob("*.child")):
             pid = alive(p)
             if pid:
@@ -424,10 +441,28 @@ def t8_abort():
         # No bash "Killed" or "Terminated" job notice for the dead section: byte for byte as serial.
         check(failures, f"T8 {label}: the same output as serial", results[0][1] == results[1][1],
               f"{results[0][1]!r} vs {results[1][1]!r}")
-    # Under --sections the serial run's parent shell exits with 128 plus the signal, and so does this.
-    secs = [section("s1"), section("s2", extra='kill -TERM "$$"'), section("s3")]
-    (src, sout, _), (prc, pout, _) = both(synthetic(secs, [], []), args=("--sections", "s1,s2,s3"))
-    check(failures, "T8 a section killed by TERM under --sections", src == prc == 143, f"{src} {prc}")
+    # Under --sections the serial run's parent shell exits with 128 plus the signal, and so does
+    # this; the outputs differ only in the job notice the normaliser drops.
+    for sig, want in (("TERM", 143), ("KILL", 137), ("HUP", 129)):
+        secs = [section("s1"), section("s2", extra=f'kill -{sig} "$$"'), section("s3")]
+        (src, sout, _), (prc, pout, _) = both(synthetic(secs, [], []), args=("--sections", "s1,s2,s3"))
+        check(failures, f"T8 a section killed by {sig} under --sections", src == prc == want
+              and normalise(sout) == normalise(pout) and "== s3 ==" not in pout,
+              f"serial {src} {sout!r}, parallel {prc} {pout!r}")
+    # A fatal shell error in a section (an unbound variable under set -u) ends a whole run with 1
+    # and a --sections run with 127, the status of the sourced cut copy, in both modes. Only bash's
+    # own diagnostic line differs (the header says how), so the rest is compared without it.
+    secs = [section("s1"), section("s2", extra='echo "$no_such_variable_here"'), section("s3")]
+    for args, want in (((), 1), (("--sections", "s1,s2,s3"), 127)):
+        (src, sout, _), (prc, pout, _) = both(synthetic(secs, [], []), args=args)
+
+        def rest(out):
+            return [x for x in out.splitlines() if not x.endswith(": no_such_variable_here: unbound variable")]
+
+        check(failures, f"T8 an unbound variable in a section, args {args}", src == prc == want
+              and rest(sout) == rest(pout) and "== s3 ==" not in pout
+              and "no_such_variable_here: unbound variable" in pout,
+              f"serial {src} {sout!r}, parallel {prc} {pout!r}")
     return failures
 
 
@@ -436,9 +471,12 @@ def sleepers(n):
             for i in range(1, n + 1)]
 
 
-def signal_run(text, sig, injected=None, wait_names=("s1", "s2", "s3")):
+def signal_run(text, sig, injected=None, wait_names=("s1", "s2", "s3"), late=()):
     """Run the parallel suite, send sig to the driver once every wait_names child runs (at once when
-    injected), and return (exit, output, leftovers, temp entries left)."""
+    injected), and return (exit, output, leftovers, temp entries left). With late, once the driver
+    is gone, first wait up to 3 seconds for those files under the tree, which a section forked
+    just before the signal writes when it is not stopped; launched.pid among them also counts every
+    live process of that PID's process group as left over."""
     t = Tree(injected or text)
     try:
         p = t.start((), "4")
@@ -453,9 +491,23 @@ def signal_run(text, sig, injected=None, wait_names=("s1", "s2", "s3")):
             os.killpg(p.pid, signal.SIGKILL)
             out, _ = p.communicate()
             return None, out, ["the driver"], []
+        if late:
+            wait_for(lambda: all((t.d / n).exists() for n in late), 3)
+
+        def left():
+            found = t.leftovers()
+            launched = t.d / "launched.pid"
+            if launched.exists():
+                try:
+                    found += [f"group {launched.read_text(encoding='utf-8').strip()} member {pid}"
+                              for pid in group_alive(int(launched.read_text(encoding="utf-8")))]
+                except ValueError:
+                    found.append("launched.pid unreadable")
+            return found
+
         # What the group's sections left is given a moment to end after the driver is gone.
-        wait_for(lambda: not t.leftovers(), 5)
-        return p.returncode, out, t.leftovers(), sorted(x.name for x in (t.d / "tmp").iterdir())
+        wait_for(lambda: not left(), 5)
+        return p.returncode, out, left(), sorted(x.name for x in (t.d / "tmp").iterdir())
     finally:
         t.close()
 
@@ -468,16 +520,41 @@ def t9_signals():
         check(failures, f"T9 {sig.name} to the driver", rc == -sig and not left and not tmp,
               f"exit {rc}, still running {left!r}, temp left {tmp!r}: {out!r}")
     # A TERM sent just before the record of a launch's PID is held and acted on once it is.
+    # The driver itself writes the launched section's PID (its process group) to launched.pid, then
+    # waits, bounded, until the section runs (its own .pid file exists), and only then sends the
+    # TERM, still before the record of the PID. Without that wait a driver that does not hold the
+    # signal removes its temp folder before the section's bash has opened its script, the section
+    # ends by itself, and the broken hold goes unseen (6 of 10 runs of that mutant). Once the
+    # driver is gone the case waits, bounded, for s1.pid and s1.child, and then judges what is left,
+    # counting every live process of the launched group.
     line = "  par_pid[i]=$!\n"
     src = synthetic(sleepers(3), [], [])
     if src.count(line) != 1:
         failures.append(f"T9 the record of a section's PID, {line!r}, is not in the driver once")
     else:
-        injected = src.replace(line, f'  kill -TERM "$BASHPID"\n{line}')
-        rc, out, left, tmp = signal_run(text, signal.SIGTERM, injected=injected)
+        hold = max(1, int(1000 * SCALE))
+        injected = src.replace(line, '  printf "%s\\n" "$!" > "$STANDIN_DIR/launched.pid"\n'
+                                     f'  for _ in $(seq {hold}); do [ -e "$STANDIN_DIR/$name.pid" ] && break; '
+                                     'sleep 0.01; done\n'
+                                     f'  kill -TERM "$BASHPID"\n{line}')
+        rc, out, left, tmp = signal_run(text, signal.SIGTERM, injected=injected,
+                                        late=("launched.pid", "s1.pid", "s1.child"))
         check(failures, "T9 a TERM between a launch and the record of its PID", rc == -signal.SIGTERM
               and not left and not tmp, f"exit {rc}, still running {left!r}, temp left {tmp!r}: {out!r}")
     return failures
+
+
+def group_alive(pgid):
+    """The PIDs of live (not zombie) processes in process group pgid."""
+    found = []
+    for stat in Path("/proc").glob("[0-9]*/stat"):
+        try:
+            fields = stat.read_text(encoding="utf-8").rpartition(") ")[2].split()
+        except OSError:
+            continue
+        if len(fields) > 2 and fields[2] == str(pgid) and not fields[0].startswith("Z"):
+            found.append(stat.parent.name)
+    return found
 
 
 def t10_merged():
@@ -487,6 +564,47 @@ def t10_merged():
     (src, sout, _), (prc, pout, _) = both(text)
     check(failures, "T10 stdout and stderr keep their order", src == 0 and (prc, pout) == (src, sout)
           and "o1\ne1\no2\ne2\no3\ne3\n" in pout, f"{sout!r} vs {pout!r}")
+    return failures
+
+
+def t16_times():
+    """SECURECONFIG_SUITE_TIMES: one row per section in parallel mode, none in serial mode, the
+    output unchanged, and a caller's setting never reaches the stand-in runs."""
+    failures = []
+    names = ["a", "b", "c"]
+    text = synthetic([section(n) for n in names], [], [])
+    t = Tree(text)
+    outer = t.d / "outer-times"
+    saved = os.environ.get("SECURECONFIG_SUITE_TIMES")
+    os.environ["SECURECONFIG_SUITE_TIMES"] = str(outer)
+    try:
+        check(failures, "T16 the harness's child environment drops a caller's SECURECONFIG_SUITE_TIMES",
+              "SECURECONFIG_SUITE_TIMES" not in t.env("4"), "")
+        rc, plain = t.run((), "4")
+        check(failures, "T16 a caller's SECURECONFIG_SUITE_TIMES gets no row from a stand-in run",
+              rc == 0 and not outer.exists(), f"{rc} {outer.read_text(encoding='utf-8') if outer.exists() else ''!r}")
+    finally:
+        if saved is None:
+            os.environ.pop("SECURECONFIG_SUITE_TIMES", None)
+        else:
+            os.environ["SECURECONFIG_SUITE_TIMES"] = saved
+    try:
+        for jobs, label in ((None, "serial"), ("4", "parallel")):
+            times = t.d / f"times-{label}"
+            rc, out = t.run((), jobs, {"SECURECONFIG_SUITE_TIMES": str(times)})
+            check(failures, f"T16 {label} output is unchanged by SECURECONFIG_SUITE_TIMES",
+                  rc == 0 and out == plain, f"{rc} {out!r} vs {plain!r}")
+            if jobs is None:
+                check(failures, "T16 a serial run writes no row", not times.exists(), "")
+                continue
+            rows = times.read_text(encoding="utf-8").splitlines() if times.exists() else []
+            good = [r.split() for r in rows]
+            check(failures, "T16 a parallel run writes `<section> <start> <end> <status>` per section in "
+                  "the file's order", [r[0] for r in good if len(r) == 4] == names
+                  and all(len(r) == 4 and float(r[1]) <= float(r[2]) and r[3] == "0" for r in good),
+                  repr(rows))
+    finally:
+        t.close()
     return failures
 
 
@@ -551,17 +669,29 @@ def t11_normaliser():
           normalise("Ran 118 tests in 288.973s") == normalise("Ran 118 tests in 279.186s")
           and normalise("Ran 118 tests in 288.973s") != normalise("Ran 117 tests in 288.973s"),
           normalise("Ran 118 tests in 288.973s"))
-    notice = "Terminated                 bash -c '. /dev/fd/3' \"$PWD/tools/run_all_checks.sh\" 3<<< \"$script\""
-    check(failures, "T11 the serial job notice for a killed cut copy is dropped",
-          normalise(f"== a ==\n{notice}\n== b ==") == "== a ==\n== b ==", normalise(notice))
+    command = "bash -c '. /dev/fd/3' \"$PWD/tools/run_all_checks.sh\" 3<<< \"$script\""
+    # The forms bash 5 printed for the serial --sections run in the stand-in harness.
+    notices = (
+        ("TERM", f"Terminated                 {command}"),
+        ("KILL", f"/var/tmp/tmpfoankz4g/tools/run_all_checks.sh: line 466: 1546593 Killed                     {command}"),
+        ("HUP", f"/var/tmp/tmpr4bf6bbz/tools/run_all_checks.sh: line 466: 1547209 Hangup                     {command}"),
+        ("ABRT", f"/var/tmp/tmp75kjtsgn/tools/run_all_checks.sh: line 466: 1548285 Aborted                    (core dumped) {command}"),
+    )
+    for sig, notice in notices:
+        check(failures, f"T11 the serial job notice for a cut copy killed by {sig} is dropped",
+              normalise(f"== a ==\n{notice}\n== b ==") == "== a ==\n== b ==", normalise(notice))
     for line in ("  ok    commit 4d110e793449: x", "  FAIL  walker failed", "Ran 118 tests",
-                 "Terminated by the user", "  ok    credential scan: 315 cases"):
+                 "Terminated by the user", "  ok    credential scan: 315 cases",
+                 f"Terminated                 {command} extra",
+                 f"  FAIL  Killed {command}",
+                 "/dev/fd/3: line 552: no_such_variable_here: unbound variable"):
         check(failures, f"T11 {line!r} is compared as is", normalise(line) == line, normalise(line))
     return failures
 
 
 CASES = (t1_order, t2_concurrency, t3_status, t4_preflight, t5_refusals, t6_dependencies,
-         t7_exclusive, t8_abort, t9_signals, t10_merged, t11_normaliser, t12_shape, t13_select_gates)
+         t7_exclusive, t8_abort, t9_signals, t10_merged, t11_normaliser, t12_shape, t13_select_gates,
+         t16_times)
 
 
 def normalise(output):
@@ -684,7 +814,8 @@ def main():
           f"order and bytes equal to serial, real concurrency, exit status, preflight and "
           f"SECURECONFIG_SUITE_JOBS refusals, dependencies and cycles, exclusive sections, early "
           f"abort and signal death of a section, HUP, INT and TERM to the driver including between "
-          f"a launch and the record of its PID, merged streams, the file's shape)")
+          f"a launch and the record of its PID, merged streams, the file's shape, "
+          f"SECURECONFIG_SUITE_TIMES)")
     return 0
 
 
