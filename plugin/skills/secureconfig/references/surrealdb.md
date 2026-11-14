@@ -267,8 +267,9 @@ MCP-tool lists. v3.3.5's capability arguments define `allow_rpc` and `allow_http
 `#[arg(default_value_os = "")]` default, and neither file defines an `allow_mcp` or `deny_mcp` argument. Their only
 MCP capability target is the HTTP route, `"mcp" => Ok(RouteTarget::Mcp),`. v3.3.5 also defines a `surreal mcp`
 command, `Mcp(McpCommandArguments)`, to "Start the MCP server over stdio for AI assistant integration", behind
-`#[cfg(feature = "mcp")]`. Its arguments type, `McpCommandArguments`, is named through the `cli::mcp` module
-(`use mcp::McpCommandArguments;` at `cli/mod.rs` line 38), whose file, `cli/mcp.rs` or `cli/mcp/mod.rs`, was not
+`#[cfg(feature = "mcp")]`. Its argument type, `McpCommandArguments`, is named through the `cli::mcp` module,
+which `pub(crate) mod mcp;` at `cli/mod.rs` line 10 declares, behind `#[cfg(feature = "mcp")]` at line 9
+(`use mcp::McpCommandArguments;` at line 38), whose file, `cli/mcp.rs` or `cli/mcp/mod.rs`, was not
 read. Whether anything else gates MCP tools at v3.3.5 is not established, because neither that module nor its
 MCP crate was read.
 
@@ -453,6 +454,7 @@ shell to run.
 - SurrealDB v3.3.5 capabilities: `--allow-rpc` and `--allow-http` with no MCP-tool list (pinned tag v3.3.5, commit 5c3383fe) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/dbs/mod.rs#L105-L324 and the HTTP route names, with `mcp` as a route: https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/rpc/src/capabilities/mod.rs#L373-L397
 - SurrealDB v3.3.5 `surreal mcp` command, behind `#[cfg(feature = "mcp")]`, whose arguments are named through the `cli::mcp` module (`cli/mcp.rs` or `cli/mcp/mod.rs`), which was not read (pinned tag v3.3.5, commit 5c3383fe) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/cli/mod.rs#L182-L184
 - SurrealDB v3.3.5 `use mcp::McpCommandArguments;`, which names the `surreal mcp` arguments through the `cli::mcp` module (pinned tag v3.3.5, commit 5c3383fe) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/cli/mod.rs#L37-L38
+- SurrealDB v3.3.5 `pub(crate) mod mcp;`, behind `#[cfg(feature = "mcp")]`, which declares the `cli::mcp` module that the `use mcp::McpCommandArguments;` import names (pinned tag v3.3.5, commit 5c3383fe) (checked November 2026): https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/cli/mod.rs#L9-L10
 - SurrealDB CLI, `surreal db sql` (checked November 2026): https://surrealdb.com/docs/reference/cli/db/commands/sql
 - SurrealDB security overview (checked November 2026): https://surrealdb.com/docs/learn/security
 - SurrealDB authentication overview (`DEFINE USER` at root, namespace or database level) (checked November 2026): https://surrealdb.com/docs/learn/security/authentication/overview
@@ -548,7 +550,7 @@ Claims (full source mapping in the JSON block below):
 - capability-all (REASONED; docs, pinned): allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. As this guide's reading of v4.0.0 source, deny-all alone leaves every HTTP route, RPC method and MCP tool allowed, as allow-http, allow-rpc and allow-mcp default to all targets; no run confirmed it, so pass explicit allow-http and allow-rpc lists.
 - capability-health (REASONED; pinned, docs): When the Verify block's health check should pass under deny-all, include health in the allow-http list: the HTTP allow getter returns a named list as given, the route parser reads health as the health route, and /health refuses a route that is not allowed, which the HTTP protocol page says answers 403.
 - mcp-advisory (REASONED; advisories): GHSA-cr79-9p8r-p5wx (high; affecting versions below 4.0.0, patched in 4.0.0) reports MCP tool identifier validation permitting statement injection, with arbitrary SQL query execution through MCP tool invocation; it bears on MCP tools staying allowed under deny-all.
-- capability-mcp-3x (REASONED; pinned-3x): The v3.3.5 capability files read define allow-rpc and allow-http with the same empty default but no allow-mcp or deny-mcp list; their only MCP target is the mcp HTTP route. surreal mcp is behind the mcp feature; its arguments are named through the cli::mcp module (use mcp::McpCommandArguments;), which was not read, nor was its MCP crate, so whether anything else gates MCP tools is not established.
+- capability-mcp-3x (REASONED; pinned-3x): The v3.3.5 capability files read define allow-rpc and allow-http with the same empty default but no allow-mcp or deny-mcp list; their only MCP target is the mcp HTTP route. surreal mcp is behind the mcp feature; its argument type is named through the cli::mcp module (pub(crate) mod mcp; at cli/mod.rs:10), which was not read, nor was its MCP crate, so any other gate on MCP tools is not established.
 - capability-net (REASONED; docs): Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF.
 - capability-functions (REASONED; docs): Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances.
 - capability-scripting (REASONED; docs): Embedded scripting defaults off; enable it only when required.
@@ -569,7 +571,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e955c8567ffc256dc05bbd2c57e3e72f1a758599118df2ac18ef43472a6ee4e5",
+  "body_sha256": "c179060444828b906cf5cacb86955807c0543649c5bfae8b0724ff762ad1188b",
   "components": {
     "pinned": {
       "name": "SurrealDB server and image",
@@ -622,6 +624,7 @@ Claims (full source mapping in the JSON block below):
         "sb555f9745ad7": "https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/rpc/src/capabilities/mod.rs#L373-L397",
         "sd82d608cc2e1": "https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/cli/mod.rs#L182-L184",
         "s5ef899492471": "https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/cli/mod.rs#L37-L38",
+        "s7b36fa5b3416": "https://github.com/surrealdb/surrealdb/blob/v3.3.5/surrealdb/server/src/cli/mod.rs#L9-L10",
         "s905871ed201e": "https://github.com/surrealdb/surrealdb/releases/tag/v3.3.5"
       }
     },
@@ -758,7 +761,7 @@ Claims (full source mapping in the JSON block below):
     "capability-all": {"text": "allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances. As this guide's reading of v4.0.0 source, deny-all alone leaves every HTTP route, RPC method and MCP tool allowed, as allow-http, allow-rpc and allow-mcp default to all targets; no run confirmed it, so pass explicit allow-http and allow-rpc lists.", "components": ["docs", "pinned"], "sources": ["docs:sc798cc43c457", "docs:scc00d3d3618d", "pinned:scce5b37cc67e", "pinned:sb983f262eea6", "pinned:s41f93c8f1044", "pinned:s10eff64ec263", "pinned:sc2c677a2fedc"], "status": "REASONED"},
     "capability-health": {"text": "When the Verify block's health check should pass under deny-all, include health in the allow-http list: the HTTP allow getter returns a named list as given, the route parser reads health as the health route, and /health refuses a route that is not allowed, which the HTTP protocol page says answers 403.", "components": ["pinned", "docs"], "sources": ["pinned:s41f93c8f1044", "pinned:s02c701807dae", "pinned:s538897c5bacc", "docs:scc00d3d3618d"], "status": "REASONED"},
     "mcp-advisory": {"text": "GHSA-cr79-9p8r-p5wx (high; affecting versions below 4.0.0, patched in 4.0.0) reports MCP tool identifier validation permitting statement injection, with arbitrary SQL query execution through MCP tool invocation; it bears on MCP tools staying allowed under deny-all.", "components": ["advisories"], "sources": ["advisories:s390dd974a89c"], "status": "REASONED"},
-    "capability-mcp-3x": {"text": "The v3.3.5 capability files read define allow-rpc and allow-http with the same empty default but no allow-mcp or deny-mcp list; their only MCP target is the mcp HTTP route. surreal mcp is behind the mcp feature; its arguments are named through the cli::mcp module (use mcp::McpCommandArguments;), which was not read, nor was its MCP crate, so whether anything else gates MCP tools is not established.", "components": ["pinned-3x"], "sources": ["pinned-3x:s7144f593a339", "pinned-3x:sb555f9745ad7", "pinned-3x:sd82d608cc2e1", "pinned-3x:s5ef899492471"], "status": "REASONED"},
+    "capability-mcp-3x": {"text": "The v3.3.5 capability files read define allow-rpc and allow-http with the same empty default but no allow-mcp or deny-mcp list; their only MCP target is the mcp HTTP route. surreal mcp is behind the mcp feature; its argument type is named through the cli::mcp module (pub(crate) mod mcp; at cli/mod.rs:10), which was not read, nor was its MCP crate, so any other gate on MCP tools is not established.", "components": ["pinned-3x"], "sources": ["pinned-3x:s7144f593a339", "pinned-3x:sb555f9745ad7", "pinned-3x:sd82d608cc2e1", "pinned-3x:s5ef899492471", "pinned-3x:s7b36fa5b3416"], "status": "REASONED"},
     "capability-net": {"text": "Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
     "capability-functions": {"text": "Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
     "capability-scripting": {"text": "Embedded scripting defaults off; enable it only when required.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},

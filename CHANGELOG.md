@@ -16,6 +16,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-11-14
+
+- surrealdb.md: the #1226 QA LOW (L1 and L4). The guide now cites `pub(crate) mod mcp;` at v3.3.5 `cli/mod.rs` line 10, behind `#[cfg(feature = "mcp")]` at line 9, as the declaration that makes `mcp::` the `cli::mcp` module, in the prose, a new Sources bullet, the `capability-mcp-3x` claim, its JSON claim and the source map, and reads "Its argument type" for "Its arguments type". The claim stays REASONED and says nothing new about the unread `cli/mcp.rs` (#1307)
+
 ## 2026-11-13
 
 - frontend-frameworks.md: two of the #1292 QA LOWs. L1: the `svelte-private` claim and the Public env paragraph now say SvelteKit errors when client code imports a private module, dynamic imports included, the verb the pinned 2.70.3 server-only-modules page uses ("SvelteKit will error:"), where they said it fails the build. L4: the Nuxt paragraph labels "a response belongs in a route handler" as this guide's reading, and the `nuxt-handlers` claim keeps the Nuxt page's middleware wording apart from "Guide advice:". L2 is left unchanged, because shortening the Verification record intro would drop two disclosures that no later paragraph states. One is that the stub, fixture, tracing and bare-listener runs test only the blocks' own guards, classification and secret handling, not a framework's behaviour. The other is that no block or claim in this guide is demonstrated. L3 and L5 are unchanged, L5 consistent with the maintainer's ruling of 2026-10-24 in DECISIONS.md to keep September 2026 (#1305).
