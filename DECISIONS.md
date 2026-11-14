@@ -17,27 +17,6 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
-- **Unattended D-1096 vote of 2026-11-14 on pinning `ssr_mode=False` in the `gradio.md` TLS example (#1313).**
-  With the fleet unattended, secureconfig sent the question under D-1096 at 11:08Z on 2026-11-14, with two options as
-  written in `notes.md`. Option 1 was to pin `ssr_mode=False` in the TLS example with a comment. Option 2 was that pin
-  plus a sourced sentence replacing the guide's "has not checked the behaviour with SSR on" disclaimer. lab_infra
-  (11:08:34Z), guardrails (11:08:40Z) and grc (11:08:55Z) each chose option 2, and each conditioned its vote on QA
-  re-reading the cited gradio@6.31.0 lines. This is recorded for the maintainer's review. It follows the
-  maintainer's 2026-11-13 ruling to check the source and then decide.
-  - Effect, applied in the same change as this entry. The `gradio.md` TLS example adds `ssr_mode=False,` with a
-    one-line comment. The disclaimer sentence becomes a sourced statement. With SSR on and Node available, Gradio
-    6.31.0 runs a Node proxy as the front server on the user-facing port over plain HTTP and Python keeps TLS only on
-    an internal port (blocks.py lines 3326-3328; `js/app/proxy_index.js` line 56). SSR turns on with
-    `ssr_mode=True` or `GRADIO_SSR_MODE=true`, and an explicit `ssr_mode=False` overrides the variable (blocks.py
-    lines 3035-3039). The Sources section gains the Node proxy source at the 6.31.0 tag, and the `tls` claim states the pin
-    and its reason in place of "this guide has not checked SSR on". The findings are in the orchestrator's private
-    plan and were read from source only; no run was made, so whether Node starts against a TLS backend is not
-    established.
-  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this vote, then a pull request
-    that restores or changes the texts. That pull request restores the earlier example and disclaimer sentence and
-    the `tls` claim, or changes them to match the new ruling, and regenerates what derives from them. It keeps every
-    existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new
-    ruling here.
 - **Maintainer rulings of 2026-11-13 on the REASONED wording in the mixed-guide header, the homepage sentence and the M1 text in `QUALITY.md` (#1309).**
   The maintainer gave these three rulings through AskUserQuestion in an attended session, all at about 19:26Z to
   19:27Z, as answers to the #1299 QA findings F3 and F5 and the #1296 QA finding 5. No reasoning was recorded beyond
@@ -1199,7 +1178,7 @@ that blocks progress is taken by majority of three predictions of what the maint
 lab_infra and guardrails, given the context through inbox-send, and the orchestrator's own. Each such decision is
 recorded with its question, the three predictions and its outcome, for the maintainer's later review. In the
 predictions quoted below, words in square brackets replace a pronoun in the quoted reasoning. The two proxy
-decisions of 2026-11-11 at the end of this section were taken under a later rule, the unattended decision rule of
+decisions of 2026-11-11 and the one of 2026-11-14 after them were taken under a later rule, the unattended decision rule of
 2026-10-31, which the first of them states.
 
 - **Proxy decision of 2026-10-27 on TODO 1.383 closure, for the maintainer's later review (#1002).** Decided at
@@ -1356,6 +1335,33 @@ decisions of 2026-11-11 at the end of this section were taken under a later rule
   ruling and awaits the maintainer's ratification, and none is recorded yet. The revert path is the maintainer's
   review: a different ruling changes or drops the definition change and the consistency check before they land, or
   replaces them after.
+- **Proxy decision of 2026-11-14 on pinning `ssr_mode=False` in the `gradio.md` TLS example, for the maintainer's later
+  review (#1313).** Decided at 2026-11-14T11:08:40Z, when the second vote arrived, under D-UNATTENDED-VOTE-V2, the
+  unattended decision rule of 2026-10-31. The question went to the D-1096 vote at about 11:08Z, after the source check
+  that the maintainer's 2026-11-13 ruling called for. The options, paraphrased rather than quoted: option 1, marked as
+  the predicted option, pins `ssr_mode=False` in the TLS example with a comment. Option 2, marked as best for the
+  project and recommended, is that pin plus a sourced sentence that replaces the guide's "has not checked the behaviour
+  with SSR on" disclaimer. The votes, as recorded in `notes.md`: lab_infra voted for option 2 at 11:08:34Z, with
+  reasoning that, in paraphrase, a stated unknown should be replaced by a sourced fact, and set no condition.
+  guardrails voted for option 2 at 11:08:40Z, on the condition that the pull request's QA confirms blocks.py lines
+  3036-3037 and 3326-3328 and proxy_index.js line 56 at gradio@6.31.0 before merge. Since lab_infra and guardrails
+  agreed, grc's vote was not needed under D-UNATTENDED-VOTE-V2; it is recorded, for option 2 at 11:08:55Z, with the
+  condition that QA re-reads the cited gradio@6.31.0 lines at that commit before it lands. The outcome is option 2.
+  Its effect, applied in the same change as this entry: the `gradio.md` TLS example adds `ssr_mode=False,` with a
+  one-line comment, and the disclaimer sentence becomes a sourced statement. Outside dev mode, with SSR on and Node
+  available, Gradio 6.31.0 can move Python, still with TLS, to an internal port and start a Node proxy on the
+  user-facing port that reaches Python over plain `http://` (blocks.py lines 3326-3328 and 3500-3506; `proxy_index.js`
+  lines 1, 22 and 56). Node is kept only if its startup check passes (`HEAD /` below 500 within 30 seconds,
+  `node_server.py` lines 183 and 265-281), otherwise Python returns to the user-facing port with TLS (blocks.py lines
+  3518-3529), and what the SvelteKit handler answers is not established. SSR turns on with `ssr_mode=True` or
+  `GRADIO_SSR_MODE=true`, and an explicit `ssr_mode=False` overrides the variable (blocks.py lines 3035-3039). The
+  Sources section gains the Node proxy and node_server sources at the 6.31.0 tag, and the `tls` claim states the pin
+  and its reason. The findings are in the orchestrator's private plan and were read from source only; no run was made.
+  Like the entries above, this decision is not a maintainer ruling and awaits the maintainer's ratification, and none
+  is recorded yet. The revert path is the maintainer's review: a different ruling withdraws or replaces this vote, and
+  a pull request then restores the earlier example, disclaimer sentence and `tls` claim, or changes them to match the
+  ruling, and regenerates what derives from them. That pull request keeps every existing entry in `CHANGELOG.md` and
+  `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling in the Rulings section.
 
 ## Profile: predicting these rulings
 
