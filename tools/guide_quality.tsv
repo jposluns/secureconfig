@@ -43,7 +43,7 @@ identity-providers.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	fdbefe28b0
 image-gen-uis.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	77f39e9fc5ca0eaf69041d34459158440c099ae09bc07ffe0fe7fc939a6e8285	2026-11-10	tool	current
 java.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	48f596a614667a2f4284f778f9ce929ff800155978d0bfec39ad85686d335fcc	2026-11-10	tool	current
 jupyter.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	e2f48a37fb32ee9376df6c9543b5a8a26dc5029aa810a1e000537543ea44116f	2026-11-10	tool	current
-kafka.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	9799cb1c99adc241c954f4fb09642e7696c996bde868a0ba0f093eaf76be7fee	2026-11-10	tool	current
+kafka.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	b801b6b71e0653e05c730a79aed75d01b72d0c1f981e66d1201555f87551d7fc	2026-11-10	tool	current
 kubernetes.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	08dbbdd50a94f03ed62e67c53f597cce1df7cbf385c8ff1c300c0dc0d0f2d215	2026-11-10	tool	current
 lighttpd.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	b408b44fee9507e7328eb4a7d86dc8f89df051aa27999d49be595a175d7c2be0	2026-11-10	tool	current
 litellm.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	7387fed7b27ae09d4fe2e2aee7e98347ae2f6366ea0b63f192b2562863424a15	2026-11-10	tool	current
