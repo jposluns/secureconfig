@@ -1018,7 +1018,8 @@ def main(argv=None):
         # allows for the 2 per-site
         # constants (its grammar is held by tools/check_draft.py). A page is .html or .htm in any
         # case, read as the CSP gate reads one (name_suffix). At the root after promotion the folder
-        # also holds the published files, named one by one in PUBLISHED.
+        # also holds the published files, named one by one in PUBLISHED. At the root it may also
+        # hold the release archives that download_problems() admits in downloads/.
         if out.is_dir():
             for path in sorted(p for p in out.rglob("*") if not p.is_dir()):
                 rel = path.relative_to(out).as_posix()
