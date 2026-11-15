@@ -64,9 +64,10 @@ named secureconfig-1.0.<N>.zip or secureconfig-plugin-1.0.<N>.zip, with <N> in t
 uses (ASCII digits, no leading zero, no `v`). Each file may be at most DOWNLOAD_MAX bytes, and
 every regular file with a valid name, an oversized one included, counts towards the total cap of
 DOWNLOADS_TOTAL_MAX bytes. Every other entry in downloads/ is refused, including any folder (empty
-or not, so the check reads only the top level), a symbolic link, a special file, any other name and
-any `-latest.zip` name, because the latest links are planned as 302 redirects with no bytes of
-their own. A downloads/ folder that cannot be read is a read error (exit 2).
+or not), a symbolic link, a special file, any other name and any `-latest.zip` name, because the
+latest links are planned as 302 redirects with no bytes of their own. download_problems() reads
+only the top level of downloads/, so only top-level regular files can be admitted there. A
+downloads/ folder that cannot be read is a read error (exit 2).
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error
 or a source the build cannot read as it needs.
@@ -923,6 +924,8 @@ def refuse_text(name, text):
         raise Refused(f"{name} would contain " + ", ".join(why))
 
 
+# The archive bytes are not checked here, only each entry's name, type and size. A later pull
+# request is planned to check each hosted archive against its release record.
 def download_problems(out, max_file=DOWNLOAD_MAX, max_total=DOWNLOADS_TOTAL_MAX):
     """The root --check problems for out/downloads/, each starting with its path relative to out.
     Only the top level is read, with os.scandir: every entry there must be a regular file whose
@@ -949,8 +952,8 @@ def download_problems(out, max_file=DOWNLOAD_MAX, max_total=DOWNLOADS_TOTAL_MAX)
         info = (folder / name).lstat()
         mode = info.st_mode
         if stat.S_ISDIR(mode):
-            problems.append(f"{rel} is a folder; release archives are regular files directly in "
-                            f"{DOWNLOADS}, so no folder is read or admitted there")
+            problems.append(f"{rel} is a folder; download_problems() reads only the top level of "
+                            f"{DOWNLOADS}, so only top-level regular files can be admitted there")
         elif name.endswith("-latest.zip"):
             problems.append(f"{rel} is a latest name; /downloads/secureconfig-latest.zip and "
                             f"/downloads/secureconfig-plugin-latest.zip are planned as 302 "
