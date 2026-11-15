@@ -3,7 +3,7 @@
 # Trust the launching shell, Bash/Git and Git configuration. BASH_ENV runs
 # before this file: refusal here cannot undo a hostile startup file.
 if [[ ${BASH_SOURCE[0]} != "$0" ]]; then
-    builtin printf '%s\n' 'INCONCLUSIVE: could not complete scan'
+    builtin printf '%s\n' 'REFUSED: unsafe or wrong use; no content searched'
     return 2
 fi
 builtin trap - DEBUG RETURN ERR EXIT
@@ -15,20 +15,29 @@ builtin shopt -u expand_aliases failglob
 builtin unset -f printf read git
 builtin enable printf read
 explain=0
+# Status 2 refuses unsafe or wrong use, always before any content search.
+# Status 3 reports a scan that could not complete, outranking printed matches.
+scan_refuse() {
+    builtin printf '%s\n' 'REFUSED: unsafe or wrong use; no content searched'
+    if (( explain )); then
+        builtin printf 'CHECK: %s\n' "$1"
+    fi
+    exit 2
+}
 scan_fail() {
     builtin printf '%s\n' 'INCONCLUSIVE: could not complete scan'
     if (( explain )); then
         builtin printf 'CHECK: %s\n' "$1"
     fi
-    exit 2
+    exit 3
 }
 usage() {
     builtin printf '%s\n' \
         'Usage: bash tools/scan_credential.sh [--explain] OUTPUT_DIRECTORY' \
         'Run from the project repository root with a relative output directory.' \
         'Enter one key on stdin (silent on a terminal), never in argv or environment.' \
-        'Exit: 0 NOT FOUND in stated scope; 1 FOUND; 2 INCONCLUSIVE.' \
-        '--explain takes no key: check prerequisites and report the first refusal.'
+        'Exit: 0 NOT FOUND in stated scope; 1 FOUND; 2 REFUSED; 3 INCONCLUSIVE.' \
+        '--explain takes no key: check prerequisites and report the first refusal or failure.'
 }
 if [[ ${1-} == --help && $# == 1 ]]; then
     usage
@@ -38,30 +47,30 @@ if [[ ${1-} == --explain ]]; then
     explain=1
     shift
 fi
-[[ $# == 1 ]] || scan_fail arguments
-[[ ! ${BASH_ENV+x} ]] || scan_fail BASH_ENV
+[[ $# == 1 ]] || scan_refuse arguments
+[[ ! ${BASH_ENV+x} ]] || scan_refuse BASH_ENV
 [[ $(builtin type -t printf) == builtin && $(builtin type -t read) == builtin &&
    $(builtin type -t compgen) == builtin && $(builtin type -t git) == file ]] ||
-    scan_fail command-resolution
+    scan_refuse command-resolution
 (( BASH_VERSINFO[0] > 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 3) )) ||
-    scan_fail bash-version
+    scan_refuse bash-version
 
 # Environment values inherit export, but not readonly/nameref/integer attributes.
 # Source execution and BASH_ENV are refused, so plain unset suffices.
 builtin unset -v key IFS GLOBIGNORE
 IFS=$' \t\n'
-builtin shopt -s globstar dotglob nullglob || scan_fail glob-options
-variables=$(compgen -v) || scan_fail variable-list
+builtin shopt -s globstar dotglob nullglob || scan_refuse glob-options
+variables=$(compgen -v) || scan_refuse variable-list
 for variable in $variables; do
     if [[ $variable == GIT_* ]]; then
-        builtin unset -v "$variable" 2>/dev/null || scan_fail git-environment
+        builtin unset -v "$variable" 2>/dev/null || scan_refuse git-environment
     fi
 done
 builtin trap 'scan_fail interrupted' HUP INT TERM
 
 # Inspect ancestors too: trailing slashes must not hide symlinks or .git.
 out=$1
-[[ -n $out && $out != /* ]] || scan_fail output-path
+[[ -n $out && $out != /* ]] || scan_refuse output-path
 prefix=.
 rest=$out
 while [[ -n $rest ]]; do
@@ -71,27 +80,29 @@ while [[ -n $rest ]]; do
     else
         rest=
     fi
-    [[ $component != .. && $component != .[gG][iI][tT] ]] || scan_fail output-path
+    [[ $component != .. && $component != .[gG][iI][tT] ]] || scan_refuse output-path
     [[ -n $component && $component != . ]] || continue
     prefix+=/$component
-    [[ -d $prefix && ! -L $prefix && -r $prefix && -x $prefix ]] || scan_fail output-root
+    [[ -d $prefix && ! -L $prefix && -r $prefix && -x $prefix ]] || scan_refuse output-root
 done
 out=$prefix
-[[ -d $out && ! -L $out && -r $out && -x $out ]] || scan_fail output-root
+[[ -d $out && ! -L $out && -r $out && -x $out ]] || scan_refuse output-root
 files=0
 for entry in "$out"/**; do
-    [[ $entry != */.[gG][iI][tT] && $entry != */.[gG][iI][tT]/* ]] || scan_fail git-component
+    [[ $entry != */.[gG][iI][tT] && $entry != */.[gG][iI][tT]/* ]] || scan_refuse git-component
     [[ ! -L $entry && -r $entry && ( -f $entry || ( -d $entry && -x $entry ) ) ]] ||
-        scan_fail output-entry
+        scan_refuse output-entry
     if [[ -f $entry ]]; then
         files=1
     fi
 done
-(( files )) || scan_fail empty-output
+(( files )) || scan_refuse empty-output
 
 # Only a presence marker crosses command substitution. read -d '' detects NUL
 # and ordinary bytes, avoiding trailing-newline loss and Bash's NUL warning.
 # FD 3 carries Git stdout; capture both pipeline statuses before any command.
+# Return Git's 0 or 1 when it printed no diagnostic, 3 when it exited 0 or 1
+# but printed one, and 2 otherwise.
 exec 3>&1
 scan_git() {
     local result
@@ -119,12 +130,17 @@ scan_git() {
     case $result in
         :0:0) return 0 ;;
         :1:0) return 1 ;;
+        D:0:0 | D:1:0) return 3 ;;
         *) return 2 ;;
     esac
 }
+# A diagnostic from a rev-parse that exited 0 or 1 is a failed check; any
+# other failing rev-parse (as outside a repository) or a nonempty prefix (a
+# subdirectory) is wrong use.
 root_prefix=$(scan_git rev-parse --show-prefix 3>&1)
 rc=$?
-[[ $rc == 0 && -z $root_prefix ]] || scan_fail repository-root
+(( rc != 3 )) || scan_fail repository-root
+[[ $rc == 0 && -z $root_prefix ]] || scan_refuse repository-root
 commits=$(scan_git rev-list --all --reflog 3>&1)
 rc=$?
 [[ $rc == 0 ]] || scan_fail history-enumeration
@@ -133,7 +149,7 @@ if (( explain )); then
     exit 0
 fi
 IFS= read -rs key || scan_fail key-input
-[[ -n $key && $key != *[[:cntrl:]]* ]] || scan_fail key-input
+[[ -n $key && $key != *[[:cntrl:]]* ]] || scan_refuse key-input
 hit=0
 scan_git grep --no-index -F -a -l -f - -- "$out"
 rc=$?

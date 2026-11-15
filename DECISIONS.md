@@ -17,6 +17,36 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-14 splitting the credential scanner's status 2 into REFUSED and INCONCLUSIVE (#1321).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 16:10Z, on the
+  exit statuses of `tools/scan_credential.sh`. The record holds only the chosen option, not the other options
+  offered, and no reasoning was recorded beyond the choice. The maintainer chose the option labelled
+  "Split 2 and 3 (Recommended)", quoted exactly. Its description, also quoted exactly, read:
+  "Predicted and best for the project: refusals of unsafe or wrong use keep exit 2 (REFUSED), failures to complete the scan become exit 3 (INCONCLUSIVE); update help text, the guides that quote its statuses, its tests, and a CHANGELOG note since readers' scripts may test for 2."
+  - Effect, applied in the same change as this entry. The scanner refuses unsafe or wrong use with status 2 and
+    `REFUSED: unsafe or wrong use; no content searched`. The refused uses are being sourced, a wrong argument
+    count, `BASH_ENV`, a command that does not resolve as expected, Bash older than 4.3, shell state it cannot set
+    or clear, an unsafe, unreadable or empty output directory, running outside the repository root, and an empty
+    key or one holding control bytes. It reports a scan that could not complete with status 3 and
+    `INCONCLUSIVE: could not complete scan`: an interrupt, a Git diagnostic from a root check where Git exits 0 or 1, a failed history
+    enumeration, a failed key read, and a failed or diagnosed output or history search. Every refusal comes before
+    any content search, and a failure still outranks a match already printed. The help text, `search-engines.md`
+    (with its plugin copy and `site/llms-full.txt`) and `tools/test_scan_credential.py` follow, and the
+    `CHANGELOG.md` entry warns that scripts testing for status 2 from the scanner must now also handle 3.
+  - Classification of cases the ruling did not name, which is the drafter's reading under CONTRIBUTING.md rule 6
+    and part of what the maintainer reviews. A failed `read` of the key is 3, and an empty or control-byte key
+    after a successful read is 2, as rule 6 says of hidden-prompt reads. A shell-state failure while the scanner
+    sets its options or clears `GIT_*` variables is 2, as rule 6 says of shell-state failures after the guards. A
+    root check where Git prints a diagnostic and exits 0 or 1 is a failed check, 3, and any other failure of that
+    check, such as Git exiting non-zero outside a repository, is read as the wrong directory and refused with 2.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
+    that restores status 2 and the single INCONCLUSIVE message for every refusal and failure, or changes them to
+    match the new ruling, in the scanner, its help text, its tests and the guide text that quotes its statuses, and
+    regenerates what derives from them. It keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
+    own `CHANGELOG.md` entry, which again warns readers whose scripts test the scanner's status, and records the new
+    ruling here. If the revert pull request uses `git revert -m 1`, that puts back this pull request's
+    `CHANGELOG.md` entry under the date it merged and does not set `VERSION`, `plugin/plugin.json` or `SKILL.md`
+    back.
 - **Maintainer ruling of 2026-11-14 that wave 2 of the exit-status sweep covers setup blocks, with a CHANGELOG bullet and a per-guide note as for wave 1 (#1322).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:50Z that day.
   The record of the ruling gives only the chosen option, not the other options offered, and no reasoning beyond the
