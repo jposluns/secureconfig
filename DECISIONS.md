@@ -35,8 +35,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     orchestrator's convention of quoting single lines; the lines it quoted were exact.
   - Effect. The `CHANGELOG.md` entries of #1328 and #1329 say that each applied D1, D2 and D3 to the guides it
     changed, and #1332 applies D1, D2 and D3 to `cors.md`, `firebase-supabase.md`, `headers.md` and
-    `headless-browser-services.md`, as its own entry says. None of those three entries cites D4, D5, D6 or D7, and
-    this entry records all seven rulings. Later pull requests of the sweep apply them to the other guides.
+    `headless-browser-services.md`, as its own entry says. None of those three entries says it applied D4, D5,
+    D6 or D7, and this entry records all seven rulings. Later pull requests of the sweep are to apply D1 to D5 and
+    D7 to the other guides, and D6 sets the scope of the planned gate.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces one or more of these rulings,
     then a pull request that changes the guards and notes placed under them to match the new ruling and regenerates
     what derives from them. It keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own
