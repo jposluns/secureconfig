@@ -104,18 +104,21 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
   case "$2" in
     ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply the client ID without control characters; not probing'; exit 2 ;;
   esac
+  command -v curl > /dev/null || { echo 'curl is not on PATH; not probing'; exit 2; }
   IFS= read -r -s -p 'Client secret (input hidden): ' HDR ||
-    { echo 'secret input failed; not probing'; exit 2; }
+    { echo 'secret input failed; not probing'; exit 3; }
   printf '\n'
   case "$HDR" in
     ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply the secret without control characters; not probing'; exit 2 ;;
   esac
   HDR="CF-Access-Client-Secret: $HDR"
   printf '%s\n' "CF-Access-Client-Id: $2" "$HDR" |
-    curl -q -g -sS --connect-timeout 5 --max-time 20 --header @- "$1" || exit 2
+    curl -q -g -sS --connect-timeout 5 --max-time 20 --header @- "$1" || exit 3
   unset -v HDR
 )
 ```
+
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, as when `curl` is not on PATH, or when the hidden prompt fails to read or `curl` fails, with 3; otherwise it ends with the status of its last command, `unset -v HDR`.
 
 ## 5. Close the side doors
 
@@ -381,7 +384,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "7751a8850a8fc89c50b1b80ab14439610f542813d7ba0eb55d3d6dab51526d87",
+  "body_sha256": "7fabeae5da790a54a9b2525d15eff5932457af49e60d95ccc105968dae1adb6d",
   "components": {
     "token-file": {
       "name": "cloudflared token-file minimum",
