@@ -24,7 +24,7 @@ Each row is one physical line. `tools/check_todo_rows.py`, which `tools/run_all_
 fails a line holding two row starts such as `| 3.6 |`, the shape a lost line break leaves when it
 joins two rows.
 
-Next ids: **1.469**, **2.50**, **3.79**, **4.15**.
+Next ids: **1.469**, **2.50**, **3.81**, **4.15**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -184,6 +184,8 @@ marked, and those are the ones worth taking first.
 | 3.76 | #1312: the kit note about the `merge_main` suite log (no further detail in the orchestrator's record). Listed with the NITs in the #1312 round-4 QA of 2026-11-14 at head 763a4039 and deferred under D-1144; #1312 merged as 90348b57. (L, XS) | `[gap]` |
 | 3.77 | QUALITY M1 (#1318): round-2 NIT E (no further detail in the orchestrator's record). Raised in the #1318 round-2 QA of 2026-11-15 and sent to this file; #1318 merged as b05e7e9d. (L, XS) | `[gap]` |
 | 3.78 | QUALITY M1 (#1318): round-2 NIT F (no further detail in the orchestrator's record). Raised in the #1318 round-2 QA of 2026-11-15 and sent to this file; #1318 merged as b05e7e9d. (L, XS) | `[gap]` |
+| 3.79 | `DECISIONS.md`: the #1312 entry's opening paragraph keeps one 120-column line, above the file's usual 116-column width, because rewrapping it would leave a 10-column line before its quotation. Left by #1326, which closed row 3.54. (L, XS) | `[gap]` |
+| 3.80 | `CHANGELOG.md` and `DECISIONS.md`: the #1310 bullet and the #1322 entry in `DECISIONS.md` still say the per-guide notes quote rule 6, where they paraphrase it. Left by #1326, which corrected the #1322 and #1323 bullets and closed row 3.71. (L, XS) | `[gap]` |
 
 ## Decisions
 
