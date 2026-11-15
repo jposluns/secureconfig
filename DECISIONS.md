@@ -17,6 +17,79 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-14 that the waiver ruling governs M1, so a reasoned waiver passes M1 everywhere (#1318).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session at about 18:44Z that day, to settle
+  the conflict between the two rulings below. The question quoted lines 62 to 66 of `QUALITY.md` and disclosed the
+  orchestrator's error that this entry records. No reasoning was recorded beyond the choice, and the notes recorded
+  only the chosen option, not the other options offered. The label and description are quoted exactly, the
+  description in two parts with nothing left out between them.
+  The maintainer chose "Waiver ruling governs (Recommended)", whose description began "Best for the project: a reasoned waiver passes M1 everywhere."
+  The description went on "One QA'd PR changes QUALITY.md:51-53, rewrites #1309's paragraph, and changes gen_guide_quality.py so only deferred-work entries and unreasoned waivers count against M1 (guide scores may rise), with DECISIONS recording this ruling and my error."
+  - Effect, applied in the same change as this entry. The M1 requirement in `QUALITY.md` now says the guide has no
+    deferred-work entry in any baseline or allow file and every waiver for the guide carries a reason, and that a
+    reasoned waiver passes M1. The paragraph #1309 wrote after the M1 levels now says that only deferred-work entries
+    and waivers without a reason count against M1. `tools/gen_guide_quality.py` counts every entry in the
+    Verify-marking, claim-length and version-basis Sources baselines, and counts an entry in
+    `tools/bracket_ranges_allow.txt` or `tools/exposure_index_allowlist.txt` only when its reason is empty.
+    `tools/test_guide_quality.py` gains cases for both, and two existing allowlist cases now use lines with no reason.
+    `tools/guide_quality.tsv`, `tools/guide_quality_ledger.tsv` and the Quality page are regenerated in this change,
+    so a guide whose only entries are reasoned waivers now scores P on M1. The GATE class definition in `QUALITY.md`
+    now says the same: the cell is PASS when the suite is green and the guide has no deferred-work entry and every
+    waiver it has carries a reason.
+  - The orchestrator's error. The question that led to the ruling of about 16:15Z below said that the waiver ruling
+    "is consistent with" #1309's text. That was false: #1309's paragraph said that every entry in the five baseline
+    and allow files counts against M1, a reasoned waiver included, while the waiver ruling passes a reasoned waiver.
+    This ruling supersedes the 16:15Z acceptance of #1309's text on this point.
+  - The orchestrator's calls, not the maintainer's: which files hold deferred work and which hold waivers, read from
+    each file's header and fields. The three baselines have no reason field, so an entry kept in the Verify-marking
+    baseline by design, such as one that carries the evidence for a DEMONSTRATED claim, still counts as deferred work.
+    The maintainer confirmed that call through AskUserQuestion on 2026-11-14 in an attended session at about 21:59Z,
+    choosing "Count them for now (Recommended)", whose description read "Predicted: merge #1318 as is (every
+    Verify-marking baseline entry counts against M1); a TODO row adds an optional reason field to that baseline
+    later, after which reasoned by-design entries would pass." The label and description are quoted exactly. An
+    allowlist guide and port pair counts when any of its lines has no reason. The script still does not read the
+    `guard-conventions: allow` lines in the guides. A later pull request can change each of these.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
+    that restores the earlier M1 text in `QUALITY.md`, the earlier count in `tools/gen_guide_quality.py` and the
+    earlier cases in `tools/test_guide_quality.py`, or changes them to match the new ruling. It keeps every existing
+    entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here. If
+    the revert pull request uses `git revert -m 1`, that puts back this pull request's `CHANGELOG.md` entry under the
+    date it merged and does not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
+- **Maintainer ruling of 2026-11-14 accepting the reading of the 2026-11-13 M1 ruling that #1309 applied, superseded on M1 by the ruling above (#1318).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session at about 16:15Z that day. No
+  reasoning was recorded beyond the choice, and the notes recorded only the chosen option, not the other options
+  offered. The label and description are quoted exactly:
+  the maintainer chose "Accept the reading (Recommended)", whose description read "Predicted and best for the project: #1309's text stands; the next QUALITY.md PR (today's waiver ruling) adds a line to DECISIONS recording that you accepted this reading."
+  - Effect, applied in the same change as this entry. This entry is the line the description names: the maintainer
+    accepted the reading that the "Maintainer rulings of 2026-11-13 on the REASONED wording in the mixed-guide
+    header, the homepage sentence and the M1 text in `QUALITY.md` (#1309)" entry below records for its third ruling.
+    The question that led to this ruling said, falsely, that the waiver ruling below "is consistent with" #1309's
+    text, as the entry above records. The ruling above, of about 18:44Z, supersedes this acceptance on M1, so the
+    same change rewrites #1309's paragraph in `QUALITY.md` and changes `tools/gen_guide_quality.py`.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling and the ruling above,
+    then a pull request that restores #1309's paragraph in `QUALITY.md` and the earlier count in
+    `tools/gen_guide_quality.py`, or changes them to match the new ruling. It keeps every existing entry in
+    `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here. If the
+    revert pull request uses `git revert -m 1`, that puts back this pull request's `CHANGELOG.md` entry under the
+    date it merged and does not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
+- **Maintainer ruling of 2026-11-14 on whether a reasoned waiver passes M1 in `QUALITY.md` (#1318).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session at about 16:07Z that day. No
+  reasoning was recorded beyond the choice, and the notes recorded only the chosen option, not the other options
+  offered. The label and description are quoted exactly:
+  the maintainer chose "Reasoned waiver passes (Recommended)", whose description read "Predicted and best for the project: change line 51-52 to no deferred-work entry in any baseline or allow file, and every waiver reasoned, matching the PASS line and how the allowlist is actually used (reviewed exceptions are legitimate); one small QA'd PR."
+  - Effect, applied in the same change as this entry. The M1 requirement in `QUALITY.md` now says the guide has no
+    deferred-work entry in any baseline or allow file and every waiver for the guide carries a reason. It said the
+    guide has no entry in any baseline or allow file. A new sentence after the requirement reads "A reasoned waiver
+    passes M1." The text the ruling calls line 51-52 is on lines 52 and 53, after the M1 heading on line 51. The M1
+    heading, the PASS, PARTIAL and GAP lines and the `guard-conventions: allow` clause are unchanged. The ruling of
+    about 16:15Z above left #1309's paragraph in conflict with this ruling, and the ruling of about 18:44Z above
+    settles the conflict in this ruling's favour.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
+    that restores the earlier M1 requirement in `QUALITY.md`, or changes it to match the new ruling. A change to
+    how `tools/gen_guide_quality.py` counts follows the revert path of the 18:44Z entry above. That pull request keeps every
+    existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new
+    ruling here. If the revert pull request uses `git revert -m 1`, that puts back this pull request's
+    `CHANGELOG.md` entry under the date it merged and does not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
 - **Maintainer ruling of 2026-11-14 ratifying the unattended proxy decision on pinning `ssr_mode=False` in the `gradio.md` TLS example (#1313).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:46Z. The
   maintainer chose the option labelled "Ratify it (Recommended)", whose description read "Predicted and best for the
