@@ -25,8 +25,8 @@ a parser would only pretend to score is scored by a reader, not faked.
 **Enforcement classes.** Each criterion carries one of three labels.
 
 - **GATE**: a section of `tools/run_all_checks.sh` fails the tree when the criterion fails. No
-  reader scores it; the cell is PASS when the suite is green and the guide has no grandfathered
-  entry.
+  reader scores it; the cell is PASS when the suite is green and the guide has no deferred-work
+  entry and every waiver it has carries a reason.
 - **TOOL**: a deterministic script can compute it today, but no gate blocks on it yet. Section 3.6
   lists which of these should become gates.
 - **JUDGMENT**: a reader with the guide and its sources decides. A guide is scored independently by
@@ -49,21 +49,28 @@ PASS, PARTIAL and GAP look like. The ids are the compliance-table columns.
 ### Group M: Mechanical floor
 
 **M1 Gate-green and baseline-free.** GATE.
-Every section of `tools/run_all_checks.sh` passes on the tree, the guide has no entry in any
-baseline or allow file, and every `guard-conventions: allow` line in the guide carries a reason.
+Every section of `tools/run_all_checks.sh` passes on the tree, the guide has no deferred-work entry
+in any baseline or allow file, every waiver for the guide carries a reason, and every
+`guard-conventions: allow` line in the guide carries a reason. A reasoned waiver passes M1.
 - PASS: suite green, no deferred-work entry, every waiver reasoned.
 - PARTIAL: suite green, but a deferred-work entry remains or a waiver lacks a reason.
 - GAP (HIGH): the suite fails on this guide. Unmergeable, so this is only ever seen on a branch.
 
 A deferred-work entry records something the guide still owes (a Verify-marking baseline entry for a
 paragraph that would attach to a DEMONSTRATED fence or a step with no concrete command, or an
-over-length claim awaiting a split). A reasoned waiver records a deliberate, reviewed exception (a
-bracket-range or exposure-index allow entry with its reason, or a DEMONSTRATED evidence text
-grandfathered by design). Every entry in the five baseline and allow files counts against M1 on every
-run, whether or not it has been sorted into one of the two. `tools/gen_guide_quality.py` counts an
-entry in `tools/exposure_index_allowlist.txt` once per distinct guide and port, and every line in
-each of the other four files once, and it ignores the count field in
-`tools/version_basis_sources_baseline.txt`. It scores the lead PARTIAL(M1) when the count is not zero.
+over-length claim awaiting a split). A reasoned waiver is a deliberate, reviewed exception recorded
+with its reason: a bracket-range or exposure-index allow entry whose reason is filled in. Only
+deferred-work entries and waivers without a reason count against M1, so a reasoned waiver passes
+M1. `tools/gen_guide_quality.py` sorts an entry by the file that holds it. Every entry in
+`tools/verify_marking_baseline.txt`, `tools/claim_length_baseline.txt` and
+`tools/version_basis_sources_baseline.txt` is deferred work and counts once, and the script ignores
+the count field in the first and last of these. None of the three has a reason field, so an entry
+kept there by design, such as one for a DEMONSTRATED evidence text, still counts as deferred work.
+An entry in `tools/bracket_ranges_allow.txt` or `tools/exposure_index_allowlist.txt` is a waiver
+and counts only when its reason is empty: a bracket-range line once, and an allowlist entry once
+per distinct guide and port that has a line with no reason. The script does not read the
+`guard-conventions: allow` lines in the guides. It scores the lead PARTIAL(M1) when the count is not
+zero.
 
 ### Group A: Coverage
 

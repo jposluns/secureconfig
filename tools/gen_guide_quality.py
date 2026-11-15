@@ -20,9 +20,12 @@ The output is byte-stable when nothing changed, so a run after a guide edit that
 score produces no diff. `fix_round` runs this on every guide edit, so that property matters.
 
 The four mechanical leads (QUALITY.md 3.6):
-  M (M1): the count of entries in the five baseline and allow files whose guide field is exactly the
-          guide (comment lines and reason text do not count; an allowlist line counts only as the
-          exposure gate loads it, once per distinct guide and port); zero is P, else PARTIAL(M1).
+  M (M1): the count of deferred-work entries and waivers without a reason in the five baseline and
+          allow files whose guide field is exactly the guide (QUALITY.md M1, the maintainer's
+          rulings of 2026-11-14). Every entry in the three DEFERRED_WORK files counts; an entry in
+          the two WAIVERS files counts only when its reason is empty, so a reasoned waiver does not.
+          Comment lines and reason text do not count, and an allowlist line counts only as the
+          exposure gate loads it, once per distinct guide and port; zero is P, else PARTIAL(M1).
   D (D3): the Sources heading month against each item month; an earlier item is GAP(D3), a later
           one with no stated meaning is PARTIAL(D3), otherwise P (n/a when there is no Sources).
   F (F1): PARTIAL(F1) when a Verify H2 carries its declaration, else `?` (the rest is judgment).
@@ -62,9 +65,18 @@ MONTHS = {m: i for i, m in enumerate(
 
 # The four TAB files carry the guide in field 1; the exposure allowlist is `<guide> <port>  # reason`.
 EXPOSURE_ALLOWLIST = "tools/exposure_index_allowlist.txt"
+BRACKET_ALLOW = "tools/bracket_ranges_allow.txt"
 BASELINES = ["tools/verify_marking_baseline.txt", "tools/version_basis_sources_baseline.txt",
-             "tools/claim_length_baseline.txt", "tools/bracket_ranges_allow.txt",
-             EXPOSURE_ALLOWLIST]
+             "tools/claim_length_baseline.txt", BRACKET_ALLOW, EXPOSURE_ALLOWLIST]
+
+# M1 sorts an entry by the file that holds it (QUALITY.md M1). The three baselines record work a
+# guide still owes, and their headers say to remove an entry when the work is done; none has a
+# reason field, so an entry kept there by design is a waiver without a reason and counts either
+# way. The two allow files record waivers with a reason field, and an entry there counts only
+# when that reason is empty.
+DEFERRED_WORK = {"tools/verify_marking_baseline.txt", "tools/version_basis_sources_baseline.txt",
+                 "tools/claim_length_baseline.txt"}
+WAIVERS = {BRACKET_ALLOW, EXPOSURE_ALLOWLIST}
 
 # Provisional type assignment from the 2026-11-09 audit (gen_table.py), confirmed by the hardening
 # lane. Everything not named here is type S; the two K index guides are pinned in check_guide_quality.
@@ -124,17 +136,36 @@ def entry_guide(path, line):
     return line.split("\t", 1)[0]
 
 
-def m1_count(guide, files):
-    """Entries for `guide` across {path: text}.
+def waiver_reasoned(path, line):
+    """Whether a waiver entry line carries a reason that is not empty or whitespace only.
 
-    Each occurrence line of a TAB-separated file counts once. The allowlist counts distinct
-    (guide, port) pairs, as the gate's dict of entries does.
+    The bracket-range allow file holds the reason in TAB field 4 and the exposure allowlist holds
+    it after the first `#`, as each file's header comment says.
+    """
+    if path == EXPOSURE_ALLOWLIST:
+        parts = line.split("#", 1)
+        return len(parts) == 2 and bool(parts[1].strip())
+    fields = line.split("\t", 3)
+    return len(fields) == 4 and bool(fields[3].strip())
+
+
+def m1_count(guide, files):
+    """M1 entries for `guide` across {path: text}: deferred work, and waivers with no reason.
+
+    A line of a file in WAIVERS counts only when waiver_reasoned is false for it; a line of any
+    other file is deferred work and counts. Each occurrence line of a TAB-separated file counts
+    once. The allowlist counts distinct (guide, port) pairs, as the gate's dict of entries does,
+    and a pair counts when any of its lines has no reason.
     """
     n = 0
     for path, text in files.items():
         lines = text.split("\n")
         if path == EXPOSURE_ALLOWLIST:
-            n += len({e for e in map(allow_entry, lines) if e and e[0] == guide})
+            n += len({e for e, line in zip(map(allow_entry, lines), lines)
+                      if e and e[0] == guide and not waiver_reasoned(path, line)})
+        elif path in WAIVERS:
+            n += sum(1 for line in lines
+                     if entry_guide(path, line) == guide and not waiver_reasoned(path, line))
         else:
             n += sum(1 for line in lines if entry_guide(path, line) == guide)
     return n
@@ -346,13 +377,13 @@ def load_ledger_extras(path):
 
 
 LEDGER_FINDING = {
-    "M1": "entries across the five baseline and allow files, to sort into deferred work and reasoned waivers",
+    "M1": "deferred-work entries and waivers without a reason across the five baseline and allow files",
     "D3": "Sources item month(s) out of step with the heading month",
     "F1": "the Verify declaration sits on the Verify H2",
     "G1": "a sentence of 80+ characters repeats more than twice",
 }
 LEDGER_FIX = {
-    "M1": "sort each entry into a deferred-work item or a reasoned waiver, then score M1",
+    "M1": "finish the deferred work and remove its entry, or give each waiver its reason",
     "D3": "settle the Sources heading-month wording in the corpus D3 sweep",
     "F1": "move the declaration to the Verify H2's first paragraph or its H3 children",
     "G1": "state the shared limitation once at the top of Verify and reference it",
