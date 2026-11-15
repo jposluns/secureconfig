@@ -17,6 +17,28 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-11-15, D1 to D7, on the `command -v` guards sweep (#1328 and #1329).**
+  The maintainer gave these seven rulings through AskUserQuestion in an attended session, answered between about
+  12:26Z and about 13:30Z that day. They settle how the sweep applies the maintainer's ruling of 2026-11-14 on missing
+  `command -v` guards, which has no entry in this file. Pull requests #1328 and #1329 applied them without an entry
+  here, and they are entered here by #1332. The record of each ruling gives only the chosen option, not the other
+  options offered, and no reasoning beyond the choice. The labels and descriptions are quoted exactly.
+  - D1, answered at about 12:26Z. The maintainer chose "Exempt tier B (Recommended)", whose description read "Predicted and best for the project: guard the 433 tier-A uses (curl, sudo, openssl, docker and similar) and list the POSIX baseline in the planned gate's reviewed baseline, so blocks stay readable and the sweep is about a quarter smaller; a missing grep or awk is not a realistic reader setup."
+  - D2, answered at about 12:35Z. The maintainer chose "Block's own style (Recommended)", whose description read "Predicted and best for the project: each guard matches the block it sits in (stdout, the block's wording such as '; not starting'), as #1322 and #1323 already do, so every refusal in a block reads and routes the same way; the ruling's text is treated as the shape, not the exact string."
+  - D3, answered at about 12:37Z. The maintainer chose "Guard each part (Recommended)", whose description read "Predicted and best for the project: a missing tool skips only the part that needs it and folds status 2 into the block's result, the way the existing ss parts do, so findings from the other parts still come through as rule 6 ranks them."
+  - D4, answered at about 12:39Z. The maintainer chose "User PATH + note (Recommended)", whose description read "Predicted and best for the project: guard sudo and the wrapped tool with command -v in the reader's PATH (no password prompt), and add a one-line note where sudo's secure_path could still miss the tool; the residual case is disclosed, not hidden."
+  - D5, answered at about 12:44Z. The maintainer chose "Keep and reword (Recommended)", whose description read "Predicted and best for the project: add the guard (missing tool now exits 2) and keep each arm for the remaining 126 case (present but not executable, still 3), rewording its message so it no longer implies a missing tool."
+  - D6, answered at about 12:46Z. The maintainer chose "Guides only (Recommended)", whose description read "Predicted and best for the project: the gate checks the guides, where readers paste blocks into internet-facing systems; CONTRIBUTING.md and README.md stay out of scope, so no allowlist entry is needed for CONTRIBUTING.md:96."
+  - D7, answered at about 13:30Z, on a re-ask. The maintainer chose "Yes, both (Recommended)", whose description read "Predicted and best for the project: the sweep covers all 52 qualifying setup blocks, as your ruling's words read, and python.md:130's block is wrapped in a subshell with a guarded refusal, so a failed cd no longer closes the reader's shell."
+  - The orchestrator's slip in the D5 question. The question cited a line range of the sweep plan, against the
+    orchestrator's convention of quoting single lines; the lines it quoted were exact.
+  - Effect. #1328 and #1329 applied these rulings to the guides they changed, and #1332 applies them to `cors.md`,
+    `firebase-supabase.md`, `headers.md` and `headless-browser-services.md`. Later pull requests of the sweep apply
+    them to the other guides.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces one or more of these rulings,
+    then a pull request that changes the guards and notes placed under it to match the new ruling and regenerates
+    what derives from them. It keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own
+    `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-14 splitting the credential scanner's status 2 into REFUSED and INCONCLUSIVE (#1321).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 16:10Z, on the
   exit statuses of `tools/scan_credential.sh`. The record holds only the chosen option, not the other options

@@ -665,6 +665,7 @@ REASONED: following block; ordinary-user profiles and MFA comparisons; a local S
           echo "substitute the protected headers file; not probing"; exit 2 ;;
         *)
           if [ -r "$2" ]; then
+            command -v curl >/dev/null || { echo "curl is not installed here; not probing"; exit 2; }
             if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
               --header @- --write-out '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
               --url "$1" < "$2"; then
@@ -681,7 +682,7 @@ REASONED: following block; ordinary-user profiles and MFA comparisons; a local S
 )
 ```
 
-REASONED: preceding block; this Supabase GET request block and interpretation need a disposable Supabase project and owner sessions, which were unavailable; a local Supabase CLI stack opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. The Firebase ownership note in this paragraph also needs valid App Check tokens, which were unavailable. Local bash -n and ShellCheck 0.11.0 runs exited 0 without output; stub runs refused placeholders and malformed set lines, and the valid request printed synthetic http=200 exit=0 err=. Non-HTTPS input printed use the project's HTTPS endpoint; not probing, and an absent header file printed headers file is unreadable; no conclusion. The bash -n, ShellCheck and stub runs recorded here covered the Supabase GET block in an earlier form, whose guard refusals left the subshell with status 0; on the current form, whose guard refusals leave the subshell with status 2 and whose failed request exits 3, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run, and the stub runs were not repeated. Neither synthetic success nor transport failure demonstrates authorization: exposed reads return unauthorized fixture data; fixed reads deny it while owner reads succeed. That authorization reading is per the guide's cited Supabase JavaScript select requests, Supabase row level security, Per-product App Check enforcement, curl curl-8_14_1 write-out fields and version requirements (checked October 2026) and curl curl-8_14_1 headers from stdin (checked October 2026). A timeout, DNS failure, malformed request, or missing fixture proves nothing about authorization.
+REASONED: preceding block; this Supabase GET request block and interpretation need a disposable Supabase project and owner sessions, which were unavailable; a local Supabase CLI stack opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. The Firebase ownership note in this paragraph also needs valid App Check tokens, which were unavailable. Local bash -n and ShellCheck 0.11.0 runs exited 0 without output; stub runs refused placeholders and malformed set lines, and the valid request printed synthetic http=200 exit=0 err=. Non-HTTPS input printed use the project's HTTPS endpoint; not probing, and an absent header file printed headers file is unreadable; no conclusion. The bash -n, ShellCheck and stub runs recorded here covered the Supabase GET block in an earlier form, whose guard refusals left the subshell with status 0; on the current form, whose guard refusals leave the subshell with status 2 and whose failed request exits 3, only the repository gate suite's bash -n and ShellCheck 0.11.0 checks run, and the stub runs were not repeated. The current form adds a `command -v curl` guard before the request, which refuses with status 2 and no curl call when curl is not installed; that guard was not run. Neither synthetic success nor transport failure demonstrates authorization: exposed reads return unauthorized fixture data; fixed reads deny it while owner reads succeed. That authorization reading is per the guide's cited Supabase JavaScript select requests, Supabase row level security, Per-product App Check enforcement, curl curl-8_14_1 write-out fields and version requirements (checked October 2026) and curl curl-8_14_1 headers from stdin (checked October 2026). A timeout, DNS failure, malformed request, or missing fixture proves nothing about authorization.
 Retain the positive owner control. Supply valid App Check tokens when testing Firebase ownership
 so an unrelated App Check rejection does not hide an open rule.
 
@@ -1074,7 +1075,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "123ba439da8cac4dcfc5cbd4168affb2597f99eb8b09e31193a4e9523bab3428",
+  "body_sha256": "6bd44cf7bc1a019fb28b462d30d345f591309d3cb06526df7f3036528438a8d8",
   "components": {
     "firebase": {
       "name": "Firebase documentation",

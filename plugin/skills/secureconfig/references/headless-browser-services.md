@@ -172,7 +172,7 @@ unpublished wherever these run.
 
 ## Verify
 
-REASONED: following block; this introduction and the listener inventory below for every DevTools, Grid, browserless, VNC and Playwright port it names, per the guide's cited Selenium Grid getting started, Selenium Docker images env vars, browserless Docker configuration and Chromium 154.0.8037.57 browser and headless-shell loopback factory entries. No isolated network namespace was available for a live listener, so no exposed or fixed service ran. During marking review (October 2026) both Verify blocks passed bash -n under bash 5.3.9, and the inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of these ports listening, with an empty process column, so it tested no target. The bash -n and ss runs recorded here covered both blocks in earlier forms: the inventory then ran ss at top level with no status of its own, and the guarded probe block's guard refusals left the subshell with status 0. The current forms of both blocks pass bash -n and ShellCheck 0.11.0 in the repository's gate suite, which runs both over every block. Stub runs of the current inventory with no network, in a clean shell and under an inherited `set -e`, `readonly` and `declare -i`, exited 0 when the stub ss listed only loopback listeners, 1 when it listed a named port on a wildcard address, 3 when it failed and 2 when ss was missing. Exposed, a listed port shows a wildcard or public bind; fixed, loopback or an internal address only. The inventory block exits 1 when a port it names is bound to a wildcard address, 3 when ss fails, 2 when ss is not installed, so nothing is listed, and otherwise 0, leaving every other address for you to judge. Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
+REASONED: following block; this introduction and the listener inventory below for every DevTools, Grid, browserless, VNC and Playwright port it names, per the guide's cited Selenium Grid getting started, Selenium Docker images env vars, browserless Docker configuration and Chromium 154.0.8037.57 browser and headless-shell loopback factory entries. No isolated network namespace was available for a live listener, so no exposed or fixed service ran. During marking review (October 2026) both Verify blocks passed bash -n under bash 5.3.9, and the inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of these ports listening, with an empty process column, so it tested no target. The bash -n and ss runs recorded here covered both blocks in earlier forms: the inventory then ran ss at top level with no status of its own, and the guarded probe block's guard refusals left the subshell with status 0. The inventory's current form and the guarded probe block's previous form, which had no `curl` guard, passed bash -n and ShellCheck 0.11.0 in the repository's gate suite, which runs both over every block. The guarded probe block's current form adds a `command -v curl` guard, which refuses with status 2 and no curl call when curl is not installed; none of those checks was re-run on it, and that guard was not run. Stub runs of the current inventory with no network, in a clean shell and under an inherited `set -e`, `readonly` and `declare -i`, exited 0 when the stub ss listed only loopback listeners, 1 when it listed a named port on a wildcard address, 3 when it failed and 2 when ss was missing. Exposed, a listed port shows a wildcard or public bind; fixed, loopback or an internal address only. The inventory block exits 1 when a port it names is bound to a wildcard address, 3 when ss fails, 2 when ss is not installed, so nothing is listed, and otherwise 0, leaving every other address for you to judge. Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
 without an isolated network namespace, and has none. No exposed or fixed service was run.
 Each names its expected exposed and fixed result so
 it discriminates when run against a live instance, based on the cited vendor documentation and pinned sources. Run each
@@ -235,7 +235,8 @@ REASONED: following block; external discovery/authentication probes and local po
   esac
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing"; exit 2 ;;
-    *) set -- "$1" "$2" "$(if curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
+    *) command -v curl >/dev/null || { echo "curl is not installed here; not probing"; exit 2; }
+       set -- "$1" "$2" "$(if curl -q -g -sS -i --noproxy '*' --connect-timeout 5 --max-time 20 \
          -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:9222/json/version"; then printf '\n0'; else printf '\n%s' "$?"; fi)" ;;
   esac
   set -- "$2" "${3##*$'\n'}" "${3%$'\n'*}"       # external or control, then curl's exit status and its output
@@ -259,7 +260,8 @@ REASONED: preceding block; the external DevTools, Selenium Grid Router and Node,
 a `200` JSON body containing `webSocketDebuggerUrl`. Fixed, the external request cannot reach that
 endpoint while the local positive control still returns it. A `404` from approval mode is not a pass.
 A connection refused or a timeout that happened during the connect is consistent with
-isolation from that vantage, not proof of the configuration. With `external`, the block exits 1
+isolation from that vantage, not proof of the configuration. The block exits 2, before any request,
+when a guard refuses its input or curl is not installed. With `external`, the block exits 1
 for any HTTP answer except a `404`; 3 for a `404`, which it cannot tell from approval mode's, and
 for any failure other than curl exit 7, including a timeout it cannot place before or after the
 connect; and 0 for curl exit 7, which it reports as consistent with isolation but not proof. A
@@ -413,7 +415,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "c495bd437a18c4742276a20cc1088a8a65f8024e968e1f0c5649a1bc160c292d",
+  "body_sha256": "573187b8eac3221ff66eb1faa78b813e2a9859c876b9e71bd984d73b12b61ca1",
   "components": {
     "chromium": {
       "name": "Chromium",
