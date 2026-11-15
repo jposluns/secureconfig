@@ -90,7 +90,8 @@ SITE_CSS = "assets/site.css"  # the optional per-site constants file (baseline R
 # every other file, so a stray file cannot ship unnoticed.
 PUBLISHED = (".well-known/security.txt", "_headers", "apple-touch-icon.png", "favicon.ico",
              "favicon.svg", "images/secureconfig-card.png", "llms-full.txt", "llms.txt", "robots.txt",
-             "sitemap.xml")
+             "sitemap.xml",
+             "secureconfig-test.zip")  # draft branch only: the one-archive test (never merged)
 # The unlisted n8n advisory (the maintainer's instruction of 2026-11-07: a dated name) and its
 # plain-text copy. tools/check_draft.py admits the page as noindex with no canonical by this exact
 # path, and the overflow page list in tools/run_all_checks.sh names it.
