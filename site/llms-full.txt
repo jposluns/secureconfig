@@ -56624,6 +56624,7 @@ The global `mlflow --env-file` option loads the file before executing the server
   if [ ! -f /etc/mlflow/server.env ] || [ -L /etc/mlflow/server.env ] || [ ! -r /etc/mlflow/server.env ]; then
     echo 'need a readable regular /etc/mlflow/server.env file, not a symlink; not starting'; exit 2
   fi
+  command -v pip >/dev/null || { echo 'pip not found; not starting'; exit 2; }
   pip install 'mlflow[auth]' || { echo 'installing mlflow[auth] failed; not starting'; exit 3; }
   MLFLOW_AUTH_CONFIG_PATH=/etc/mlflow/basic_auth.ini \
     mlflow --env-file /etc/mlflow/server.env server --app-name basic-auth
@@ -56962,7 +56963,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "549d51c58e0cae5e7b619d79b5ed80a18c5195b7a0ab3d743d7c89394cc8d2a4",
+  "body_sha256": "35a643f37db4b6640b0bee362f14661ae73d5b6360193154a57a62828481a60e",
   "components": {
     "source": {
       "name": "MLflow pinned source",
