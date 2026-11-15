@@ -28,7 +28,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     count, `BASH_ENV`, a command that does not resolve as expected, Bash older than 4.3, shell state it cannot set
     or clear, an unsafe, unreadable or empty output directory, running outside the repository root, and an empty
     key or one holding control bytes. It reports a scan that could not complete with status 3 and
-    `INCONCLUSIVE: could not complete scan`: an interrupt, a Git diagnostic during the root check, a failed history
+    `INCONCLUSIVE: could not complete scan`: an interrupt, a Git diagnostic from a root check where Git exits 0 or 1, a failed history
     enumeration, a failed key read, and a failed or diagnosed output or history search. Every refusal comes before
     any content search, and a failure still outranks a match already printed. The help text, `search-engines.md`
     (with its plugin copy and `site/llms-full.txt`) and `tools/test_scan_credential.py` follow, and the
@@ -37,8 +37,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     and part of what the maintainer reviews. A failed `read` of the key is 3, and an empty or control-byte key
     after a successful read is 2, as rule 6 says of hidden-prompt reads. A shell-state failure while the scanner
     sets its options or clears `GIT_*` variables is 2, as rule 6 says of shell-state failures after the guards. A
-    root check where Git exits non-zero, as it does outside a repository, is read as the wrong directory and
-    refused with 2, while one where Git exits 0 or 1 but prints a diagnostic is a failed check, 3.
+    root check where Git prints a diagnostic and exits 0 or 1 is a failed check, 3, and any other failure of that
+    check, such as Git exiting non-zero outside a repository, is read as the wrong directory and refused with 2.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
     that restores status 2 and the single INCONCLUSIVE message for every refusal and failure, or changes them to
     match the new ruling, in the scanner, its help text, its tests and the guide text that quotes its statuses, and

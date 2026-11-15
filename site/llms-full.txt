@@ -42905,7 +42905,7 @@ exposed state, and Typesense with its plaintext backend on `127.0.0.1:8108` gave
 
 REASONED: search each admin, master or bootstrap key before deploying a client build, using the repository's `tools/scan_credential.sh` credential scanner. The cited Git manuals define the literal file and commit-tree searches; the engine references require privileged keys to stay server-side. The scanner is part of the [secureconfig repository](https://github.com/jposluns/secureconfig) itself, at `tools/scan_credential.sh`, from the merge of [PR #450](https://github.com/jposluns/secureconfig/pull/450) onward; it is not included in the published site or the plugin. Use a full clone of the repository, record the commit you ran, and read the script before giving it a real key.
 
-DEMONSTRATED: `tools/test_scan_credential.py` is the regression evidence for the repository tool, run with Bash 5.3.9 and Git 2.53.0 on disposable repositories: literal output and historical matches returned FOUND/1; absence and the named omission fixtures returned NOT FOUND/0. Wrong use, including a directory where Git's repository-root check fails, invalid keys and unsafe output entries returned REFUSED/2, and failed key reads, other Git errors and diagnostics, and incomplete searches returned INCONCLUSIVE/3. These are fixture observations, not real application builds; bounded sampling of the scanner's and its children's argv and environment during live scans found no key, and such sampling is no proof against exposure between samples or through process memory.
+DEMONSTRATED: `tools/test_scan_credential.py` is the regression evidence for the repository tool, run with Bash 5.3.9 and Git 2.53.0 on disposable repositories: literal output and historical matches returned FOUND/1; absence and the named omission fixtures returned NOT FOUND/0. Wrong use, including a directory outside a repository, invalid keys and unsafe output entries returned REFUSED/2, and failed key reads, other Git errors and diagnostics, and incomplete searches returned INCONCLUSIVE/3. These are fixture observations, not real application builds; bounded sampling of the scanner's and its children's argv and environment during live scans found no key, and such sampling is no proof against exposure between samples or through process memory.
 
 REASONED: following block; no real application build is available in the authoring environment. From a trusted fresh shell with BASH_ENV unset, substitute the two checkout paths and the relative build directory, then enter one key alone on a line at the silent read; repeat for each key. Bash 4.3+, trusted Bash/Git executables and Git configuration, a finished build and a quiet repository are prerequisites. In a disposable real build, seed a dummy key and require FOUND/1, remove it and rebuild and require NOT FOUND/0; retain a separate old-commit positive control. Those real-build controls remain unobserved under row 1.117.
 
@@ -43022,7 +43022,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-10",
-  "body_sha256": "ace8deec79648b82638a84cbf43de2ebe4e4f70adb8f6c939706c1d60362523c",
+  "body_sha256": "5c0ad197475fd2a6664d51c6615d3489cc1d73dcc624db3ea53d2f6c583cf51e",
   "components": {
     "meili": {
       "name": "Meilisearch release reference",

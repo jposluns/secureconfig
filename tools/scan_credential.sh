@@ -101,7 +101,8 @@ done
 # Only a presence marker crosses command substitution. read -d '' detects NUL
 # and ordinary bytes, avoiding trailing-newline loss and Bash's NUL warning.
 # FD 3 carries Git stdout; capture both pipeline statuses before any command.
-# Return 3 when Git exited 0 or 1 but printed a diagnostic, and 2 otherwise.
+# Return Git's 0 or 1 when it printed no diagnostic, 3 when it exited 0 or 1
+# but printed one, and 2 otherwise.
 exec 3>&1
 scan_git() {
     local result
@@ -133,9 +134,9 @@ scan_git() {
         *) return 2 ;;
     esac
 }
-# A failing rev-parse (as outside a repository) or a nonempty prefix (a
-# subdirectory) is wrong use; a diagnostic from a rev-parse that exited 0 or 1 is
-# a failed check.
+# A diagnostic from a rev-parse that exited 0 or 1 is a failed check; any
+# other failing rev-parse (as outside a repository) or a nonempty prefix (a
+# subdirectory) is wrong use.
 root_prefix=$(scan_git rev-parse --show-prefix 3>&1)
 rc=$?
 (( rc != 3 )) || scan_fail repository-root
