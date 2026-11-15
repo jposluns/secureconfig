@@ -24,15 +24,15 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   "Split 2 and 3 (Recommended)", quoted exactly. Its description, also quoted exactly, read:
   "Predicted and best for the project: refusals of unsafe or wrong use keep exit 2 (REFUSED), failures to complete the scan become exit 3 (INCONCLUSIVE); update help text, the guides that quote its statuses, its tests, and a CHANGELOG note since readers' scripts may test for 2."
   - Effect, applied in the same change as this entry. The scanner refuses unsafe or wrong use with status 2 and
-    `REFUSED: unsafe or wrong use; no content searched`. The refused uses are being sourced, a wrong argument
-    count, `BASH_ENV`, a command that does not resolve as expected, Bash older than 4.3, shell state it cannot set
-    or clear, an unsafe, unreadable or empty output directory, running outside the repository root, and an empty
-    key or one holding control bytes. It reports a scan that could not complete with status 3 and
-    `INCONCLUSIVE: could not complete scan`: an interrupt, a Git diagnostic from a root check where Git exits 0 or 1, a failed history
-    enumeration, a failed key read, and a failed or diagnosed output or history search. Every refusal comes before
-    any content search, and a failure still outranks a match already printed. The help text, `search-engines.md`
-    (with its plugin copy and `site/llms-full.txt`) and `tools/test_scan_credential.py` follow, and the
-    `CHANGELOG.md` entry warns that scripts testing for status 2 from the scanner must now also handle 3.
+    `REFUSED: unsafe or wrong use; no content searched`. The refused uses are being sourced, a wrong argument count,
+    `BASH_ENV`, a command that does not resolve as expected, Bash older than 4.3, shell state it cannot set or
+    clear, an unsafe, unreadable or empty output directory, running outside the repository root, and an empty key or
+    one holding control bytes. It reports a scan that could not complete with status 3 and
+    `INCONCLUSIVE: could not complete scan`: an interrupt, a Git diagnostic from a root check where Git exits 0 or
+    1, a failed history enumeration, a failed key read, and a failed or diagnosed output or history search. Every
+    refusal comes before any content search, and a failure still outranks a match already printed. The help text,
+    `search-engines.md` (with its plugin copy and `site/llms-full.txt`) and `tools/test_scan_credential.py` follow,
+    and the `CHANGELOG.md` entry warns that scripts testing for status 2 from the scanner must now also handle 3.
   - Classification of cases the ruling did not name, which is the drafter's reading under CONTRIBUTING.md rule 6
     and part of what the maintainer reviews. A failed `read` of the key is 3, and an empty or control-byte key
     after a successful read is 2, as rule 6 says of hidden-prompt reads. A shell-state failure while the scanner
@@ -212,32 +212,31 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     `SECURECONFIG_SUITE_JOBS=N` with N a whole number from 1 to 64. It is off by default: unset or `1` is the serial
     run, and CI sets nothing, so the `gates` check stays serial. At N above 1 each section runs in its own bash
     process and process group, and the output is buffered and printed in the file's order. A new `# exclusive:` line
-    runs `llms-full` and `plugin`, which rewrite the working tree in place, first and alone, and `generated-committed`
-    runs after them, per its `# depends:` line. `tools/test_parallel_suite.py`, run by the `gate-runners` section,
-    tests the mode on stand-in sections against the serial run of the same text.
+    runs `llms-full` and `plugin`, which rewrite the working tree in place, first and alone, and
+    `generated-committed` runs after them, per its `# depends:` line. `tools/test_parallel_suite.py`, run by the
+    `gate-runners` section, tests the mode on stand-in sections against the serial run of the same text.
   - Where it departs from the ruling's words. The serial run is not untouched: the overflow section's stop now
     repeats its TERM for up to 5 seconds and then sends KILL to a process still running, which fixes a 60-second
-    wait seen under load in `tools/test_gate_runners.py` and a hang inferred, not observed, for its stand-in
-    server, and the `gate-runners` section also runs the new test. Output
-    order and lines are identical apart from 3 fields that differ between any 2 runs: the credential scanner's elapsed
-    time and sampling counts, and unittest's elapsed times. On 2 failing paths the lines differ as well. Under
-    `--sections`, a section killed by a signal other than INT or PIPE makes the serial run print bash's job notice for its child shell,
-    which the parallel run does not print. And a diagnostic that bash itself prints from inside a section, such as
-    an unbound variable or a command not found, names another file or line, because each section runs from its own
-    temporary script. The exit status is the same in every case tested, a fatal shell error in a section included:
-    an unbound variable gives 1 in a whole run and 127 under `--sections`, and a syntax error gives 2 in both, in
-    both modes.
+    wait seen under load in `tools/test_gate_runners.py` and a hang inferred, not observed, for its stand-in server,
+    and the `gate-runners` section also runs the new test. Output order and lines are identical apart from 3 fields
+    that differ between any 2 runs: the credential scanner's elapsed time and sampling counts, and unittest's
+    elapsed times. On 2 failing paths the lines differ as well. Under `--sections`, a section killed by a signal
+    other than INT or PIPE makes the serial run print bash's job notice for its child shell, which the parallel run
+    does not print. And a diagnostic that bash itself prints from inside a section, such as an unbound variable or a
+    command not found, names another file or line, because each section runs from its own temporary script. The exit
+    status is the same in every case tested, a fatal shell error in a section included: an unbound variable gives 1
+    in a whole run and 127 under `--sections`, and a syntax error gives 2 in both, in both modes.
   - The orchestrator's calls, not the maintainer's: the default is off, CI is unchanged, and the `version-basis`
     section is not split, so a later pull request can change each of them. Also the orchestrator's call: a revert
     pull request keeps the overflow section's repeated TERM unless a later ruling says otherwise, because without it
     the case in `tools/test_gate_runners.py` waits 60 seconds again.
   - Revert. Unsetting `SECURECONFIG_SUITE_JOBS`, or setting it to `1`, runs the serial suite with no revert. The
-    revert path for the code is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
-    that removes the parallel mode, its test and its documentation, or changes them to match the new ruling. It
-    keeps every existing entry in `CHANGELOG.md` and
-    `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here. If the revert pull request
-    uses `git revert -m 1`, that puts back this pull request's `CHANGELOG.md` entry under the date it merged and does
-    not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
+    revert path for the code is a later maintainer ruling that withdraws or replaces this ruling, then a pull
+    request that removes the parallel mode, its test and its documentation, or changes them to match the new ruling.
+    It keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and
+    records the new ruling here. If the revert pull request uses `git revert -m 1`, that puts back this pull
+    request's `CHANGELOG.md` entry under the date it merged and does not set `VERSION`, `plugin/plugin.json` or
+    `SKILL.md` back.
 - **Maintainer rulings of 2026-11-13 on the REASONED wording in the mixed-guide header, the homepage sentence and the M1 text in `QUALITY.md` (#1309).**
   The maintainer gave these three rulings through AskUserQuestion in an attended session, all at about 19:26Z to
   19:27Z, as answers to the #1299 QA findings F3 and F5 and the #1296 QA finding 5. No reasoning was recorded beyond
