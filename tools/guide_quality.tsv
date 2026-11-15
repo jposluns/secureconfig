@@ -12,7 +12,7 @@ clickhouse.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	11efeeda48aaebe6d2002d69242d
 cloud-firewalls.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	a3fb65779a75d02a5a0af8bc077cce1cc0bf9d5dce42fc92e7530518eba7e395	2026-11-10	tool	current
 cloud-identity-proxies.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	b580ee91ca04aa2c8f3771088c275422b350f01c6f43e683192ae74833576c97	2026-11-10	tool	current
 cloudflare.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	7fabeae5da790a54a9b2525d15eff5932457af49e60d95ccc105968dae1adb6d	2026-11-10	tool	current
-code-server.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	1ec232d8ada275b10bb18f1523cdf799ceff65f6e9ef992b18f69c53ea44fe7f	2026-11-10	tool	current
+code-server.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	4d4a9b2bec001d1b933c808f5d25db3bef11ea9deac9b4b4ff736c3f9f69113e	2026-11-10	tool	current
 common-mistakes.md	K	P	n/a	?	n/a	n/a	n/a	?	?	n/a	?	SOLID	b4a22108842595f276f0bbbcd8b43a3677e71ad3a3cbd1d5116fd0789cbdd7ad	2026-11-10	tool	current
 connection-poolers.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	d8331d53ffa0efedcdc7f3e28b77816137fcb59d5c4a6257408e19213547adb7	2026-11-10	tool	current
 container-hardening.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	1aebec7da57b179cd121a6e4a50acab780d17b39af6f7438353687adf082b3c0	2026-11-10	tool	current
@@ -57,7 +57,7 @@ mfa.md	X	PARTIAL(M1)	?	?	?	n/a	?	?	?	?	?	SOLID	bac1bf62e7639167fa222996b6f207cdd
 minio.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	PARTIAL(G1)	?	?	SOLID	85740b262253dedbe64449ab7f401420e3f298980c920d0f573476995316c498	2026-11-10	tool	current
 mlflow.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	229b7fe148bd06baf56a819e4b39abd955e9bea96468ff4d6aea73f8b076b04d	2026-11-10	tool	current
 model-servers.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1) ?(G2,G3)	?	?	SOLID	105098a1318f99ea84e5718e3bc42fb43db119075b403629fd0079ad269981a2	2026-11-10	tool	current
-mongodb.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	7b53e6592ea27171f30074fbbf1c252a4d03422b8ccdb4fffac0a4eede17c7ee	2026-11-10	tool	current
+mongodb.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	b71093b470afe7e2ff77a494ec62095b743c7c8f668259edc7f2cc23118cbaab	2026-11-10	tool	current
 mosquitto.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	1a338374bc949536319551bfd205fe9cee9b44986c2d2bb5521ddf90c2955941	2026-11-10	tool	current
 mysql.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f2d816e86442c44d0bb64fc147557151ea41ddccb731d3992fb1f870244bc5ba	2026-11-10	tool	current
 n8n.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f6e7899bd9c60ae3e0c59c9202223a7fcb58592b6f43a745b7325bfdaf77130e	2026-11-10	tool	current
