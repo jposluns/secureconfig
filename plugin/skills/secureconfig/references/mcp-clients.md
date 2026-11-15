@@ -98,13 +98,13 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 3. **SSRF destinations are blocked (partially runnable).** The address-classification half is runnable now; the client-integration half is reasoned. Runnable: confirm the deny-list rejects the reserved and internal ranges a discovery URL might target, namely the cloud metadata address, loopback, and RFC 1918 space:
 
-   Address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
+   Address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. That run invoked the expression without `-I`, in an earlier form of the block; no stub or live run has covered the `-I` form. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
 
    ```bash
    (                                       # a subshell, so the exit below ends only the subshell
      set -- 0 169.254.169.254 127.0.0.1 10.0.0.1 192.168.0.1 172.16.0.1   # the block's status so far (1, a finding, outranks 3, inconclusive, which outranks 0), then the addresses still to classify
      while [ "$#" -gt 1 ]; do
-       set -- "$(if python3 -c 'import ipaddress,sys; a=ipaddress.ip_address(sys.argv[1]); print(sys.argv[1], "BLOCK" if (a.is_private or a.is_loopback or a.is_link_local or a.is_reserved) else "ALLOW")' "$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
+       set -- "$(if python3 -I -c 'import ipaddress,sys; a=ipaddress.ip_address(sys.argv[1]); print(sys.argv[1], "BLOCK" if (a.is_private or a.is_loopback or a.is_link_local or a.is_reserved) else "ALLOW")' "$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)" "$@"
        set -- "${1##*$'\n'}" "${1%$'\n'*}" "${@:2}"   # python's exit status, its line, the status so far, then the addresses
        printf '%s' "$2"
        case "$1:$2" in
@@ -157,13 +157,13 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
    Save the actual captured body as `dcr-request.json` and inspect it (this native client checks for `native`; a remotely-hosted browser client checks for `web` instead):
 
-   The application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
+   The application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. That run invoked the expression without `-I`, in an earlier form of the block; no stub or live run has covered the `-I` form. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
 
    ```bash
    (                                       # a subshell, so the exits below end only the subshell
      [ -f dcr-request.json ] || { echo "no dcr-request.json in this directory: save the captured registration body there first; not checking"; exit 2; }
      [ -r dcr-request.json ] || { echo "dcr-request.json is unreadable; not checking"; exit 2; }
-     set -- "$(if python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("application_type") == "native" else 1)' < dcr-request.json 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+     set -- "$(if python3 -I -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("application_type") == "native" else 1)' < dcr-request.json 2>&1; then printf '\n0'; else printf '\n%s' "$?"; fi)"
      set -- "${1##*$'\n'}" "${1%$'\n'*}"   # python's exit status, then anything it printed
      printf '%s' "$2"
      case "$1:$2" in
@@ -259,7 +259,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "cc910598b718d48835c0e1ae7c32a916940e0f59156a8d4733ae02ad0066c5d1",
+  "body_sha256": "fd628f4d9d0620375027743388242ab66b7d71d75e121bbccfd53055af5704d3",
   "components": {
     "mcp": {
       "name": "MCP",
