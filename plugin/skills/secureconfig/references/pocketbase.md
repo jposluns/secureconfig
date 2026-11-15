@@ -365,7 +365,9 @@ ephemeral or `dynamic` project key for the same project sets the current authori
 disabled. So do user sessions on the console project that act on an organization, and
 admin-mode user sessions on other projects, except on the console project's `/v1/projects` and
 `/v1/projects/:projectId` routes and GET requests to the `/v1/organization/projects` routes, which
-enable it. An OAuth2 key with the `owner` role on an admin-mode request by a user to a project
+enable it. That the console-project sessions act on an organization is this guide's reading of the
+code comment at `api.php` lines 302 to 304 at 2.7.0, not established from the code.
+An OAuth2 key with the `owner` role on an admin-mode request by a user to a project
 other than the console also sets it to disabled. Route scope validation still applies to every requester. At 2.7.0 a request with an
 `x-appwrite-key` header that resolves to no key is refused. Collection `permissions` and
 `documentSecurity` are handed to utopia-php/database when the collection is created. The
@@ -1438,7 +1440,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-11",
-  "body_sha256": "80c1694aa1674d9611e73b22886f6b1fe569df6fa74af23d92427de29e95882a",
+  "body_sha256": "39607da0b6b9a68e6d527fa6371f05299ba4f5de63f9c4ddd08fcf3e92d083ac",
   "components": {
     "pb": {
       "name": "PocketBase",

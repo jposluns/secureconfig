@@ -92,7 +92,7 @@ Bash 5.3 says that assignment affects only the command's environment; ensure the
   [ "$#" -eq 0 ] || { printf 'SURREAL_* variables set in this shell:'; printf ' %s' "$@"; printf '; unset them first; not starting\n'; exit 2; }
   IFS= read -r -s -p 'Initial root password: ' pw < /dev/tty || { printf '\n'; echo 'password input failed; not starting'; exit 3; }
   printf '\n'
-  [ -n "$pw" ] || exit 2
+  [ -n "$pw" ] || { echo 'empty password; not starting'; exit 2; }
   SURREAL_USER=root SURREAL_PASS="$pw" surreal db start surrealkv:/data/mydb.db --bind 127.0.0.1:8000
 )
 ```
@@ -573,7 +573,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "0ea43c175db44b77d9be957577c11839b128e80aa01fbe6a7ca81e39818f2328",
+  "body_sha256": "3deb6bdd099c2d6a0d817901e21eb7d800d8d68aa2f0365ad01c4fb1fdb652f8",
   "components": {
     "pinned": {
       "name": "SurrealDB server and image",

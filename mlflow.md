@@ -58,12 +58,13 @@ The global `mlflow --env-file` option loads the file before executing the server
   fi
   command -v pip >/dev/null || { echo 'pip not found; not starting'; exit 2; }
   pip install 'mlflow[auth]' || { echo 'installing mlflow[auth] failed; not starting'; exit 3; }
+  command -v mlflow >/dev/null || { echo 'mlflow not found; not starting'; exit 2; }
   MLFLOW_AUTH_CONFIG_PATH=/etc/mlflow/basic_auth.ini \
     mlflow --env-file /etc/mlflow/server.env server --app-name basic-auth
 )
 ```
 
-REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, or `pip install` fails, with 3; otherwise it ends with the status of its last command, the `mlflow` server.
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2 (as when `pip` is not found, or `mlflow` is not found after the install), or `pip install` fails, with 3; otherwise it ends with the status of its last command, the `mlflow` server.
 
 Only the file path reaches the launch command; the shell never reads or exports the key. MLflow loads it into its own environment and forwards it to workers (traced at v3.16.1 in the sources below), so it remains exposed to the same account and root in process memory and, for inheriting processes, `/proc/<pid>/environ` throughout their lifetimes. A protected file does not remove that server-side exposure.
 
@@ -395,7 +396,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "35a643f37db4b6640b0bee362f14661ae73d5b6360193154a57a62828481a60e",
+  "body_sha256": "229b7fe148bd06baf56a819e4b39abd955e9bea96468ff4d6aea73f8b076b04d",
   "components": {
     "source": {
       "name": "MLflow pinned source",
