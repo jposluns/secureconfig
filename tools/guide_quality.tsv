@@ -60,7 +60,7 @@ model-servers.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	732025b7f5972943243190c76
 mongodb.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	1bb9e73717f13c924ac93b39d92f444534291f5f1a536195180052d14b41d682	2026-11-10	tool	current
 mosquitto.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	1a338374bc949536319551bfd205fe9cee9b44986c2d2bb5521ddf90c2955941	2026-11-10	tool	current
 mysql.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f2d816e86442c44d0bb64fc147557151ea41ddccb731d3992fb1f870244bc5ba	2026-11-10	tool	current
-n8n.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	e07c7cf381c5ee3b2ae35d1078dd8ed1072f55252ba0337a321adeeda7616c99	2026-11-10	tool	current
+n8n.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f6e7899bd9c60ae3e0c59c9202223a7fcb58592b6f43a745b7325bfdaf77130e	2026-11-10	tool	current
 nats.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	8217295abc00cb5360d364a3ab6dac354738e90bfe89a9f22e9b9942c4428651	2026-11-10	tool	current
 neo4j.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	a5bae35dce475f51d51a0897f48af22dc879fa254260e5b604de23c48c7051ce	2026-11-10	tool	current
 nextjs.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	b108993995a4c20ab2cc52ad62f6d0153d1eeb233e9f9f1367ccffead5951804	2026-11-10	tool	current
