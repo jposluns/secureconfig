@@ -98,7 +98,7 @@ For static accounts, the following alternative derives the key without sending t
 
 MD5 here is coturn's static-key format, not a recommendation to use MD5 for password storage. `SHATYPE_DEFAULT` selects the MD5 branch, even though the enum aliases it to `SHATYPE_SHA1`; the SHA256, SHA384 and SHA512 branches are separate. The default key is 16 bytes, printed as 32 lowercase hex digits with a `0x` prefix (`userdb.c` lines 997-1014). OpenSSL 3.5.5's dgst manual documents `-md5`, `-r` for coreutils output and stdin when no file is supplied. The block checks pipeline success and validates the extracted hex before printing the config entry; a build or policy that refuses MD5 produces no key. It does not change OpenSSL policy to enable MD5.
 
-DEMONSTRATED: following block; local Bash 5.3.9 and OpenSSL 3.5.5, with the prompt supplied on stdin, produced `user=ninefingers:0xbc807ee29df3c9ffa736523fb2c4e8ee` for coturn 4.18.0's public example in `examples/etc/turnserver.conf` lines 383-390. An instrumented wrapper recorded Bash, wrapper and OpenSSL command lines from procfs: none contained the example password. A synchronized exposed control did contain it. In the earlier form of the block that those runs covered, unsubstituted placeholders, empty or non-ASCII passwords, readonly password/IFS variables and a failing digest command each exited 2 without a key. The current form exits 3 for a failed digest, unusable digest output or a failed password read, refuses a missing `openssl` with 2 before the prompt, and was not re-run. This is a local derivation and argv observation, not a TURN allocation test or a demonstration of terminal echo suppression.
+DEMONSTRATED: following block, in the earlier form described below; local Bash 5.3.9 and OpenSSL 3.5.5, with the prompt supplied on stdin, produced `user=ninefingers:0xbc807ee29df3c9ffa736523fb2c4e8ee` for coturn 4.18.0's public example in `examples/etc/turnserver.conf` lines 383-390. An instrumented wrapper recorded Bash, wrapper and OpenSSL command lines from procfs: none contained the example password. A synchronized exposed control did contain it. In the earlier form of the block that those runs covered, unsubstituted placeholders, empty or non-ASCII passwords, readonly password/IFS variables and a failing digest command each exited 2 without a key. The current form exits 3 for a failed digest, unusable digest output or a failed password read, refuses a missing `openssl` with 2 before the prompt, and was not re-run. This is a local derivation and argv observation, not a TURN allocation test or a demonstration of terminal echo suppression.
 
 ```bash
 (
@@ -469,7 +469,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "59a6790813129a29c7387dc6a0ec1baf7bbaaa597e36febeb45343031974ac33",
+  "body_sha256": "e9e8d6666a0aa6053c114a27ce34c106930dc5b9d1e5c9219a3c537da7769a41",
   "components": {
     "livekit": {
       "name": "LiveKit",
