@@ -52,33 +52,37 @@ Keep the three secrets, `KEY_VAULTS_SECRET`, `AUTH_SECRET` and the Google OAuth 
   { unset -n gsec && unset -v gsec; } 2>/dev/null ||
     { echo 'cannot clear gsec in this shell; nothing written'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; nothing written'; exit 2; }
+  command -v openssl >/dev/null || { echo 'openssl not found, so the keys cannot be generated; nothing written'; exit 2; }
+  command -v ls >/dev/null || { echo 'ls not found, so the mode of secrets.env cannot be checked after the write; nothing written'; exit 2; }
   printf 'Google OAuth client secret (input hidden): '
-  IFS= read -r -s gsec || { printf '\n'; echo 'no client secret read; nothing written'; exit 2; }
+  IFS= read -r -s gsec || { printf '\n'; echo 'no client secret read; nothing written'; exit 3; }
   printf '\n'
   case "$gsec" in
     ""|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty client secret, placeholder or control character; nothing written'; exit 2 ;;
   esac
   set -- "$(openssl rand -base64 32)" "$(openssl rand -base64 32)"
-  [ "${#1}" -eq 44 ] || { echo 'key generation failed; nothing written'; exit 2; }
-  [ "${#2}" -eq 44 ] || { echo 'key generation failed; nothing written'; exit 2; }
-  case "$1$2" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
+  [ "${#1}" -eq 44 ] || { echo 'key generation failed; nothing written'; exit 3; }
+  [ "${#2}" -eq 44 ] || { echo 'key generation failed; nothing written'; exit 3; }
+  case "$1$2" in *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=]*) echo 'key generation failed; nothing written'; exit 3 ;; esac
   mkdir -p -- "$HOME/.config/lobechat"
   chmod 700 -- "$HOME/.config/lobechat"
   command -v getfacl >/dev/null || { echo 'getfacl not found, so a default ACL on ~/.config/lobechat cannot be ruled out; install the acl package; nothing written'; exit 2; }
   case "$(getfacl -d -c -p -- "$HOME/.config/lobechat"; echo "getfacl-status=$?")" in
     getfacl-status=0) ;;
     *getfacl-status=0) echo 'the directory ~/.config/lobechat has a default ACL, which a new file inherits in place of umask 077; nothing written'; exit 2 ;;
-    *) echo 'getfacl could not read the ACL of ~/.config/lobechat; nothing written'; exit 2 ;;
+    *) echo 'getfacl could not read the ACL of ~/.config/lobechat; nothing written'; exit 3 ;;
   esac
   printf 'KEY_VAULTS_SECRET=%s\nAUTH_SECRET=%s\nAUTH_GOOGLE_SECRET=%s\n' "$1" "$2" "$gsec" > "$HOME/.config/lobechat/secrets.env"
   case "$(ls -ln -- "$HOME/.config/lobechat/secrets.env")" in
     '-rw------- '*|'-rw-------.'*) ;;
-    *) echo 'secrets.env is not mode 0600, so other accounts may read it; delete ~/.config/lobechat/secrets.env, do not use the values in it, and rotate the Google client secret'; exit 2 ;;
+    *) echo 'secrets.env is not mode 0600, so other accounts may read it; delete ~/.config/lobechat/secrets.env, do not use the values in it, and rotate the Google client secret'; exit 3 ;;
   esac
 )
 ```
 
-The block refuses to run when `~/.config/lobechat/secrets.env` already exists in any form, a dangling symlink included, before it prompts or generates anything, so a rerun cannot replace a `KEY_VAULTS_SECRET` that already encrypts data. `set -C` adds overwrite protection for an existing regular file only, not for every kind of target, and the existence check runs before the write rather than atomically with it, so both hold only in directories that no other account can write to or replace: `$HOME`, `~/.config` and the owner-only directory the block creates. For a deployment that already has these values, put its existing values in such a file instead of generating new ones. `umask 077` creates the directory mode `0700` and the file mode `0600`, unless the directory, or the parent it is created in, carries a default ACL: new files inherit that ACL in place of the umask, and `chmod 700` on the directory does not remove it. So once it has created the directory, which is after the prompt, the block runs `getfacl -d -c -p` on it, which prints the directory's default ACL and nothing else, and writes nothing when that prints anything, when `getfacl` fails, or when `getfacl` is not installed, leaving the directory behind; remove a default ACL you do not need with `setfacl -k ~/.config/lobechat` and run the block again. A missing `getfacl` fails closed because the block then cannot tell, before the write, whether the file would be private; `getfacl` comes from the `acl` package, and where it is not installed the block refuses to run. After the write the block reads the file's permission field from `ls -ln` and fails unless it is exactly `-rw-------` followed by a space or a `.`; any other field fails the check, including the `+`-marked field a named ACL entry produced in the recorded runs. If the check fails, delete the file, do not use the values in it, and rotate the Google client secret. Without these checks, the block wrote `secrets.env` mode `0644` when `~/.config` carried a default ACL (run in a scratch home directory with bash 5.3.9, acl 2.3.2 and `openssl` stubbed). The block writes nothing unless both generated values are 44 base64 characters and the prompted secret is non-empty, is not the placeholder and holds no control character. `read` stops at the first newline, so a newline cannot enter the value; the check refuses a carriage return or any other control character. Paste the secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. The generated values pass only through the subshell's positional parameters and the builtin `printf`, and the client secret through one variable local to the subshell, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read them. A write failure can leave a partial file. The launch block below refuses the shapes it can detect, a generated value that is not 44 base64 characters, a missing or duplicated line, or any other line, but a client secret cut short still looks like a valid value and cannot be detected, so delete a file left by a failed run and create it again rather than starting on it. The file holds the secrets in plaintext at rest, readable by that account, by root and by any backup that copies it, so keep it and its backups out of source control ([secrets.md](secrets.md)). Start LobeChat from the file, with only non-secret values on its command line. Substitute your Google OAuth client ID and the addresses or domains allowed to register inside the single quotes on the `set --` line:
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status with 2 when a guard refuses, as when `openssl`, `getfacl` or `ls` is not found, and with 3 when the hidden prompt fails to read, key generation or `getfacl` fails, or the written file is not mode `0600`. Under its `set -e`, a command it does not check, such as `mkdir`, `chmod` or the write itself, ends it with that command's own status if it fails; otherwise it ends with the status of its last command, the `case` that checks the file's mode.
+
+The block refuses to run when `~/.config/lobechat/secrets.env` already exists in any form, a dangling symlink included, before it prompts or generates anything, so a rerun cannot replace a `KEY_VAULTS_SECRET` that already encrypts data. `set -C` adds overwrite protection for an existing regular file only, not for every kind of target, and the existence check runs before the write rather than atomically with it, so both hold only in directories that no other account can write to or replace: `$HOME`, `~/.config` and the owner-only directory the block creates. For a deployment that already has these values, put its existing values in such a file instead of generating new ones. `umask 077` creates the directory mode `0700` and the file mode `0600`, unless the directory, or the parent it is created in, carries a default ACL: new files inherit that ACL in place of the umask, and `chmod 700` on the directory does not remove it. So once it has created the directory, which is after the prompt, the block runs `getfacl -d -c -p` on it, which prints the directory's default ACL and nothing else, and writes nothing when that prints anything, when `getfacl` fails, or when `getfacl` is not installed, leaving the directory behind; remove a default ACL you do not need with `setfacl -k ~/.config/lobechat` and run the block again. A missing `getfacl` fails closed because the block then cannot tell, before the write, whether the file would be private; `getfacl` comes from the `acl` package, and where it is not installed the block refuses to run. After the write the block reads the file's permission field from `ls -ln` and fails unless it is exactly `-rw-------` followed by a space or a `.`; any other field fails the check, including the `+`-marked field a named ACL entry produced in the recorded runs. If the check fails, delete the file, do not use the values in it, and rotate the Google client secret. Without these checks, the block wrote `secrets.env` mode `0644` when `~/.config` carried a default ACL (run in a scratch home directory with bash 5.3.9, acl 2.3.2 and `openssl` stubbed). That run covered an earlier form of the block, and the current form was not re-run. The block writes nothing unless both generated values are 44 base64 characters and the prompted secret is non-empty, is not the placeholder and holds no control character. `read` stops at the first newline, so a newline cannot enter the value; the check refuses a carriage return or any other control character. Paste the secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. The generated values pass only through the subshell's positional parameters and the builtin `printf`, and the client secret through one variable local to the subshell, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read them. A write failure can leave a partial file. The launch block below refuses the shapes it can detect, a generated value that is not 44 base64 characters, a missing or duplicated line, or any other line, but a client secret cut short still looks like a valid value and cannot be detected, so delete a file left by a failed run and create it again rather than starting on it. The file holds the secrets in plaintext at rest, readable by that account, by root and by any backup that copies it, so keep it and its backups out of source control ([secrets.md](secrets.md)). Start LobeChat from the file, with only non-secret values on its command line. Substitute your Google OAuth client ID and the addresses or domains allowed to register inside the single quotes on the `set --` line:
 
 ```bash
 (
@@ -89,28 +93,32 @@ The block refuses to run when `~/.config/lobechat/secrets.env` already exists in
   case "$1|$2" in *REPLACE_WITH_*) echo 'substitute the client ID inside the quotes on the set -- line; not starting'; exit 2 ;; esac
   { [ -n "$1" ] && [ -n "$2" ]; } || { echo 'empty value on the set -- line; not starting'; exit 2; }
   case "$1$2" in *[[:space:][:cntrl:]]*) echo 'whitespace or a control character on the set -- line; not starting'; exit 2 ;; esac
+  command -v grep >/dev/null || { echo 'grep not found, so ~/.config/lobechat/secrets.env cannot be checked; not starting'; exit 2; }
   f="$HOME/.config/lobechat/secrets.env"
   { [ -f "$f" ] && [ ! -L "$f" ]; } ||
     { echo 'need ~/.config/lobechat/secrets.env to be a regular file (it is missing, a symlink or another kind of file); not starting'; exit 2; }
   if grep -Eavqx -- 'KEY_VAULTS_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=|AUTH_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=|AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$f"; then
     echo 'a line in ~/.config/lobechat/secrets.env is not one of the three secret lines; not starting'; exit 2
   else
-    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/lobechat/secrets.env; not starting'; exit 3; }
   fi
   if grep -aq -- 'REPLACE_WITH_' "$f"; then
     echo 'a placeholder is still in ~/.config/lobechat/secrets.env; not starting'; exit 2
   else
-    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+    rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check ~/.config/lobechat/secrets.env; not starting'; exit 3; }
   fi
-  c=$(grep -Eacx -- 'KEY_VAULTS_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=' "$f") || c=
+  c=$(grep -Eacx -- 'KEY_VAULTS_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=' "$f") ||
+    { rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check the KEY_VAULTS_SECRET lines in ~/.config/lobechat/secrets.env; not starting'; exit 3; }; }
   [ "$c" = 1 ] ||
-    { echo 'need exactly one generated KEY_VAULTS_SECRET line in ~/.config/lobechat/secrets.env, or could not check it; not starting'; exit 2; }
-  c=$(grep -Eacx -- 'AUTH_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=' "$f") || c=
+    { echo 'need exactly one generated KEY_VAULTS_SECRET line in ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+  c=$(grep -Eacx -- 'AUTH_SECRET=[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/]{43}=' "$f") ||
+    { rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check the AUTH_SECRET lines in ~/.config/lobechat/secrets.env; not starting'; exit 3; }; }
   [ "$c" = 1 ] ||
-    { echo 'need exactly one generated AUTH_SECRET line in ~/.config/lobechat/secrets.env, or could not check it; not starting'; exit 2; }
-  c=$(grep -Eacx -- 'AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$f") || c=
+    { echo 'need exactly one generated AUTH_SECRET line in ~/.config/lobechat/secrets.env; not starting'; exit 2; }
+  c=$(grep -Eacx -- 'AUTH_GOOGLE_SECRET=[^[:cntrl:]]+' "$f") ||
+    { rc=$?; [ "$rc" -eq 1 ] || { echo 'could not check the AUTH_GOOGLE_SECRET lines in ~/.config/lobechat/secrets.env; not starting'; exit 3; }; }
   [ "$c" = 1 ] ||
-    { echo 'need exactly one AUTH_GOOGLE_SECRET line in ~/.config/lobechat/secrets.env, or could not check it; not starting'; exit 2; }
+    { echo 'need exactly one AUTH_GOOGLE_SECRET line in ~/.config/lobechat/secrets.env; not starting'; exit 2; }
   docker run -d -p 127.0.0.1:3210:3210 \
     --env-file "$HOME/.config/lobechat/secrets.env" \
     -e AUTH_DISABLE_EMAIL_PASSWORD=1 \
@@ -121,7 +129,9 @@ The block refuses to run when `~/.config/lobechat/secrets.env` already exists in
 )
 ```
 
-The block refuses the placeholder, an empty value, and whitespace or a control character on the `set --` line. It checks first that `~/.config/lobechat/secrets.env` is a regular file and not a symlink, so a FIFO in its place can neither block the check nor be read by it. It then reads the file as text (`grep -a`: without `-a`, a NUL could make a malformed line look valid to grep) and refuses to start unless the file holds exactly one line for each generated value and exactly one client secret line, no other line and no placeholder. The block makes that check because at v27.5.1 an env-file line holding only a name takes its value from the CLI's own environment, which would bring back the channel the file replaces. It uses a count only from a `grep` that succeeded, says that it could not check when `grep` cannot read the file, and gives the same result in a shell that has `set -e` on. The patterns for the two generated values spell out their ASCII character sets rather than ranges such as `A-Z`, whose meaning can depend on the locale. The client secret pattern, `[^[:cntrl:]]+`, is the exception and depends on the locale: it refuses only control characters, and the locale decides which characters are control characters, as it does for the other `[:cntrl:]` checks, in the block that creates the file and on the `set --` line. A key of another shape from an existing deployment needs the matching pattern relaxed. This moves the secrets out of argv, not out of reach. Docker hands them to the container as environment variables, so anyone who can use the Docker socket can read them back with `docker inspect`, which returns the container's configuration with its `Env` list, for as long as the container exists, running or stopped; and the same user as the container's process, or root, can read them from that process's `/proc/<pid>/environ` for its whole lifetime. Socket access is root-equivalent already ([container-hardening.md](container-hardening.md)); grant it to nobody you would not trust with these keys. `-e NAME` with no value would keep them out of argv as well, but only under rule 7's guarded one-command prefix assignment, never an `export`, and the values would then sit in the CLI's own environment too. Neither form erases a value already recorded in shell history, tracing or a log.
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status with 2 when a guard refuses, as when `grep` is not found or the file does not hold exactly the three secret lines, and with 3 when `grep` cannot check the file; otherwise it ends with the status of its last command, `docker run`.
+
+The block refuses the placeholder, an empty value, and whitespace or a control character on the `set --` line. It checks first that `~/.config/lobechat/secrets.env` is a regular file and not a symlink, so a FIFO in its place can neither block the check nor be read by it. It then reads the file as text (`grep -a`: without `-a`, a NUL could make a malformed line look valid to grep) and refuses to start unless the file holds exactly one line for each generated value and exactly one client secret line, no other line and no placeholder. The block makes that check because at v27.5.1 an env-file line holding only a name takes its value from the CLI's own environment, which would bring back the channel the file replaces. It uses the count that `grep -c` prints even when `grep` finds no matching line, so a file missing a line gives a count of 0 and is refused with 2, as is one with a duplicated line; when `grep` fails, as when it cannot read the file, the block says that it could not check and stops with status 3. It gives the same result in a shell that has `set -e` on. The patterns for the two generated values spell out their ASCII character sets rather than ranges such as `A-Z`, whose meaning can depend on the locale. The client secret pattern, `[^[:cntrl:]]+`, is the exception and depends on the locale: it refuses only control characters, and the locale decides which characters are control characters, as it does for the other `[:cntrl:]` checks, in the block that creates the file and on the `set --` line. A key of another shape from an existing deployment needs the matching pattern relaxed. This moves the secrets out of argv, not out of reach. Docker hands them to the container as environment variables, so anyone who can use the Docker socket can read them back with `docker inspect`, which returns the container's configuration with its `Env` list, for as long as the container exists, running or stopped; and the same user as the container's process, or root, can read them from that process's `/proc/<pid>/environ` for its whole lifetime. Socket access is root-equivalent already ([container-hardening.md](container-hardening.md)); grant it to nobody you would not trust with these keys. `-e NAME` with no value would keep them out of argv as well, but only under rule 7's guarded one-command prefix assignment, never an `export`, and the values would then sit in the CLI's own environment too. Neither form erases a value already recorded in shell history, tracing or a log.
 
 MFA: enforce it at whichever SSO provider you list in `AUTH_SSO_PROVIDERS`; LobeChat's own login has no second factor of its own.
 
@@ -344,7 +354,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "019458c1748a61779dcc36ff48589cb4403b6de793605f895f7662b02588c8e6",
+  "body_sha256": "da77f1c2ed52eca4ba010260e2fecfc66b28f979654b5a47ca65240a6d8c1907",
   "components": {
     "anything": {
       "name": "AnythingLLM documentation",
