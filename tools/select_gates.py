@@ -25,9 +25,11 @@ path.
 
 THE MAP is MAP below, the one place it is written: a path takes the sections of the first pattern
 it matches, and a path that matches no pattern takes every section. Every scoped path also takes
-ANY_PATH, the sections that read every file (the secrets scan) or resolve links to any path (a
-removed or renamed file can break a link elsewhere). A pattern's `*` matches within one path
-segment and `**/` any number of whole segments, including none. An ALL pattern matches in any
+ANY_PATH, the sections that read every file (the secrets scan), resolve links to any path (a
+removed or renamed file can break a link elsewhere) or hold every tracked path to the export
+allowlist (an added, removed or renamed file can leave a path unlisted or a line matching
+nothing). A pattern's `*` matches within one path segment and `**/` any number of whole
+segments, including none. An ALL pattern matches in any
 case, since matching more paths only runs more sections; a scoped pattern matches case exactly,
 except a name ending after a `*` in its last segment, which matches in any case, so
 `site/**/*.html` takes INDEX.HTML too. A section belongs to a scoped path when it reads that
@@ -63,9 +65,9 @@ SECTION = re.compile(r"^# section: ([a-z0-9-]+)$", re.M)
 DEPENDS_LINE = re.compile(r"# depends: ([a-z0-9-]+): ([a-z0-9-]+(?: [a-z0-9-]+)*)")
 
 ALL = "ALL"
-# Every scoped path: the secrets scan reads every file, and the two link gates resolve links to
-# any path in the checkout.
-ANY_PATH = ("secrets", "local-links", "llms-full-links")
+# Every scoped path: the secrets scan reads every file, the two link gates resolve links to any
+# path in the checkout, and the export-lists check holds every tracked path to the allowlist.
+ANY_PATH = ("secrets", "local-links", "llms-full-links", "export-lists")
 # The gates that read Markdown wherever it is tracked (each skips some directories of its own).
 MARKDOWN = ("bare-urls", "verify-tls", "guard-conventions", "unfiltered-ss", "prose-conventions",
             "shell-blocks", "bracket-ranges", "pinned-citations", "placeholders", "aiqt-baseline")

@@ -1,0 +1,26 @@
+# The private paths: every tracked path that stays in this repository and is never published.
+#
+# Each line is deny<TAB>PATTERN. A PATTERN is an exact path or a glob; ** stands for any number
+# of whole segments and * for part of one segment. This file is itself private, so the public
+# allowlist names public paths only. A path a deny line matches must match no allowlist line,
+# and each deny line must match at least one tracked path.
+
+# The project's working records and the assistant adapter.
+deny	AGENTS.md
+deny	CLAUDE.md
+deny	DECISIONS.md
+deny	DONE.md
+deny	PENDING-DECISIONS.md
+deny	TODO.md
+
+# Development tooling, the page sources and the vendored and pinned build inputs.
+deny	.aiqt/**
+deny	.baseline/**
+deny	.github/**
+deny	scripts/**
+deny	site-src/**
+deny	tools/**
+
+# The export's own private documents.
+deny	export/FORMAT.md
+deny	export/private-paths.txt
