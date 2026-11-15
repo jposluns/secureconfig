@@ -148,7 +148,7 @@ DEMONSTRATED: an earlier form of the following block; local Bash 5.3.9 and OpenS
 )
 ```
 
-REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, as when `openssl` is not on PATH, or when the password read, the digest or the digest's output fails, with 3; otherwise it ends with the status of its last command, the `builtin printf` that prints the entry. The run recorded above covered an earlier form of this block, and the current form was not re-run.
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, as when `openssl` is not on PATH, or when the password read, the digest or the digest's output fails, with 3; otherwise it ends with the status of its last command, the `builtin printf` that prints the entry. The runs recorded above covered an earlier form of this block, and the current form was not re-run.
 
 The prompt variable is cleared of inherited attributes, never exported and used only by Bash builtins. The builtin `printf` sends the exact bytes on stdin to `openssl dgst -md5 -r`; neither the password nor the key is an external process argument. The block clears inherited traps and disables tracing, allexport and inherited errexit before reading, refuses readonly IFS, and removes the password variable after hashing. These measures close the argv channel only. They do not protect against a compromised shell, same-account or root memory inspection, terminal capture, or tracing that is re-enabled. Never type the password into the pasted block or a command line, where shell history can retain it. Paste it alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. The printed key is itself a credential: protect its output and place the generated entry in the protected coturn configuration under the same realm. The offline-guessing and key-reuse weaknesses described above still apply.
 
@@ -469,7 +469,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "821c186bf4ff4ff3d43888af0ad872905af6509b3e4b18e38f7a3cda06f1bb94",
+  "body_sha256": "08d7bdf0156089340524d32ef89f7ead64f0d76d033c71b0c1ec1ae45d9a046b",
   "components": {
     "livekit": {
       "name": "LiveKit",
