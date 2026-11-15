@@ -133,13 +133,13 @@ refusal from that vantage, and the write-out fields need curl 7.75.0 or newer.
 
 ### Function and credential checks
 
-REASONED: listener isolation and the canary function comparison, per the guide's cited Supabase docker-compose.yml and Supabase docker .env.example. No Supabase deployment or container runtime is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five rejected guard cases reached no curl stub, while substituted canary inputs produced two STUB curl lines. These runs covered the blocks in earlier forms, in which the inventory had no status of its own and the canary block printed both results unclassified and ended with the second curl's status. The current forms of both blocks pass bash -n and ShellCheck 0.11.0 in the repository's gate suite, which runs both over every block, and the inventory's current form was also stub-run, as the Verify introduction records. No live outcome was observed: fixed listeners are private, and the function's exposed state accepts both requests while JWT enforcement denies the credential-free request and admits the current-token control. The gateway serves plain HTTP on `8000`. Substitute the base URL, function name, and current legacy
+REASONED: listener isolation and the canary function comparison, per the guide's cited Supabase docker-compose.yml and Supabase docker .env.example. No Supabase deployment or container runtime is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five rejected guard cases reached no curl stub, while substituted canary inputs produced two STUB curl lines. These runs covered the blocks in earlier forms, in which the inventory had no status of its own and the canary block printed both results unclassified and ended with the second curl's status. The inventory's current form and the canary block's previous form, which had no `curl` guard, passed bash -n and ShellCheck 0.11.0 in the repository's gate suite, which runs both over every block, and the inventory's current form was also stub-run, as the Verify introduction records. The canary block's current form adds a `command -v curl` guard, which refuses with status 2 and no curl call when curl is not installed; none of those checks was re-run on it, and that guard was not run. No live outcome was observed: fixed listeners are private, and the function's exposed state accepts both requests while JWT enforcement denies the credential-free request and admits the current-token control. The gateway serves plain HTTP on `8000`. Substitute the base URL, function name, and current legacy
 `ANON_KEY` JWT inside the single quotes. Use a canary function with a known response and no independent
 authentication. With `FUNCTIONS_VERIFY_JWT=false`, both requests should reach it; with verification
 enabled, the credential-free request should receive `401` and the Bearer-authenticated request should
 return its known response. An arbitrary function can return its own `401`, so that status alone does not
-identify the main worker's policy. The block exits 1 when the credential-free request returns a
-`2xx`; 3 when either request fails, the Bearer request returns anything but a `2xx`, or the
+identify the main worker's policy. The block exits 2 when a guard refuses or curl is not installed;
+1 when the credential-free request returns a `2xx`; 3 when either request fails, the Bearer request returns anything but a `2xx`, or the
 credential-free request returns anything but `401` or a `2xx`; and otherwise 0, leaving the
 Bearer response body for you to compare with the canary's known response.
 
@@ -159,6 +159,7 @@ REASONED: following block; the canary function comparison follows the cited envi
   case "$2" in *REPLACE_WITH_*|*FUNCTION_NAME*|"") echo "substitute a function name; not probing"; exit 2 ;; esac
   case "$3" in *REPLACE_WITH_*|"") echo "substitute a current legacy anon JWT; not probing"; exit 2 ;; esac
   case "$3" in *[[:cntrl:]]*) echo "the anon JWT must be one line with no control characters; not probing"; exit 2 ;; esac
+  command -v curl >/dev/null || { echo "curl is not installed here; not probing"; exit 2; }
   # Compare the credential-free request with a current legacy anon JWT sent as Bearer.
   # Use a canary with a known response and no independent authentication.
   set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -292,7 +293,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "bfdc42556a63914e42d11f1ca26273c73e1497bda656592bd1931fd0421769f1",
+  "body_sha256": "0c545d74d9a13649e6c555301f1d76d47d9b2b9d08a8d6e075a26d133508b2d7",
   "components": {
     "docs": {
       "name": "Supabase documentation",

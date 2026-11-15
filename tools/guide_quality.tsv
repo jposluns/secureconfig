@@ -65,7 +65,7 @@ nats.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	8217295abc00cb5360d364a3
 neo4j.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	a5bae35dce475f51d51a0897f48af22dc879fa254260e5b604de23c48c7051ce	2026-11-10	tool	current
 nextjs.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	b108993995a4c20ab2cc52ad62f6d0153d1eeb233e9f9f1367ccffead5951804	2026-11-10	tool	current
 nginx.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	8a4ab478aaaa2f58804b00b20a1d83e38acc7de0be9fdb5c2a6d95cdf256af1c	2026-11-10	tool	current
-nodejs.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	c50b3aeebd7579f769a7964691ef7cea4fd9de42c9c33d24bd64f898df966181	2026-11-10	tool	current
+nodejs.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	17fec69060642068d12bbd2ac60e6644cd1036768933bf67aac4b84c898a6624	2026-11-10	tool	current
 nomad-consul.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	ae1c84224571043cfac59f7ef6afdcacb0c70a0d70bb3f909794310bbefc136c	2026-11-10	tool	current
 object-storage.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	139bbd5d2de5d6cc80a68540c09848087e17cb4f633455a6f0c0d41641bdd015	2026-11-10	tool	current
 observability-components.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	9dce261efb106d26f5d7e81ddd5d6fb9911c2b158adf9ec9f19c2431fd37c4d3	2026-11-10	tool	current
@@ -73,7 +73,7 @@ oidc-integration.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	6333a88ccbfb
 ollama.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	d4001588908bdf2723fb2ae68911a612a4680bb06f230088e472c8ff48efbc36	2026-11-10	tool	current
 open-webui.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	e51d97b1051005da6ba4d083b5949d60a91a1cb1e0910407c333aad9e2c6b281	2026-11-10	tool	current
 openclaw.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	3815828c34fddbe3481c810f921965b3f1674da163f7c8be62897a3f0559c203	2026-11-10	tool	current
-paas.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	59a1f9107da1ac7bb86982f00ceb93add040c3349f356cb1707e55b0e5f3d0b0	2026-11-10	tool	current
+paas.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	5b0fc4ed5bb18605f69c902c083fa747e56418cf911b0629456ac6556539c951	2026-11-10	tool	current
 php.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	68ff4db5978b00e023f86d75f52ae8a48964384416a045a2150ad4d7e7d12941	2026-11-10	tool	current
 pocketbase.md	C	P	?	?	?	GAP(D3)	?	?	PARTIAL(G1)	?	?	MINOR-GAPS	39607da0b6b9a68e6d527fa6371f05299ba4f5de63f9c4ddd08fcf3e92d083ac	2026-11-10	tool	current
 postgresql.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	8dfdaa5890bde912d02bc09c4b2deb85d5a5f6b4cd58956274ad0ea39a47a7a9	2026-11-10	tool	current
@@ -94,7 +94,7 @@ server-admin-panels.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	6b401a44b
 sqlite-http-frontends.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	f32f2d8ab5237bf48e3a0dbb55bc212b9cf5e903bd7165f3324c1758aad3cc47	2026-11-10	tool	current
 sqlite.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	6e44867fed7f8eceb07674a7a4da09f72418ec7cd1a7e85f394aaffda99c829d	2026-11-10	tool	current
 streamlit.md	S	PARTIAL(M1)	?	?	?	GAP(D3)	?	?	PARTIAL(G1)	?	?	MINOR-GAPS	0b49ec359ddfa611e974e64a14d8c9a03ce8acdeb15d5c93ea8487ed739702aa	2026-11-10	tool	current
-supabase-self-hosted.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	bfdc42556a63914e42d11f1ca26273c73e1497bda656592bd1931fd0421769f1	2026-11-10	tool	current
+supabase-self-hosted.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	0c545d74d9a13649e6c555301f1d76d47d9b2b9d08a8d6e075a26d133508b2d7	2026-11-10	tool	current
 surrealdb.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	3deb6bdd099c2d6a0d817901e21eb7d800d8d68aa2f0365ad01c4fb1fdb652f8	2026-11-10	tool	current
 tailscale.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	d732d5b8d86a5b322517082d8b97dc0d66bd13ba623f0841e82da4153625cf59	2026-11-10	tool	current
 time-series-metrics-stores.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	c749c01383af1105c7ad079f301722bf9f7d8a683a24113641a18aa31aa647e3	2026-11-10	tool	current
