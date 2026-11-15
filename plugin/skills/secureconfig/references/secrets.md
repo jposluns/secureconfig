@@ -52,7 +52,7 @@ Leaked API keys and credentials in public repositories are the most common secur
      { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell'; exit 2; }
      trap 'unset -v TOKEN' EXIT
      printf 'Registry token (input hidden): '
-     IFS= read -r -s TOKEN || { printf '\n'; echo 'no secret read'; exit 2; }
+     IFS= read -r -s TOKEN || { printf '\n'; echo 'no secret read'; exit 3; }
      printf '\n'
      case "$TOKEN" in
        ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character'; exit 2 ;;
@@ -60,6 +60,8 @@ Leaked API keys and credentials in public repositories are the most common secur
      printf '%s' "$TOKEN" | docker login ghcr.io -u "$USER" --password-stdin
    )
    ```
+
+   REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, or the hidden prompt fails to read, with 3; otherwise it ends with the status of its last command, the pipeline into `docker login`.
 
    There is no probe for this rule, and the obvious one is worse than none. `ps -eo args | grep -i 'password\|token\|secret'` finds only commands that spell the word out, such as `docker login --password hunter2`. It does not match `htpasswd -cbs .htpasswd admin Xk29fQ7LmVt3w9Zr`, or `mysql -pHunter2`, or `curl -u admin:hunter2`, because a real secret is a random string and `.htpasswd` does not contain the word "password". A snapshot also misses every short-lived process, which is most of them. A check that reads clean while the exposure is running is worse than no check, so this rule is enforced by review and by reaching for the stdin flag, not by grep.
 
@@ -237,7 +239,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "f0f57bfca4dfee70d7a2e00fdd1347991de7050b161f80142f3da893370d3060",
+  "body_sha256": "a32ad41fd3452c8dcfa103aba586364472b6f5bdec4cf822173b4a6b2d8bc5d5",
   "components": {
     "git-ignore": {
       "name": "Git ignore patterns",

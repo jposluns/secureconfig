@@ -90,7 +90,7 @@ Bash 5.3 says that assignment affects only the command's environment; ensure the
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not starting'; exit 2; }
   set -- "${!SURREAL_@}"
   [ "$#" -eq 0 ] || { printf 'SURREAL_* variables set in this shell:'; printf ' %s' "$@"; printf '; unset them first; not starting\n'; exit 2; }
-  IFS= read -r -s -p 'Initial root password: ' pw < /dev/tty || exit 2
+  IFS= read -r -s -p 'Initial root password: ' pw < /dev/tty || { printf '\n'; echo 'password input failed; not starting'; exit 3; }
   printf '\n'
   [ -n "$pw" ] || exit 2
   SURREAL_USER=root SURREAL_PASS="$pw" surreal db start surrealkv:/data/mydb.db --bind 127.0.0.1:8000
@@ -111,6 +111,8 @@ Paste the password alone at the hidden prompt: a multi-line paste leaves every l
 your shell to run.
 
 The block clears `SURREAL_USER` and `SURREAL_PASS` itself, then refuses to start while any other `SURREAL_*` variable is set in the calling shell, naming each. The database reads many of its options from such variables, including `SURREAL_UNAUTHENTICATED` and `SURREAL_BIND`, so an inherited one would start the server differently from what the block shows. The check also refuses the launcher's own `SURREAL_CLI_*` variables, which its pages separate from the database's. Unset them, or start from a clean shell.
+
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The root-password block above sets its own status only when a guard refuses or the password is empty, with 2, or the hidden prompt fails to read, with 3; otherwise it ends with the status of its last command, `surreal db start`.
 
 v4.0.0 removes the RocksDB engine. The start page as served says the `rocksdb://` and `indxdb://` schemes "are kept as deprecated spellings of `surrealkv://`", so the block names `surrealkv:/data/mydb.db`, which that page reads as an absolute path. The server's own path check is in a crate this guide has not read, so how v4.0.0 handles a `rocksdb:` path is not established here.
 
@@ -571,7 +573,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "baee5174669660b8f51aca4edfb87d305265e0b7ca2822eaa4c2d7b5b674185f",
+  "body_sha256": "0ea43c175db44b77d9be957577c11839b128e80aa01fbe6a7ca81e39818f2328",
   "components": {
     "pinned": {
       "name": "SurrealDB server and image",

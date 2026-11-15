@@ -61,7 +61,7 @@ The original alias-only request below illustrates issuance and attribution. It d
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell'; exit 2; }
   trap 'unset -v LITELLM_MASTER_KEY' EXIT
   printf 'LiteLLM master key (input hidden): '
-  IFS= read -r -s LITELLM_MASTER_KEY || { printf '\n'; echo 'no secret read'; exit 2; }
+  IFS= read -r -s LITELLM_MASTER_KEY || { printf '\n'; echo 'no secret read'; exit 3; }
   printf '\n'
   case "$LITELLM_MASTER_KEY" in
     ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character'; exit 2 ;;
@@ -72,6 +72,8 @@ The original alias-only request below illustrates issuance and attribution. It d
     -d '{"key_alias": "app-frontend"}'
 )
 ```
+
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, or the hidden prompt fails to read, with 3; otherwise it ends with the status of its last command, the pipeline into `curl`.
 
 Each app gets its own virtual key, which can be revoked or budgeted independently; LiteLLM's docs cover per-key models, budgets, and expiry. Clients send the virtual key in the `Authorization` header (the header name is configurable via `litellm_key_header_name`).
 
@@ -592,7 +594,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "7387fed7b27ae09d4fe2e2aee7e98347ae2f6366ea0b63f192b2562863424a15",
+  "body_sha256": "769276432646a9365f357cc4e98154837e86c1851b249a1dd2642aae228dd849",
   "components": {
     "sso": {
       "name": "LiteLLM SSO allowance",
