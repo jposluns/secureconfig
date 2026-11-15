@@ -37,8 +37,9 @@ A build refuses (ArchiveError) a tar stream it cannot read; a symbolic link, a h
 other entry that is neither a regular file nor a directory; a path that is absolute or holds an
 empty, `.` or `..` component; and a path given twice. It also refuses a kind with no file, a kind
 whose root file (`SKILL.md` for the skill, `plugin.json` for the plugin) is missing, and a
-chat_upload kind that breaks one of the upload limits above. The bytes repeat for one git,
-Python and zlib.
+chat_upload kind that breaks one of the upload limits above. tools/test_release.py has a case
+for each of these refusals except three: an entry of another type, such as a FIFO or a device;
+a kind with no file; and a missing `plugin.json`. The bytes repeat for one git, Python and zlib.
 """
 import io
 import re

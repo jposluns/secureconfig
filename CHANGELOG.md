@@ -5,7 +5,8 @@ that of the most recently merged pull request. The current value is in the `VERS
 repository root. A version names a state of `main`, and some of those states are also published as
 tagged releases, cut "on completion of major milestones or on demand". Each is a GitHub release on the
 tag `v` plus `VERSION`, such as `v1.0.1153`, whose assets are `site/llms-full.txt` as committed, the
-plugin tarball, the full release notes and `SHA256SUMS`; CONTRIBUTING.md's "Releasing" section
+skill zip `secureconfig-1.0.<N>.zip`, the plugin zip `secureconfig-plugin-1.0.<N>.zip`, the full
+release notes and `SHA256SUMS`; CONTRIBUTING.md's "Releasing" section
 gives the steps. A records pull request after each release adds a bullet here naming its tag, its
 target commit and the UTC dates it covers, the target's date only up to the target commit, and the
 previous release's date too when the release also covers it after that previous target. Each
