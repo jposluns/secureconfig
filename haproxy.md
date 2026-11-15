@@ -30,11 +30,16 @@ Get a certificate first ([free-certificates.md](free-certificates.md) or [self-s
 sudo mkdir -p /etc/haproxy/certs && sudo chmod 700 /etc/haproxy/certs
 # Write the combined PEM to a root-only temp file (umask 077 keeps it mode 600), then rename it into place,
 # so the private key is never briefly world-readable and a failure leaves nothing half-written.
-sudo bash -c 'umask 077; tmp=$(mktemp /etc/haproxy/certs/.pem.XXXXXX) || exit 1
+sudo bash -c 'umask 077
+  command -v mktemp > /dev/null || { echo "mktemp is not on PATH; nothing written"; exit 2; }
+  command -v cat > /dev/null || { echo "cat is not on PATH; nothing written"; exit 2; }
+  tmp=$(mktemp /etc/haproxy/certs/.pem.XXXXXX) || exit 3
   cat /etc/letsencrypt/live/example.com/fullchain.pem \
-      /etc/letsencrypt/live/example.com/privkey.pem > "$tmp" || { rm -f "$tmp"; exit 1; }
+      /etc/letsencrypt/live/example.com/privkey.pem > "$tmp" || { rm -f "$tmp"; exit 3; }
   mv "$tmp" /etc/haproxy/certs/example.com.pem'
 ```
+
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only inside `sudo bash -c`: with 2 when `mktemp` or `cat` is not on PATH, and with 3 when `mktemp` fails or `cat` or the write to the temporary file fails; otherwise it ends with the status of its last command, `sudo bash -c`, whose status is that of `mv` when `sudo` runs it. The block does not check that the certificate files are readable before `cat` reads them, so an unreadable one also exits 3, where rule 6 gives an unreadable file the reader supplied status 2.
 
 With Certbot v2.3.0, run the concatenation and reload HAProxy after a successful renewal using `certbot renew --deploy-hook /path/to/deploy-hook-script` or an executable in `/etc/letsencrypt/renewal-hooks/deploy` (assuming the `/etc/letsencrypt` configuration directory, on `certbot renew`).
 
@@ -433,7 +438,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "d2feed52638b0fb5736dd12ba940bb27a5bb2fc765bec492b0f15a8b22908a8d",
+  "body_sha256": "0e6206e35e6c604ae3847358ff1b55cdcbf02d0dee3d44a2a06d2e06c188a334",
   "components": {
     "haproxy": {
       "name": "HAProxy",

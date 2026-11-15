@@ -11,7 +11,7 @@ chat-uis.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	019458c1748a61779dcc36ff48589cb4403b6de7
 clickhouse.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	11efeeda48aaebe6d2002d69242d23aad7332a230d5b6f8084da586e72bb0a47	2026-11-10	tool	current
 cloud-firewalls.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	a3fb65779a75d02a5a0af8bc077cce1cc0bf9d5dce42fc92e7530518eba7e395	2026-11-10	tool	current
 cloud-identity-proxies.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	427f1c43708e214388f52140b2aba8eba34855bf8b278a14515e316f2da11591	2026-11-10	tool	current
-cloudflare.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	7751a8850a8fc89c50b1b80ab14439610f542813d7ba0eb55d3d6dab51526d87	2026-11-10	tool	current
+cloudflare.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	7fabeae5da790a54a9b2525d15eff5932457af49e60d95ccc105968dae1adb6d	2026-11-10	tool	current
 code-server.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	9b98e33f64642356b7ff76e3118b9bf636593a50b889e7cf3edc030618826da5	2026-11-10	tool	current
 common-mistakes.md	K	P	n/a	?	n/a	n/a	n/a	?	?	n/a	?	SOLID	b4a22108842595f276f0bbbcd8b43a3677e71ad3a3cbd1d5116fd0789cbdd7ad	2026-11-10	tool	current
 connection-poolers.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	d8331d53ffa0efedcdc7f3e28b77816137fcb59d5c4a6257408e19213547adb7	2026-11-10	tool	current
@@ -34,7 +34,7 @@ gitops-controllers.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	b93332fac2
 go.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	5c4b33e6d16d118aaf133645b369cb3b46099ff732119bf81755e5b05f7b12a5	2026-11-10	tool	current
 gpu-clouds.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	987e395d78900fcb8f247ee334e70cf832f1d272bbd202d0f2200133369a4335	2026-11-10	tool	current
 gradio.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	4bd2c804fb80557e8eed3f354e79162d50336ee412556181db6ce81f7eb82fde	2026-11-10	tool	current
-haproxy.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	d2feed52638b0fb5736dd12ba940bb27a5bb2fc765bec492b0f15a8b22908a8d	2026-11-10	tool	current
+haproxy.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	0e6206e35e6c604ae3847358ff1b55cdcbf02d0dee3d44a2a06d2e06c188a334	2026-11-10	tool	current
 headers.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	39ca21a6acd6f5e964df85181ee154aa3168d8cb4fc6335f88a465ae8739629b	2026-11-10	tool	current
 headless-browser-services.md	C	P	?	?	?	GAP(D3)	?	?	?	?	?	MINOR-GAPS	c495bd437a18c4742276a20cc1088a8a65f8024e968e1f0c5649a1bc160c292d	2026-11-10	tool	current
 headless-cms-instant-api.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	0f3341bd00c37ba9c5380f01db4cf910b6c263b4d7213dde3bae788d453b71de	2026-11-10	tool	current
@@ -44,7 +44,7 @@ image-gen-uis.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	77f39e9fc5ca0eaf69041d344
 java.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	48f596a614667a2f4284f778f9ce929ff800155978d0bfec39ad85686d335fcc	2026-11-10	tool	current
 jupyter.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	e2f48a37fb32ee9376df6c9543b5a8a26dc5029aa810a1e000537543ea44116f	2026-11-10	tool	current
 kafka.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	5907c6db29f85723ec9dd9c6b75d47955f878e0aff62365516161332685693ac	2026-11-10	tool	current
-kubernetes.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	08dbbdd50a94f03ed62e67c53f597cce1df7cbf385c8ff1c300c0dc0d0f2d215	2026-11-10	tool	current
+kubernetes.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	7b937fe7cf1b7fecaebe34745152c780e93ea43e74fae0a979d45910f1e69002	2026-11-10	tool	current
 lighttpd.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	b408b44fee9507e7328eb4a7d86dc8f89df051aa27999d49be595a175d7c2be0	2026-11-10	tool	current
 litellm.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	7387fed7b27ae09d4fe2e2aee7e98347ae2f6366ea0b63f192b2562863424a15	2026-11-10	tool	current
 llm-observability.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	fedfe69f91436b52bb1b513ae54fb4099e5dd17eed91691b4f6f6bea16ebe19b	2026-11-10	tool	current
@@ -80,7 +80,7 @@ postgresql.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	8dfdaa5890bde912d02bc09c4b2deb85d5a5f6
 python.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	32048bf47a61a7c8b01bac34c0340deac63450b4ec8c9ec1af63b2a43d00b065	2026-11-10	tool	current
 rabbitmq.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	827e8f253c2455dc18dc845a54d8015cd0eea915fc6eb6ac13ae7ee913a06d5a	2026-11-10	tool	current
 ray.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	20627523910cb5b9e66607932b0490ab17d6041e9c4ad3639fb8e919c294110b	2026-11-10	tool	current
-realtime-voice-infra.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	947dd0ffdcd7f172c3be537a86676afcf5313ce714ed3fe63097825b1106293c	2026-11-10	tool	current
+realtime-voice-infra.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	59a6790813129a29c7387dc6a0ec1baf7bbaaa597e36febeb45343031974ac33	2026-11-10	tool	current
 realtime-webhooks.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	406f7ed9f7e018166c3259cb973b83d2b3daae8c16008540473cd3e0d52a0b1d	2026-11-10	tool	current
 redis.md	S	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	fa2cae058289856b567209194eda26b4e7b97d426b3f84f8c113132b92e5d0f3	2026-11-10	tool	current
 ruby.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	5abe45766cdb5cb3239379744dc7afee97dda1f3115d12d146a5a59e1672ca5c	2026-11-10	tool	current

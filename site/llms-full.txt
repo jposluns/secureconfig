@@ -1718,18 +1718,21 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
   case "$2" in
     ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply the client ID without control characters; not probing'; exit 2 ;;
   esac
+  command -v curl > /dev/null || { echo 'curl is not on PATH; not probing'; exit 2; }
   IFS= read -r -s -p 'Client secret (input hidden): ' HDR ||
-    { echo 'secret input failed; not probing'; exit 2; }
+    { echo 'secret input failed; not probing'; exit 3; }
   printf '\n'
   case "$HDR" in
     ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'supply the secret without control characters; not probing'; exit 2 ;;
   esac
   HDR="CF-Access-Client-Secret: $HDR"
   printf '%s\n' "CF-Access-Client-Id: $2" "$HDR" |
-    curl -q -g -sS --connect-timeout 5 --max-time 20 --header @- "$1" || exit 2
+    curl -q -g -sS --connect-timeout 5 --max-time 20 --header @- "$1" || exit 3
   unset -v HDR
 )
 ```
+
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, as when `curl` is not on PATH, or when the hidden prompt fails to read or `curl` fails, with 3; otherwise it ends with the status of its last command, `unset -v HDR`.
 
 ## 5. Close the side doors
 
@@ -1995,7 +1998,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "7751a8850a8fc89c50b1b80ab14439610f542813d7ba0eb55d3d6dab51526d87",
+  "body_sha256": "7fabeae5da790a54a9b2525d15eff5932457af49e60d95ccc105968dae1adb6d",
   "components": {
     "token-file": {
       "name": "cloudflared token-file minimum",
@@ -12204,11 +12207,16 @@ Get a certificate first ([free-certificates.md](https://github.com/jposluns/secu
 sudo mkdir -p /etc/haproxy/certs && sudo chmod 700 /etc/haproxy/certs
 # Write the combined PEM to a root-only temp file (umask 077 keeps it mode 600), then rename it into place,
 # so the private key is never briefly world-readable and a failure leaves nothing half-written.
-sudo bash -c 'umask 077; tmp=$(mktemp /etc/haproxy/certs/.pem.XXXXXX) || exit 1
+sudo bash -c 'umask 077
+  command -v mktemp > /dev/null || { echo "mktemp is not on PATH; nothing written"; exit 2; }
+  command -v cat > /dev/null || { echo "cat is not on PATH; nothing written"; exit 2; }
+  tmp=$(mktemp /etc/haproxy/certs/.pem.XXXXXX) || exit 3
   cat /etc/letsencrypt/live/example.com/fullchain.pem \
-      /etc/letsencrypt/live/example.com/privkey.pem > "$tmp" || { rm -f "$tmp"; exit 1; }
+      /etc/letsencrypt/live/example.com/privkey.pem > "$tmp" || { rm -f "$tmp"; exit 3; }
   mv "$tmp" /etc/haproxy/certs/example.com.pem'
 ```
+
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only inside `sudo bash -c`: with 2 when `mktemp` or `cat` is not on PATH, and with 3 when `mktemp` fails or `cat` or the write to the temporary file fails; otherwise it ends with the status of its last command, `sudo bash -c`, whose status is that of `mv` when `sudo` runs it. The block does not check that the certificate files are readable before `cat` reads them, so an unreadable one also exits 3, where rule 6 gives an unreadable file the reader supplied status 2.
 
 With Certbot v2.3.0, run the concatenation and reload HAProxy after a successful renewal using `certbot renew --deploy-hook /path/to/deploy-hook-script` or an executable in `/etc/letsencrypt/renewal-hooks/deploy` (assuming the `/etc/letsencrypt` configuration directory, on `certbot renew`).
 
@@ -12607,7 +12615,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "d2feed52638b0fb5736dd12ba940bb27a5bb2fc765bec492b0f15a8b22908a8d",
+  "body_sha256": "0e6206e35e6c604ae3847358ff1b55cdcbf02d0dee3d44a2a06d2e06c188a334",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -15151,9 +15159,11 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   { unset -n PASSWORD confirm && unset -v PASSWORD confirm; } 2>/dev/null ||
     { echo 'cannot clear PASSWORD or confirm in this shell; not creating the secret'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not creating the secret'; exit 2; }
-  IFS= read -r -s -p 'basic auth password: ' PASSWORD < /dev/tty || exit 2
+  command -v mktemp > /dev/null || { echo 'mktemp is not on PATH; not creating the secret'; exit 2; }
+  command -v htpasswd > /dev/null || { echo 'htpasswd is not on PATH; not creating the secret'; exit 2; }
+  IFS= read -r -s -p 'basic auth password: ' PASSWORD < /dev/tty || { echo; echo 'password input failed; not creating the secret'; exit 3; }
   echo
-  IFS= read -r -s -p 'again, to confirm: ' confirm < /dev/tty || exit 2
+  IFS= read -r -s -p 'again, to confirm: ' confirm < /dev/tty || { echo; echo 'confirmation input failed; not creating the secret'; exit 3; }
   echo
   [ -n "$PASSWORD" ] || { echo 'no password supplied; not creating the secret'; exit 2; }
   [ "$PASSWORD" = "$confirm" ] || { echo 'the two entries differ; not creating the secret'; exit 2; }
@@ -15168,20 +15178,20 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   # terminal, a hangup or SIGTERM did too; if that happens, remove it from your temporary directory
   # by hand.
   set -- "$(mktemp -d)"
-  [ -d "$1" ] || { echo 'cannot create a private directory; not creating the secret'; exit 2; }
+  [ -d "$1" ] || { echo 'cannot create a private directory; not creating the secret'; exit 3; }
   trap 'rm -rf -- "$1"' EXIT
   trap 'exit 129' HUP
   trap 'exit 130' INT
   trap 'exit 143' TERM
   printf '%s' "$PASSWORD" | htpasswd -cis "$1/.htpasswd" admin ||
-    { echo 'password-file creation failed; not creating the secret'; exit 2; }
+    { echo 'password-file creation failed; not creating the secret'; exit 3; }
   # -i does no verification, so the block asks twice and refuses a mismatch; `-vi` below then
   # confirms the file holds that value, and the secret is created only if it does. Paste the block by
   # itself: the shell reads the whole subshell before either `read` runs. Without bracketed paste,
   # lines pasted after the closing `)` feed the two prompts instead, and the block refuses unless both
   # are identical; with bracketed paste, they run as commands once the block finishes.
   printf '%s' "$PASSWORD" | htpasswd -vi "$1/.htpasswd" admin ||
-    { echo 'htpasswd could not verify the file; not creating the secret'; exit 2; }
+    { echo 'htpasswd could not verify the file; not creating the secret'; exit 3; }
   # Sources has no kubectl reference for the key name this gives the file in the Secret, and the
   # runs recorded below used a stub kubectl, so before Envoy Gateway uses app-basic-auth, confirm
   # that the Secret has a .htpasswd key, listing its key names only and never printing its value.
@@ -15189,7 +15199,9 @@ Gateway API defines no authentication filter; each implementation adds its own. 
 )
 ```
 
-The block's runs on 2026-10-13 (UTC) used Bash 5.3.9 on a pty, a dummy password typed at the hidden prompts, stub `htpasswd` and `kubectl` executables, and logging wrappers around the real `mktemp` and `rm`. The block removed its directory in the 2026-10-13 runs after normal completion, a refused creation, a refused verification and a failed `kubectl`, and after Ctrl-C, SIGHUP or SIGTERM sent to its process group while `kubectl` waited, both pasted into an interactive shell and run as a script; SIGKILL left the directory and its `.htpasswd` behind. The block, when the shell running it was the terminal's session leader (run directly as the terminal's process, without job control), removed the directory after 50 Ctrl-C, 49 SIGHUP and 50 SIGTERM runs in 50 repeats, and after 20, 19 and 17 in an earlier 20 repeats of the same commands. Fifty repeats of the block without the HUP, INT and TERM traps, in the same session-leader setup, removed the directory after 50, 2 and 1. The session-leader shell was itself ended by the signal in the SIGHUP and SIGTERM runs, so its exit hung up the terminal. The dummy password reached the `htpasswd` stub only on stdin, never in any stub's argv, the `bash -x` trace or the terminal output. Stubs stood in for the cluster, so these runs do not show which key `kubectl` gives the file in the Secret.
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status with 2 when a guard refuses, as when `mktemp` or `htpasswd` is not on PATH, and with 3 when a hidden prompt fails to read, or creating the private directory or writing or verifying the password file fails. Once its traps are set, a hangup, Ctrl-C or SIGTERM ends it with 129, 130 or 143; otherwise it ends with the status of its last command, `kubectl create secret`.
+
+The block's runs on 2026-10-13 (UTC) used Bash 5.3.9 on a pty, a dummy password typed at the hidden prompts, stub `htpasswd` and `kubectl` executables, and logging wrappers around the real `mktemp` and `rm`. The block removed its directory in the 2026-10-13 runs after normal completion, a failed creation, a failed verification and a failed `kubectl`, and after Ctrl-C, SIGHUP or SIGTERM sent to its process group while `kubectl` waited, both pasted into an interactive shell and run as a script; SIGKILL left the directory and its `.htpasswd` behind. Those runs covered an earlier form of the block, in which a failed creation or verification exited 2 as a refusal; it was not re-run on the current form, which exits 3 for those failures and for a failed hidden prompt or private directory, and refuses a missing `mktemp` or `htpasswd` with 2. The block, when the shell running it was the terminal's session leader (run directly as the terminal's process, without job control), removed the directory after 50 Ctrl-C, 49 SIGHUP and 50 SIGTERM runs in 50 repeats, and after 20, 19 and 17 in an earlier 20 repeats of the same commands. Fifty repeats of the block without the HUP, INT and TERM traps, in the same session-leader setup, removed the directory after 50, 2 and 1. The session-leader shell was itself ended by the signal in the SIGHUP and SIGTERM runs, so its exit hung up the terminal. The dummy password reached the `htpasswd` stub only on stdin, never in any stub's argv, the `bash -x` trace or the terminal output. Stubs stood in for the cluster, so these runs do not show which key `kubectl` gives the file in the Secret.
 
 `-s` is SHA-1, which Apache describes as "insecure by today's standards", and it is not a
 choice here: Envoy Gateway's basic auth documentation says "only SHA hash algorithm is
@@ -15748,7 +15760,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "08dbbdd50a94f03ed62e67c53f597cce1df7cbf385c8ff1c300c0dc0d0f2d215",
+  "body_sha256": "7b937fe7cf1b7fecaebe34745152c780e93ea43e74fae0a979d45910f1e69002",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
@@ -59229,7 +59241,7 @@ For static accounts, the following alternative derives the key without sending t
 
 MD5 here is coturn's static-key format, not a recommendation to use MD5 for password storage. `SHATYPE_DEFAULT` selects the MD5 branch, even though the enum aliases it to `SHATYPE_SHA1`; the SHA256, SHA384 and SHA512 branches are separate. The default key is 16 bytes, printed as 32 lowercase hex digits with a `0x` prefix (`userdb.c` lines 997-1014). OpenSSL 3.5.5's dgst manual documents `-md5`, `-r` for coreutils output and stdin when no file is supplied. The block checks pipeline success and validates the extracted hex before printing the config entry; a build or policy that refuses MD5 produces no key. It does not change OpenSSL policy to enable MD5.
 
-DEMONSTRATED: following block; local Bash 5.3.9 and OpenSSL 3.5.5, with the prompt supplied on stdin, produced `user=ninefingers:0xbc807ee29df3c9ffa736523fb2c4e8ee` for coturn 4.18.0's public example in `examples/etc/turnserver.conf` lines 383-390. An instrumented wrapper recorded Bash, wrapper and OpenSSL command lines from procfs: none contained the example password. A synchronized exposed control did contain it. Unsubstituted placeholders, empty or non-ASCII passwords, readonly password/IFS variables and a failing digest command each exited 2 without a key. This is a local derivation and argv observation, not a TURN allocation test or a demonstration of terminal echo suppression.
+DEMONSTRATED: following block; local Bash 5.3.9 and OpenSSL 3.5.5, with the prompt supplied on stdin, produced `user=ninefingers:0xbc807ee29df3c9ffa736523fb2c4e8ee` for coturn 4.18.0's public example in `examples/etc/turnserver.conf` lines 383-390. An instrumented wrapper recorded Bash, wrapper and OpenSSL command lines from procfs: none contained the example password. A synchronized exposed control did contain it. In the earlier form of the block that those runs covered, unsubstituted placeholders, empty or non-ASCII passwords, readonly password/IFS variables and a failing digest command each exited 2 without a key. The current form exits 3 for a failed digest, unusable digest output or a failed password read, refuses a missing `openssl` with 2 before the prompt, and was not re-run. This is a local derivation and argv observation, not a TURN allocation test or a demonstration of terminal echo suppression.
 
 ```bash
 (
@@ -59255,8 +59267,9 @@ DEMONSTRATED: following block; local Bash 5.3.9 and OpenSSL 3.5.5, with the prom
     { echo 'cannot clear password variable; not deriving'; exit 2; }
   { unset -n IFS; } 2>/dev/null ||
     { echo 'cannot clear IFS; not deriving'; exit 2; }
+  command -v openssl > /dev/null || { echo 'openssl is not on PATH; not deriving'; exit 2; }
   IFS= read -r -s -p 'TURN password: ' turn_password ||
-    { echo 'password read failed; not deriving'; exit 2; }
+    { echo 'password read failed; not deriving'; exit 3; }
   builtin printf '\n' >&2
   case "$turn_password" in
     ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) echo 'invalid ASCII password; not deriving'; exit 2 ;;
@@ -59267,16 +59280,18 @@ DEMONSTRATED: following block; local Bash 5.3.9 and OpenSSL 3.5.5, with the prom
   unset -v turn_password
   case "$2" in
     *$'\nOK') set -- "$1" "${2%$'\nOK'}" ;;
-    *) echo 'digest failed; no key produced'; exit 2 ;;
+    *) echo 'digest failed; no key produced'; exit 3 ;;
   esac
   set -- "$1" "${2%% *}"
   case "$2" in
-    ""|*[!0123456789abcdef]*) echo 'unexpected digest output; no key produced'; exit 2 ;;
+    ""|*[!0123456789abcdef]*) echo 'unexpected digest output; no key produced'; exit 3 ;;
   esac
-  [ "${#2}" -eq 32 ] || { echo 'unexpected digest length; no key produced'; exit 2; }
+  [ "${#2}" -eq 32 ] || { echo 'unexpected digest length; no key produced'; exit 3; }
   builtin printf 'user=%s:0x%s\n' "$1" "$2"
 )
 ```
+
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, as when `openssl` is not on PATH, or when the password read, the digest or the digest's output fails, with 3; otherwise it ends with the status of its last command, the `builtin printf` that prints the entry.
 
 The prompt variable is cleared of inherited attributes, never exported and used only by Bash builtins. The builtin `printf` sends the exact bytes on stdin to `openssl dgst -md5 -r`; neither the password nor the key is an external process argument. The block clears inherited traps and disables tracing, allexport and inherited errexit before reading, refuses readonly IFS, and removes the password variable after hashing. These measures close the argv channel only. They do not protect against a compromised shell, same-account or root memory inspection, terminal capture, or tracing that is re-enabled. Never type the password into the pasted block or a command line, where shell history can retain it. Paste it alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. The printed key is itself a credential: protect its output and place the generated entry in the protected coturn configuration under the same realm. The offline-guessing and key-reuse weaknesses described above still apply.
 
@@ -59597,7 +59612,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "947dd0ffdcd7f172c3be537a86676afcf5313ce714ed3fe63097825b1106293c",
+  "body_sha256": "59a6790813129a29c7387dc6a0ec1baf7bbaaa597e36febeb45343031974ac33",
   "components": {
     "livekit": {
       "name": "LiveKit",
