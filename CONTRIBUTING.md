@@ -495,9 +495,17 @@ offers them; both are repository settings. When the orchestrator read them from 
 on 2026-11-01, immutable releases were already enabled, and the existing "All Tags" tag ruleset
 already blocked tag update, deletion and non-fast-forward, and also creation except for its
 bypass role, so no new ruleset was created; `DECISIONS.md` records that observation. A
-release's assets are `site/llms-full.txt` as committed, the plugin tarball, the full release
-notes and `SHA256SUMS`; its body is short and generated, with the list of pull requests and a
-link to `CHANGELOG.md` at the tag.
+release has five assets: `site/llms-full.txt` as committed, the skill zip
+`secureconfig-1.0.<N>.zip` (the `plugin/skills/secureconfig/` folder, with `SKILL.md` at the
+zip's root), the plugin zip `secureconfig-plugin-1.0.<N>.zip` (the `plugin/` folder), the full
+release notes and `SHA256SUMS`, which lists the other four. `tools/_archives.py` builds both zips
+from `git archive` of the target, with sorted file entries, fixed dates and modes and no
+directory entries, so two builds give the same bytes. The skill zip is also what a claude.ai
+chat skill upload takes, so the build refuses it unless it holds exactly one `SKILL.md`, the one
+at its root, no `.claude-plugin/` entry and at most 200 files, the limits an upload test of
+2026-11-15 found. No asset has a `-latest` name: the latest
+links will be 302 redirects with no bytes of their own. Its body is short and generated, with the
+list of pull requests and a link to `CHANGELOG.md` at the tag.
 
 1. Fetch `main` and the release tags with `git fetch origin main 'refs/tags/v*:refs/tags/v*'`,
    and confirm that `git rev-parse main origin/main` prints one commit twice and that the
@@ -568,11 +576,12 @@ link to `CHANGELOG.md` at the tag.
    `gh release create v1.0.<N> --draft --target <sha> --title "secureconfig v1.0.<N>" --notes-file <dir>/body.md <dir>/assets/*`.
    Never run `git push --tags`, which would publish the local `qa/` tags.
 7. Download the draft's assets into a new directory with
-   `gh release download v1.0.<N> --dir <new>`, run `sha256sum -c SHA256SUMS` there, and
-   compare that directory with `<dir>/assets` using `diff -r`, and run
-   `git ls-remote origin refs/tags/v1.0.<N>`, which must print nothing while the release is a
-   draft. Any failure, difference or tag stops the release, and the draft is fixed or discarded
-   before anything is published.
+   `gh release download v1.0.<N> --dir <new>`, run `sha256sum -c SHA256SUMS` there, which must
+   report each of the other four assets, both zips among them, as `OK`. Compare that
+   directory with `<dir>/assets` using `diff -r`, so it holds exactly the five assets and no
+   `-latest` name, and run `git ls-remote origin refs/tags/v1.0.<N>`, which must print nothing
+   while the release is a draft. Any failure, difference or tag stops the release, and the draft
+   is fixed or discarded before anything is published.
 8. Only then publish the draft with `gh release edit v1.0.<N> --draft=false`, and confirm with
    `git ls-remote origin refs/tags/v1.0.<N>` that the tag names the target. Immutable releases
    were enabled on this repository when this procedure was written (read from the GitHub API on
@@ -584,7 +593,9 @@ link to `CHANGELOG.md` at the tag.
    download holds exactly the four uploaded assets, as step 7's `diff -r` assumes; and the
    "All Tags" ruleset's bypass role let the publisher create the tag. Step 7's checks, the
    publish command's exit status and the `git ls-remote` check still show any of them failing
-   on a later release.
+   on a later release. That download was confirmed for the four assets of that release; the
+   first release with the five assets above confirms again online that the download holds
+   exactly the five uploaded assets, and until then that is unverified.
 9. Record the release in a records pull request through the normal flow: one `CHANGELOG.md`
    bullet naming the tag, its target commit and the UTC dates it covers, saying that the
    target's date is covered only up to the target commit, and also saying whether the
@@ -593,10 +604,11 @@ link to `CHANGELOG.md` at the tag.
 10. Ask the posluns orchestrator, which owns https://posluns.dev/hashes.txt, to add the release:
     send the project, the version, the release date (UTC), the tag, its target commit, the
     artefact location and the SHA-256 of the release's `SHA256SUMS` asset, which
-    `sha256sum <dir>/assets/SHA256SUMS` prints, and how to reproduce that digest. Once posluns
-    reports the line live, fetch https://posluns.dev/hashes.txt and compare its `secureconfig`
-    line for the release with that digest; a missing or different line is reported to posluns
-    and corrected.
+    `sha256sum <dir>/assets/SHA256SUMS` prints, and how to reproduce that digest. Also send
+    each zip's name, its SHA-256 as `SHA256SUMS` lists it, and its location as a GitHub release
+    asset; posluns owns the format of its lines. Once posluns reports the lines live, fetch
+    https://posluns.dev/hashes.txt and compare its `secureconfig` lines for the release with
+    those digests; a missing or different line is reported to posluns and corrected.
 
 The released `llms-full.txt` is the committed file, so its repository links point at `main`,
 not at the tag, and the body says so. The bundled
