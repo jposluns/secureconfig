@@ -17,6 +17,7 @@ KEY = b"QA_DUMMY_LITERAL_450_X9"
 F = b"FOUND: remove and rotate credential\n"
 N = b"NOT FOUND: no literal credential in stated scope\n"
 I = b"INCONCLUSIVE: could not complete scan\n"
+R = b"REFUSED: unsafe or wrong use; no content searched\n"
 CASES = []
 COUNTS = collections.Counter()
 SKIPS = []
@@ -146,9 +147,13 @@ for name, content in [
 for path in [".hidden", "has space", "line\nbreak", "-app", "a*[b]?",
              "\udcff", ".gitignore", ".github/cfg", ".gitattributes", "x.git", ".git2"]:
     case("filename " + repr(path), "FOUND", lambda f, p=path: bundle(f, path=p))
-for name, data in [("empty key", b"\n"), ("EOF", b""), ("unterminated", KEY),
-                   ("CRLF key", KEY + b"\r\n"), ("tab key", KEY + b"\t\n")]:
-    case(name, "INCONCLUSIVE", lambda f, d=data: f.scan(2, I, data=d))
+# A read that fails (end of input, no final newline) is a failed check, 3; a
+# value read successfully but empty or holding control bytes is refused, 2.
+for name, data, status in [("empty key", b"\n", 2), ("EOF", b"", 3),
+                           ("unterminated", KEY, 3), ("CRLF key", KEY + b"\r\n", 2),
+                           ("tab key", KEY + b"\t\n", 2)]:
+    case(name, "REFUSED" if status == 2 else "INCONCLUSIVE",
+         lambda f, d=data, s=status: f.scan(s, R if s == 2 else I, data=d))
 
 
 def ignore(f, where):
@@ -188,7 +193,7 @@ def shape(f, kind):
                 s.bind(str(p / "socket"))
             except PermissionError as e:
                 raise unittest_skip("unix-socket-bind-refused", str(e))
-    f.scan(2, I)
+    f.scan(2, R)
 
 
 class unittest_skip(Exception):
@@ -201,7 +206,7 @@ class unittest_skip(Exception):
 
 for kind in ["missing", "file root", "symlink root", "empty", "directories only",
              "symlink file", "symlink directory", "symlink dangling", "FIFO", "socket"]:
-    case(kind, "INCONCLUSIVE", lambda f, k=kind: shape(f, k))
+    case(kind, "REFUSED", lambda f, k=kind: shape(f, k))
 
 
 def denied(f, kind, mode):
@@ -213,13 +218,13 @@ def denied(f, kind, mode):
         if os.access(p, os.R_OK) and (kind != "directory" or os.access(p, os.X_OK)):
             raise unittest_skip("privileged-uid-reads-everything",
                                 "permission denial unavailable for this uid")
-        f.scan(2, I)
+        f.scan(2, R)
     finally:
         p.chmod(0o700 if kind == "directory" else 0o600)
 
 
 for kind, mode in [("file", 0), ("directory", 0), ("directory", 0o600)]:
-    case(f"unreadable {kind} {mode:o}", "INCONCLUSIVE",
+    case(f"unreadable {kind} {mode:o}", "REFUSED",
          lambda f, k=kind, m=mode: denied(f, k, m))
 for chars in itertools.product(*["gG", "iI", "tT"]):
     spelling = "." + "".join(chars)
@@ -233,9 +238,9 @@ for chars in itertools.product(*["gG", "iI", "tT"]):
             else:
                 p.write_bytes(KEY)
             f.git("config", "core.ignoreCase", "true")
-            f.scan(2, I)
+            f.scan(2, R)
         case(f"dotgit {depth}{spelling} {'directory' if directory else 'file'}",
-             "INCONCLUSIVE", dotgit)
+             "REFUSED", dotgit)
 
 
 def nested(f, kind):
@@ -243,14 +248,17 @@ def nested(f, kind):
         f.git("init", "-q", "dist/nested")
     else:
         f.write("dist/module/.git", b"gitdir: ../../.git/modules/module\n")
-    f.scan(2, I)
+    f.scan(2, R)
 
 
 for kind in ("repository", "gitfile"):
-    case("nested " + kind, "INCONCLUSIVE", lambda f, k=kind: nested(f, k))
+    case("nested " + kind, "REFUSED", lambda f, k=kind: nested(f, k))
 for out in (".", ".git", ".git/objects", "dist/../dist", "/tmp", ""):
-    case("refuse output " + repr(out), "INCONCLUSIVE",
-         lambda f, o=out: f.scan(2, I, out=o))
+    case("refuse output " + repr(out), "REFUSED",
+         lambda f, o=out: f.scan(2, R, out=o))
+# A key or other value in argv is wrong use: the tool takes one operand.
+case("extra argument refusal", "REFUSED",
+     lambda f: f.scan(2, R, args=["dist", KEY.decode()]))
 
 
 def output_path(f, path):
@@ -322,7 +330,7 @@ def corruption(f, kind, match=False):
         f.write(".git/refs/heads/broken", b"1" * 40 + b"\n")
     if match:
         f.write("dist/app.js", KEY)
-    f.scan(2, (b"dist/app.js\n" if match and kind != "broken ref" else b"") + I)
+    f.scan(3, (b"dist/app.js\n" if match and kind != "broken ref" else b"") + I)
 
 
 for kind in ["missing", "corrupt", "broken ref"]:
@@ -445,9 +453,9 @@ for before in [
 for name in ["printf", "read", "git"]:
     case("exported function " + name, "FOUND",
          lambda f, n=name: f.found(before=n + '() { return 99; }; export -f ' + n))
-case("exported compgen function", "INCONCLUSIVE",
-     lambda f: f.scan(2, I, before="compgen() { return 99; }; export -f compgen"))
-case("BASH_ENV refusal", "INCONCLUSIVE", lambda f: f.scan(2, I, env={"BASH_ENV": "/dev/null"}))
+case("exported compgen function", "REFUSED",
+     lambda f: f.scan(2, R, before="compgen() { return 99; }; export -f compgen"))
+case("BASH_ENV refusal", "REFUSED", lambda f: f.scan(2, R, env={"BASH_ENV": "/dev/null"}))
 
 
 def git_environment(f, variable):
@@ -529,7 +537,7 @@ for n in [150, 151]:
 def repo_shape(f, kind):
     if kind == "non-repository":
         shutil.rmtree(f.root / ".git")
-        f.scan(2, I)
+        f.scan(2, R)
     elif kind == "empty repository":
         f.git("update-ref", "-d", "refs/heads/main")
         f.git("reflog", "expire", "--expire=all", "--all")
@@ -538,7 +546,7 @@ def repo_shape(f, kind):
         old = f.root
         f.root = old / "dist"
         try:
-            f.scan(2, I, out=".")
+            f.scan(2, R, out=".")
         finally:
             f.root = old
     elif kind == "bare with bundle":
@@ -547,7 +555,7 @@ def repo_shape(f, kind):
     elif kind == "bare without bundle":
         f.git("config", "core.bare", "true")
         shutil.rmtree(f.root / "dist")
-        f.scan(2, I)
+        f.scan(2, R)
     else:
         if kind == "detached":
             f.git("checkout", "--detach", "-q")
@@ -559,7 +567,7 @@ def repo_shape(f, kind):
 
 
 for kind in ["non-repository", "below root", "bare without bundle"]:
-    case(kind, "INCONCLUSIVE", lambda f, k=kind: repo_shape(f, k))
+    case(kind, "REFUSED", lambda f, k=kind: repo_shape(f, k))
 case("bare with bundle", "FOUND", lambda f: repo_shape(f, "bare with bundle"))
 for kind in ["empty repository", "detached", "packed refs", "no reflogs"]:
     case(kind, "NOT FOUND", lambda f, k=kind: repo_shape(f, k))
@@ -569,7 +577,7 @@ def warning(f, match):
     if match:
         f.write("dist/app.js", KEY)
     f.git("config", "core.fsync", "invalid")
-    f.scan(2, I, stderr=b"")
+    f.scan(3, I, stderr=b"")
 
 
 case("Git warning clean", "INCONCLUSIVE", lambda f: warning(f, False))
@@ -580,7 +588,7 @@ def explain(f, bad):
     if bad:
         (f.root / "dist/link").symlink_to("../source")
     f.scan(2 if bad else 0,
-           I + b"CHECK: output-entry\n" if bad else
+           R + b"CHECK: output-entry\n" if bad else
            b"READY: prerequisites passed; no key read and no content searched\n",
            args=["--explain", "dist"], data=b"")
 
@@ -589,13 +597,44 @@ case("explain refusal without key", "CHECK", lambda f: explain(f, True))
 case("explain success without key", "CHECK", lambda f: explain(f, False))
 
 
+def explain_failure(f):
+    # A prerequisite that Git cannot complete is a failure, not a refusal.
+    f.write(".git/refs/heads/broken", b"1" * 40 + b"\n")
+    f.scan(3, I + b"CHECK: history-enumeration\n", args=["--explain", "dist"], data=b"")
+
+
+def explain_below_root(f):
+    # Running from a subdirectory is wrong use, refused before Git searches.
+    old = f.root
+    f.root = old / "dist"
+    try:
+        f.scan(2, R + b"CHECK: repository-root\n", args=["--explain", "."], data=b"")
+    finally:
+        f.root = old
+
+
+case("explain failure without key", "CHECK", explain_failure)
+case("explain below root without key", "CHECK", explain_below_root)
+
+
+def help_text(f):
+    p = subprocess.run(["bash", str(TOOL), "--help"], cwd=f.root, env=f.env,
+                       capture_output=True, timeout=30)
+    assert (p.returncode, p.stderr) == (0, b""), (p.returncode, p.stderr)
+    line = b"Exit: 0 NOT FOUND in stated scope; 1 FOUND; 2 REFUSED; 3 INCONCLUSIVE.\n"
+    assert line in p.stdout, p.stdout
+
+
+case("help states four statuses", "CHECK", help_text)
+
+
 def source_refusal(f):
     p = subprocess.run(["bash", "-c", 'source "$1" dist', "fixture", str(TOOL)],
                        cwd=f.root, env=f.env, input=KEY + b"\n", capture_output=True)
-    assert (p.returncode, p.stdout, p.stderr) == (2, I, b"")
+    assert (p.returncode, p.stdout, p.stderr) == (2, R, b"")
 
 
-case("sourced refusal", "INCONCLUSIVE", source_refusal)
+case("sourced refusal", "REFUSED", source_refusal)
 
 
 def storage(f, kind):
@@ -610,7 +649,7 @@ def storage(f, kind):
         f.write(".git/objects/info/alternates", os.fsencode(store) + b"\n")
     elif kind == "broken alternates":
         f.write(".git/objects/info/alternates", os.fsencode(f.root / "absent") + b"\n")
-        f.scan(2, I)
+        f.scan(3, I)
         return
     elif kind == "packed refs positive":
         f.git("pack-refs", "--all")
@@ -735,7 +774,7 @@ def partial(f, available):
         f.write("dist/app.js", b"clean")
         if not available:
             f.git("remote", "set-url", "origin", "file://" + str(root / "missing"))
-        f.scan(1 if available else 2, quoted(h + ":source") + F if available else I)
+        f.scan(1 if available else 3, quoted(h + ":source") + F if available else I)
     finally:
         f.root = root
 
@@ -765,7 +804,7 @@ def injected(f, stage, status, diagnostic):
     emit = "printf '" + diagnostic + "' >&2" if diagnostic else ":"
     env = wrapper(f, "if " + condition + "; then\n" + emit +
                   "\nexit " + str(status) + "\nfi")
-    f.scan(2, I, env=env, stderr=b"")
+    f.scan(3, I, env=env, stderr=b"")
 
 
 for stage in ("rev-list", "output", "history"):
@@ -777,7 +816,7 @@ for stage in ("rev-list", "output", "history"):
 
 def failed_producer(f):
     env = wrapper(f, 'if [[ $3 == grep ]]; then exit 0; fi')
-    f.scan(2, I, key=b"Q" * 131072, env=env, stderr=b"")
+    f.scan(3, I, key=b"Q" * 131072, env=env, stderr=b"")
 
 
 case("failed pattern producer", "INCONCLUSIVE", failed_producer)
@@ -845,10 +884,10 @@ case("other Git environment with config injection", "FOUND", lambda f: environme
 
 def parent_symlink(f):
     (f.root / "alias").symlink_to("dist")
-    f.scan(2, I, out="alias/")
+    f.scan(2, R, out="alias/")
 
 
-case("symlink root trailing slash", "INCONCLUSIVE", parent_symlink)
+case("symlink root trailing slash", "REFUSED", parent_symlink)
 case("changed case absent", "NOT FOUND",
      lambda f: (f.write("dist/app.js", KEY.lower()), f.scan(0, N)))
 case("locale C.UTF-8", "FOUND", lambda f: f.found(env={"LC_ALL": "C.UTF-8"}))
@@ -876,12 +915,12 @@ case("transcoded historical content", "FOUND", transcoded)
 
 def startup(f, content):
     p = f.write("startup", content.encode())
-    f.scan(2, I, env={"BASH_ENV": str(p)})
+    f.scan(2, R, env={"BASH_ENV": str(p)})
 
 
 for content in ["readonly GIT_DIR=bad\n", "readonly key=old\n",
                 "enable -n compgen\n", "shopt -s expand_aliases\nalias compgen=false\n"]:
-    case("startup refusal " + content.strip(), "INCONCLUSIVE",
+    case("startup refusal " + content.strip(), "REFUSED",
          lambda f, c=content: startup(f, c))
 for before in ["set -ax; export SHELLOPTS", "shopt -s failglob; export BASHOPTS",
                "enable -n compgen", "alias compgen=false", "export IFS=x",
@@ -1009,7 +1048,7 @@ def terminal_read(f, interrupt=False):
         else:
             os.write(master, KEY + b"\n")
         out, err = p.communicate(timeout=5)
-        assert (p.returncode, out, err) == ((2, I, b"") if interrupt else
+        assert (p.returncode, out, err) == ((3, I, b"") if interrupt else
                                            (1, b"dist/app.js\n" + F, b""))
         os.set_blocking(master, False)
         try:
@@ -1133,9 +1172,9 @@ def old_bash(f):
     # BASH_VERSINFO is readonly, so a current Bash cannot impersonate an
     # older one; this stub pins the guard text in the tool and evaluates the
     # same expression under substituted versions. A failed guard reaches
-    # scan_fail, whose INCONCLUSIVE/2 contract the refusal cases observe.
+    # scan_refuse, whose REFUSED/2 contract the refusal cases observe.
     guard = ("(( BASH_VERSINFO[0] > 4 || (BASH_VERSINFO[0] == 4 && "
-             "BASH_VERSINFO[1] >= 3) )) ||\n    scan_fail bash-version")
+             "BASH_VERSINFO[1] >= 3) )) ||\n    scan_refuse bash-version")
     assert guard in TOOL.read_text(), "version guard changed; update this stub"
     expression = guard.rsplit(" ||", 1)[0].replace("BASH_VERSINFO", "V")
     for major, minor, new_enough in [(3, 2, False), (4, 2, False),
