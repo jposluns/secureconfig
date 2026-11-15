@@ -135,7 +135,8 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
 # The 2026-10-13 stub run covered the API key subshell in an earlier form, before the TLS, API and webhook probes took the n8n host on guarded set -- lines that refuse example.com, example.net, example.org and their subdomains, and before this block reported one exit status for all of its parts.
 # On 2026-10-31 an earlier form, before the ss presence check, passed bash -n and ran whole against stubs, including those example-domain refusals; no n8n deployment or network was involved.
 # A later review that day ran the form with that check, whose three host parts lowercased the host with tr before refusing those names, through bash -n and ShellCheck 0.11.0 and whole against stubs with no network, with ss present and passing, present and failing, and missing.
-# The gate suite's bash -n and ShellCheck 0.11.0 passes cover the current form, which on 2026-11-01 also passed bash -n and ShellCheck 0.11.0 and ran whole against stubs with no network: each host part refused those names in lower, upper and mixed case, also with tr absent, and under dash refused every host with status 2.
+# The gate suite's bash -n and ShellCheck 0.11.0 passes covered the next form, before the curl guards, which on 2026-11-01 also passed bash -n and ShellCheck 0.11.0 and ran whole against stubs with no network: each host part refused those names in lower, upper and mixed case, also with tr absent, and under dash refused every host with status 2.
+# The current form adds a command -v curl guard to each host part, which refuses that part with status 2 and no curl call when curl is not installed; none of those checks was re-run on it, and its guards were not run.
 # Owner setup must be COMPLETE before the instance is public: the pinned owner setup handler
 # skips authentication and issues an owner session cookie. Confirm the owner exists; do NOT POST
 # owner-creation data to a live instance as a "test".
@@ -165,6 +166,7 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
     shopt -u nocasematch   # every match below compares letter case exactly again
+    command -v curl >/dev/null || { echo "curl is not installed here; not probing"; exit 2; }   # a missing curl refuses this part with status 2, ranked as above
     curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
       -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "https://$1/" ||
       { echo "curl exit $?: the TLS request failed; inconclusive"; exit 3; }
@@ -191,6 +193,7 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
     shopt -u nocasematch   # every match below compares letter case exactly again
     case "$2" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 2 ;; esac
     case "$2" in *[[:cntrl:]]*) echo "the API key must be one line with no control characters; not probing"; exit 2 ;; esac
+    command -v curl >/dev/null || { echo "curl is not installed here; not probing"; exit 2; }   # a missing curl refuses this part with status 2, ranked as above
     set -- "$1" "$2" "https://$1/api/v1/workflows" 0   # the host, the key, the workflows URL, then this part's status so far, ranked as above
     set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' "$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "$1" "$2" "$3" "$4" "${5%%$'\n'*}" "${5##*$'\n'}"   # curl's write-out line, then its exit status
@@ -238,6 +241,7 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
     esac
     shopt -u nocasematch   # every match below compares letter case exactly again
     case "$2" in *REPLACE_WITH_*|"") echo "substitute the webhook path on the set -- line above; not probing"; exit 2 ;; esac
+    command -v curl >/dev/null || { echo "curl is not installed here; not probing"; exit 2; }   # a missing curl refuses this part with status 2, ranked as above
     set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-cred=%{http_code} exit=%{exitcode}\n' -X POST "https://$1/webhook/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
     set -- "${3%%$'\n'*}" "${3##*$'\n'}"   # curl's write-out line, then its exit status
     printf '%s\n' "$1"
@@ -552,7 +556,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-10",
-  "body_sha256": "2e25f725b4d85b468b3b227e86c8d369ffe93954210f0793ff250c24cbc44c96",
+  "body_sha256": "e07c7cf381c5ee3b2ae35d1078dd8ed1072f55252ba0337a321adeeda7616c99",
   "components": {
     "server": {
       "name": "n8n listener source",
