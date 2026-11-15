@@ -2,8 +2,8 @@
 """Check a release candidate offline before it is published.
 
 A release is a GitHub release on a tag `v1.0.<N>` that names one merge commit on `main`, with
-six assets: `llms-full.txt`, the plugin tarball, the skill zip, the plugin zip, the full release
-notes and `SHA256SUMS`.
+five assets: `llms-full.txt`, the skill zip, the plugin zip, the full release notes and
+`SHA256SUMS`.
 CONTRIBUTING.md's "Releasing" section gives the procedure and DECISIONS.md the rulings of
 2026-11-01. This tool is run by that procedure, not on every pull request; its self-test,
 tools/test_release.py, runs in tools/run_all_checks.sh so the shipped rule is tested there.
@@ -46,12 +46,11 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
    this is not applied to it.
 7. The notes asset and `body.md` equal, byte for byte, the ones regenerated from the target;
    the body holds the range's merged pull requests, so its list cannot drift from the range.
-8. `llms-full.txt` equals `site/llms-full.txt` at the target, the tarball and each zip
-   tools/_archives.py lists (the skill zip and the plugin zip) equal a rebuild from `git archive`
-   of the target's `plugin/` (built twice, and the two must agree), `SHA256SUMS` equals its
-   rebuild and verifies every asset, and `assets/` holds nothing else. No asset name ends in
-   `-latest.zip`: the distribution standard's latest links are 302 redirects with no bytes of
-   their own, so `SHA256SUMS` lists only versioned files.
+8. `llms-full.txt` equals `site/llms-full.txt` at the target, each zip tools/_archives.py lists
+   (the skill zip and the plugin zip) equals a rebuild from `git archive` of the target's
+   `plugin/` (built twice, and the two must agree), `SHA256SUMS` equals its rebuild and verifies
+   every asset, and `assets/` holds nothing else. No asset name ends in `-latest.zip`: a latest
+   link is a 302 redirect with no bytes of its own, so `SHA256SUMS` lists only versioned files.
 9. Only when 1 to 8 pass: tools/run_all_checks.sh, run in a `git worktree` of the target,
    exits 0, ends with "All gates passed.", prints the shell-block gate's pass line, and prints
    no line beginning `  FAIL  ` and no line beginning `  SKIP  ` but two. A line is read as a
@@ -90,17 +89,14 @@ exists only on GitHub, so the procedure fetches `main` and the `v*` tags first, 
 check that a mention of a pull request in a section is that pull request's own entry.
 
 THE RELEASE DIRECTORY: --build writes it into a new directory: `body.md`, the release body, and
-`assets/` with `llms-full.txt`, `secureconfig-plugin-v1.0.<N>.tar.gz`,
-`secureconfig-1.0.<N>.zip`, `secureconfig-plugin-1.0.<N>.zip`, `RELEASE-NOTES-v1.0.<N>.md` and
-`SHA256SUMS`, which lists the other five in that order. It refuses when any of checks 1 to 6
-fails or a zip cannot be built, and it does not run the suite. The notes are a heading and one
-paragraph, then each dated section in the range, newest first, from its heading to its last
-non-empty line, separated by one empty line. The tarball is `git archive --format=tar
---prefix=secureconfig-plugin-v1.0.<N>/` of `plugin` with tar.umask 0002, compressed by Python's
-gzip at level 9 with mtime 0, so its bytes repeat for one git, Python and zlib. The zips are
-built by tools/_archives.py from `git archive --format=tar` of `plugin`, also with tar.umask
-0002, whose docstring gives their layout, the chat skill upload's limits on the skill zip, and
-the fixed dates, modes and order that make their bytes repeat for one git, Python and zlib.
+`assets/` with `llms-full.txt`, `secureconfig-1.0.<N>.zip`, `secureconfig-plugin-1.0.<N>.zip`,
+`RELEASE-NOTES-v1.0.<N>.md` and `SHA256SUMS`, which lists the other four in that order. It
+refuses when any of checks 1 to 6 fails or a zip cannot be built, and it does not run the suite.
+The notes are a heading and one paragraph, then each dated section in the range, newest first,
+from its heading to its last non-empty line, separated by one empty line. The zips are built by
+tools/_archives.py from `git archive --format=tar` of `plugin` with tar.umask 0002; that
+module's docstring gives their layout, the chat skill upload's limits on the skill zip, and the
+fixed dates, modes and order that make their bytes repeat for one git, Python and zlib.
 `git archive` applies export-ignore and export-subst attributes; .gitattributes sets neither
 today.
 
@@ -172,7 +168,6 @@ Exit 0 is a pass, 1 a finding, and 2 a candidate that could not be checked.
 """
 import argparse
 import datetime
-import gzip
 import hashlib
 import json
 import re
@@ -291,15 +286,14 @@ def release_tags(root):
 
 
 def names(tag):
-    """The asset names, in SHA256SUMS order: `llms-full.txt`, the tarball, each zip ARCHIVES
-    lists, the notes and `SHA256SUMS`. archive_name() refuses a latest zip name first; the check
-    below refuses a latest name among them again, in case a later name does not come from it."""
+    """The asset names, in SHA256SUMS order: `llms-full.txt`, each zip ARCHIVES lists, the notes
+    and `SHA256SUMS`. archive_name() refuses a latest zip name first; the check below refuses a
+    latest name among them again, in case a later name does not come from it."""
     try:
         zips = tuple(archive_name(kind, tag[1:]) for kind in ARCHIVES)
     except ArchiveError as exc:
         raise CannotCheck(f"the release's zip names cannot be formed: {exc}") from exc
-    found = ("llms-full.txt", f"secureconfig-plugin-{tag}.tar.gz", *zips,
-             f"RELEASE-NOTES-{tag}.md", "SHA256SUMS")
+    found = ("llms-full.txt", *zips, f"RELEASE-NOTES-{tag}.md", "SHA256SUMS")
     latest = [name for name in found if name.endswith(LATEST_SUFFIX)]
     if latest:
         raise CannotCheck(f"{', '.join(latest)} would be a release asset, but a latest link is a "
@@ -331,18 +325,12 @@ def dated_sections(lines):
     return sections
 
 
-def tarball(root, target, tag):
-    data = git(root, "-c", "tar.umask=0002", "archive", "--format=tar",
-               f"--prefix=secureconfig-plugin-{tag}/", target, "plugin", binary=True)
-    return gzip.compress(data, compresslevel=9, mtime=0)
-
-
 def archives(root, target, tag):
-    """[(name, bytes)] for the tarball and then each zip ARCHIVES lists, from the target's
-    `plugin/`. ArchiveError when a zip cannot be built."""
+    """[(name, bytes)] for each zip ARCHIVES lists, from the target's `plugin/`. ArchiveError
+    when a zip cannot be built."""
     stream = git(root, "-c", "tar.umask=0002", "archive", "--format=tar", target, SOURCE,
                  binary=True)
-    return [(names(tag)[1], tarball(root, target, tag)), *build_all(stream, tag[1:])]
+    return build_all(stream, tag[1:])
 
 
 def sums(files):
@@ -830,7 +818,7 @@ def examine(root, main_ref, target, tag, previous, gates_run):
     numbers = sorted({pr for pr, _, _ in merged})
     pr_list = ", ".join(f"#{n}" for n in numbers)
     changelog_url = f"{REPOSITORY}/blob/{tag}/{CHANGELOG}"
-    llms, tar_name, *zip_names, notes_name, sums_name = names(tag)
+    llms, *zip_names, notes_name, sums_name = names(tag)
     own = f"pull request #{merge.group(1)}"
     if previous is None:
         covered = f"up to {target_date} UTC (that date only up to the target)"

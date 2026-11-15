@@ -13,17 +13,17 @@ passing twin that differs only in its defect: the two clean releases below, a fi
 later one, are the twins, and each finding case changes one thing about them. Every case runs
 the shipped entry point under `python3 -I -B`.
 
-The zips (plan-v3 sections 1.3, 1.4 and 1.8) are read from the clean later release: two builds
-give byte-equal zips; the skill zip holds exactly the files git records under
-`plugin/skills/secureconfig/` at the target, with `SKILL.md` at its root, and the plugin zip
-exactly those under `plugin/`, in sorted order and with equal bytes; each entry has the mode
-0644, or 0755 for the fixture's executable script, the date 1980-01-01, create_system 3, no
-extra field and no directory entry; and no asset or SHA256SUMS line has a `-latest` name. A
-publisher git config with tar.umask 0777 changes no asset's bytes. A changed zip, a latest-named
-file among the assets, a SHA256SUMS line naming one and a target with no skill `SKILL.md` are
-refused. So are a VERSION of 1.0.0 or with a leading zero (check 2, exit 1) and a skill folder
-that breaks a chat skill upload limit: a second `SKILL.md`, a `.claude-plugin/` entry or 201
-files; 200 files pass.
+The zips are read from the clean later release, and two builds give byte-equal zips. The skill
+zip holds exactly the files git records under `plugin/skills/secureconfig/` at the target, with
+`SKILL.md` at its root, and the plugin zip exactly those under `plugin/`, in sorted order and
+with equal bytes. Each entry has the mode 0644, or 0755 for the fixture's executable script,
+the date 1980-01-01, create_system 3, no extra field and no directory entry. No asset name,
+names() entry or SHA256SUMS line has a `-latest` or `.tar.gz` name. A publisher git config with
+tar.umask 0777 changes no asset's bytes. A changed zip, a latest-named file or a `.tar.gz` file
+among the assets, a SHA256SUMS line naming a latest zip and a target with no skill `SKILL.md`
+are refused. So are a VERSION of 1.0.0 or with a leading zero (check 2, exit 1) and a skill
+folder that breaks a chat skill upload limit: a second `SKILL.md`, a `.claude-plugin/` entry or
+201 files; 200 files pass.
 
 tools/_archives.py and names() are also called in-process. archive_name() refuses a latest name,
 and names() refuses one itself when archive_name() lets it through; archive_name() also refuses
@@ -51,8 +51,9 @@ import check_release  # noqa: E402
 # The clean later release's zips and the assets SHA256SUMS lists, in its order.
 SKILL_ZIP = "secureconfig-1.0.13.zip"
 PLUGIN_ZIP = "secureconfig-plugin-1.0.13.zip"
-LATER_ASSETS = ("llms-full.txt", "secureconfig-plugin-v1.0.13.tar.gz", SKILL_ZIP, PLUGIN_ZIP,
-                "RELEASE-NOTES-v1.0.13.md")
+LATER_ASSETS = ("llms-full.txt", SKILL_ZIP, PLUGIN_ZIP, "RELEASE-NOTES-v1.0.13.md")
+# The suffix of the plugin tarball, which the release does not ship; no asset name ends in it.
+TARBALL = ".tar.gz"
 SKILL_DIR = "plugin/skills/secureconfig/"
 SCRIPT = SKILL_DIR + "scripts/update.sh"
 OK = "  ok    "
@@ -353,9 +354,15 @@ def zip_cases(repo, target, later, again):
              and not any(n.endswith("-latest.zip") for n in (*listed, *present)))
     expect("the assets and SHA256SUMS name both zips, in names() order, and no -latest name",
            (0 if clean else 1, f"{listed}; {present}"), 0)
-    expect("names() gives the six asset names, both zips without a v",
+    expect("names() gives the five asset names, both zips without a v",
            (0 if check_release.names("v1.0.13") == (*LATER_ASSETS, "SHA256SUMS") else 1,
             str(check_release.names("v1.0.13"))), 0)
+    # The release ships no tarball: a `.tar.gz` name in names(), among the built assets or in
+    # SHA256SUMS fails this case, whatever the other names are.
+    tarballs = [n for n in (*check_release.names("v1.0.13"), *listed, *present)
+                if n.lower().endswith(TARBALL)]
+    expect("no .tar.gz name is in names(), the built assets or SHA256SUMS",
+           (1 if tarballs else 0, str(tarballs)), 0)
 
 
 def tar_of(members):
@@ -571,7 +578,8 @@ def cases(tmp):
            "target, with `SKILL.md` at the zip's root.\n",
            f"- The `{PLUGIN_ZIP}` asset is the `plugin/` folder at the target, with that "
            "folder's contents at the zip's root.\n",
-           "`SHA256SUMS` covers each of the other assets", absent=("three", "-latest"))
+           "`SHA256SUMS` covers each of the other assets",
+           absent=("three", "-latest", TARBALL, "tarball"))
     again = tmp / "again"
     gate(repo, c[13], "v1.0.13", "v1.0.11", again, "--build")
     same = all((later / p).read_bytes() == (again / p).read_bytes()
@@ -579,7 +587,7 @@ def cases(tmp):
     expect("two builds of one release are byte-identical", (0 if same else 1, ""), 0)
     zip_cases(repo, c[13], later, again)
     # A publisher whose git config masks every mode bit in `git archive`: the release check
-    # pins tar.umask for both of its `git archive` calls, so no asset's bytes change.
+    # pins tar.umask for its `git archive` call, so no asset's bytes change.
     masking = tmp / "masking.gitconfig"
     masking.write_text("[tar]\n\tumask = 0777\n", encoding="utf-8")
     masked = tmp / "masked"
@@ -635,6 +643,8 @@ def cases(tmp):
          [f"{SKILL_ZIP} differs from its rebuild", f"SHA256SUMS does not verify {SKILL_ZIP}"]),
         ("a latest-named zip among the assets is refused", "assets/secureconfig-latest.zip",
          b"PK\x05\x06" + bytes(18), ["secureconfig-latest.zip is not a release asset"]),
+        ("a tarball among the assets is refused", "assets/secureconfig-plugin-v1.0.13.tar.gz",
+         b"\x1f\x8b" + bytes(18), ["secureconfig-plugin-v1.0.13.tar.gz is not a release asset"]),
         ("a SHA256SUMS line naming a latest zip is refused", "assets/SHA256SUMS",
          (later / "assets" / "SHA256SUMS").read_bytes() + b"0" * 64
          + b"  secureconfig-plugin-latest.zip\n",

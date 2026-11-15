@@ -2,12 +2,10 @@
 """Build the release's zip archives from the target's own tree, so that two builds of one target
 give the same bytes.
 
-The maintainer's OD-1 ruling chose two separate archives (plan-v3 section 1.1). ARCHIVES lists
-the archive kinds. Each kind holds the files under one prefix of `plugin/`, with that prefix
-removed, so a later kind of that shape is a new entry in the list and not a change to the code.
-A combined archive (plan-v3 section 1.11) may not be of that shape: the listing plan-v3 section
-1.4 cites for it puts files from more than one folder at the zip's root, which one prefix cannot
-express, so it would also need a change to entries(). Today the list holds two kinds:
+ARCHIVES lists the archive kinds. Each kind holds the files under one prefix of `plugin/`, with
+that prefix removed, so a later kind of that shape is a new entry in the list and not a change
+to the code. A kind that puts files from more than one folder at the zip's root cannot be
+expressed by one prefix and would also need a change to entries(). The list holds two kinds:
 
 - the skill zip, `secureconfig-<version>.zip`: every file under `plugin/skills/secureconfig/`
   with that prefix removed, so `SKILL.md` is at the zip's root;
@@ -15,13 +13,11 @@ express, so it would also need a change to entries(). Today the list holds two k
   prefix removed, so the zip's root is the plugin's root.
 
 `<version>` is `VERSION` at the target, `1.0.<N>`, with no `v` and no leading zero in `<N>`.
-These are the names that pull request #1331, which is pending and not in this tree, plans to
-have the site build's `--check` admit in `site/downloads/`; no check here compares them with the
-site. No archive name ends in `-latest.zip`: the latest links are 302 redirects with no bytes of
-their own, so no build writes one, and archive_name() refuses one.
+No archive name ends in `-latest.zip`: a latest link is a 302 redirect with no bytes of its
+own, so no build writes one, and archive_name() refuses one.
 
-The skill zip is also what a claude.ai chat skill upload takes. The owner's upload test of
-2026-11-15 found that such an upload refuses a zip with more than 200 files, a plugin manifest
+The skill zip is also what a claude.ai chat skill upload takes. An upload test on 2026-11-15
+found that such an upload refuses a zip with more than 200 files, a plugin manifest
 (`.claude-plugin/plugin.json`) or more than one `SKILL.md`. So a kind marked chat_upload (the
 skill zip; the plugin zip is not marked) must hold exactly one file named `SKILL.md`, the one at
 its root, no entry with a `.claude-plugin` path component, and at most CHAT_MAX_FILES (200)
@@ -29,24 +25,20 @@ files. The zip holds no directory entries, so its entries are its files. Both na
 in any letter case, which is stricter than the upload test showed.
 
 The input is the tar stream that `git archive --format=tar <target> plugin` writes, never a
-working tree; tools/check_release.py passes it in. Each zip:
-
-- holds file entries only, with no directory entries, sorted by their path in the zip (Python's
-  string order);
-- dates each entry 1980-01-01 00:00:00, sets its create_system to 3 (Unix), and gives it the
-  mode 0644, or 0755 when the tar entry has an execute bit (git records a file as 100644 or
-  100755, so that bit is the git mode's). tools/check_release.py runs that `git archive` with
-  `-c tar.umask=0002`, as for the tarball, so a tar.umask in the publisher's git config cannot
-  clear the bit;
-- compresses each entry with ZIP_DEFLATED at level 9, with no archive comment and no extra
-  fields.
+working tree; tools/check_release.py passes it in. Each zip holds file entries only, with no
+directory entries, sorted by their path in the zip (Python's string order). It dates each entry
+1980-01-01 00:00:00, sets its create_system to 3 (Unix), and gives it the mode 0644, or 0755
+when the tar entry has an execute bit (git records a file as 100644 or 100755, so that bit is
+the git mode's). tools/check_release.py runs that `git archive` with `-c tar.umask=0002`, so a
+tar.umask in the publisher's git config cannot clear the bit. Each entry is compressed with
+ZIP_DEFLATED at level 9 and has no extra fields, and the zip has no archive comment.
 
 A build refuses (ArchiveError) a tar stream it cannot read; a symbolic link, a hard link or any
 other entry that is neither a regular file nor a directory; a path that is absolute or holds an
 empty, `.` or `..` component; and a path given twice. It also refuses a kind with no file, a kind
 whose root file (`SKILL.md` for the skill, `plugin.json` for the plugin) is missing, and a
 chat_upload kind that breaks one of the upload limits above. The bytes repeat for one git,
-Python and zlib, as the tarball's do.
+Python and zlib.
 """
 import io
 import re
@@ -64,7 +56,7 @@ UNIX = 3
 FILE_MODE = stat.S_IFREG | 0o644
 EXEC_MODE = stat.S_IFREG | 0o755
 LEVEL = 9
-# The claude.ai chat skill upload's limits, from the owner's upload test of 2026-11-15.
+# The claude.ai chat skill upload's limits, from an upload test on 2026-11-15.
 CHAT_MAX_FILES = 200
 CHAT_SKILL_FILE = "skill.md"
 CHAT_MANIFEST_FOLDER = ".claude-plugin"

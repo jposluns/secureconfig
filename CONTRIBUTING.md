@@ -495,10 +495,10 @@ offers them; both are repository settings. When the orchestrator read them from 
 on 2026-11-01, immutable releases were already enabled, and the existing "All Tags" tag ruleset
 already blocked tag update, deletion and non-fast-forward, and also creation except for its
 bypass role, so no new ruleset was created; `DECISIONS.md` records that observation. A
-release has six assets: `site/llms-full.txt` as committed, the plugin tarball, the skill zip
+release has five assets: `site/llms-full.txt` as committed, the skill zip
 `secureconfig-1.0.<N>.zip` (the `plugin/skills/secureconfig/` folder, with `SKILL.md` at the
 zip's root), the plugin zip `secureconfig-plugin-1.0.<N>.zip` (the `plugin/` folder), the full
-release notes and `SHA256SUMS`, which lists the other five. `tools/_archives.py` builds both zips
+release notes and `SHA256SUMS`, which lists the other four. `tools/_archives.py` builds both zips
 from `git archive` of the target, with sorted file entries, fixed dates and modes and no
 directory entries, so two builds give the same bytes. The skill zip is also what a claude.ai
 chat skill upload takes, so the build refuses it unless it holds exactly one `SKILL.md`, the one
@@ -577,8 +577,8 @@ list of pull requests and a link to `CHANGELOG.md` at the tag.
    Never run `git push --tags`, which would publish the local `qa/` tags.
 7. Download the draft's assets into a new directory with
    `gh release download v1.0.<N> --dir <new>`, run `sha256sum -c SHA256SUMS` there, which must
-   report each of the other five assets, both zips among them, as `OK`. Compare that
-   directory with `<dir>/assets` using `diff -r`, so it holds exactly the six assets and no
+   report each of the other four assets, both zips among them, as `OK`. Compare that
+   directory with `<dir>/assets` using `diff -r`, so it holds exactly the five assets and no
    `-latest` name, and run `git ls-remote origin refs/tags/v1.0.<N>`, which must print nothing
    while the release is a draft. Any failure, difference or tag stops the release, and the draft
    is fixed or discarded before anything is published.
@@ -593,9 +593,9 @@ list of pull requests and a link to `CHANGELOG.md` at the tag.
    download holds exactly the four uploaded assets, as step 7's `diff -r` assumes; and the
    "All Tags" ruleset's bypass role let the publisher create the tag. Step 7's checks, the
    publish command's exit status and the `git ls-remote` check still show any of them failing
-   on a later release. That download was confirmed for four assets, before the two zips were
-   added; the first release with six assets confirms again online that the download holds
-   exactly the six uploaded assets, and until then that is unverified.
+   on a later release. That download was confirmed for the four assets of that release; the
+   first release with the five assets above confirms again online that the download holds
+   exactly the five uploaded assets, and until then that is unverified.
 9. Record the release in a records pull request through the normal flow: one `CHANGELOG.md`
    bullet naming the tag, its target commit and the UTC dates it covers, saying that the
    target's date is covered only up to the target commit, and also saying whether the
