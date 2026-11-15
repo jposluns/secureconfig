@@ -31868,7 +31868,7 @@ DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with B
 
 REASONED: introduction to the deployment prerequisites for the cited cluster API checks; local preparation observations are recorded above, while cluster identities and deployed trust remain unavailable. Before running:
 
-- REASONED: substitution and paste procedure for the five guarded cluster blocks; re-run at marking time, the unsubstituted guard refused with exit 1 and substituted values reached the first curl call against a local argument recorder; deployed hostname and certificate coverage is not established here; no deployed cluster or its CA certificate is available in the authoring environment. That marking-time re-run covered an earlier form, a single cluster block whose refusals exited with status 1; the five current blocks, whose refusals exit with status 2, are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs on 2026-10-31, not by that re-run. Substitute your actual hostname, HTTP port, CA path and each block's other values inside the single quotes on its `set --` line. Paste each whole block. Use a TLS hostname covered by the deployed certificate.
+- REASONED: substitution and paste procedure for the five guarded cluster blocks; re-run at marking time, the unsubstituted guard refused with exit 1 and substituted values reached the first curl call against a local argument recorder; deployed hostname and certificate coverage is not established here; no deployed cluster or its CA certificate is available in the authoring environment. That marking-time re-run covered an earlier form, a single cluster block whose refusals exited with status 1; the five current blocks, whose refusals exit with status 2, are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes and by stub runs on 2026-10-31, not by that re-run; the audit block's `python3 -I` marker line postdates those stub runs. Substitute your actual hostname, HTTP port, CA path and each block's other values inside the single quotes on its `set --` line. Paste each whole block. Use a TLS hostname covered by the deployed certificate.
 - REASONED: CA selection from the cited product TLS references; no deployed cluster CA or administrator identity is available. Elasticsearch automatic setup supplies `http_ca.crt`. For OpenSearch, use the **deployed production HTTP CA**, such as `/path/production-ca.pem`, and your production administrator's header file. Do not verify production against the demo CA.
 - REASONED: fixture control from the cited privilege and document APIs; no seeded target cluster is available. Have an administrator confirm that `app-data` and `other-data` each contain a readable document with ID `rbac-probe`. A missing document is not an RBAC-denial result.
 - REASONED: header-file preparation only; re-run at marking time, a disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; no target cluster is available to confirm that the user does not exist. Prepare a header file, such as `/path/audit-probe.header`, with a Basic authentication header for a confirmed nonexistent user named `audit_probe` and a deliberately wrong password, and set its path on the audit block's `set --` line. Keep all credentials in header files.
@@ -32813,7 +32813,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "23857b058927710c9b9f5a1db89ee2b7874bb0b55c924952038117fd9f872d0d",
+  "body_sha256": "90610402eb793dd573a7e7878a5b36b53b5ccbdc3d50cb8e8b7196916be992f1",
   "components": {
     "es-api": {
       "name": "Elasticsearch API",
@@ -55584,7 +55584,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 3. **SSRF destinations are blocked (partially runnable).** The address-classification half is runnable now; the client-integration half is reasoned. Runnable: confirm the deny-list rejects the reserved and internal ranges a discovery URL might target, namely the cloud metadata address, loopback, and RFC 1918 space:
 
-   Address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. That run used the form before the block gained `python3 -I`; no stub or live run has covered the `-I` form. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
+   Address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. That run invoked the expression without `-I`, in an earlier form of the block; no stub or live run has covered the `-I` form. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
 
    ```bash
    (                                       # a subshell, so the exit below ends only the subshell
@@ -55643,7 +55643,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
    Save the actual captured body as `dcr-request.json` and inspect it (this native client checks for `native`; a remotely-hosted browser client checks for `web` instead):
 
-   The application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. That run used the form before the block gained `python3 -I`; no stub or live run has covered the `-I` form. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
+   The application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. That run invoked the expression without `-I`, in an earlier form of the block; no stub or live run has covered the `-I` form. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
 
    ```bash
    (                                       # a subshell, so the exits below end only the subshell
@@ -55745,7 +55745,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "8b79c66e5a0cf5e16a113de57c93d498d1e3d48dbddb8c0541103a5e8572ff27",
+  "body_sha256": "fd628f4d9d0620375027743388242ab66b7d71d75e121bbccfd53055af5704d3",
   "components": {
     "mcp": {
       "name": "MCP",
