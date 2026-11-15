@@ -55,6 +55,30 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     that removes the guards placed under it, or changes them to match the new ruling, with the notes that describe
     them, and regenerates what derives from them. It keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`,
     adds its own `CHANGELOG.md` entry, and records the new ruling here.
+- **Maintainer rulings of 2026-11-15 on the post-write mode checks and the `chat-uis.md` line-count checks in wave 2 of the exit-status sweep (#1330).**
+  The maintainer gave these two rulings through AskUserQuestion in an attended session, answered at about 14:56Z and
+  about 15:00Z that day, on arms the wave-2 plan left for a ruling. The record of the rulings gives only the chosen
+  options, not the other options offered, and no reasoning beyond the choices. The labels and descriptions are quoted
+  exactly:
+  on the seven post-write mode-check arms, the maintainer chose "3, failed operation (Recommended)", whose description read "Predicted and best for the project: the block's own write did not leave a private file, a failure of an operation after the checks passed, which rule 6 gives 3; the delete/do-not-use/rotate messages stay."
+  On the line-count checks at `chat-uis.md` lines 107, 110 and 113, the maintainer chose "Split them (Recommended)", whose description read "Predicted and best for the project: keep the grep status, so a wrong count is refused with 2 and a failed grep is reported as 3, each with its own message, as rule 6 separates refusals from failures."
+  - Effect, applied in the same change as this entry, the third pull request of wave 2. Under the first ruling, the
+    seven checks that a written file is mode `0600`, at `chat-uis.md` line 76, `image-gen-uis.md` line 74 and
+    `model-servers.md` lines 49, 103, 179, 272 and 319, change from status 2 to 3 under CONTRIBUTING.md rule 6, by
+    line at the base commit. Under the second, the line-count checks at `chat-uis.md` lines 107, 110 and 113 are
+    split, so a wrong count is still refused with 2, with a message that no longer says "or could not check it", and
+    a failed `grep` is reported with 3 and a message of its own. The other arms the same change moves from 2 to 3,
+    the `command -v` guards it adds and the per-block notes are listed in its `CHANGELOG.md` entry.
+  - Not changed: the question on the arm at `model-servers.md` line 302, which exits 2 both when the walk above the
+    private user-data directory finds a `.git` entry and when it cannot reach `/`, is still open with the maintainer,
+    so that arm and the sentence "It refuses if any step fails." are unchanged.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces these rulings, then a pull request
+    that restores status 2 and the earlier messages at the ten arms listed above, or changes them to match the new
+    ruling, and regenerates the plugin copies, `site/llms-full.txt`, the manifest and the quality table. Undoing
+    the second ruling also removes the three arms that report a failed `grep` with 3 and restores the earlier
+    line-count form, in which `c=$(grep …) || c=` discarded `grep`'s status before each count check.
+    That pull request keeps every existing entry in `CHANGELOG.md` and
+    `DECISIONS.md`, and adds its own `CHANGELOG.md` entry.
 - **Maintainer ruling of 2026-11-14 splitting the credential scanner's status 2 into REFUSED and INCONCLUSIVE (#1321).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 16:10Z, on the
   exit statuses of `tools/scan_credential.sh`. The record holds only the chosen option, not the other options
