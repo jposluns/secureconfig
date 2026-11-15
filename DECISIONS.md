@@ -17,6 +17,27 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-14 that wave 2 of the exit-status sweep covers setup blocks, with a CHANGELOG bullet and a per-guide note as for wave 1 (#1322).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:50Z that day.
+  The record of the ruling gives only the chosen option, not the other options offered, and no reasoning beyond the
+  choice. The label and description are quoted exactly:
+  the maintainer chose "Yes, sweep setup too (Recommended)", whose description read "Predicted and best for the project: one QA'd PR per few guides makes the ~44 setup arms follow rule 6 as well, so every script a reader copies uses one exit-code meaning; CHANGELOG plus per-guide note, as for wave 1."
+  - Effect, applied in the same change as this entry, the first pull request of wave 2. Four setup arms change from
+    status 2 to 3 under CONTRIBUTING.md rule 6, by line at the base commit: the failed hidden prompts at
+    `litellm.md` line 64, `secrets.md` line 55 and `surrealdb.md` line 93, and the failed `pip install 'mlflow[auth]'`
+    at `mlflow.md` line 59. The `surrealdb.md` and `mlflow.md` arms were a bare `|| exit 2` and now print a message.
+    A `command -v pip` guard added before the `mlflow.md` arm refuses a missing `pip` with 2, as rule 6 requires of
+    a missing required tool, where that arm would otherwise report it as 3.
+    Each changed block gains the per-guide note in its section, quoting rule 6's meanings and saying that the block
+    otherwise ends with the status of its last command. Rule 6 is the standard; it is unchanged. The other setup
+    arms the ruling covers change in later pull requests of the wave.
+  - Not changed: the empty-password refusal at `surrealdb.md` line 95, which stays 2 because rule 6 refuses an empty
+    value after a successful read with status 2, and the Verify blocks of the four guides.
+  - Revert. The revert path is a later maintainer ruling that withdraws or narrows this one, then a pull request
+    that reverts the listed `exit` numbers, the two added messages and the `pip` guard, removes the per-guide notes
+    and regenerates the plugin copies, `site/llms-full.txt`, `tools/guide_quality.tsv` and each guide's body digest.
+    That pull request keeps every existing entry in `CHANGELOG.md` and
+    `DECISIONS.md`, and adds its own `CHANGELOG.md` entry.
 - **Maintainer ruling of 2026-11-14 that the waiver ruling governs M1, so a reasoned waiver passes M1 everywhere (#1318).**
   The maintainer gave this ruling through AskUserQuestion in an attended session at about 18:44Z that day, to settle
   the conflict between the two rulings below. The question quoted lines 62 to 66 of `QUALITY.md` and disclosed the
