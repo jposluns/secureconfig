@@ -7,7 +7,7 @@ apache.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	4fc847dae3fcde93596591
 authentication.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	a2513ee36418f8ce4396ccfc1dddc56469cfc4e405483835b4ef80372a1cadbe	2026-11-10	tool	current
 bi-dashboards.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	bf579abc5c372f97e8d147027a58a00ba73b68a686c1b5fa224a1ce22cd0b62b	2026-11-10	tool	current
 caddy.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	b7ba9b6a6d3e53409c78c11b26a63fb37a27cf6295c2227248f4a11125f5a839	2026-11-10	tool	current
-chat-uis.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	e8d0218a21b6f0543858edbf1ca29346f7229830b481c0b7c0e037fac5a045a4	2026-11-10	tool	current
+chat-uis.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	da77f1c2ed52eca4ba010260e2fecfc66b28f979654b5a47ca65240a6d8c1907	2026-11-10	tool	current
 clickhouse.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	11efeeda48aaebe6d2002d69242d23aad7332a230d5b6f8084da586e72bb0a47	2026-11-10	tool	current
 cloud-firewalls.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	a3fb65779a75d02a5a0af8bc077cce1cc0bf9d5dce42fc92e7530518eba7e395	2026-11-10	tool	current
 cloud-identity-proxies.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	427f1c43708e214388f52140b2aba8eba34855bf8b278a14515e316f2da11591	2026-11-10	tool	current
@@ -40,7 +40,7 @@ headless-browser-services.md	C	P	?	?	?	GAP(D3)	?	?	?	?	?	MINOR-GAPS	c495bd437a18
 headless-cms-instant-api.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	0f3341bd00c37ba9c5380f01db4cf910b6c263b4d7213dde3bae788d453b71de	2026-11-10	tool	current
 host.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	7d838ff31ba83ca080701a908875e898cc5031ff3fa2c9682392563b6978e967	2026-11-10	tool	current
 identity-providers.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	fdbefe28b0184721aaf4417e2f3a4e851bec9dfadcae5f5c59820a69e86b5ea4	2026-11-10	tool	current
-image-gen-uis.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	e10eb48592d454d8f290464461cebf91169eda0a89dff87d82cbc2b5412a9059	2026-11-10	tool	current
+image-gen-uis.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	05cb4de963ebb344152aae0469390f7600f4b74ce2451c04cabd0cf8552b9f70	2026-11-10	tool	current
 java.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	48f596a614667a2f4284f778f9ce929ff800155978d0bfec39ad85686d335fcc	2026-11-10	tool	current
 jupyter.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	e2f48a37fb32ee9376df6c9543b5a8a26dc5029aa810a1e000537543ea44116f	2026-11-10	tool	current
 kafka.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	5907c6db29f85723ec9dd9c6b75d47955f878e0aff62365516161332685693ac	2026-11-10	tool	current
@@ -56,7 +56,7 @@ memcached.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	57ef35d716df1dc97e6
 mfa.md	X	PARTIAL(M1)	?	?	?	n/a	?	?	?	?	?	SOLID	bac1bf62e7639167fa222996b6f207cddd47b7e52a35a30260af1b0d9b23c5a0	2026-11-10	tool	current
 minio.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	PARTIAL(G1)	?	?	SOLID	85740b262253dedbe64449ab7f401420e3f298980c920d0f573476995316c498	2026-11-10	tool	current
 mlflow.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	229b7fe148bd06baf56a819e4b39abd955e9bea96468ff4d6aea73f8b076b04d	2026-11-10	tool	current
-model-servers.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1) ?(G2,G3)	?	?	SOLID	94923a54c6d8bde82a7b192455b166325a37023a8d33e291994233c89f54bb07	2026-11-10	tool	current
+model-servers.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1) ?(G2,G3)	?	?	SOLID	105098a1318f99ea84e5718e3bc42fb43db119075b403629fd0079ad269981a2	2026-11-10	tool	current
 mongodb.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	1bb9e73717f13c924ac93b39d92f444534291f5f1a536195180052d14b41d682	2026-11-10	tool	current
 mosquitto.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	1a338374bc949536319551bfd205fe9cee9b44986c2d2bb5521ddf90c2955941	2026-11-10	tool	current
 mysql.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f2d816e86442c44d0bb64fc147557151ea41ddccb731d3992fb1f870244bc5ba	2026-11-10	tool	current

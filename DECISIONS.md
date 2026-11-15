@@ -30,13 +30,15 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     line at the base commit. Under the second, the line-count checks at `chat-uis.md` lines 107, 110 and 113 are
     split, so a wrong count is still refused with 2, with a message that no longer says "or could not check it", and
     a failed `grep` is reported with 3 and a message of its own. The other arms the same change moves from 2 to 3,
-    the `command -v` guards it adds and the per-guide notes are listed in its `CHANGELOG.md` entry.
+    the `command -v` guards it adds and the per-block notes are listed in its `CHANGELOG.md` entry.
   - Not changed: the question on the arm at `model-servers.md` line 302, which exits 2 both when the walk above the
     private user-data directory finds a `.git` entry and when it cannot reach `/`, is still open with the maintainer,
     so that arm and the sentence "It refuses if any step fails." are unchanged.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces these rulings, then a pull request
     that restores status 2 and the earlier messages at the ten arms listed above, or changes them to match the new
-    ruling, and regenerates the plugin copies, `site/llms-full.txt`, the manifest and the quality table.
+    ruling, and regenerates the plugin copies, `site/llms-full.txt`, the manifest and the quality table. Undoing
+    the second ruling also removes the three arms that report a failed `grep` with 3 and restores the earlier
+    line-count form, in which `c=$(grep …) || c=` discarded `grep`'s status before each count check.
     That pull request keeps every existing entry in `CHANGELOG.md` and
     `DECISIONS.md`, and adds its own `CHANGELOG.md` entry.
 - **Maintainer ruling of 2026-11-14 splitting the credential scanner's status 2 into REFUSED and INCONCLUSIVE (#1321).**
