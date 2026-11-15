@@ -12,6 +12,10 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 dest="plugin/skills/secureconfig/references"
+# The repository's licence and notice files, copied to the plugin's root below, so the plugin
+# zip, which holds every file under plugin/, carries them. The listing below and the copy both
+# read this one array, so the generated-file record cannot name other files than the copy uses.
+notices=(LICENSE NOTICE)
 
 mapfile -t files < <(bash scripts/build-llms-full.sh --list-guides)
 if [ "${#files[@]}" -eq 0 ]; then
@@ -20,10 +24,11 @@ if [ "${#files[@]}" -eq 0 ]; then
 fi
 
 if [ "${1:-}" = "--list-inputs" ]; then
-  # The guide list, the script it came from, and VERSION: changing build-llms-full.sh changes what
-  # this bundle contains, and VERSION sets plugin.json's version below, so all three are inputs to
-  # this build and the generated-file record has to say so.
-  printf '%s\n' "${files[@]}" scripts/build-llms-full.sh VERSION \
+  # The guide list, the script it came from, VERSION, and LICENSE and NOTICE: changing
+  # build-llms-full.sh changes what this bundle contains, VERSION sets plugin.json's version
+  # below, and LICENSE and NOTICE are copied into plugin/ below, so all of them are inputs to this
+  # build and the generated-file record has to say so.
+  printf '%s\n' "${files[@]}" scripts/build-llms-full.sh VERSION "${notices[@]}" \
     tools/version_basis.py tools/version_basis_guides.txt tools/version_basis_sources_baseline.txt tools/_markdown.py tools/check_guide_shape.py tools/check_verify_marking.py tools/_verify_sections.py CHANGELOG.md
   exit 0
 fi
@@ -58,6 +63,12 @@ rm -rf "$dest"
 mkdir -p "$dest"
 for f in "${files[@]}"; do
   cp "$f" "$dest/$f"
+done
+
+# The root LICENSE and NOTICE, byte for byte, at the plugin's root, where the plugin zip and an
+# installed plugin carry them. The skill zip holds only plugin/skills/secureconfig/ and does not.
+for f in "${notices[@]}"; do
+  cp "$f" "plugin/$f"
 done
 
 # Keep the plugin manifest's version in lockstep with the repository VERSION (1.0.<pull request
