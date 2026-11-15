@@ -38,7 +38,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     after a successful read is 2, as rule 6 says of hidden-prompt reads. A shell-state failure while the scanner
     sets its options or clears `GIT_*` variables is 2, as rule 6 says of shell-state failures after the guards. A
     root check where Git exits non-zero, as it does outside a repository, is read as the wrong directory and
-    refused with 2, while one where Git exits 0 but prints a diagnostic is a failed check, 3.
+    refused with 2, while one where Git exits 0 or 1 but prints a diagnostic is a failed check, 3.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
     that restores status 2 and the single INCONCLUSIVE message for every refusal and failure, or changes them to
     match the new ruling, in the scanner, its help text, its tests and the guide text that quotes its statuses, and

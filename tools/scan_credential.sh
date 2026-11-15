@@ -134,7 +134,7 @@ scan_git() {
     esac
 }
 # A failing rev-parse (as outside a repository) or a nonempty prefix (a
-# subdirectory) is wrong use; a diagnostic from a rev-parse that exited 0 is
+# subdirectory) is wrong use; a diagnostic from a rev-parse that exited 0 or 1 is
 # a failed check.
 root_prefix=$(scan_git rev-parse --show-prefix 3>&1)
 rc=$?
