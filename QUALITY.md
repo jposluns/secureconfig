@@ -65,10 +65,10 @@ M1. `tools/gen_guide_quality.py` sorts an entry by the file that holds it. Every
 `tools/verify_marking_baseline.txt`, `tools/claim_length_baseline.txt` and
 `tools/version_basis_sources_baseline.txt` is deferred work and counts once, and the script ignores
 the count field in the first and last of these. None of the three has a reason field, so an entry
-kept there for a DEMONSTRATED evidence text grandfathered by design is a waiver without a reason and
-counts. An entry in `tools/bracket_ranges_allow.txt` or `tools/exposure_index_allowlist.txt` is a
-waiver and counts only when its reason is empty: a bracket-range line once, and an allowlist entry
-once per distinct guide and port that has a line with no reason. The script does not read the
+kept there by design, such as one for a DEMONSTRATED evidence text, still counts as deferred work.
+An entry in `tools/bracket_ranges_allow.txt` or `tools/exposure_index_allowlist.txt` is a waiver
+and counts only when its reason is empty: a bracket-range line once, and an allowlist entry once
+per distinct guide and port that has a line with no reason. The script does not read the
 `guard-conventions: allow` lines in the guides. It scores the lead PARTIAL(M1) when the count is not
 zero.
 
