@@ -13411,7 +13411,7 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
 - This guide advises: never set `NODE_TLS_REJECT_UNAUTHORIZED=0`, which disables certificate validation for TLS connections in the Node.js process, and never pass `rejectUnauthorized: false`, which disables server-certificate verification for that client connection. Never configure an `https.Agent` with `rejectUnauthorized: false`: requests using that agent inherit its TLS option. The agent reach is this guide's assessment of Node.js's documented request, agent and TLS options.
 - For an internal CA or self-signed server, this guide advises instead: set `NODE_EXTRA_CA_CERTS=/path/ca.crt` before starting Node.js, pointing at a PEM file of trusted certificates (see [self-signed.md](https://github.com/jposluns/secureconfig/blob/main/self-signed.md)). Node.js adds these to its well-known root CAs at launch; changing the variable at runtime has no effect on the current process. An explicit `ca` option prevents use of both the well-known and extra CAs for that TLS or HTTPS client or server, and Node.js ignores the variable when run as setuid root or with Linux file capabilities.
 
-## 5. Verify (REASONED: TLS, headers, authentication, listener and proxy-header expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Node application, proxy or managed ingress to test. The block needs bash: in a shell without bash's shopt, such as dash, it refuses with status 2 before probing. At the end it exits 2 when ss is not installed only if no other part found something or was inconclusive, because a finding and an inconclusive result both outrank that refusal.)
+## 5. Verify (REASONED: TLS, headers, authentication, listener and proxy-header expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Node application, proxy or managed ingress to test. The block needs bash: in a shell without bash's shopt, such as dash, it refuses with status 2 before probing. At the end it exits 2 when curl or ss is not installed only if no other part found something or was inconclusive, because a finding and an inconclusive result both outrank that refusal.)
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -13438,43 +13438,48 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
   [ -r "$3" ] || { echo "the session cookie file is unreadable; not probing"; exit 2; }
   set +e                                # errexit off here, so a check that ends nonzero is recorded below instead of ending the block
   set -- "$1" "$2" "$3" 0               # the 4th value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused to run), which outranks 0
-  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sI --noproxy '*' -w '\n%{http_code} %{redirect_url}' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"         # curl's exit status, then the headers, the HTTP code and the redirect URL
-  set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"    # curl's exit status, the headers, then the HTTP code and the redirect URL
-  printf '%s' "$6"                     # expect a redirect to an https:// Location: 301 from section 1's code, while a fronting proxy or platform may use another 3xx
-  case "$5:$7" in
-    0:3??" https://"*) ;;
-    0:*) echo "HTTP ${7%% *} with redirect URL '${7#* }' is not the expected redirect to an https:// Location; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
-    *) echo "curl exit $5: the redirect request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
-  esac
-  curl -q -g -sI --noproxy '*' "https://$1/"   # succeeds without -k; shows helmet's headers
-  case "$?" in 0) ;; *) echo "curl exit $?: the HTTPS request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;; esac
+  if command -v curl >/dev/null; then   # the redirect, HTTPS and authentication parts below need curl: a missing curl refuses them with status 2, ranked as above
+    set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sI --noproxy '*' -w '\n%{http_code} %{redirect_url}' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"         # curl's exit status, then the headers, the HTTP code and the redirect URL
+    set -- "$1" "$2" "$3" "$4" "$5" "${6%$'\n'*}" "${6##*$'\n'}"    # curl's exit status, the headers, then the HTTP code and the redirect URL
+    printf '%s' "$6"                     # expect a redirect to an https:// Location: 301 from section 1's code, while a fronting proxy or platform may use another 3xx
+    case "$5:$7" in
+      0:3??" https://"*) ;;
+      0:*) echo "HTTP ${7%% *} with redirect URL '${7#* }' is not the expected redirect to an https:// Location; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+      *) echo "curl exit $5: the redirect request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    esac
+    curl -q -g -sI --noproxy '*' "https://$1/"   # succeeds without -k; shows helmet's headers
+    case "$?" in 0) ;; *) echo "curl exit $?: the HTTPS request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;; esac
 
-  # Auth: probe a REAL protected route (not a placeholder like /api, which often 404s), show the
-  # status, and disable client proxies so a denial is attributable. A denial from ANY layer (the app,
-  # or a proxy/Access in front) is the pass; the positive control proves auth actually gates rather
-  # than the route being broken for everyone.
-  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code} %{redirect_url}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"        # curl's exit status, then the HTTP code and the redirect URL
-  printf '%s\n' "${6%% *}"
-                                       # expect 401 or 403 with no credentials
-  case "$5:$6" in
-    "0:401 "*|"0:403 "*) ;;
-    0:2??" "*) echo "FINDING: the protected path answered ${6%% *} with no credentials"; set -- "$1" "$2" "$3" 1 ;;
-    0:3??" "?*) echo "unclassified observation: with no credentials the protected path answered ${6%% *} with a redirect to '${6#* }'; a redirect to the login page of a gate in front of the app is that gate's denial and the pass, and a redirect anywhere else is not, so judge it yourself" ;;
-    0:*) echo "HTTP ${6%% *} with no credentials is neither the 401 or 403 pass nor a 2xx finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
-    *) echo "curl exit $5: the request with no credentials failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
-  esac
-  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' -b "$3" "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"        # curl's exit status, then the HTTP code
-  printf '%s\n' "$6"
-                                       # expect 200 with a valid session (cookie read from a file, not argv;
-                                       # for a bearer-token route name a header file on the set -- line and use -H @"$3" instead of -b)
-  case "$5:$6" in
-    0:200) ;;
-    0:*) echo "HTTP $6 with the session cookie is not the expected 200, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
-    *) echo "curl exit $5: the request with the session cookie failed, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
-  esac
+    # Auth: probe a REAL protected route (not a placeholder like /api, which often 404s), show the
+    # status, and disable client proxies so a denial is attributable. A denial from ANY layer (the app,
+    # or a proxy/Access in front) is the pass; the positive control proves auth actually gates rather
+    # than the route being broken for everyone.
+    set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code} %{redirect_url}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"        # curl's exit status, then the HTTP code and the redirect URL
+    printf '%s\n' "${6%% *}"
+                                         # expect 401 or 403 with no credentials
+    case "$5:$6" in
+      "0:401 "*|"0:403 "*) ;;
+      0:2??" "*) echo "FINDING: the protected path answered ${6%% *} with no credentials"; set -- "$1" "$2" "$3" 1 ;;
+      0:3??" "?*) echo "unclassified observation: with no credentials the protected path answered ${6%% *} with a redirect to '${6#* }'; a redirect to the login page of a gate in front of the app is that gate's denial and the pass, and a redirect anywhere else is not, so judge it yourself" ;;
+      0:*) echo "HTTP ${6%% *} with no credentials is neither the 401 or 403 pass nor a 2xx finding; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+      *) echo "curl exit $5: the request with no credentials failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    esac
+    set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' -b "$3" "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%%$'\n'*}"        # curl's exit status, then the HTTP code
+    printf '%s\n' "$6"
+                                         # expect 200 with a valid session (cookie read from a file, not argv;
+                                         # for a bearer-token route name a header file on the set -- line and use -H @"$3" instead of -b)
+    case "$5:$6" in
+      0:200) ;;
+      0:*) echo "HTTP $6 with the session cookie is not the expected 200, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+      *) echo "curl exit $5: the request with the session cookie failed, so the positive control failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    esac
+  else
+    echo "curl is not installed here; not probing"
+    case "$4" in 0) set -- "$1" "$2" "$3" 2 ;; esac
+  fi
 
   if command -v ss >/dev/null; then
     ss -tlnp   # read every listener; a same-host proxy layout binds 127.0.0.1 only, on managed
@@ -13486,20 +13491,25 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
   fi
   # trust proxy: add a temporary route that echoes req.ip, then remove it after this check
   #   app.get('/whoami', (req, res) => res.send(req.ip))
-  set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' "https://$1/whoami"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"         # curl's exit status, then the response body
-  printf '%s\n' "$6"
-                                       # req.ip must be your real client IP, never 203.0.113.9: echoing the
-                                       # forged value means `trust proxy` is too broad and trusts a
-                                       # client-set header. This checks req.ip scoping only, not that the
-                                       # proxy strips headers, and does not cover X-Forwarded-Host or -Proto.
-                                       # An overwriting proxy can also mask a too-broad setting, so a clean
-                                       # result here does not prove the trust boundary by itself
-  case "$5:$6" in
-    0:*203.0.113.9*) echo "FINDING: /whoami echoed the forged 203.0.113.9, so trust proxy trusts a client-set header"; set -- "$1" "$2" "$3" 1 ;;
-    0:*) echo "unclassified observation: /whoami did not echo 203.0.113.9; read its answer above, because a clean result does not prove the trust boundary by itself" ;;
-    *) echo "curl exit $5: the /whoami request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
-  esac
+  if command -v curl >/dev/null; then   # the /whoami part below needs curl: a missing curl refuses it with status 2, ranked as above
+    set -- "$1" "$2" "$3" "$4" "$(if curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' "https://$1/whoami"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}" "${5%$'\n'*}"         # curl's exit status, then the response body
+    printf '%s\n' "$6"
+                                         # req.ip must be your real client IP, never 203.0.113.9: echoing the
+                                         # forged value means `trust proxy` is too broad and trusts a
+                                         # client-set header. This checks req.ip scoping only, not that the
+                                         # proxy strips headers, and does not cover X-Forwarded-Host or -Proto.
+                                         # An overwriting proxy can also mask a too-broad setting, so a clean
+                                         # result here does not prove the trust boundary by itself
+    case "$5:$6" in
+      0:*203.0.113.9*) echo "FINDING: /whoami echoed the forged 203.0.113.9, so trust proxy trusts a client-set header"; set -- "$1" "$2" "$3" 1 ;;
+      0:*) echo "unclassified observation: /whoami did not echo 203.0.113.9; read its answer above, because a clean result does not prove the trust boundary by itself" ;;
+      *) echo "curl exit $5: the /whoami request failed; inconclusive"; [ "$4" = 1 ] || set -- "$1" "$2" "$3" 3 ;;
+    esac
+  else
+    echo "curl is not installed here; not probing"
+    case "$4" in 0) set -- "$1" "$2" "$3" 2 ;; esac
+  fi
   echo "block exit $4; the HTTPS headers, the Location of a redirect answered with no credentials, the listener list and a clean /whoami answer are not classified, so judge them yourself"
   exit "$4"
 )
@@ -13619,7 +13629,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "c50b3aeebd7579f769a7964691ef7cea4fd9de42c9c33d24bd64f898df966181",
+  "body_sha256": "17fec69060642068d12bbd2ac60e6644cd1036768933bf67aac4b84c898a6624",
   "components": {
     "node-v26": {
       "name": "Node.js API documentation",
@@ -23835,7 +23845,7 @@ At the time of writing, the pinned Dev Mode docs require PRO or Team & Enterpris
 
 ## 6. Verify
 
-REASONED: HTTPS redirect, application-authentication and deployed-secret checks; no PaaS application, tenant credentials or deployed client bundle was supplied for this metadata review, and no live run is recorded. The redirect and unauthenticated-request checks take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the unauthenticated-request check takes its protected path on the same line. No run of the guards on the form before this change, which lowercased the host and the redirect's headers with `tr` and deleted the headers' spaces and tabs with a second `tr`, was recorded before 2026-11-01; curl-stub runs of it that day refused the reserved spellings with `tr` present, and with `tr` absent or failing refused none, probed the reserved name and reported a finding. The current form refuses a reserved name, and matches the Location header, under bash's `nocasematch` option, and deletes the spaces and tabs with bash expansions, instead of through `tr`; each part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. It is covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs on 2026-11-01 with no network. In bash, each part refused `example.com`, `EXAMPLE.NET`, `App.Example.COM`, `api.EXAMPLE.org` and seven other reserved spellings with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached both probes. In those runs a 301 whose Location header read `LOCATION:` and a tab before `HTTPS://`, or `location :` and spaces and a tab before `https://`, passed, also with `tr` absent or failing, while a 301 with an http:// Location or with no Location line was a finding. The redirect part unsets LC_ALL and sets LC_ALL=C inside its subshell just before the Location match, because `nocasematch` folds case through the locale and a Turkish or Azerbaijani locale does not fold `I` to `i`; the C locale folds A to Z only, so `location:` matches in any letter case in every locale, and a non-ASCII letter must match exactly. If LC_ALL is read-only, that part says so and exits 2 instead of classifying the redirect; both arms of the match end the part, so no later command runs in that locale. In stub runs on 2026-11-01 without the LC_ALL lines, LC_ALL=tr_TR.UTF-8 or LANG=tr_TR.UTF-8 turned a 301 whose header read `LOCATION: https://` into a finding. With them, that 301 passed under C, C.UTF-8 and both Turkish settings, also under an inherited `nocasematch` or `set -e`, while an http:// Location stayed a finding and a read-only LC_ALL gave 2 and its message. Under dash, each part refused every host name with 2 and the bash message before its probe, and the block exited 2. The expected readings below follow the cited platform documentation and the guide's application-security reasoning; exact application behaviour remains deployment-specific.
+REASONED: HTTPS redirect, application-authentication and deployed-secret checks; no PaaS application, tenant credentials or deployed client bundle was supplied for this metadata review, and no live run is recorded. The redirect and unauthenticated-request checks take the app's host name on guarded `set --` lines that refuse example.com, example.net, example.org and their subdomains, and the unauthenticated-request check takes its protected path on the same line. No run of the guards on the form before this change, which lowercased the host and the redirect's headers with `tr` and deleted the headers' spaces and tabs with a second `tr`, was recorded before 2026-11-01; curl-stub runs of it that day refused the reserved spellings with `tr` present, and with `tr` absent or failing refused none, probed the reserved name and reported a finding. The current form refuses a reserved name, and matches the Location header, under bash's `nocasematch` option, and deletes the spaces and tabs with bash expansions, instead of through `tr`; each part refuses with 2, saying the block needs bash, when `shopt` fails, as it does in dash. Before its `curl` guards, it was covered by the gate suite's bash -n and ShellCheck 0.11.0 passes and by curl-stub runs on 2026-11-01 with no network. In bash, each part refused `example.com`, `EXAMPLE.NET`, `App.Example.COM`, `api.EXAMPLE.org` and seven other reserved spellings with 2 and no curl call, also with `tr` absent from PATH or failing and under an inherited `nocasematch`, `readonly`, `declare -i` or `set -e`, and a host name outside the reserved names reached both probes. In those runs a 301 whose Location header read `LOCATION:` and a tab before `HTTPS://`, or `location :` and spaces and a tab before `https://`, passed, also with `tr` absent or failing, while a 301 with an http:// Location or with no Location line was a finding. The redirect part unsets LC_ALL and sets LC_ALL=C inside its subshell just before the Location match, because `nocasematch` folds case through the locale and a Turkish or Azerbaijani locale does not fold `I` to `i`; the C locale folds A to Z only, so `location:` matches in any letter case in every locale, and a non-ASCII letter must match exactly. If LC_ALL is read-only, that part says so and exits 2 instead of classifying the redirect; both arms of the match end the part, so no later command runs in that locale. In stub runs on 2026-11-01 without the LC_ALL lines, LC_ALL=tr_TR.UTF-8 or LANG=tr_TR.UTF-8 turned a 301 whose header read `LOCATION: https://` into a finding. With them, that 301 passed under C, C.UTF-8 and both Turkish settings, also under an inherited `nocasematch` or `set -e`, while an http:// Location stayed a finding and a read-only LC_ALL gave 2 and its message. Under dash, each part refused every host name with 2 and the bash message before its probe, and the block exited 2. The current form adds a `command -v curl` guard to each part, which refuses that part with status 2 and no curl call when curl is not installed; none of those checks was re-run on it, and its guards were not run. The expected readings below follow the cited platform documentation and the guide's application-security reasoning; exact application behaviour remains deployment-specific.
 
 ```bash
 # 1. This guide checks HTTP->HTTPS redirection. Spot-check on / only: it does not prove HTTPS on every route/method, nor that
@@ -23850,7 +23860,7 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
 #    This guide's check: require 301/302/307/308 with an https:// Location; HTTP content without that redirect fails.
 (                                       # the whole block in one subshell, so one exit status covers every part of it
   set +e                                # errexit off here, so a part that ends nonzero is folded into the status below instead of ending the block
-  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input), which outranks 0
+  set -- 0                              # the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (a part refused its input or found a required tool missing), which outranks 0
   (                                     # a subshell, so your own script arguments are untouched
     set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_APP_HOST'   # the public host name your platform serves the app on, no scheme, user name, port, path, query, fragment, percent sign or trailing dot: replace inside the quotes, keeping them
     [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
@@ -23864,6 +23874,7 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
       example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
     esac
     shopt -u nocasematch   # every match below compares letter case exactly again
+    command -v curl >/dev/null || { echo "curl is not installed here; not probing"; exit 2; }   # a missing curl refuses this part with status 2, ranked as above
     set -- "$1" "$(if curl -q -g -sSI --noproxy '*' -w 'http=%{http_code}\n' "http://$1/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # this guide's redirect check above; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a pass or a fail
     set -- "$1" "${2##*$'\n'}" "${2%$'\n\n'*}"   # curl's exit status, then the headers and the http= line
     set -- "$1" "$2" "$3" "${3##*$'\n'}"         # the same values, then the http= line alone
@@ -23910,6 +23921,7 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
     case "$2" in
       ""|*REPLACE_WITH_*|/*|*[[:space:][:cntrl:]]*) echo "substitute a protected path, without its leading slash, inside the quotes on the set -- line above; not probing"; exit 2 ;;
     esac
+    command -v curl >/dev/null || { echo "curl is not installed here; not probing"; exit 2; }   # a missing curl refuses this part with status 2, ranked as above
     set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' "https://$1/$2"; then printf '\n0'; else printf '\n%s' "$?"; fi)"  # no creds: want the APP's own 401/403, not a platform SSO 401; -S makes curl show an error message if it fails despite -s (cited curl show-error). This guide's assessment: http=000 beside a "curl: (N) ..." error line means no HTTP response arrived: inconclusive, not a rejection
     set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the http= line
     printf '%s\n' "$4"
@@ -24069,7 +24081,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "59a1f9107da1ac7bb86982f00ceb93add040c3349f356cb1707e55b0e5f3d0b0",
+  "body_sha256": "5b0fc4ed5bb18605f69c902c083fa747e56418cf911b0629456ac6556539c951",
   "components": {
     "render": {
       "name": "Render documentation",
@@ -69905,13 +69917,13 @@ refusal from that vantage, and the write-out fields need curl 7.75.0 or newer.
 
 ### Function and credential checks
 
-REASONED: listener isolation and the canary function comparison, per the guide's cited Supabase docker-compose.yml and Supabase docker .env.example. No Supabase deployment or container runtime is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five rejected guard cases reached no curl stub, while substituted canary inputs produced two STUB curl lines. These runs covered the blocks in earlier forms, in which the inventory had no status of its own and the canary block printed both results unclassified and ended with the second curl's status. The current forms of both blocks pass bash -n and ShellCheck 0.11.0 in the repository's gate suite, which runs both over every block, and the inventory's current form was also stub-run, as the Verify introduction records. No live outcome was observed: fixed listeners are private, and the function's exposed state accepts both requests while JWT enforcement denies the credential-free request and admits the current-token control. The gateway serves plain HTTP on `8000`. Substitute the base URL, function name, and current legacy
+REASONED: listener isolation and the canary function comparison, per the guide's cited Supabase docker-compose.yml and Supabase docker .env.example. No Supabase deployment or container runtime is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five rejected guard cases reached no curl stub, while substituted canary inputs produced two STUB curl lines. These runs covered the blocks in earlier forms, in which the inventory had no status of its own and the canary block printed both results unclassified and ended with the second curl's status. The inventory's current form and the canary block's previous form, which had no `curl` guard, passed bash -n and ShellCheck 0.11.0 in the repository's gate suite, which runs both over every block, and the inventory's current form was also stub-run, as the Verify introduction records. The canary block's current form adds a `command -v curl` guard, which refuses with status 2 and no curl call when curl is not installed; none of those checks was re-run on it, and that guard was not run. No live outcome was observed: fixed listeners are private, and the function's exposed state accepts both requests while JWT enforcement denies the credential-free request and admits the current-token control. The gateway serves plain HTTP on `8000`. Substitute the base URL, function name, and current legacy
 `ANON_KEY` JWT inside the single quotes. Use a canary function with a known response and no independent
 authentication. With `FUNCTIONS_VERIFY_JWT=false`, both requests should reach it; with verification
 enabled, the credential-free request should receive `401` and the Bearer-authenticated request should
 return its known response. An arbitrary function can return its own `401`, so that status alone does not
-identify the main worker's policy. The block exits 1 when the credential-free request returns a
-`2xx`; 3 when either request fails, the Bearer request returns anything but a `2xx`, or the
+identify the main worker's policy. The block exits 2 when a guard refuses or curl is not installed;
+1 when the credential-free request returns a `2xx`; 3 when either request fails, the Bearer request returns anything but a `2xx`, or the
 credential-free request returns anything but `401` or a `2xx`; and otherwise 0, leaving the
 Bearer response body for you to compare with the canary's known response.
 
@@ -69931,6 +69943,7 @@ REASONED: following block; the canary function comparison follows the cited envi
   case "$2" in *REPLACE_WITH_*|*FUNCTION_NAME*|"") echo "substitute a function name; not probing"; exit 2 ;; esac
   case "$3" in *REPLACE_WITH_*|"") echo "substitute a current legacy anon JWT; not probing"; exit 2 ;; esac
   case "$3" in *[[:cntrl:]]*) echo "the anon JWT must be one line with no control characters; not probing"; exit 2 ;; esac
+  command -v curl >/dev/null || { echo "curl is not installed here; not probing"; exit 2; }
   # Compare the credential-free request with a current legacy anon JWT sent as Bearer.
   # Use a canary with a known response and no independent authentication.
   set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -70064,7 +70077,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "bfdc42556a63914e42d11f1ca26273c73e1497bda656592bd1931fd0421769f1",
+  "body_sha256": "0c545d74d9a13649e6c555301f1d76d47d9b2b9d08a8d6e075a26d133508b2d7",
   "components": {
     "docs": {
       "name": "Supabase documentation",
