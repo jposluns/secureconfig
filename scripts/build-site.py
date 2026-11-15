@@ -58,7 +58,16 @@ an extra page (a .html or .htm file in any case, as the CSP gate names one) at a
 other file except, at base `/` only, the published files the root holds beside the pages
 (PUBLISHED: llms.txt, llms-full.txt, robots.txt, sitemap.xml, _headers, .well-known/security.txt,
 favicon.svg, favicon.ico, apple-touch-icon.png and images/secureconfig-card.png). A new published
-file is added to PUBLISHED before it ships.
+file is added to PUBLISHED before it ships. At base `/` only, the folder may also hold release
+archives, which the build never writes (download_problems()): regular files directly in downloads/
+named secureconfig-1.0.<N>.zip or secureconfig-plugin-1.0.<N>.zip, with <N> in the form `VERSION`
+uses (ASCII digits, no leading zero, no `v`). Each file may be at most DOWNLOAD_MAX bytes, and
+every regular file with a valid name, an oversized one included, counts towards the total cap of
+DOWNLOADS_TOTAL_MAX bytes. Every other entry in downloads/ is refused, including any folder (empty
+or not), a symbolic link, a special file, any other name and any `-latest.zip` name, because the
+latest links are planned as 302 redirects with no bytes of their own. download_problems() reads
+only the top level of downloads/, so only top-level regular files can be admitted there. A
+downloads/ folder that cannot be read is a read error (exit 2).
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error
 or a source the build cannot read as it needs.
@@ -68,7 +77,9 @@ only bash and Python, and installs nothing. No network.
 import argparse
 import html
 import json
+import os
 import re
+import stat
 import sys
 from pathlib import Path
 
@@ -91,6 +102,17 @@ SITE_CSS = "assets/site.css"  # the optional per-site constants file (baseline R
 PUBLISHED = (".well-known/security.txt", "_headers", "apple-touch-icon.png", "favicon.ico",
              "favicon.svg", "images/secureconfig-card.png", "llms-full.txt", "llms.txt", "robots.txt",
              "sitemap.xml")
+# The release archives a root --check admits in downloads/ (plan-v3 sections 1.3 and 1.6): the
+# records pull request copies each released zip there byte for byte, and this build writes none.
+# Only the 2 versioned names, with the version in the form `VERSION` uses (1.0.<N>, no `v`), and no
+# latest name: /downloads/secureconfig-latest.zip and /downloads/secureconfig-plugin-latest.zip are
+# planned as 302 redirects with no bytes of their own. Each archive is capped below Cloudflare
+# Pages' limit on 1 file, 25 MiB (to verify online), and all of them together are capped because
+# every published zip stays published, and stays in Git history.
+DOWNLOADS = "downloads/"
+DOWNLOAD_NAME = re.compile(r"secureconfig(?:-plugin)?-1\.0\.[1-9][0-9]*\.zip")
+DOWNLOAD_MAX = 20 * 1024 * 1024
+DOWNLOADS_TOTAL_MAX = 200 * 1024 * 1024
 # The unlisted n8n advisory (the maintainer's instruction of 2026-11-07: a dated name) and its
 # plain-text copy. tools/check_draft.py admits the page as noindex with no canonical by this exact
 # path, and the overflow page list in tools/run_all_checks.sh names it.
@@ -902,6 +924,59 @@ def refuse_text(name, text):
         raise Refused(f"{name} would contain " + ", ".join(why))
 
 
+# The archive bytes are not checked here, only each entry's name, type and size. A later pull
+# request is planned to check each hosted archive against its release record.
+def download_problems(out, max_file=DOWNLOAD_MAX, max_total=DOWNLOADS_TOTAL_MAX):
+    """The root --check problems for out/downloads/, each starting with its path relative to out.
+    Only the top level is read, with os.scandir: every entry there must be a regular file whose
+    name DOWNLOAD_NAME matches in full, at most max_file bytes, so any folder, empty or not, is
+    refused and never read. Every regular file with a valid name, an oversized one included,
+    counts towards the total, which must be at most max_total bytes. Each entry is read with
+    lstat, so a symbolic link is refused and never followed. No downloads/ gives no problems, and
+    a downloads/ that is not a folder is left to main()'s stray-file rule. OSError on a read
+    error, including a downloads/ folder that cannot be listed."""
+    folder = out / DOWNLOADS
+    try:
+        mode = folder.lstat().st_mode
+    except FileNotFoundError:
+        return []
+    if stat.S_ISLNK(mode):
+        return [f"{DOWNLOADS} is a symbolic link; release archives are regular files in a folder"]
+    if not stat.S_ISDIR(mode):
+        return []
+    with os.scandir(folder) as entries:  # OSError when the folder cannot be listed
+        names = sorted(entry.name for entry in entries)
+    problems, total = [], 0
+    for name in names:
+        rel = DOWNLOADS + name
+        info = (folder / name).lstat()
+        mode = info.st_mode
+        if stat.S_ISDIR(mode):
+            problems.append(f"{rel} is a folder; download_problems() reads only the top level of "
+                            f"{DOWNLOADS}, so only top-level regular files can be admitted there")
+        elif name.endswith("-latest.zip"):
+            problems.append(f"{rel} is a latest name; /downloads/secureconfig-latest.zip and "
+                            f"/downloads/secureconfig-plugin-latest.zip are planned as 302 "
+                            f"redirects with no bytes of their own, so no file carries one")
+        elif not DOWNLOAD_NAME.fullmatch(name):
+            problems.append(f"{rel} is not a release archive name; {DOWNLOADS} holds only "
+                            f"secureconfig-1.0.<N>.zip and secureconfig-plugin-1.0.<N>.zip, "
+                            f"<N> as in VERSION")
+        elif not stat.S_ISREG(mode):
+            problems.append(f"{rel} is not a regular file; a release archive is the released "
+                            f"zip's bytes, copied")
+        else:
+            size = info.st_size
+            total += size  # an oversized file counts too: its bytes are in the folder
+            if size > max_file:
+                problems.append(f"{rel} is {size} bytes, over the {max_file}-byte cap on 1 "
+                                f"release archive")
+    if total > max_total:
+        problems.append(f"{DOWNLOADS} holds {total} bytes of release archives, over the "
+                        f"{max_total}-byte cap on all of them together")
+    return problems
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--base", default="/")
@@ -943,7 +1018,8 @@ def main(argv=None):
         # allows for the 2 per-site
         # constants (its grammar is held by tools/check_draft.py). A page is .html or .htm in any
         # case, read as the CSP gate reads one (name_suffix). At the root after promotion the folder
-        # also holds the published files, named one by one in PUBLISHED.
+        # also holds the published files, named one by one in PUBLISHED. At the root it may also
+        # hold the release archives that download_problems() admits in downloads/.
         if out.is_dir():
             for path in sorted(p for p in out.rglob("*") if not p.is_dir()):
                 rel = path.relative_to(out).as_posix()
@@ -954,9 +1030,17 @@ def main(argv=None):
                 elif args.base != "/":
                     problems.append(f"{rel} is neither a page this build writes nor a copied "
                                     f"template file under {COPIED}")
+                elif rel.startswith(DOWNLOADS):
+                    continue  # held by download_problems() below
                 elif rel not in PUBLISHED:
                     problems.append(f"{rel} is neither a page this build writes, a copied template "
                                     f"file under {COPIED}, nor a published file in PUBLISHED")
+            if args.base == "/":
+                try:
+                    problems += download_problems(out)
+                except OSError as exc:
+                    print(f"  FAIL  cannot read {out / DOWNLOADS}: {exc}")
+                    return 2
         if problems:
             for p in problems:
                 print(f"  FAIL  {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}/{p}; "

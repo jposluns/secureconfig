@@ -77,6 +77,7 @@ minio.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the de
 minio.md	G1	PARTIAL	no		1 sentence(s) repeated, max 23 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 mlflow.md	D3	PARTIAL	no		13 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 model-servers.md	D3	PARTIAL	no		1 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
+model-servers.md	G1	PARTIAL	no		3 sentence(s) repeated, max 5 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 mongodb.md	M1	PARTIAL	no		1 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
 mongodb.md	G1	PARTIAL	no		1 sentence(s) repeated, max 15 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 mosquitto.md	M1	PARTIAL	no		2 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
