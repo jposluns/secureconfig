@@ -70,7 +70,7 @@ PubkeyAuthentication yes
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
 sudo ufw delete allow OpenSSH                # only if an earlier run of this guide added it: a new rule does not replace an old one
-sudo ufw allow proto tcp from REPLACE_WITH_ADMIN_RANGE to any port 22
+sudo ufw allow proto tcp from REPLACE_WITH_ADMIN_RANGE to any port 22   # confirm your current address is inside REPLACE_WITH_ADMIN_RANGE first
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw enable
@@ -311,7 +311,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "685fc3a1da70487fa46b8d9f74f054cbf82eb02e1e050872a172c10d022c1cbc",
+  "body_sha256": "7d838ff31ba83ca080701a908875e898cc5031ff3fa2c9682392563b6978e967",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",

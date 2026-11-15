@@ -221,7 +221,7 @@ platform git sources that feed the privileged controllers.
 
 ## Verify
 
-REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks then present, each with exit 0 and no diagnostics. That review covered every block in an earlier form: the Argo CD API and Flux webhook blocks before their curls took the host on a guarded `set --` line, and all three before each block ended with one exit status for everything it runs. The four current blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by the October and November 2026 stub runs recorded at each block. The stub outcomes and expected exposed and fixed results are recorded at their individual checks. The expected exposed and fixed results are given per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
+REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks then present, each with exit 0 and no diagnostics. That review covered every block in an earlier form: the Argo CD API and Flux webhook blocks before their curls took the host on a guarded `set --` line, and all three before each block ended with one exit status for everything it runs. The four current blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by the October and November 2026 stub runs recorded at each block. The Argo CD API and Flux webhook blocks' `python3 -I -c` form, which keeps Python from importing a module from the current directory, postdates those runs. The stub outcomes and expected exposed and fixed results are recorded at their individual checks. The expected exposed and fixed results are given per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
 also, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 there is no Kubernetes cluster. None was stood up in its exposed and fixed states. Each names its expected exposed and fixed result
 so it discriminates against a live install, based on the cited vendor documentation and pinned source readings. A login page, a
@@ -274,6 +274,8 @@ case also did with `tr` absent from PATH, and under an inherited `nocasematch`, 
 `declare -i` variables, or `set -e`, and a host outside those names reached the anonymous request. Under
 dash, which lacks bash's `shopt`, stub runs of the current form refused reserved and other host names
 alike with status 2 and its message that the block needs bash, before any request.
+Those November 2026 runs covered the block before its two parse lines gained `python3 -I`; no stub
+or live run has covered that change.
 Backlog row 2.28 retains the remaining limits: whether the deployed Redis tag was built from the
 recipe its index annotations name, whether Redis's title overwrite
 also clears the `REDIS_PASSWORD` environment copy, and per-handler RBAC coverage in `argocd-server`.
@@ -318,7 +320,7 @@ every line after the first for your shell to run.
   case "$5:${6##*anon http=}" in
     0:401' '*) ;;
     0:2??' '*)
-      set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(printf '%s' "${6%$'\n'anon http=*}" | python3 -c 'import json, sys; items = (lambda data: data.get("items", False) if isinstance(data, dict) else False)(json.load(sys.stdin)); sys.exit(12 if items is not None and not isinstance(items, list) else 10 if any(isinstance(item, dict) and isinstance(item.get("metadata"), dict) and item.get("metadata").get("name") == sys.argv[1] for item in items or ()) else 11)' "$3"; printf '%s' "$?")"   # python3 exits 10 when an item's metadata.name in the application list is $3, 11 for a list without it, 12 for other JSON and nonzero otherwise
+      set -- "$1" "$2" "$3" "$4" "$5" "$6" "$(printf '%s' "${6%$'\n'anon http=*}" | python3 -I -c 'import json, sys; items = (lambda data: data.get("items", False) if isinstance(data, dict) else False)(json.load(sys.stdin)); sys.exit(12 if items is not None and not isinstance(items, list) else 10 if any(isinstance(item, dict) and isinstance(item.get("metadata"), dict) and item.get("metadata").get("name") == sys.argv[1] for item in items or ()) else 11)' "$3"; printf '%s' "$?")"   # python3 exits 10 when an item's metadata.name in the application list is $3, 11 for a list without it, 12 for other JSON and nonzero otherwise
       case "$7" in
         10) echo "FINDING: the anonymous request was answered with application JSON naming $3"; set -- "$1" "$2" "$3" 1 ;;
         11|12) echo "the anonymous request was answered with a 2xx that does not name $3 (a login page or a proxy's page is not the fixed state); inconclusive"; set -- "$1" "$2" "$3" 3 ;;
@@ -349,7 +351,7 @@ every line after the first for your shell to run.
     printf '%s' "$5"
     case "$4:${5##*auth http=}" in
       0:200' '*)
-        set -- "$1" "$2" "$3" "$4" "$5" "$(printf '%s' "${5%$'\n'auth http=*}" | python3 -c 'import json, sys; items = (lambda data: data.get("items", False) if isinstance(data, dict) else False)(json.load(sys.stdin)); sys.exit(12 if items is not None and not isinstance(items, list) else 10 if any(isinstance(item, dict) and isinstance(item.get("metadata"), dict) and item.get("metadata").get("name") == sys.argv[1] for item in items or ()) else 11)' "$3"; printf '%s' "$?")"   # the same parse and statuses as above
+        set -- "$1" "$2" "$3" "$4" "$5" "$(printf '%s' "${5%$'\n'auth http=*}" | python3 -I -c 'import json, sys; items = (lambda data: data.get("items", False) if isinstance(data, dict) else False)(json.load(sys.stdin)); sys.exit(12 if items is not None and not isinstance(items, list) else 10 if any(isinstance(item, dict) and isinstance(item.get("metadata"), dict) and item.get("metadata").get("name") == sys.argv[1] for item in items or ()) else 11)' "$3"; printf '%s' "$?")"   # the same parse and statuses as above
         case "$6" in
           10) echo "the token-bearing request was answered with 200 naming $3"; exit 0 ;;
           11|12) echo "the token-bearing request was answered with 200 but does not name $3, so the positive control failed; inconclusive"; exit 3 ;;
@@ -516,6 +518,8 @@ two reserved names in upper or mixed case also did with `tr` absent from PATH, a
 the secret prompt. Under dash, which lacks bash's `shopt`, stub runs of the current form refused
 reserved and other host names alike with status 2 and its message that the block needs bash, before the
 secret prompt.
+Those November 2026 runs covered the block before its signer gained `python3 -I`; no stub or live run
+has covered that change.
 Read the receiver's status without printing the default table, full status, condition messages, or
 `.status.webhookPath` (status messages can carry the generated path, itself a capability for a `generic`
 receiver): select the name and the Ready condition explicitly. The rejection status is type- and
@@ -569,7 +573,7 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   IFS= read -r -s -p 'receiver HMAC secret: ' hmac < /dev/tty || { echo 'the hidden prompt could not read the HMAC secret; inconclusive'; exit 3; }; echo
   [ -n "$hmac" ] || { echo 'supply the HMAC secret; not probing'; exit 2; }
   set -- "$1" "$2" '{"ref":"refs/heads/main"}'   # the fixed, non-secret request body
-  set -- "$1" "$2" "$3" "$(set -o pipefail; if printf '%s' "$hmac" | python3 -c \
+  set -- "$1" "$2" "$3" "$(set -o pipefail; if printf '%s' "$hmac" | python3 -I -c \
     'import hmac, sys; print(hmac.new(sys.stdin.buffer.read(), sys.argv[1].encode(), "sha256").hexdigest())' "$3"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
   set -- "$1" "$2" "$3" "${4%$'\n'*}" "${4##*$'\n'}"   # the signature with Python's newline, then the signer's exit status
   [ "$5" = 0 ] || { echo 'signature generation failed; not probing'; exit 3; }
@@ -860,7 +864,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "b93332fac2381126c55dd1cf869f3ff85ee57aa99959e15fc102c28f872a09af",
+  "body_sha256": "5ab2885fcf51f4fc7b357744b4f464f94024053e8641edf825e53b0ba1bcd1b3",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
