@@ -65734,7 +65734,7 @@ There are two fixes, and you can use both:
   outcome assumes that the timestamp and label decoders that `Entry.Unmarshal` calls return an
   error rather than panic; those decoders were not read. In this guide's assessment, a panic there
   would push nothing either, so metastore and ingest-limits records add no route either way.
-  Programs that import Loki are not traced.
+  Programs that import Loki were not traced by this reading.
   No Loki run has observed an ingester holding or returning such an entry. By that reading too,
   backward log queries do not time-filter the head block, and the
   unordered head block queries its vendored go-datastructures v1.1.7 range tree from the interval's
@@ -65779,8 +65779,8 @@ There are two fixes, and you can use both:
   stream interceptors named here are all that Loki code adds. The same search finds nothing that
   sets dskit's `GRPCOptions`, a field with no YAML key whose server options dskit appends to its
   own, and no call of grpc-go's `AddGlobalServerOptions` hook, whose options `NewServer` applies
-  first, so neither adds a stream interceptor or stats handler in the v3.7.8 repository; a program
-  that imports Loki is not traced. The transport stream's
+  first, so neither adds a stream interceptor or stats handler in the v3.7.8 repository; programs
+  that import Loki were not traced by this reading. The transport stream's
   `Write`, which `SendMsg` calls, only returns the
   result of its transport's `write`, and grpc-go's HTTP/2 server transport sets itself as that
   transport for each stream it creates. In that transport, `write`, and the header write it makes
@@ -65815,7 +65815,8 @@ There are two fixes, and you can use both:
   when `GrpcMethodLimiter` is set, the in-flight limiter's tap handle. `ComposeTapHandles` returns
   a lone handle as is and otherwise calls each in order on the previous one's context. A search of
   every file in the v3.7.8 tag archive finds `GRPCTapHandles` only in that field's declaration and
-  dskit's append, so nothing in the repository sets it; a program that imports Loki is not traced.
+  dskit's append, so nothing in the repository sets it; programs that import Loki were not traced
+  by this reading.
   The otelgrpc server handler, which dskit builds with no option, takes OpenTelemetry's global
   propagator and tracer provider by default. From source reading of `cmd/loki/main.go`, Loki's
   `main` calls dskit's `NewOTelOrJaegerFromEnv`, with no option, when `tracing.enabled`, true by
@@ -65844,7 +65845,8 @@ There are two fixes, and you can use both:
   context. From source reading, `handleStream` adds the `x/net/trace` context only when grpc-go's
   `EnableTracing` package variable is true, and a search of every Go file in the v3.7.8 tag archive
   finds that variable read in `NewServer`, `handleStream` and the client's `newAttemptLocked` but
-  never assigned, so nothing in the repository sets it; a program that imports Loki is not traced.
+  never assigned, so nothing in the repository sets it; programs that import Loki were not traced
+  by this reading.
   `handleStream` adds the `pprof.WithLabels` context only when the setting grpc-go reads from the
   `GRPC_GO_SERVER_GOROUTINE_LABELS` environment variable has its server-method bit set, so that
   depends on the deployment's environment. Which status
@@ -65862,8 +65864,8 @@ There are two fixes, and you can use both:
   emulator and grpc-go's xDS wrapper the only non-test `grpc.NewServer` call is dskit's, which
   builds Loki's main and internal gRPC servers. In dskit, the HTTP server's handler wraps only the
   HTTP router, and `Run` serves the gRPC server with `Serve` on its gRPC listener, so the
-  empty-batch reading's transport assumption holds for Loki's servers in the v3.7.8 repository; a
-  program that imports Loki is not traced.
+  empty-batch reading's transport assumption holds for Loki's servers in the v3.7.8 repository;
+  programs that import Loki were not traced by this reading.
   From source reading of grpc-go's control buffer and write quota, enqueuing a frame fails, with
   `ErrConnClosing`, only once the control buffer is finished, which the transport's `Close` does
   and the transport's loopy writer also does when it exits, and a write-quota wait ends only when
@@ -65891,7 +65893,7 @@ There are two fixes, and you can use both:
   documentation script, and no vendored package imports Loki's `ingester` or `loki` package;
   nothing in the repository sets it. So what the ingester querier and ingesters return for the
   interval is still not established and has not been observed, and what a wrapper set by a program
-  that imports Loki does is not traced.
+  that imports Loki does was not traced by this reading.
   `Run` initializes the target modules through the module manager and starts the resulting
   services together. The internal server module exists only when `internal-server.enable` is
   true (default false); it is then inserted before `Server` in each module dependency list that
@@ -66691,7 +66693,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "441ffdd2b896159a7c9044785b1ef1956ea1a11fd556afcb8b299c7bc91693b5",
+  "body_sha256": "9dce261efb106d26f5d7e81ddd5d6fb9911c2b158adf9ec9f19c2431fd37c4d3",
   "components": {
     "node": {
       "name": "node_exporter",
