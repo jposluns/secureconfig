@@ -2,14 +2,16 @@
 #
 # Each line is KIND<TAB>PATH<TAB>NEED. A render line may add <TAB>SOURCE when the file is
 # rendered from another input path.
-#   KIND  copy: the file is published byte for byte as it is in the input.
-#         render: the file is generated during the export, and the generated file is published.
+#   KIND  copy: a file to be published byte for byte as it is in the input.
+#         render: a file to be generated during the export, and published as generated.
 #   PATH  an exact path, or a narrow glob: one * in the last segment, under a fixed directory,
 #         ending in a fixed suffix such as .md. A * never matches a name that starts with a dot.
-#   NEED  required: the export refuses when the file is missing. optional: it may be absent.
+#   NEED  required: the line must match at least one tracked path. optional: it may match none,
+#         for a file that is not in the checkout yet.
 #
-# A file this allowlist does not name is never published. Each published path matches exactly
-# one line, and each line matches at least one file.
+# tools/export_lists.py --check fails a tracked path that no line of this file or of the
+# private paths matches, a path two lines of this file match, a published path that is not a
+# regular file, and a required line that matches no tracked path.
 
 # Project documents, copied as they are.
 copy	README.md	required

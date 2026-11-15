@@ -1923,12 +1923,14 @@ fi
 echo "== the export allowlist and the private paths account for every tracked path =="
 # export/public-allowlist.txt names every path the public repository may carry, and
 # export/private-paths.txt every tracked path that stays here. tools/export_lists.py --check fails
-# a tracked path that neither names or that both name, a path two allowlist lines publish, a line
-# that matches no tracked path, a guide without its own exact copy line, a publishable marker
-# that does not compile, and a public exception whose line has changed or lost its hit. It reads
-# git's list of tracked paths and writes nothing. The private lists are not read here: they never
-# enter a checkout. The self-test runs first, on fixtures under TMPDIR, so what runs against the
-# checkout is the shipped check.
+# a tracked path that neither names or that both name, a path two allowlist lines publish or two
+# deny lines keep private, a published path that is not a regular file or whose name leaves the
+# path characters, a required line that matches no tracked path, a copy or render line that can
+# match a denied path, a tracked guide without its own exact copy line, a publishable marker that
+# does not compile or can match an empty string, and a public exception whose line has changed or
+# lost its hit. It reads git's list of tracked paths and writes nothing. The private lists are
+# not read here: they never enter a checkout. The self-test runs first, on fixtures under TMPDIR,
+# so what runs against the checkout is the shipped check.
 run_gate test_export_lists.py python3 -I -B tools/test_export_lists.py
 run_gate "export_lists.py --check" python3 -I -B tools/export_lists.py --check
 
