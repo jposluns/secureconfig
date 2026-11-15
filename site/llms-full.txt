@@ -16204,7 +16204,7 @@ platform git sources that feed the privileged controllers.
 
 ## Verify
 
-REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks then present, each with exit 0 and no diagnostics. That review covered every block in an earlier form: the Argo CD API and Flux webhook blocks before their curls took the host on a guarded `set --` line, and all three before each block ended with one exit status for everything it runs. The four current blocks are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by the October and November 2026 stub runs recorded at each block. The Argo CD API and Flux webhook blocks' `python3 -I -c` form, which keeps Python from importing a module from the current directory, postdates those runs. The stub outcomes and expected exposed and fixed results are recorded at their individual checks. The expected exposed and fixed results are given per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
+REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks then present, each with exit 0 and no diagnostics. That review covered every block in an earlier form: the Argo CD API and Flux webhook blocks before their curls took the host on a guarded `set --` line, and all three before each block ended with one exit status for everything it runs. The four blocks, in their form before the Argo CD API and Flux webhook blocks gained `python3 -I -c`, were covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by the October and November 2026 stub runs recorded at each block. No stub or live run has covered the Argo CD API and Flux webhook blocks' `python3 -I -c` form, which keeps Python from importing a module from the current directory. The stub outcomes and expected exposed and fixed results are recorded at their individual checks. The expected exposed and fixed results are given per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
 also, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 there is no Kubernetes cluster. None was stood up in its exposed and fixed states. Each names its expected exposed and fixed result
 so it discriminates against a live install, based on the cited vendor documentation and pinned source readings. A login page, a
@@ -16248,17 +16248,16 @@ top-level array exited 3.
 So did an anonymous login page, 302 or curl failure, a token-bearing 403 or failure, a failing python3
 and no readable /dev/tty. A missing python3, each `set --` refusal, and beside an anonymous 401 an empty
 or readonly token or a readonly IFS exited 2; an inherited `set -e`, `set -u` or `declare -i tok` left
-these results unchanged. The current form instead matches reserved names in any letter case through
-bash's `nocasematch` option, and is covered by the repository gate suite's bash -n and ShellCheck 0.11.0
+these results unchanged. The form before the two parse lines gained `python3 -I` instead matches reserved
+names in any letter case through bash's `nocasematch` option, and was covered by the repository gate suite's bash -n and ShellCheck 0.11.0
 passes over every block, and by November 2026 stub runs under bash 5.3.9 with curl stubbed and no
 network. In those runs eight reserved names in lower, upper and mixed case, bare and as subdomains,
 each exited 2 with the reserved-name message before any request; two reserved names in upper or mixed
 case also did with `tr` absent from PATH, and under an inherited `nocasematch`, readonly and
 `declare -i` variables, or `set -e`, and a host outside those names reached the anonymous request. Under
-dash, which lacks bash's `shopt`, stub runs of the current form refused reserved and other host names
+dash, which lacks bash's `shopt`, stub runs of that form refused reserved and other host names
 alike with status 2 and its message that the block needs bash, before any request.
-Those November 2026 runs covered the block before its two parse lines gained `python3 -I`; no stub
-or live run has covered that change.
+No stub or live run has covered the block since its two parse lines gained `python3 -I`.
 Backlog row 2.28 retains the remaining limits: whether the deployed Redis tag was built from the
 recipe its index annotations name, whether Redis's title overwrite
 also clears the `REDIS_PASSWORD` environment copy, and per-handler RBAC coverage in `argocd-server`.
@@ -16491,18 +16490,17 @@ lowercased the host with `tr`. In those runs an unsigned
 401 or 500 beside a signed 200 exited 0, and the stub received the body on stdin and the expected HMAC
 header. An unsigned 200 exited 1, also when the signed request failed; an unsigned 302 or curl failure,
 a signed 401, a failing or silent python3 and no readable /dev/tty exited 3; and an empty secret, a
-readonly hmac or IFS and each `set --` refusal exited 2. The current form instead matches reserved
-names in any letter case through bash's `nocasematch` option, and is covered by the repository gate
+readonly hmac or IFS and each `set --` refusal exited 2. The form before the signer gained `python3 -I` instead matches reserved
+names in any letter case through bash's `nocasematch` option, and was covered by the repository gate
 suite's bash -n and ShellCheck 0.11.0 passes over every block, and by November 2026 stub runs under bash
 5.3.9 with curl stubbed and no network. In those runs eight reserved names in lower, upper and mixed
 case, bare and as subdomains, each exited 2 with the reserved-name message before the secret prompt;
 two reserved names in upper or mixed case also did with `tr` absent from PATH, and under an inherited
 `nocasematch`, readonly and `declare -i` variables, or `set -e`, and a host outside those names reached
-the secret prompt. Under dash, which lacks bash's `shopt`, stub runs of the current form refused
+the secret prompt. Under dash, which lacks bash's `shopt`, stub runs of that form refused
 reserved and other host names alike with status 2 and its message that the block needs bash, before the
 secret prompt.
-Those November 2026 runs covered the block before its signer gained `python3 -I`; no stub or live run
-has covered that change.
+No stub or live run has covered the block since its signer gained `python3 -I`.
 Read the receiver's status without printing the default table, full status, condition messages, or
 `.status.webhookPath` (status messages can carry the generated path, itself a capability for a `generic`
 receiver): select the name and the Ready condition explicitly. The rejection status is type- and
@@ -16847,7 +16845,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "5ab2885fcf51f4fc7b357744b4f464f94024053e8641edf825e53b0ba1bcd1b3",
+  "body_sha256": "82e44ffd30a1c327b04ded346c7c71a386915afa0ba2354043bc58cbf52d3fbe",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -31866,7 +31864,7 @@ For either UI, loopback binding suits a proxy in the same network namespace. For
 
 REASONED: verification scope from the recorded authoring limitations; no target cluster, container runtime, node access or audit collector is available. All deployment checks below are **REASONED, not demonstrated**: the authoring environment has no target cluster or Docker/Podman runtime, and no access to the target node or audit collector; the authoring host forbids opening listeners without an isolated network namespace, and has none. Expected outcomes follow the cited vendor behavior; no deployment result is claimed.
 
-DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. In a further run on 2026-10-13 (UTC), after the cluster guard gained the REST guard's 1 to 65535 port range check, ports 0, 65536, 99999 and a 20-digit value exited 1 before any curl call, while 1, 9200 and 65535 reached the first curl call; before the change every one of those ports reached it. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. In a further run on 2026-10-13 (UTC), after the cluster, REST and UI guards' `example.com` test was made case-insensitive, each of the three refused `example.com`, `EXAMPLE.COM`, `Example.Com` and `es.EXAMPLE.com` with exit 1 before any curl call and passed `Dummy.Valid.test` to its first curl call unchanged. Before the change, the three forms that are not all lowercase reached curl in all three guards. The three guards were later extended to refuse `example.net` and `example.org` in any letter case. In a further run on 2026-10-13 (UTC), with Bash 5.3.9, each block was saved to a file and run with its commands unchanged except fixture values, and curl, python3 and date were stubbed. In that further run, each of the three guards refused `example.net`, `EXAMPLE.NET`, `es.Example.Net`, `example.org`, `EXAMPLE.ORG`, `es.Example.Org`, `example.com`, `EXAMPLE.COM`, `Example.Com`, `es.EXAMPLE.com` and `example.network.test` with exit 1 before any curl call. Each of the three guards passed `Dummy.Valid.test` to curl unchanged in that run, exiting 0 after 11, 1 and 2 curl calls in the cluster, REST and UI blocks. Before the extension, the `.net` and `.org` hosts and `example.network.test` reached curl while the `.com` forms were refused. The test is a substring match, so it also refuses longer names that contain `example.net` or `example.org`, such as `example.network.test`. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results. The guard and stub runs recorded here, and the bash -n run of the nine shell blocks, covered an earlier form of the eight Verify blocks among them, in which the guarded blocks' refusals exited with status 1, the cluster checks were one block, now split into the first five blocks below, and the listener inventory was two bare `ss` commands, now a guarded subshell. The current forms, whose refusals exit with status 2 and whose results set the exit status, are covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs of every Verify block on 2026-10-31, not by the runs recorded here. The audit block's marker line now runs `python3 -I -c`, so Python does not import a module from the current directory; that form postdates every run recorded here and the 2026-10-31 stub runs, and no stub or live run has covered it.
+DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. In a further run on 2026-10-13 (UTC), after the cluster guard gained the REST guard's 1 to 65535 port range check, ports 0, 65536, 99999 and a 20-digit value exited 1 before any curl call, while 1, 9200 and 65535 reached the first curl call; before the change every one of those ports reached it. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. In a further run on 2026-10-13 (UTC), after the cluster, REST and UI guards' `example.com` test was made case-insensitive, each of the three refused `example.com`, `EXAMPLE.COM`, `Example.Com` and `es.EXAMPLE.com` with exit 1 before any curl call and passed `Dummy.Valid.test` to its first curl call unchanged. Before the change, the three forms that are not all lowercase reached curl in all three guards. The three guards were later extended to refuse `example.net` and `example.org` in any letter case. In a further run on 2026-10-13 (UTC), with Bash 5.3.9, each block was saved to a file and run with its commands unchanged except fixture values, and curl, python3 and date were stubbed. In that further run, each of the three guards refused `example.net`, `EXAMPLE.NET`, `es.Example.Net`, `example.org`, `EXAMPLE.ORG`, `es.Example.Org`, `example.com`, `EXAMPLE.COM`, `Example.Com`, `es.EXAMPLE.com` and `example.network.test` with exit 1 before any curl call. Each of the three guards passed `Dummy.Valid.test` to curl unchanged in that run, exiting 0 after 11, 1 and 2 curl calls in the cluster, REST and UI blocks. Before the extension, the `.net` and `.org` hosts and `example.network.test` reached curl while the `.com` forms were refused. The test is a substring match, so it also refuses longer names that contain `example.net` or `example.org`, such as `example.network.test`. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results. The guard and stub runs recorded here, and the bash -n run of the nine shell blocks, covered an earlier form of the eight Verify blocks among them, in which the guarded blocks' refusals exited with status 1, the cluster checks were one block, now split into the first five blocks below, and the listener inventory was two bare `ss` commands, now a guarded subshell. The forms before the audit block's marker line gained `python3 -I -c`, whose refusals exit with status 2 and whose results set the exit status, were covered by the repository gate suite's bash -n and ShellCheck 0.11.0 passes over every block and by stub runs of every Verify block on 2026-10-31, not by the runs recorded here. The audit block's marker line now runs `python3 -I -c`, so Python does not import a module from the current directory; no stub or live run has covered that form.
 
 REASONED: introduction to the deployment prerequisites for the cited cluster API checks; local preparation observations are recorded above, while cluster identities and deployed trust remain unavailable. Before running:
 
@@ -32815,7 +32813,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "fa2116ca8e42d9001ad1538fe138c042d11450b6ed2a469417c366dc02840411",
+  "body_sha256": "23857b058927710c9b9f5a1db89ee2b7874bb0b55c924952038117fd9f872d0d",
   "components": {
     "es-api": {
       "name": "Elasticsearch API",
@@ -55586,7 +55584,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 3. **SSRF destinations are blocked (partially runnable).** The address-classification half is runnable now; the client-integration half is reasoned. Runnable: confirm the deny-list rejects the reserved and internal ranges a discovery URL might target, namely the cloud metadata address, loopback, and RFC 1918 space:
 
-   Address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
+   Address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. That run used the form before the block gained `python3 -I`; no stub or live run has covered the `-I` form. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
 
    ```bash
    (                                       # a subshell, so the exit below ends only the subshell
@@ -55645,7 +55643,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
    Save the actual captured body as `dcr-request.json` and inspect it (this native client checks for `native`; a remotely-hosted browser client checks for `web` instead):
 
-   The application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
+   The application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. That run used the form before the block gained `python3 -I`; no stub or live run has covered the `-I` form. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
 
    ```bash
    (                                       # a subshell, so the exits below end only the subshell
@@ -55747,7 +55745,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "3d6e39c7a05d80bc7793d9b5666909727671d2fe10c836bb00484960657c0481",
+  "body_sha256": "8b79c66e5a0cf5e16a113de57c93d498d1e3d48dbddb8c0541103a5e8572ff27",
   "components": {
     "mcp": {
       "name": "MCP",

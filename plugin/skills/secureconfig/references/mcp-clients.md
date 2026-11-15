@@ -98,7 +98,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 3. **SSRF destinations are blocked (partially runnable).** The address-classification half is runnable now; the client-integration half is reasoned. Runnable: confirm the deny-list rejects the reserved and internal ranges a discovery URL might target, namely the cloud metadata address, loopback, and RFC 1918 space:
 
-   Address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
+   Address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. That run used the form before the block gained `python3 -I`; no stub or live run has covered the `-I` form. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
 
    ```bash
    (                                       # a subshell, so the exit below ends only the subshell
@@ -157,7 +157,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
    Save the actual captured body as `dcr-request.json` and inspect it (this native client checks for `native`; a remotely-hosted browser client checks for `web` instead):
 
-   The application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
+   The application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. That run used the form before the block gained `python3 -I`; no stub or live run has covered the `-I` form. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
 
    ```bash
    (                                       # a subshell, so the exits below end only the subshell
@@ -259,7 +259,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "3d6e39c7a05d80bc7793d9b5666909727671d2fe10c836bb00484960657c0481",
+  "body_sha256": "8b79c66e5a0cf5e16a113de57c93d498d1e3d48dbddb8c0541103a5e8572ff27",
   "components": {
     "mcp": {
       "name": "MCP",
