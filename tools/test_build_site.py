@@ -46,15 +46,21 @@ build writes: it carries no HTML or Markdown, the page's section labels in order
 content.json entry of the advisory; a backtick, a dash character, a tag, a character reference, a
 Markdown link or "what this is" framing planted in it is refused; and --check reports a change to
 it, its absence and a stray advisories/other.txt beside it.
-At the root, --check admits the 2 versioned release archive names in downloads/ and refuses a
-latest name there; a staged build refuses any file in downloads/. download_problems() itself
+At the root, --check admits the 2 versioned release archive names in downloads/, refuses a latest
+name and a folder there, and exits 2 when downloads/ cannot be listed (skipped when run as root,
+which can list it); a staged build refuses any file in downloads/. download_problems() itself
 accepts secureconfig-1.0.<N>.zip and secureconfig-plugin-1.0.<N>.zip and a file of exactly the
-per-file cap, and refuses both latest names, wrong names and version forms, a file in a subfolder,
-an oversized file, a total over the total cap (reported once, counting only admitted files), a
-symbolic link under a valid name, and downloads/ itself as a symbolic link.
+per-file cap, and refuses both latest names, wrong names and version forms (a non-ASCII digit
+first or later among them), a folder (empty, holding a valid archive name, or itself under a valid
+name), a symbolic link to a file and to a folder under a valid name, a FIFO under a valid name
+(where the platform has os.mkfifo), an oversized file, and a total over the total cap, reported
+once. The total counts every regular file with a valid name, an oversized one included, and no
+refused entry. downloads/ itself as a symbolic link is refused, a downloads/ that cannot be listed
+raises OSError (skipped as root), and the caps are exactly 20 MiB and 200 MiB.
 """
 import html
 import importlib.util
+import os
 import shutil
 import subprocess
 import sys
@@ -148,9 +154,11 @@ def sized(path, size):
 
 
 def download_cases():
-    """(failures, count) for download_problems() on fixture downloads/ folders: each case maps a
-    name under downloads/ to a size, or to None for a symbolic link to a valid archive outside it,
-    and expects the problems whose text starts with each given prefix, in order."""
+    """(failures, count) for the release archive rule: download_problems() on fixture downloads/
+    folders, and the exact cap values. Each case maps a name under downloads/ to a size, or to None
+    for a symbolic link to a valid archive outside it, "folder" for an empty folder, "folder link"
+    for a symbolic link to a folder outside it, or "fifo" for a FIFO, and expects the problems
+    whose text starts with each given prefix, in order."""
     failures, count = [], 0
 
     def case(label, files, want, link_folder=False, **caps):
@@ -163,12 +171,20 @@ def download_cases():
                 sized(Path(d) / "elsewhere" / "secureconfig-1.0.1234.zip", 100)
                 (out / "downloads").symlink_to(Path(d) / "elsewhere", target_is_directory=True)
             for name, size in files.items():
+                entry = out / "downloads" / name
+                entry.parent.mkdir(parents=True, exist_ok=True)
                 if size is None:
                     sized(Path(d) / "target.zip", 100)
-                    (out / "downloads").mkdir(exist_ok=True)
-                    (out / "downloads" / name).symlink_to(Path(d) / "target.zip")
+                    entry.symlink_to(Path(d) / "target.zip")
+                elif size == "folder":
+                    entry.mkdir()
+                elif size == "folder link":
+                    sized(Path(d) / "target" / "secureconfig-1.0.1234.zip", 100)
+                    entry.symlink_to(Path(d) / "target", target_is_directory=True)
+                elif size == "fifo":
+                    os.mkfifo(entry)
                 else:
-                    sized(out / "downloads" / name, size)
+                    sized(entry, size)
             got = build_site.download_problems(out, **caps)
         if len(got) != len(want) or not all(g.startswith(w) for w, g in zip(want, got)):
             failures.append(f"downloads/, {label}: expected problems starting {want!r}, got {got!r}")
@@ -185,16 +201,32 @@ def download_cases():
     for name in ("secureconfig-v1.0.1234.zip", "secureconfig-1.0.01234.zip", "secureconfig-1.0.0.zip",
                  "secureconfig-1.1.1234.zip", "secureconfig-1.0.zip", "secureconfig-1.0.1234.0.zip",
                  "secureconfig-plugin-1.0.12a.zip", "secureconfig-1.0.１２.zip",
-                 "secureconfig-1.0.١٢.zip", "SECURECONFIG-1.0.1234.zip",
+                 "secureconfig-1.0.١٢.zip", "secureconfig-1.0.1١٢.zip",
+                 "secureconfig-plugin-1.0.1２.zip", "SECURECONFIG-1.0.1234.zip",
                  "secureconfig-1.0.1234.ZIP", "secureconfig-1.0.1234.zip.gz",
                  "secureconfig-skill-1.0.1234.zip", "other-1.0.1234.zip", "notes.txt"):
         case(f"the wrong name or version form {name!r}", {name: 100},
              [f"downloads/{name} is not a release archive name"])
-    case("a file in a subfolder", {"old/secureconfig-1.0.1234.zip": 100},
-         ["downloads/old/secureconfig-1.0.1234.zip is not a release archive name"])
+    # Only the top level is read: any folder is refused as a folder, and nothing in it is read.
+    case("an empty folder", {"old": "folder"}, ["downloads/old is a folder"])
+    case("a folder holding a valid archive name", {"old/secureconfig-1.0.1234.zip": 100},
+         ["downloads/old is a folder"])
+    case("a folder under a valid name", {"secureconfig-1.0.1234.zip": "folder"},
+         ["downloads/secureconfig-1.0.1234.zip is a folder"])
+    case("a symbolic link to a folder under a valid name",
+         {"secureconfig-1.0.1234.zip": "folder link"},
+         ["downloads/secureconfig-1.0.1234.zip is not a regular file"])
+    if hasattr(os, "mkfifo"):
+        case("a FIFO under a valid name", {"secureconfig-plugin-1.0.1234.zip": "fifo"},
+             ["downloads/secureconfig-plugin-1.0.1234.zip is not a regular file"])
     case("a file of exactly the per-file cap", {"secureconfig-1.0.1234.zip": big}, [])
     case("an oversized file", {"secureconfig-plugin-1.0.1234.zip": big + 1},
          [f"downloads/secureconfig-plugin-1.0.1234.zip is {big + 1} bytes, over the {big}-byte cap"])
+    case("an oversized file, which counts towards the total",
+         {"secureconfig-1.0.1.zip": 11, "secureconfig-plugin-1.0.1.zip": 10},
+         ["downloads/secureconfig-1.0.1.zip is 11 bytes, over the 10-byte cap",
+          "downloads/ holds 21 bytes of release archives, over the 20-byte cap"],
+         max_file=10, max_total=20)
     case("files totalling exactly the total cap",
          {"secureconfig-1.0.1.zip": 10, "secureconfig-plugin-1.0.1.zip": 10,
           "secureconfig-1.0.2.zip": 5}, [], max_file=10, max_total=25)
@@ -213,11 +245,29 @@ def download_cases():
     with tempfile.TemporaryDirectory() as d:
         if build_site.download_problems(Path(d)) != []:
             failures.append("downloads/: a root with no downloads/ folder has problems")
+    if os.geteuid() != 0:  # root lists a folder whatever its mode, so this needs a non-root user
+        count += 1
+        with tempfile.TemporaryDirectory() as d:
+            sized(Path(d) / "downloads" / "secureconfig-1.0.1234.zip", 100)
+            (Path(d) / "downloads").chmod(0o300)
+            try:
+                got = build_site.download_problems(Path(d))
+                failures.append(f"downloads/: a folder that cannot be listed gave {got!r}, "
+                                f"not OSError")
+            except OSError:
+                pass
+            finally:
+                (Path(d) / "downloads").chmod(0o700)
     count += 1
     # Cloudflare Pages' limit on 1 file is 25 MiB (to verify online); the total holds several files.
     if not 0 < big < 25 * 1024 * 1024 or not big < build_site.DOWNLOADS_TOTAL_MAX:
         failures.append(f"downloads/: the caps {big} and {build_site.DOWNLOADS_TOTAL_MAX} are not "
                         f"a per-file cap below 25 MiB and a larger total cap")
+    count += 1
+    # The CHANGELOG and the pull request state these exact values, so a change to either fails here.
+    if (big, build_site.DOWNLOADS_TOTAL_MAX) != (20 * 1024 * 1024, 200 * 1024 * 1024):
+        failures.append(f"downloads/: the caps {big} and {build_site.DOWNLOADS_TOTAL_MAX} are not "
+                        f"20 MiB and 200 MiB")
     return failures, count
 
 
@@ -613,6 +663,23 @@ def main():
         rc, text = run("--check", "--out", str(out))
         if rc != 1 or "downloads/secureconfig-latest.zip is a latest name" not in text:
             failures.append(f"--check at the root accepted downloads/secureconfig-latest.zip: {text!r}")
+        (out / "downloads" / "secureconfig-latest.zip").unlink()
+        (out / "downloads" / "old").mkdir()
+        rc, text = run("--check", "--out", str(out))
+        if rc != 1 or "downloads/old is a folder" not in text:
+            failures.append(f"--check at the root accepted an empty folder downloads/old: {text!r}")
+        (out / "downloads" / "old").rmdir()
+        # A downloads/ that cannot be listed is a read error (exit 2), not an empty folder. Root
+        # lists a folder whatever its mode, so this case runs only as another user.
+        if os.geteuid() != 0:
+            (out / "downloads").chmod(0o300)
+            try:
+                rc, text = run("--check", "--out", str(out))
+            finally:
+                (out / "downloads").chmod(0o700)
+            if rc != 2 or "cannot read" not in text:
+                failures.append(f"--check at the root did not exit 2 on a downloads/ it cannot "
+                                f"list: {rc} {text!r}")
         shutil.rmtree(out / "downloads")
         # SPECIFICATION 4.1 items 0 and 3: the staged build written under draft/ beside the root
         # pages, as on the `draft` branch, is refused at the root, page and copied file alike.
@@ -686,9 +753,15 @@ def main():
           f"with its summary and reporter details, and its plain-text copy (no markup, the "
           f"page's labels in order, every entry, 6 planted refusals, and --check on its change, "
           f"its absence and a stray .txt beside it); release archives in downloads/ (--check on "
-          f"the 2 versioned names and a latest name at the root and a staged stray, and "
-          f"{downloads} download_problems() cases: both names, both latest names, wrong version "
-          f"forms, an oversized file, the total cap and symbolic links)")
+          f"the 2 versioned names, a latest name and a folder at the root"
+          f"{', a downloads/ it cannot list (exit 2)' if os.geteuid() != 0 else ''} and a staged "
+          f"stray, and {downloads} release archive rule cases, the download_problems() fixtures "
+          f"and the exact caps: both names, both latest names, wrong version forms, folders, "
+          f"symbolic links{', a FIFO' if hasattr(os, 'mkfifo') else ''}"
+          f"{', an unlistable folder' if os.geteuid() != 0 else ''}, an oversized file counted in "
+          f"the total, the total cap and the 20 MiB and 200 MiB values)")
+    if os.geteuid() == 0:
+        print("  note  run as root, so the 2 unlistable downloads/ cases were skipped")
     return 0
 
 

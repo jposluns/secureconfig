@@ -61,10 +61,12 @@ favicon.svg, favicon.ico, apple-touch-icon.png and images/secureconfig-card.png)
 file is added to PUBLISHED before it ships. At base `/` only, the folder may also hold release
 archives, which the build never writes (download_problems()): regular files directly in downloads/
 named secureconfig-1.0.<N>.zip or secureconfig-plugin-1.0.<N>.zip, with <N> in the form `VERSION`
-uses (ASCII digits, no leading zero, no `v`). Each file may be at most DOWNLOAD_MAX bytes and all
-of them together at most DOWNLOADS_TOTAL_MAX bytes. Every other entry in downloads/ is refused,
-including a symbolic link, a subfolder's files, any other name and any `-latest.zip` name, because
-the latest links are 302 redirects with no bytes of their own.
+uses (ASCII digits, no leading zero, no `v`). Each file may be at most DOWNLOAD_MAX bytes, and
+every regular file with a valid name, an oversized one included, counts towards the total cap of
+DOWNLOADS_TOTAL_MAX bytes. Every other entry in downloads/ is refused, including any folder (empty
+or not, so the check reads only the top level), a symbolic link, a special file, any other name and
+any `-latest.zip` name, because the latest links are planned as 302 redirects with no bytes of
+their own. A downloads/ folder that cannot be read is a read error (exit 2).
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error
 or a source the build cannot read as it needs.
@@ -74,6 +76,7 @@ only bash and Python, and installs nothing. No network.
 import argparse
 import html
 import json
+import os
 import re
 import stat
 import sys
@@ -102,9 +105,9 @@ PUBLISHED = (".well-known/security.txt", "_headers", "apple-touch-icon.png", "fa
 # records pull request copies each released zip there byte for byte, and this build writes none.
 # Only the 2 versioned names, with the version in the form `VERSION` uses (1.0.<N>, no `v`), and no
 # latest name: /downloads/secureconfig-latest.zip and /downloads/secureconfig-plugin-latest.zip are
-# 302 redirects with no bytes of their own. Each archive is capped below Cloudflare Pages' 25 MiB
-# limit on 1 file, and all of them together are capped because every published zip stays
-# published, and stays in Git history.
+# planned as 302 redirects with no bytes of their own. Each archive is capped below Cloudflare
+# Pages' limit on 1 file, 25 MiB (to verify online), and all of them together are capped because
+# every published zip stays published, and stays in Git history.
 DOWNLOADS = "downloads/"
 DOWNLOAD_NAME = re.compile(r"secureconfig(?:-plugin)?-1\.0\.[1-9][0-9]*\.zip")
 DOWNLOAD_MAX = 20 * 1024 * 1024
@@ -921,26 +924,37 @@ def refuse_text(name, text):
 
 
 def download_problems(out, max_file=DOWNLOAD_MAX, max_total=DOWNLOADS_TOTAL_MAX):
-    """The root --check problems for out/downloads/, each starting with its path relative to out:
-    every entry must be a regular file directly in downloads/ whose name DOWNLOAD_NAME matches in
-    full, at most max_file bytes, and those files together at most max_total bytes. An entry is
-    read with lstat, so a symbolic link is refused and never followed. OSError on a read error."""
+    """The root --check problems for out/downloads/, each starting with its path relative to out.
+    Only the top level is read, with os.scandir: every entry there must be a regular file whose
+    name DOWNLOAD_NAME matches in full, at most max_file bytes, so any folder, empty or not, is
+    refused and never read. Every regular file with a valid name, an oversized one included,
+    counts towards the total, which must be at most max_total bytes. Each entry is read with
+    lstat, so a symbolic link is refused and never followed. No downloads/ gives no problems, and
+    a downloads/ that is not a folder is left to main()'s stray-file rule. OSError on a read
+    error, including a downloads/ folder that cannot be listed."""
     folder = out / DOWNLOADS
-    if folder.is_symlink():
-        return [f"{DOWNLOADS} is a symbolic link; release archives are regular files in a folder"]
-    if not folder.is_dir():
+    try:
+        mode = folder.lstat().st_mode
+    except FileNotFoundError:
         return []
+    if stat.S_ISLNK(mode):
+        return [f"{DOWNLOADS} is a symbolic link; release archives are regular files in a folder"]
+    if not stat.S_ISDIR(mode):
+        return []
+    with os.scandir(folder) as entries:  # OSError when the folder cannot be listed
+        names = sorted(entry.name for entry in entries)
     problems, total = [], 0
-    for path in sorted(folder.rglob("*")):
-        rel = path.relative_to(out).as_posix()
-        mode = path.lstat().st_mode
+    for name in names:
+        rel = DOWNLOADS + name
+        info = (folder / name).lstat()
+        mode = info.st_mode
         if stat.S_ISDIR(mode):
-            continue  # a subfolder's files are refused by name below
-        name = rel[len(DOWNLOADS):]
-        if name.endswith("-latest.zip"):
+            problems.append(f"{rel} is a folder; release archives are regular files directly in "
+                            f"{DOWNLOADS}, so no folder is read or admitted there")
+        elif name.endswith("-latest.zip"):
             problems.append(f"{rel} is a latest name; /downloads/secureconfig-latest.zip and "
-                            f"/downloads/secureconfig-plugin-latest.zip are 302 redirects with "
-                            f"no bytes of their own, so no file carries one")
+                            f"/downloads/secureconfig-plugin-latest.zip are planned as 302 "
+                            f"redirects with no bytes of their own, so no file carries one")
         elif not DOWNLOAD_NAME.fullmatch(name):
             problems.append(f"{rel} is not a release archive name; {DOWNLOADS} holds only "
                             f"secureconfig-1.0.<N>.zip and secureconfig-plugin-1.0.<N>.zip, "
@@ -949,8 +963,8 @@ def download_problems(out, max_file=DOWNLOAD_MAX, max_total=DOWNLOADS_TOTAL_MAX)
             problems.append(f"{rel} is not a regular file; a release archive is the released "
                             f"zip's bytes, copied")
         else:
-            size = path.lstat().st_size
-            total += size
+            size = info.st_size
+            total += size  # an oversized file counts too: its bytes are in the folder
             if size > max_file:
                 problems.append(f"{rel} is {size} bytes, over the {max_file}-byte cap on 1 "
                                 f"release archive")
