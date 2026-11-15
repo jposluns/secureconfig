@@ -24,8 +24,9 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
    covered by the next release, as check 6 requires. `.github/workflows/checks.yml` exists at
    the target as a regular file and its top-level `on:` block mapping has a `workflow_dispatch`
    key, read as THE DISPATCH TRIGGER below says.
-2. The tag is `v` plus `VERSION` at the target, `VERSION` is `1.0.<digits>` once trailing
-   newlines are dropped (as scripts/build-plugin.sh reads it), and `plugin/plugin.json` at the
+2. The tag is `v` plus `VERSION` at the target, `VERSION` is `1.0.<N>` once trailing
+   newlines are dropped (as scripts/build-plugin.sh reads it), with `<N>` made of ASCII digits,
+   not 0 and with no leading zero, as the zip names need, and `plugin/plugin.json` at the
    target carries the same version.
 3. The tag does not exist locally. With --first, no `v1.0.<N>` tag exists locally. With
    --previous, that tag exists locally, is the highest-numbered `v1.0.<N>` tag, and its number
@@ -97,10 +98,11 @@ paragraph, then each dated section in the range, newest first, from its heading 
 non-empty line, separated by one empty line. The tarball is `git archive --format=tar
 --prefix=secureconfig-plugin-v1.0.<N>/` of `plugin` with tar.umask 0002, compressed by Python's
 gzip at level 9 with mtime 0, so its bytes repeat for one git, Python and zlib. The zips are
-built by tools/_archives.py from `git archive --format=tar` of `plugin`, whose docstring gives
-their layout and the fixed dates, modes and order that make their bytes repeat for one git,
-Python and zlib. `git archive` applies export-ignore and export-subst attributes;
-.gitattributes sets neither today.
+built by tools/_archives.py from `git archive --format=tar` of `plugin`, also with tar.umask
+0002, whose docstring gives their layout, the chat skill upload's limits on the skill zip, and
+the fixed dates, modes and order that make their bytes repeat for one git, Python and zlib.
+`git archive` applies export-ignore and export-subst attributes; .gitattributes sets neither
+today.
 
 THE DISPATCH TRIGGER: check 1 uses only the standard library, so it reads the workflow with its
 own strict line model, written for this check alone. The model is not a YAML parser: it accepts
@@ -180,8 +182,8 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _archives import (ARCHIVES, LATEST_SUFFIX, SOURCE, ArchiveError,  # noqa: E402
-                       archive_name, build_all)
+from _archives import (ARCHIVES, LATEST_SUFFIX, SOURCE, VERSION_SHAPE,  # noqa: E402
+                       ArchiveError, archive_name, build_all)
 from check_changelog_format import HEADING, check as format_findings  # noqa: E402
 from check_changelog_prs import MERGE_COMMIT, merged_number, referenced  # noqa: E402
 
@@ -201,7 +203,8 @@ PYTHON_SKIP = re.compile(r"  SKIP  python3 ([0-9]+\.[0-9]+\.[0-9]+) differs from
 # passing suite always prints it, since a missing shellcheck prints a SKIP instead.
 SHELL_PASS = re.compile(r"  ok    [0-9]+ bash blocks in [0-9]+ guides parse and pass "
                         r"shellcheck (\S+) at \S.*")
-VERSION_SHAPE = re.compile(r"1\.0\.([0-9]+)")
+# VERSION_SHAPE, imported above, is the zip names' version shape, so check 2 refuses (exit 1) any
+# VERSION that names() could not turn into zip names.
 TAG_SHAPE = re.compile(r"v1\.0\.([0-9]+)")
 FULL_ID = re.compile(r"[0-9a-f]{40}")
 RUN_ID = re.compile(r"[0-9]+")
@@ -289,7 +292,8 @@ def release_tags(root):
 
 def names(tag):
     """The asset names, in SHA256SUMS order: `llms-full.txt`, the tarball, each zip ARCHIVES
-    lists, the notes and `SHA256SUMS`. A latest name among them is refused."""
+    lists, the notes and `SHA256SUMS`. archive_name() refuses a latest zip name first; the check
+    below refuses a latest name among them again, in case a later name does not come from it."""
     try:
         zips = tuple(archive_name(kind, tag[1:]) for kind in ARCHIVES)
     except ArchiveError as exc:
@@ -336,7 +340,8 @@ def tarball(root, target, tag):
 def archives(root, target, tag):
     """[(name, bytes)] for the tarball and then each zip ARCHIVES lists, from the target's
     `plugin/`. ArchiveError when a zip cannot be built."""
-    stream = git(root, "archive", "--format=tar", target, SOURCE, binary=True)
+    stream = git(root, "-c", "tar.umask=0002", "archive", "--format=tar", target, SOURCE,
+                 binary=True)
     return [(names(tag)[1], tarball(root, target, tag)), *build_all(stream, tag[1:])]
 
 
@@ -733,7 +738,8 @@ def examine(root, main_ref, target, tag, previous, gates_run):
     # 2. The tag, VERSION and plugin.json agree.
     version = at_target(root, target, "VERSION").decode("utf-8", "replace").rstrip("\n")
     if not VERSION_SHAPE.fullmatch(version):
-        findings.append(f"VERSION at the target is {version!r}, not 1.0.<digits>")
+        findings.append(f"VERSION at the target is {version!r}, not 1.0.<N> with ASCII digits, "
+                        "not 0 and with no leading zero")
     if tag != f"v{version}":
         findings.append(f"the tag {tag!r} is not `v` plus VERSION at the target, v{version}")
     try:

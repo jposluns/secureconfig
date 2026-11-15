@@ -19,10 +19,20 @@ give byte-equal zips; the skill zip holds exactly the files git records under
 exactly those under `plugin/`, in sorted order and with equal bytes; each entry has the mode
 0644, or 0755 for the fixture's executable script, the date 1980-01-01, create_system 3, no
 extra field and no directory entry; and no asset or SHA256SUMS line has a `-latest` name. A
-changed zip, a latest-named file among the assets, a SHA256SUMS line naming one and a target with
-no skill `SKILL.md` are refused. tools/_archives.py and names() are also called in-process: a
-latest name, a version with a leading zero or another form, and a symbolic link in the tar
-stream are refused.
+publisher git config with tar.umask 0777 changes no asset's bytes. A changed zip, a latest-named
+file among the assets, a SHA256SUMS line naming one and a target with no skill `SKILL.md` are
+refused. So are a VERSION of 1.0.0 or with a leading zero (check 2, exit 1) and a skill folder
+that breaks a chat skill upload limit: a second `SKILL.md`, a `.claude-plugin/` entry or 201
+files; 200 files pass.
+
+tools/_archives.py and names() are also called in-process. archive_name() refuses a latest name,
+and names() refuses one itself when archive_name() lets it through; archive_name() also refuses
+a version with a leading zero or another form. In the tar stream, a symbolic or hard link, an
+absolute path, an empty, `.` or `..` component, a path given twice, and bytes that are not a tar
+stream or are cut short are refused.
+The chat limits are also called in-process, the file count at 200 and 201 files, and the plugin
+zip is held to none of them. Entries given out of order come out sorted, and create_system is 3
+even where ZipInfo's default is 0.
 """
 import io
 import os
@@ -176,12 +186,13 @@ def changelog(entries, broken=False):
 
 
 def build(root, history=HISTORY, suite=PASSING_SUITE, omit=(), version=None, plugin=None,
-          broken=None, checks=WORKFLOW, skill=True):
+          broken=None, checks=WORKFLOW, skill=True, extra=()):
     """A repository whose main is `history`; returns each pull request's merge commit.
 
     `checks` is the text of .github/workflows/checks.yml, its bytes, None for no such file,
     SYMLINK for a symlink to a file holding the stub, or DIRECTORY for a directory holding it.
     The skill folder holds a guide, an executable script and, unless `skill` is false, SKILL.md.
+    `extra` names more files under the skill folder, each committed from the start.
     """
     root.mkdir(parents=True)
     git(root, "init", "-q")
@@ -204,6 +215,8 @@ def build(root, history=HISTORY, suite=PASSING_SUITE, omit=(), version=None, plu
     write(root, SKILL_DIR + "references/guide.md", "fixture guide\n")
     write(root, SCRIPT, "#!/bin/sh\nexit 0\n")
     (root / SCRIPT).chmod(0o755)
+    for relative in extra:
+        write(root, SKILL_DIR + relative, f"fixture {relative}\n")
     write(root, "site/llms-full.txt", "bundle 9\n")
     write(root, "CHANGELOG.md", changelog([]) + "\n## 2026-09-30\n\n- Start (#9).\n")
     git(root, "add", "-A")
@@ -226,12 +239,16 @@ def build(root, history=HISTORY, suite=PASSING_SUITE, omit=(), version=None, plu
     return commits
 
 
-def gate(root, target, tag, previous, out, *extra):
+def gate(root, target, tag, previous, out, *extra, config=None):
+    """The check's result; `config`, when given, is the publisher's global git config file."""
     selector = ["--first"] if previous is None else ["--previous", previous]
+    env = environment(root)
+    if config is not None:
+        env["GIT_CONFIG_GLOBAL"] = str(config)
     done = subprocess.run(
         [sys.executable, "-I", "-B", str(GATE), "--repo", str(root), "--target", target,
          "--tag", tag, *selector, "--gates-check-run", RUN, "--dir", str(out), *extra],
-        cwd=root, capture_output=True, text=True, env=environment(root), timeout=600)
+        cwd=root, capture_output=True, text=True, env=env, timeout=600)
     return done.returncode, done.stdout + done.stderr
 
 
@@ -341,8 +358,88 @@ def zip_cases(repo, target, later, again):
             str(check_release.names("v1.0.13"))), 0)
 
 
+def tar_of(members):
+    """A tar stream of (path, bytes or None, tar type) members, in the order given; None writes
+    a member with no data, such as a link, whose target is SKILL.md."""
+    stream = io.BytesIO()
+    with tarfile.open(fileobj=stream, mode="w", format=tarfile.PAX_FORMAT) as tar:
+        for path, data, kind in members:
+            entry = tarfile.TarInfo(path)
+            entry.type = kind
+            if kind in (tarfile.SYMTYPE, tarfile.LNKTYPE):
+                entry.linkname = SKILL_DIR + "SKILL.md"
+            if data is None:
+                tar.addfile(entry)
+            else:
+                entry.size = len(data)
+                tar.addfile(entry, io.BytesIO(data))
+    return stream.getvalue()
+
+
+def refused(name, call, *needles):
+    """Expect call() to raise ArchiveError whose message holds every needle; any other
+    exception is recorded as a failure of the case, not a crash of the run."""
+    try:
+        call()
+        got = (0, f"{name}: accepted")
+    except _archives.ArchiveError as exc:
+        got = (1, str(exc))
+    except Exception as exc:  # noqa: BLE001
+        got = (2, f"{type(exc).__name__}: {exc}")
+    expect(name, got, 1, *needles)
+
+
+def accepted(name, call):
+    """Expect call() to return without an exception."""
+    try:
+        call()
+        got = (0, "")
+    except Exception as exc:  # noqa: BLE001
+        got = (1, f"{type(exc).__name__}: {exc}")
+    expect(name, got, 0)
+
+
+def skill_files(paths):
+    """tree_files()-shaped {path: (mode, bytes)}: SKILL.md and the given paths, under the
+    skill folder, each with mode 0644."""
+    return {SKILL_DIR + p: (_archives.FILE_MODE, p.encode()) for p in ("SKILL.md", *paths)}
+
+
+def chat_limit_cases():
+    """The chat skill upload limits on the skill zip, in-process, each at its edge."""
+    skill, plugin = _archives.ARCHIVES
+    expect("the skill zip is held to the chat limits and the plugin zip is not",
+           (0 if skill.chat_upload and not plugin.chat_upload else 1, str(_archives.ARCHIVES)), 0)
+    fill = [f"references/g{i:03}.md" for i in range(199)]
+    accepted("a skill zip of exactly 200 files is built",
+             lambda: _archives.build(skill_files(fill), skill))
+    refused("a skill zip of 201 files is refused",
+            lambda: _archives.build(skill_files([*fill, "references/g999.md"]), skill),
+            "the zip would hold 201 files; a chat skill upload refuses a zip with more than 200")
+    for path in ("references/SKILL.md", "references/deep/skill.md", "Skill.MD"):
+        refused(f"a second SKILL.md in the skill zip, {path}, is refused",
+                lambda: _archives.build(skill_files([path]), skill),
+                "the zip would hold 2 files named SKILL.md", path,
+                "a chat skill upload takes exactly one, SKILL.md at the root")
+    accepted("a file whose name only ends in SKILL.md is not counted as one",
+             lambda: _archives.build(skill_files(["references/NOT-SKILL.md"]), skill))
+    for path in (".claude-plugin/plugin.json", ".claude-plugin/other.json",
+                 "references/.Claude-Plugin/plugin.json", ".claude-plugin"):
+        refused(f"a .claude-plugin entry in the skill zip, {path}, is refused",
+                lambda: _archives.build(skill_files([path]), skill),
+                f"the zip would hold {path}; a chat skill upload refuses a zip with a "
+                ".claude-plugin/ entry")
+    # The plugin zip, which also holds the skill folder, may exceed every limit.
+    big = {f"plugin/{p}": (_archives.FILE_MODE, b"x")
+           for p in ("plugin.json", ".claude-plugin/plugin.json", "skills/a/SKILL.md",
+                     *(f"skills/b/{i}.md" for i in range(200)))}
+    accepted("a plugin zip of 203 files with a .claude-plugin entry and a nested SKILL.md is "
+             "built", lambda: _archives.build(big, plugin))
+
+
 def archive_unit_cases():
-    """tools/_archives.py and names() in-process: a latest name and a symbolic link refused."""
+    """tools/_archives.py and names() in-process: latest names, the tar stream refusals, the
+    sorted order, create_system and the chat limits."""
     latest = _archives.Kind("secureconfig-latest.zip", SKILL_DIR, "SKILL.md", "a latest name")
     try:
         _archives.archive_name(latest, "1.0.13")
@@ -356,33 +453,77 @@ def archive_unit_cases():
             got = (0, _archives.archive_name(_archives.ARCHIVES[0], version))
         except _archives.ArchiveError as exc:
             got = (1, str(exc))
-        expect(f"archive_name() refuses the version {version!r}, which the site would refuse",
-               got, 1, "with ASCII digits and no leading zero")
-    kept = check_release.ARCHIVES
+        expect(f"archive_name() refuses the version {version!r}, which the zip names do not "
+               "take", got, 1, "with ASCII digits and no leading zero")
+    # names() passes on archive_name()'s refusal, and, with archive_name() replaced by one that
+    # does not refuse, refuses the latest name itself.
+    kept, kept_name = check_release.ARCHIVES, check_release.archive_name
     check_release.ARCHIVES = (*kept, latest)
+    results = []
     try:
-        got = (0, str(check_release.names("v1.0.13")))
-    except check_release.CannotCheck as exc:
-        got = (2, str(exc))
+        for plain in (False, True):
+            if plain:
+                check_release.archive_name = lambda kind, version: kind.template.format(
+                    version=version)
+            try:
+                results.append((0, str(check_release.names("v1.0.13"))))
+            except check_release.CannotCheck as exc:
+                results.append((2, str(exc)))
     finally:
-        check_release.ARCHIVES = kept
-    expect("names() refuses a kind whose name is a latest name", got, 2,
+        check_release.ARCHIVES, check_release.archive_name = kept, kept_name
+    expect("names() reports archive_name()'s refusal of a latest name as cannot check",
+           results[0], 2, "zip names cannot be formed",
            "secureconfig-latest.zip is a latest name")
-    stream = io.BytesIO()
-    with tarfile.open(fileobj=stream, mode="w") as tar:
-        entry = tarfile.TarInfo(SKILL_DIR + "SKILL.md")
-        entry.size = 6
-        tar.addfile(entry, io.BytesIO(b"skill\n"))
-        link = tarfile.TarInfo(SKILL_DIR + "link.md")
-        link.type, link.linkname = tarfile.SYMTYPE, "SKILL.md"
-        tar.addfile(link)
+    expect("names() itself refuses a latest name that archive_name() let through", results[1],
+           2, "secureconfig-latest.zip would be a release asset, but a latest link is a 302")
+
+    skill_md = (SKILL_DIR + "SKILL.md", b"skill\n", tarfile.REGTYPE)
+    plugin_json = ("plugin/plugin.json", b"{}\n", tarfile.REGTYPE)
+    for name, members, needle in [
+        ("a symbolic link", [skill_md, (SKILL_DIR + "link.md", None, tarfile.SYMTYPE)],
+         "link.md' is not a regular file (tar type"),
+        ("a hard link", [skill_md, (SKILL_DIR + "hard.md", None, tarfile.LNKTYPE)],
+         "hard.md' is not a regular file (tar type"),
+        ("an absolute path", [skill_md, ("/plugin/x.md", b"x", tarfile.REGTYPE)],
+         "the tar entry '/plugin/x.md' is not a plain relative path"),
+        ("an empty component", [skill_md, ("plugin//x.md", b"x", tarfile.REGTYPE)],
+         "the tar entry 'plugin//x.md' is not a plain relative path"),
+        ("a . component", [skill_md, ("plugin/./x.md", b"x", tarfile.REGTYPE)],
+         "the tar entry 'plugin/./x.md' is not a plain relative path"),
+        ("a .. component", [skill_md, ("plugin/../x.md", b"x", tarfile.REGTYPE)],
+         "the tar entry 'plugin/../x.md' is not a plain relative path"),
+        ("a path given twice", [skill_md, plugin_json, skill_md],
+         f"the tar entry '{SKILL_DIR}SKILL.md' appears twice"),
+    ]:
+        refused(f"{name} in the tar stream is refused",
+                lambda: _archives.build_all(tar_of(members), "1.0.13"), needle)
+    for name, data in [("bytes that are not a tar stream", b"not a tar stream\n" * 64),
+                       ("the bytes of a tar stream cut short",
+                        tar_of([skill_md, plugin_json])[:700])]:
+        refused(f"{name} are refused", lambda: _archives.build_all(data, "1.0.13"),
+                "the tar stream cannot be read")
+
+    # Entries given out of order come out sorted, whatever order git writes them in.
+    shuffled = [plugin_json, (SKILL_DIR + "z.md", b"z", tarfile.REGTYPE),
+                (SKILL_DIR + "B.md", b"b", tarfile.REGTYPE), skill_md,
+                (SKILL_DIR + "a/a.md", b"a", tarfile.REGTYPE)]
+    built = dict(_archives.build_all(tar_of(shuffled), "1.0.13"))
+    with zipfile.ZipFile(io.BytesIO(built["secureconfig-1.0.13.zip"])) as archive:
+        listed = archive.namelist()
+    expect("entries given out of order are sorted in the zip",
+           (0 if listed == ["B.md", "SKILL.md", "a/a.md", "z.md"] else 1, str(listed)), 0)
+    # ZipInfo defaults create_system to 0 where sys.platform is win32; the build sets 3.
+    platform = sys.platform
     try:
-        _archives.build_all(stream.getvalue(), "1.0.13")
-        got = (0, "build_all() accepted a symbolic link")
-    except _archives.ArchiveError as exc:
-        got = (1, str(exc))
-    expect("a symbolic link in the tar stream is refused", got, 1,
-           "link.md' is not a regular file")
+        sys.platform = "win32"
+        built = dict(_archives.build_all(tar_of(shuffled), "1.0.13"))
+    finally:
+        sys.platform = platform
+    with zipfile.ZipFile(io.BytesIO(built["secureconfig-1.0.13.zip"])) as archive:
+        systems = sorted({info.create_system for info in archive.infolist()})
+    expect("create_system is 3 even where ZipInfo's default is 0",
+           (0 if systems == [3] else 1, str(systems)), 0)
+    chat_limit_cases()
 
 
 def cases(tmp):
@@ -437,6 +578,18 @@ def cases(tmp):
                for p in ["body.md", *(f"assets/{n}" for n in sorted(os.listdir(later / "assets")))])
     expect("two builds of one release are byte-identical", (0 if same else 1, ""), 0)
     zip_cases(repo, c[13], later, again)
+    # A publisher whose git config masks every mode bit in `git archive`: the release check
+    # pins tar.umask for both of its `git archive` calls, so no asset's bytes change.
+    masking = tmp / "masking.gitconfig"
+    masking.write_text("[tar]\n\tumask = 0777\n", encoding="utf-8")
+    masked = tmp / "masked"
+    gate(repo, c[13], "v1.0.13", "v1.0.11", masked, "--build", config=masking)
+    same = all((masked / "assets" / n).is_file()
+               and (later / "assets" / n).read_bytes() == (masked / "assets" / n).read_bytes()
+               for n in (*LATER_ASSETS, "SHA256SUMS"))
+    expect("a publisher's tar.umask of 0777 changes no asset, so the script keeps 0755",
+           (0 if same else 1, str(sorted(os.listdir(masked / "assets")))
+            if (masked / "assets").is_dir() else "no assets"), 0)
     archive_unit_cases()
     noskill = tmp / "noskill"
     merges = build(noskill, skill=False)
@@ -444,6 +597,25 @@ def cases(tmp):
            gate(noskill, merges[11], "v1.0.11", None, tmp / "noskill-out", "--build"), 1,
            "the release's zips cannot be built from the target: the target has no "
            "plugin/skills/secureconfig/SKILL.md")
+    # The chat skill upload limits, through the check: the skill folder already holds SKILL.md,
+    # the guide and the script, so 197 more files make 200 and 198 make 201.
+    fill = [f"references/g{i:03}.md" for i in range(198)]
+    for name, extra, code, needle in [
+        ("a skill folder of 200 files passes checks 1 to 6", fill[:197], 0,
+         "checks 1 to 6 passed"),
+        ("a skill folder of 201 files is refused", fill, 1,
+         "the zip would hold 201 files; a chat skill upload refuses a zip with more than 200"),
+        ("a skill folder with a second SKILL.md is refused", ["references/SKILL.md"], 1,
+         "the zip would hold 2 files named SKILL.md"),
+        ("a skill folder with .claude-plugin/plugin.json is refused",
+         [".claude-plugin/plugin.json"], 1,
+         "the zip would hold .claude-plugin/plugin.json; a chat skill upload refuses"),
+    ]:
+        other = tmp / f"chat{COUNT[0]}"
+        merges = build(other, extra=extra)
+        prefix = "" if code == 0 else "the release's zips cannot be built from the target: "
+        expect(name, gate(other, merges[11], "v1.0.11", None, tmp / f"chat-out{COUNT[0]}",
+                          "--build"), code, prefix + needle)
 
     # Checks 7 and 8: the release directory, each mutated once from the clean later release.
     mutations = [
@@ -920,6 +1092,14 @@ def cases(tmp):
     expect("a malformed VERSION is refused",
            release(repo, c[11], "v1.0.11-rc", None, tmp / "b"), 2,
            "is not shaped v1.0.<digits>", "VERSION at the target is '1.0.11-rc'")
+    # A VERSION the zip names do not take, with a tag that matches it, is check 2's finding.
+    for number in ("012", "0"):
+        repo = tmp / f"zipversion{number}"
+        c = build(repo, version={11: number}, plugin={11: number})
+        expect(f"a VERSION of 1.0.{number} is refused by check 2",
+               release(repo, c[11], f"v1.0.{number}", None, tmp / f"zv{number}"), 1,
+               f"VERSION at the target is '1.0.{number}', not 1.0.<N> with ASCII digits, not 0 "
+               "and with no leading zero", absent=("cannot check",))
 
     # Check 1 again: a UTC date that has not ended (2099 stands for one) is no longer refused;
     # the release covers that date only up to its target, and says so.

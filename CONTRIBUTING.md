@@ -500,7 +500,10 @@ release has six assets: `site/llms-full.txt` as committed, the plugin tarball, t
 zip's root), the plugin zip `secureconfig-plugin-1.0.<N>.zip` (the `plugin/` folder), the full
 release notes and `SHA256SUMS`, which lists the other five. `tools/_archives.py` builds both zips
 from `git archive` of the target, with sorted file entries, fixed dates and modes and no
-directory entries, so two builds give the same bytes. No asset has a `-latest` name: the latest
+directory entries, so two builds give the same bytes. The skill zip is also what a claude.ai
+chat skill upload takes, so the build refuses it unless it holds exactly one `SKILL.md`, the one
+at its root, no `.claude-plugin/` entry and at most 200 files, the limits the owner's upload test
+of 2026-11-15 found. No asset has a `-latest` name: the latest
 links will be 302 redirects with no bytes of their own. Its body is short and generated, with the
 list of pull requests and a link to `CHANGELOG.md` at the tag.
 
