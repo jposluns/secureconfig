@@ -42930,7 +42930,7 @@ REASONED: the tool's four outcomes are FOUND/1 (remove and rotate the credential
 
 ## Sources (checked October 2026)
 
-Version scope: Typesense 30.2; Meilisearch current unversioned documentation checked 2026-09-18, with v1.53.2 as the release reference. The first release containing all four default keys and their exact permissions remains to be confirmed against the deployed release, so inspect `GET /keys`. The Verify commands require Bash, curl 7.75.0 or later, OpenBSD-compatible netcat and Git; the credential scan was exercised with Bash 5.3.9 and Git 2.55.0.
+Version scope: Typesense 30.2; Meilisearch current unversioned documentation checked 2026-09-18, with v1.53.2 as the release reference. The first release containing all four default keys and their exact permissions remains to be confirmed against the deployed release, so inspect `GET /keys`. The Verify commands require Bash, curl 7.75.0 or later, OpenBSD-compatible netcat and Git; the credential scan was exercised with Bash 5.3.9 and Git 2.53.0.
 
 - Meilisearch master API keys (MEILI_MASTER_KEY, the four default API keys; rolling documentation, checked September 2026): https://www.meilisearch.com/docs/resources/self_hosting/security/master_api_keys
 - Typesense data access control (bootstrap api-key, /keys, actions, collections, filter_by, include_fields/exclude_fields, expires_at; rolling documentation, checked September 2026): https://typesense.org/docs/guide/data-access-control.html
@@ -43022,7 +43022,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-10",
-  "body_sha256": "86dfd508edb284ab31f0afb7fbba758556d4bcc1c80003072430348d56c23bc9",
+  "body_sha256": "67f346cee9f994baf810953034cf20fa4c8615ce47055e66e7e4d185d299f8ee",
   "components": {
     "meili": {
       "name": "Meilisearch release reference",
