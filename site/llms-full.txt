@@ -4367,7 +4367,7 @@ Leaked API keys and credentials in public repositories are the most common secur
      { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell'; exit 2; }
      trap 'unset -v TOKEN' EXIT
      printf 'Registry token (input hidden): '
-     IFS= read -r -s TOKEN || { printf '\n'; echo 'no secret read'; exit 2; }
+     IFS= read -r -s TOKEN || { printf '\n'; echo 'no secret read'; exit 3; }
      printf '\n'
      case "$TOKEN" in
        ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character'; exit 2 ;;
@@ -4375,6 +4375,8 @@ Leaked API keys and credentials in public repositories are the most common secur
      printf '%s' "$TOKEN" | docker login ghcr.io -u "$USER" --password-stdin
    )
    ```
+
+   REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, or the hidden prompt fails to read, with 3; otherwise it ends with the status of its last command, the pipeline into `docker login`.
 
    There is no probe for this rule, and the obvious one is worse than none. `ps -eo args | grep -i 'password\|token\|secret'` finds only commands that spell the word out, such as `docker login --password hunter2`. It does not match `htpasswd -cbs .htpasswd admin Xk29fQ7LmVt3w9Zr`, or `mysql -pHunter2`, or `curl -u admin:hunter2`, because a real secret is a random string and `.htpasswd` does not contain the word "password". A snapshot also misses every short-lived process, which is most of them. A check that reads clean while the exposure is running is worse than no check, so this rule is enforced by review and by reaching for the stdin flag, not by grep.
 
@@ -4552,7 +4554,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "f0f57bfca4dfee70d7a2e00fdd1347991de7050b161f80142f3da893370d3060",
+  "body_sha256": "a32ad41fd3452c8dcfa103aba586364472b6f5bdec4cf822173b4a6b2d8bc5d5",
   "components": {
     "git-ignore": {
       "name": "Git ignore patterns",
@@ -44672,7 +44674,7 @@ Bash 5.3 says that assignment affects only the command's environment; ensure the
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not starting'; exit 2; }
   set -- "${!SURREAL_@}"
   [ "$#" -eq 0 ] || { printf 'SURREAL_* variables set in this shell:'; printf ' %s' "$@"; printf '; unset them first; not starting\n'; exit 2; }
-  IFS= read -r -s -p 'Initial root password: ' pw < /dev/tty || exit 2
+  IFS= read -r -s -p 'Initial root password: ' pw < /dev/tty || { printf '\n'; echo 'password input failed; not starting'; exit 3; }
   printf '\n'
   [ -n "$pw" ] || exit 2
   SURREAL_USER=root SURREAL_PASS="$pw" surreal db start surrealkv:/data/mydb.db --bind 127.0.0.1:8000
@@ -44693,6 +44695,8 @@ Paste the password alone at the hidden prompt: a multi-line paste leaves every l
 your shell to run.
 
 The block clears `SURREAL_USER` and `SURREAL_PASS` itself, then refuses to start while any other `SURREAL_*` variable is set in the calling shell, naming each. The database reads many of its options from such variables, including `SURREAL_UNAUTHENTICATED` and `SURREAL_BIND`, so an inherited one would start the server differently from what the block shows. The check also refuses the launcher's own `SURREAL_CLI_*` variables, which its pages separate from the database's. Unset them, or start from a clean shell.
+
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The root-password block above sets its own status only when a guard refuses or the password is empty, with 2, or the hidden prompt fails to read, with 3; otherwise it ends with the status of its last command, `surreal db start`.
 
 v4.0.0 removes the RocksDB engine. The start page as served says the `rocksdb://` and `indxdb://` schemes "are kept as deprecated spellings of `surrealkv://`", so the block names `surrealkv:/data/mydb.db`, which that page reads as an absolute path. The server's own path check is in a crate this guide has not read, so how v4.0.0 handles a `rocksdb:` path is not established here.
 
@@ -45153,7 +45157,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "baee5174669660b8f51aca4edfb87d305265e0b7ca2822eaa4c2d7b5b674185f",
+  "body_sha256": "0ea43c175db44b77d9be957577c11839b128e80aa01fbe6a7ca81e39818f2328",
   "components": {
     "pinned": {
       "name": "SurrealDB server and image",
@@ -49398,7 +49402,7 @@ The original alias-only request below illustrates issuance and attribution. It d
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell'; exit 2; }
   trap 'unset -v LITELLM_MASTER_KEY' EXIT
   printf 'LiteLLM master key (input hidden): '
-  IFS= read -r -s LITELLM_MASTER_KEY || { printf '\n'; echo 'no secret read'; exit 2; }
+  IFS= read -r -s LITELLM_MASTER_KEY || { printf '\n'; echo 'no secret read'; exit 3; }
   printf '\n'
   case "$LITELLM_MASTER_KEY" in
     ''|*REPLACE_WITH_*|*[[:cntrl:]]*) echo 'empty secret, placeholder or control character'; exit 2 ;;
@@ -49409,6 +49413,8 @@ The original alias-only request below illustrates issuance and attribution. It d
     -d '{"key_alias": "app-frontend"}'
 )
 ```
+
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, or the hidden prompt fails to read, with 3; otherwise it ends with the status of its last command, the pipeline into `curl`.
 
 Each app gets its own virtual key, which can be revoked or budgeted independently; LiteLLM's docs cover per-key models, budgets, and expiry. Clients send the virtual key in the `Authorization` header (the header name is configurable via `litellm_key_header_name`).
 
@@ -49929,7 +49935,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "7387fed7b27ae09d4fe2e2aee7e98347ae2f6366ea0b63f192b2562863424a15",
+  "body_sha256": "769276432646a9365f357cc4e98154837e86c1851b249a1dd2642aae228dd849",
   "components": {
     "sso": {
       "name": "LiteLLM SSO allowance",
@@ -56618,11 +56624,14 @@ The global `mlflow --env-file` option loads the file before executing the server
   if [ ! -f /etc/mlflow/server.env ] || [ -L /etc/mlflow/server.env ] || [ ! -r /etc/mlflow/server.env ]; then
     echo 'need a readable regular /etc/mlflow/server.env file, not a symlink; not starting'; exit 2
   fi
-  pip install 'mlflow[auth]' || exit 2
+  command -v pip >/dev/null || { echo 'pip not found; not starting'; exit 2; }
+  pip install 'mlflow[auth]' || { echo 'installing mlflow[auth] failed; not starting'; exit 3; }
   MLFLOW_AUTH_CONFIG_PATH=/etc/mlflow/basic_auth.ini \
     mlflow --env-file /etc/mlflow/server.env server --app-name basic-auth
 )
 ```
+
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, or `pip install` fails, with 3; otherwise it ends with the status of its last command, the `mlflow` server.
 
 Only the file path reaches the launch command; the shell never reads or exports the key. MLflow loads it into its own environment and forwards it to workers (traced at v3.16.1 in the sources below), so it remains exposed to the same account and root in process memory and, for inheriting processes, `/proc/<pid>/environ` throughout their lifetimes. A protected file does not remove that server-side exposure.
 
@@ -56954,7 +56963,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "772772a2da80d16cdaf3f8173ef1ec7e8a0f1bd4862124eddb23bbbaf3bde338",
+  "body_sha256": "35a643f37db4b6640b0bee362f14661ae73d5b6360193154a57a62828481a60e",
   "components": {
     "source": {
       "name": "MLflow pinned source",

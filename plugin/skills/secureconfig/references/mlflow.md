@@ -56,11 +56,14 @@ The global `mlflow --env-file` option loads the file before executing the server
   if [ ! -f /etc/mlflow/server.env ] || [ -L /etc/mlflow/server.env ] || [ ! -r /etc/mlflow/server.env ]; then
     echo 'need a readable regular /etc/mlflow/server.env file, not a symlink; not starting'; exit 2
   fi
-  pip install 'mlflow[auth]' || exit 2
+  command -v pip >/dev/null || { echo 'pip not found; not starting'; exit 2; }
+  pip install 'mlflow[auth]' || { echo 'installing mlflow[auth] failed; not starting'; exit 3; }
   MLFLOW_AUTH_CONFIG_PATH=/etc/mlflow/basic_auth.ini \
     mlflow --env-file /etc/mlflow/server.env server --app-name basic-auth
 )
 ```
+
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, or `pip install` fails, with 3; otherwise it ends with the status of its last command, the `mlflow` server.
 
 Only the file path reaches the launch command; the shell never reads or exports the key. MLflow loads it into its own environment and forwards it to workers (traced at v3.16.1 in the sources below), so it remains exposed to the same account and root in process memory and, for inheriting processes, `/proc/<pid>/environ` throughout their lifetimes. A protected file does not remove that server-side exposure.
 
@@ -392,7 +395,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "772772a2da80d16cdaf3f8173ef1ec7e8a0f1bd4862124eddb23bbbaf3bde338",
+  "body_sha256": "35a643f37db4b6640b0bee362f14661ae73d5b6360193154a57a62828481a60e",
   "components": {
     "source": {
       "name": "MLflow pinned source",
