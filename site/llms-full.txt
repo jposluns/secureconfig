@@ -12212,13 +12212,15 @@ sudo mkdir -p /etc/haproxy/certs && sudo chmod 700 /etc/haproxy/certs
 sudo bash -c 'umask 077
   command -v mktemp > /dev/null || { echo "mktemp is not on PATH; nothing written"; exit 2; }
   command -v cat > /dev/null || { echo "cat is not on PATH; nothing written"; exit 2; }
+  test -r /etc/letsencrypt/live/example.com/fullchain.pem || { echo "fullchain.pem is not readable; nothing written"; exit 2; }
+  test -r /etc/letsencrypt/live/example.com/privkey.pem || { echo "privkey.pem is not readable; nothing written"; exit 2; }
   tmp=$(mktemp /etc/haproxy/certs/.pem.XXXXXX) || exit 3
   cat /etc/letsencrypt/live/example.com/fullchain.pem \
       /etc/letsencrypt/live/example.com/privkey.pem > "$tmp" || { rm -f "$tmp"; exit 3; }
   mv "$tmp" /etc/haproxy/certs/example.com.pem'
 ```
 
-REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only inside `sudo bash -c`: with 2 when `mktemp` or `cat` is not on the PATH that `sudo` gives it, and with 3 when `mktemp` fails or `cat` or the write to the temporary file fails; otherwise it ends with the status of its last command, `sudo bash -c`, whose status is that of `mv` when `sudo` runs it. The block does not check that the certificate files are readable before `cat` reads them, so an unreadable one also exits 3, where rule 6 gives an unreadable file the reader supplied status 2.
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only inside `sudo bash -c`: with 2 when `mktemp` or `cat` is not on the PATH that `sudo` gives it or `test -r`, run as root, finds either certificate file unreadable, and with 3 when `mktemp` fails or `cat` or the write to the temporary file fails. Otherwise it ends with the status of its last command, `sudo bash -c`, whose status is that of `mv` when `sudo` runs it. A file that passes `test -r` but then fails to read still exits 3, as rule 6 gives a failed operation after its checks passed.
 
 With Certbot v2.3.0, run the concatenation and reload HAProxy after a successful renewal using `certbot renew --deploy-hook /path/to/deploy-hook-script` or an executable in `/etc/letsencrypt/renewal-hooks/deploy` (assuming the `/etc/letsencrypt` configuration directory, on `certbot renew`).
 
@@ -12617,7 +12619,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "aec33172124fe60dc26132666a45c702782505e09fa282bfc5bf691b0a83b357",
+  "body_sha256": "4bfde41dbf431bd9f1e54c261e8ced0bc6aa192d56e627d782396ebe3ad204dd",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -42929,7 +42931,7 @@ REASONED: following block; no real application build is available in the authori
 (cd /path/to/project && bash /path/to/secureconfig/tools/scan_credential.sh ./dist)
 ```
 
-REASONED: the tool's four outcomes are FOUND/1 (remove and rotate the credential), NOT FOUND/0 (only the scope below), REFUSED/2 (unsafe or wrong use, such as the wrong directory, a second argument or an unsafe output path, refused before any content is searched) and INCONCLUSIVE/3 (a scan that could not complete, taking precedence over earlier matches). It prints matching names, which can themselves contain a key, but never matching content or Git diagnostics. To identify the first failed prerequisite without entering a key, add `--explain` before the output argument; its categories disclose no paths. A READY result checks prerequisites only, not content. Interrupted runs without a final outcome remain inconclusive.
+REASONED: the tool's four outcomes are FOUND/1 (remove and rotate the credential), NOT FOUND/0 (only the scope below), REFUSED/2 (unsafe or wrong use, such as the wrong directory, a second argument or an unsafe output path, refused before any content is searched) and INCONCLUSIVE/3 (a scan that could not complete, taking precedence over earlier matches). Read from the scanner's code rather than a fixture, a `git rev-parse` at its repository-root check that exits non-zero inside a repository is also refused with 2, unless it exits 1 after printing a diagnostic, which is INCONCLUSIVE/3. It prints matching names, which can themselves contain a key, but never matching content or Git diagnostics. To identify the first failed prerequisite without entering a key, add `--explain` before the output argument; its categories disclose no paths. A READY result checks prerequisites only, not content. Interrupted runs without a final outcome remain inconclusive.
 
 - REASONED: Git grep searches raw output bytes and regular-file blobs in commits from `git rev-list --all --reflog`; it neither decodes gzip/Brotli nor reconstructs encoded, escaped, split or runtime-injected keys.
 - REASONED: Git tree searches omit committed symlink targets, submodule contents and LFS payloads; the output walk refuses symlinks, special/unreadable entries, empty output and any ASCII-case `.git` component.
@@ -43038,7 +43040,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-10",
-  "body_sha256": "5c0ad197475fd2a6664d51c6615d3489cc1d73dcc624db3ea53d2f6c583cf51e",
+  "body_sha256": "13cbcc2b925bf10f22bb7d5e04121a8c63fc54c524a3d7dc35660721f717bb29",
   "components": {
     "meili": {
       "name": "Meilisearch release reference",
@@ -44690,7 +44692,7 @@ Bash 5.3 says that assignment affects only the command's environment; ensure the
   [ "$#" -eq 0 ] || { printf 'SURREAL_* variables set in this shell:'; printf ' %s' "$@"; printf '; unset them first; not starting\n'; exit 2; }
   IFS= read -r -s -p 'Initial root password: ' pw < /dev/tty || { printf '\n'; echo 'password input failed; not starting'; exit 3; }
   printf '\n'
-  [ -n "$pw" ] || exit 2
+  [ -n "$pw" ] || { echo 'empty password; not starting'; exit 2; }
   SURREAL_USER=root SURREAL_PASS="$pw" surreal db start surrealkv:/data/mydb.db --bind 127.0.0.1:8000
 )
 ```
@@ -45171,7 +45173,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "0ea43c175db44b77d9be957577c11839b128e80aa01fbe6a7ca81e39818f2328",
+  "body_sha256": "3deb6bdd099c2d6a0d817901e21eb7d800d8d68aa2f0365ad01c4fb1fdb652f8",
   "components": {
     "pinned": {
       "name": "SurrealDB server and image",
@@ -56640,12 +56642,13 @@ The global `mlflow --env-file` option loads the file before executing the server
   fi
   command -v pip >/dev/null || { echo 'pip not found; not starting'; exit 2; }
   pip install 'mlflow[auth]' || { echo 'installing mlflow[auth] failed; not starting'; exit 3; }
+  command -v mlflow >/dev/null || { echo 'mlflow not found; not starting'; exit 2; }
   MLFLOW_AUTH_CONFIG_PATH=/etc/mlflow/basic_auth.ini \
     mlflow --env-file /etc/mlflow/server.env server --app-name basic-auth
 )
 ```
 
-REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2, or `pip install` fails, with 3; otherwise it ends with the status of its last command, the `mlflow` server.
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only when a guard refuses, with 2 (as when `pip` is not found, or `mlflow` is not found after the install), or `pip install` fails, with 3; otherwise it ends with the status of its last command, the `mlflow` server.
 
 Only the file path reaches the launch command; the shell never reads or exports the key. MLflow loads it into its own environment and forwards it to workers (traced at v3.16.1 in the sources below), so it remains exposed to the same account and root in process memory and, for inheriting processes, `/proc/<pid>/environ` throughout their lifetimes. A protected file does not remove that server-side exposure.
 
@@ -56977,7 +56980,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "35a643f37db4b6640b0bee362f14661ae73d5b6360193154a57a62828481a60e",
+  "body_sha256": "229b7fe148bd06baf56a819e4b39abd955e9bea96468ff4d6aea73f8b076b04d",
   "components": {
     "source": {
       "name": "MLflow pinned source",
@@ -75000,7 +75003,9 @@ ephemeral or `dynamic` project key for the same project sets the current authori
 disabled. So do user sessions on the console project that act on an organization, and
 admin-mode user sessions on other projects, except on the console project's `/v1/projects` and
 `/v1/projects/:projectId` routes and GET requests to the `/v1/organization/projects` routes, which
-enable it. An OAuth2 key with the `owner` role on an admin-mode request by a user to a project
+enable it. That the console-project sessions act on an organization is this guide's reading of the
+code comment at `api.php` lines 302 to 304 at 2.7.0, not established from the code.
+An OAuth2 key with the `owner` role on an admin-mode request by a user to a project
 other than the console also sets it to disabled. Route scope validation still applies to every requester. At 2.7.0 a request with an
 `x-appwrite-key` header that resolves to no key is refused. Collection `permissions` and
 `documentSecurity` are handed to utopia-php/database when the collection is created. The
@@ -76073,7 +76078,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-11",
-  "body_sha256": "80c1694aa1674d9611e73b22886f6b1fe569df6fa74af23d92427de29e95882a",
+  "body_sha256": "39607da0b6b9a68e6d527fa6371f05299ba4f5de63f9c4ddd08fcf3e92d083ac",
   "components": {
     "pb": {
       "name": "PocketBase",

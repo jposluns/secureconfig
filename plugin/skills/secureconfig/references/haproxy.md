@@ -33,13 +33,15 @@ sudo mkdir -p /etc/haproxy/certs && sudo chmod 700 /etc/haproxy/certs
 sudo bash -c 'umask 077
   command -v mktemp > /dev/null || { echo "mktemp is not on PATH; nothing written"; exit 2; }
   command -v cat > /dev/null || { echo "cat is not on PATH; nothing written"; exit 2; }
+  test -r /etc/letsencrypt/live/example.com/fullchain.pem || { echo "fullchain.pem is not readable; nothing written"; exit 2; }
+  test -r /etc/letsencrypt/live/example.com/privkey.pem || { echo "privkey.pem is not readable; nothing written"; exit 2; }
   tmp=$(mktemp /etc/haproxy/certs/.pem.XXXXXX) || exit 3
   cat /etc/letsencrypt/live/example.com/fullchain.pem \
       /etc/letsencrypt/live/example.com/privkey.pem > "$tmp" || { rm -f "$tmp"; exit 3; }
   mv "$tmp" /etc/haproxy/certs/example.com.pem'
 ```
 
-REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only inside `sudo bash -c`: with 2 when `mktemp` or `cat` is not on the PATH that `sudo` gives it, and with 3 when `mktemp` fails or `cat` or the write to the temporary file fails; otherwise it ends with the status of its last command, `sudo bash -c`, whose status is that of `mv` when `sudo` runs it. The block does not check that the certificate files are readable before `cat` reads them, so an unreadable one also exits 3, where rule 6 gives an unreadable file the reader supplied status 2.
+REASONED: exit status meanings, per CONTRIBUTING.md rule 6. A block that sets its exit status uses 0 for a pass, or for an observation the block cannot classify and says so; 1 for a finding; 2 for a guard refusal; and 3 for a failed or inconclusive check. The block above sets its own status only inside `sudo bash -c`: with 2 when `mktemp` or `cat` is not on the PATH that `sudo` gives it or `test -r`, run as root, finds either certificate file unreadable, and with 3 when `mktemp` fails or `cat` or the write to the temporary file fails. Otherwise it ends with the status of its last command, `sudo bash -c`, whose status is that of `mv` when `sudo` runs it. A file that passes `test -r` but then fails to read still exits 3, as rule 6 gives a failed operation after its checks passed.
 
 With Certbot v2.3.0, run the concatenation and reload HAProxy after a successful renewal using `certbot renew --deploy-hook /path/to/deploy-hook-script` or an executable in `/etc/letsencrypt/renewal-hooks/deploy` (assuming the `/etc/letsencrypt` configuration directory, on `certbot renew`).
 
@@ -438,7 +440,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "aec33172124fe60dc26132666a45c702782505e09fa282bfc5bf691b0a83b357",
+  "body_sha256": "4bfde41dbf431bd9f1e54c261e8ced0bc6aa192d56e627d782396ebe3ad204dd",
   "components": {
     "haproxy": {
       "name": "HAProxy",

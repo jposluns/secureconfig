@@ -226,7 +226,7 @@ REASONED: following block; no real application build is available in the authori
 (cd /path/to/project && bash /path/to/secureconfig/tools/scan_credential.sh ./dist)
 ```
 
-REASONED: the tool's four outcomes are FOUND/1 (remove and rotate the credential), NOT FOUND/0 (only the scope below), REFUSED/2 (unsafe or wrong use, such as the wrong directory, a second argument or an unsafe output path, refused before any content is searched) and INCONCLUSIVE/3 (a scan that could not complete, taking precedence over earlier matches). It prints matching names, which can themselves contain a key, but never matching content or Git diagnostics. To identify the first failed prerequisite without entering a key, add `--explain` before the output argument; its categories disclose no paths. A READY result checks prerequisites only, not content. Interrupted runs without a final outcome remain inconclusive.
+REASONED: the tool's four outcomes are FOUND/1 (remove and rotate the credential), NOT FOUND/0 (only the scope below), REFUSED/2 (unsafe or wrong use, such as the wrong directory, a second argument or an unsafe output path, refused before any content is searched) and INCONCLUSIVE/3 (a scan that could not complete, taking precedence over earlier matches). Read from the scanner's code rather than a fixture, a `git rev-parse` at its repository-root check that exits non-zero inside a repository is also refused with 2, unless it exits 1 after printing a diagnostic, which is INCONCLUSIVE/3. It prints matching names, which can themselves contain a key, but never matching content or Git diagnostics. To identify the first failed prerequisite without entering a key, add `--explain` before the output argument; its categories disclose no paths. A READY result checks prerequisites only, not content. Interrupted runs without a final outcome remain inconclusive.
 
 - REASONED: Git grep searches raw output bytes and regular-file blobs in commits from `git rev-list --all --reflog`; it neither decodes gzip/Brotli nor reconstructs encoded, escaped, split or runtime-injected keys.
 - REASONED: Git tree searches omit committed symlink targets, submodule contents and LFS payloads; the output walk refuses symlinks, special/unreadable entries, empty output and any ASCII-case `.git` component.
@@ -335,7 +335,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-10",
-  "body_sha256": "5c0ad197475fd2a6664d51c6615d3489cc1d73dcc624db3ea53d2f6c583cf51e",
+  "body_sha256": "13cbcc2b925bf10f22bb7d5e04121a8c63fc54c524a3d7dc35660721f717bb29",
   "components": {
     "meili": {
       "name": "Meilisearch release reference",
