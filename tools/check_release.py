@@ -2,7 +2,8 @@
 """Check a release candidate offline before it is published.
 
 A release is a GitHub release on a tag `v1.0.<N>` that names one merge commit on `main`, with
-four assets: `llms-full.txt`, the plugin tarball, the full release notes and `SHA256SUMS`.
+six assets: `llms-full.txt`, the plugin tarball, the skill zip, the plugin zip, the full release
+notes and `SHA256SUMS`.
 CONTRIBUTING.md's "Releasing" section gives the procedure and DECISIONS.md the rulings of
 2026-11-01. This tool is run by that procedure, not on every pull request; its self-test,
 tools/test_release.py, runs in tools/run_all_checks.sh so the shipped rule is tested there.
@@ -44,9 +45,12 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
    this is not applied to it.
 7. The notes asset and `body.md` equal, byte for byte, the ones regenerated from the target;
    the body holds the range's merged pull requests, so its list cannot drift from the range.
-8. `llms-full.txt` equals `site/llms-full.txt` at the target, the tarball equals a rebuild from
-   `git archive` of the target's `plugin/` (built twice, and the two must agree), `SHA256SUMS`
-   equals its rebuild and verifies every asset, and `assets/` holds nothing else.
+8. `llms-full.txt` equals `site/llms-full.txt` at the target, the tarball and each zip
+   tools/_archives.py lists (the skill zip and the plugin zip) equal a rebuild from `git archive`
+   of the target's `plugin/` (built twice, and the two must agree), `SHA256SUMS` equals its
+   rebuild and verifies every asset, and `assets/` holds nothing else. No asset name ends in
+   `-latest.zip`: the distribution standard's latest links are 302 redirects with no bytes of
+   their own, so `SHA256SUMS` lists only versioned files.
 9. Only when 1 to 8 pass: tools/run_all_checks.sh, run in a `git worktree` of the target,
    exits 0, ends with "All gates passed.", prints the shell-block gate's pass line, and prints
    no line beginning `  FAIL  ` and no line beginning `  SKIP  ` but two. A line is read as a
@@ -86,13 +90,17 @@ check that a mention of a pull request in a section is that pull request's own e
 
 THE RELEASE DIRECTORY: --build writes it into a new directory: `body.md`, the release body, and
 `assets/` with `llms-full.txt`, `secureconfig-plugin-v1.0.<N>.tar.gz`,
-`RELEASE-NOTES-v1.0.<N>.md` and `SHA256SUMS`. It refuses when any of checks 1 to 6 fails, and
-it does not run the suite. The notes are a heading and one paragraph, then each dated section
-in the range, newest first, from its heading to its last non-empty line, separated by one
-empty line. The tarball is `git archive --format=tar --prefix=secureconfig-plugin-v1.0.<N>/`
-of `plugin` with tar.umask 0002, compressed by Python's gzip at level 9 with mtime 0, so its
-bytes repeat for one git, Python and zlib. `git archive` applies export-ignore and export-subst
-attributes; .gitattributes sets neither today.
+`secureconfig-1.0.<N>.zip`, `secureconfig-plugin-1.0.<N>.zip`, `RELEASE-NOTES-v1.0.<N>.md` and
+`SHA256SUMS`, which lists the other five in that order. It refuses when any of checks 1 to 6
+fails or a zip cannot be built, and it does not run the suite. The notes are a heading and one
+paragraph, then each dated section in the range, newest first, from its heading to its last
+non-empty line, separated by one empty line. The tarball is `git archive --format=tar
+--prefix=secureconfig-plugin-v1.0.<N>/` of `plugin` with tar.umask 0002, compressed by Python's
+gzip at level 9 with mtime 0, so its bytes repeat for one git, Python and zlib. The zips are
+built by tools/_archives.py from `git archive --format=tar` of `plugin`, whose docstring gives
+their layout and the fixed dates, modes and order that make their bytes repeat for one git,
+Python and zlib. `git archive` applies export-ignore and export-subst attributes;
+.gitattributes sets neither today.
 
 THE DISPATCH TRIGGER: check 1 uses only the standard library, so it reads the workflow with its
 own strict line model, written for this check alone. The model is not a YAML parser: it accepts
@@ -172,6 +180,8 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _archives import (ARCHIVES, LATEST_SUFFIX, SOURCE, ArchiveError,  # noqa: E402
+                       archive_name, build_all)
 from check_changelog_format import HEADING, check as format_findings  # noqa: E402
 from check_changelog_prs import MERGE_COMMIT, merged_number, referenced  # noqa: E402
 
@@ -278,9 +288,20 @@ def release_tags(root):
 
 
 def names(tag):
-    """The four asset names, in SHA256SUMS order."""
-    return ("llms-full.txt", f"secureconfig-plugin-{tag}.tar.gz", f"RELEASE-NOTES-{tag}.md",
-            "SHA256SUMS")
+    """The asset names, in SHA256SUMS order: `llms-full.txt`, the tarball, each zip ARCHIVES
+    lists, the notes and `SHA256SUMS`. A latest name among them is refused."""
+    try:
+        zips = tuple(archive_name(kind, tag[1:]) for kind in ARCHIVES)
+    except ArchiveError as exc:
+        raise CannotCheck(f"the release's zip names cannot be formed: {exc}") from exc
+    found = ("llms-full.txt", f"secureconfig-plugin-{tag}.tar.gz", *zips,
+             f"RELEASE-NOTES-{tag}.md", "SHA256SUMS")
+    latest = [name for name in found if name.endswith(LATEST_SUFFIX)]
+    if latest:
+        raise CannotCheck(f"{', '.join(latest)} would be a release asset, but a latest link is a "
+                          "302 redirect with no bytes of its own, so SHA256SUMS lists only "
+                          "versioned files")
+    return found
 
 
 def changelog_lines(data):
@@ -310,6 +331,13 @@ def tarball(root, target, tag):
     data = git(root, "-c", "tar.umask=0002", "archive", "--format=tar",
                f"--prefix=secureconfig-plugin-{tag}/", target, "plugin", binary=True)
     return gzip.compress(data, compresslevel=9, mtime=0)
+
+
+def archives(root, target, tag):
+    """[(name, bytes)] for the tarball and then each zip ARCHIVES lists, from the target's
+    `plugin/`. ArchiveError when a zip cannot be built."""
+    stream = git(root, "archive", "--format=tar", target, SOURCE, binary=True)
+    return [(names(tag)[1], tarball(root, target, tag)), *build_all(stream, tag[1:])]
 
 
 def sums(files):
@@ -796,7 +824,7 @@ def examine(root, main_ref, target, tag, previous, gates_run):
     numbers = sorted({pr for pr, _, _ in merged})
     pr_list = ", ".join(f"#{n}" for n in numbers)
     changelog_url = f"{REPOSITORY}/blob/{tag}/{CHANGELOG}"
-    llms, tar_name, notes_name, sums_name = names(tag)
+    llms, tar_name, *zip_names, notes_name, sums_name = names(tag)
     own = f"pull request #{merge.group(1)}"
     if previous is None:
         covered = f"up to {target_date} UTC (that date only up to the target)"
@@ -851,14 +879,21 @@ def examine(root, main_ref, target, tag, previous, gates_run):
             f"- The `{llms}` asset is the committed `site/llms-full.txt` at the target, "
             f"unchanged. Its repository links point at `main`, not at this tag, so they follow "
             f"the moving branch.\n"
-            f"- `{sums_name}` covers the other three assets; check a download with "
+            + "".join(f"- The `{name}` asset is {kind.description}.\n"
+                      for name, kind in zip(zip_names, ARCHIVES)) +
+            f"- `{sums_name}` covers each of the other assets; check a download with "
             f"`sha256sum -c {sums_name}`.\n")
-    first_build = tarball(root, target, tag)
-    if tarball(root, target, tag) != first_build:
-        return [f"two builds of {tar_name} from the target differ, so it is not reproducible "
-                "here"], None
+    try:
+        first_build = archives(root, target, tag)
+        second_build = archives(root, target, tag)
+    except ArchiveError as exc:
+        return [f"the release's zips cannot be built from the target: {exc}"], None
+    differ = [name for (name, data), (_, again) in zip(first_build, second_build) if data != again]
+    if differ:
+        return [f"two builds of {name} from the target differ, so it is not reproducible here"
+                for name in differ], None
     files = [(llms, at_target(root, target, "site/llms-full.txt")),
-             (tar_name, first_build),
+             *first_build,
              (notes_name, notes.encode("utf-8"))]
     files.append((sums_name, sums(files)))
     release = {"body": body.encode("utf-8"), "files": files, "prs": numbers,
