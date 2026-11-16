@@ -17,6 +17,56 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-15 on the public identity: personal identity everywhere (#1336).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 22:46Z. The
+  record gives only the chosen option, noting that it was not the recommended project identity, and no reasoning
+  beyond the choice. The label and description are quoted exactly. The maintainer chose
+  "Personal identity everywhere", whose description read:
+  "Export commits use your own git identity, and the README keeps its maintainer section."
+  - Effect. This pull request changes no file under this ruling; it enters the ruling here. The part of the
+    overnight plan that the next entry quotes includes "personal git identity".
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
+    own `CHANGELOG.md` entry, and records the new ruling here.
+- **Maintainer ruling of 2026-11-15 that the whole project moves to the Apache License 2.0 from the change onward (#1336).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 17:33Z, after
+  writing on question 1b:
+  "I'm thinking of changing this project to Apache 2.0, as it now contains code. Consider and advise."
+  The advice given recommended a split, code under Apache and guides under CC0. The labels, descriptions and the
+  maintainer's words in this entry are quoted exactly. The maintainer chose "Whole project Apache-2.0", whose
+  description read:
+  "Everything moves to Apache-2.0 from the change onward (earlier versions stay CC0): one licence, simplest to state, with the attribution and NOTICE conditions applying to guide content too."
+  This overrode the recommended split, and no other reasoning was recorded. The record says the ruling supersedes
+  question 1b. The record's note on question 1b, which is the orchestrator's summary and not the maintainer's
+  words, says that the zips will carry `LICENSE` and `NOTICE` under the new licence. The orchestrator, who wrote
+  that note at 17:33Z, meant both the skill zip and the plugin zip. The release did not yet build both zips then:
+  pull request #1333, which made each release carry a skill zip and a plugin zip and dropped the plugin `.tar.gz`,
+  merged at 21:27Z the same day.
+  - Later facts, from the same day. In a free-form answer at about 22:33Z, the maintainer wrote:
+    "only me, why is the copyright jeff posluns i thought we were doing apache 2.0 or is that how you do it with apache?, anything from other projects keep their licenses, so the template takes the license from that project (ask posluns)".
+    The record of that answer says that the project has no other contributors, that material copied from other
+    projects keeps its own licence, and that the site template's licence comes from posluns, which was asked. On the
+    copyright line, the maintainer was told that Apache-2.0 is a licence the copyright holder grants, so the holder
+    is still named, as the licence's appendix template reads "Copyright [yyyy] [name of copyright owner]". At about
+    22:46Z, the maintainer directed in the console:
+    'inform all orchestrators that we're using "Jeff Posluns" for copyright 2026 on apache 2.0'.
+    At about 22:47Z, the maintainer chose "Merge relicence overnight (Recommended)", whose description read:
+    "Predicted and best for the project: the relicence PRs (plugin copies of LICENSE/NOTICE, then the relicence itself) merge overnight after two-family QA and gates, so the first public export starts under Apache-2.0; everything already published stays CC0."
+    The overnight plan recorded with that answer begins "relicence PR A then B (Copyright 2026 Jeff Posluns; template
+    keeps CC0 per posluns; personal git identity)".
+  - Effect, in the same change as this entry, the first of the two pull requests. `scripts/build-plugin.sh` copies
+    the root `LICENSE` and `NOTICE`, byte for byte, to `plugin/LICENSE` and `plugin/NOTICE`, so the plugin zip
+    carries them. No licence wording changes here: the root files and their copies are still the current CC0-era
+    `LICENSE` and `NOTICE`.
+  - Not yet changed: the licence change itself lands in a later pull request, which replaces the root `LICENSE` and
+    `NOTICE` with the Apache License 2.0 text and an Apache NOTICE and also adds `LICENSE` and `NOTICE` to the
+    skill zip. From that change onward, this ruling supersedes in part the ruling below on the vendored AIQT files'
+    licence (#343): its choice to keep the guides under CC0. The skill zip does not yet carry `LICENSE` or `NOTICE`,
+    only the `license:` line in the front matter of `plugin/skills/secureconfig/SKILL.md`. This pull request makes
+    the plugin zip carry them, and the second pull request, which changes the licence, adds them to the skill zip.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
+    own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-15 splitting the walk arm of the text-generation-webui `CMD_FLAGS.txt` block into statuses 2 and 3 (#1337).**
   The maintainer gave this ruling through AskUserQuestion, recorded as attended, answered at about 17:20Z that day,
   on the walk arm at `model-servers.md` line 317 on main that wave 2c of the exit-status sweep held back. It is the
@@ -1162,6 +1212,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   whether relicensing the repository to Apache-2.0 would be easier; the answer given was that it would put
   redistribution conditions on configuration readers copy, and that earlier releases stay CC0 regardless. They then
   chose to keep CC0 with the exception. No other reasoning was given.
+  The 2026-11-15 ruling above, that the whole project moves to Apache-2.0, supersedes in part this ruling: from the
+  later pull request that changes the licence onward, it supersedes the choice to keep the guides under CC0. The
+  re-pin, the vendored `.aiqt/` LICENSE and NOTICE, and that earlier releases stay CC0 still stand.
 
 - **A retroactive full-panel review of #255 and #256:** run it against their current text. This overrode my
   recommendation, which was to close it without one. No reasoning was given. Its findings are rows 1.136 and 3.17.
