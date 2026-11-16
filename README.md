@@ -18,7 +18,7 @@ This repository gives an AI assistant the security steps to apply and a way to r
 
 ## The maintainer
 
-Jeff Posluns has spent more than 30 years in technology and security and wants to help keep the world and its information more secure. He built this library from that experience and uses his own AI tooling to keep expanding and updating it, with automated checks so it keeps its accuracy as it grows. Everything here is free to use under the Apache License 2.0, including the site template's copied files, apart from the template's fonts, its third-party marks, and the projects' own names, marks and domain names.
+Jeff Posluns has spent more than 30 years in technology and security and wants to help keep the world and its information more secure. Jeff built this library from that experience and keeps expanding and updating it with Jeff's own AI tooling, backed by automated checks so it keeps its accuracy as it grows. Everything here is free to use under the Apache License 2.0, including the site template's copied files, apart from the template's fonts, its third-party marks, and the projects' own names, marks and domain names.
 
 The guides are licensed under the [Apache License 2.0](LICENSE), as is the rest of the repository; versions before 1.0.1341 remain dedicated to the public domain under CC0 1.0. From template 1.15.0 the site template's copied files are under the Apache License 2.0 too, and template versions 1.13.0 and earlier stay under CC0 1.0. The exceptions are the template's fonts, its GitHub, LinkedIn and ORCID marks, and the project names its logos carry and the projects' domain names (see [Licence](#licence)).
 
