@@ -25,8 +25,8 @@ finding in one names its file and the rule it breaks, with the line number for a
 byte offset of the first byte that is not UTF-8, never a message or warning of the regular
 expression compiler, which can quote or locate the pattern. A pass prints counts and each list's
 SHA-256, and an unexpected error in --check-private prints only its type. When an argument
-starts with --check-private or --private-dir, a usage error prints the usage and a fixed message
-and repeats no argument.
+starts with --priv or --check-p, a prefix of --private-dir or --check-private, a usage error
+prints the usage and a fixed message and repeats no argument, in either mode.
 
 Every list is UTF-8 with LF line endings, no byte order mark, no carriage return and no control
 or format character other than the tab that separates fields, and its last line ends in LF.
@@ -121,8 +121,9 @@ PRIVATE_FILES = (TERMS, PRIVATE_MARKERS, PRIVATE_EXCEPTIONS)
 LINK_FORMS = (("a github.com blob", "https://github.com/example-org/secureconfig/blob/main/{}"),
               ("a raw.githubusercontent.com",
                "https://raw.githubusercontent.com/example-org/secureconfig/main/{}"))
-# The arguments that put a usage error in quiet mode, since one may carry the private path.
-PRIVATE_ARGUMENTS = ("--check-private", "--private-dir")
+# The prefixes of --private-dir and --check-private that put a usage error in quiet mode, since
+# an argument that starts with one, even a misspelled option, may carry the private path.
+PRIVATE_ARGUMENTS = ("--priv", "--check-p")
 
 PUBLISH_KINDS = ("copy", "render")
 NEEDS = ("required", "optional")
@@ -852,7 +853,7 @@ class QuietParser(argparse.ArgumentParser):
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else [str(arg) for arg in argv]
     # Abbreviations are off, so --check-private runs only when an argument names it in full, and
-    # any argument that starts with it or with --private-dir makes a usage error quiet.
+    # any argument that starts with --priv or --check-p makes a usage error quiet in either mode.
     quiet = any(arg.startswith(PRIVATE_ARGUMENTS) for arg in argv)
     parser = QuietParser(description="Parse and check the export lists.", allow_abbrev=False,
                          quiet=quiet)

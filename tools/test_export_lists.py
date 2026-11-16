@@ -757,8 +757,8 @@ def check_private_cli(cases):
             cases.check(rc == 2 and "is not an absolute path" in out,
                         f"an empty {el.PRIVATE_DIR_ENV} should be refused: {rc}, {out!r}")
 
-            # A usage error repeats no argument once one starts with --check-private or
-            # --private-dir, since an argument may be the private directory's path.
+            # A usage error repeats no argument once one starts with --priv or --check-p, a prefix
+            # of --private-dir or --check-private, since an argument may be the private path.
             quiet = ("error: the arguments do not parse; with --check-private or --private-dir "
                      "no argument is repeated")
             stray = str(priv) + "-stray"
@@ -770,6 +770,10 @@ def check_private_cli(cases):
                 ("--check-private given a value", (f"--check-private={stray}", "--root", root)),
                 ("--check-private beside --check", ("--check-private", "--check", stray)),
                 ("--private-dir with no mode", (f"--private-dir={stray}",)),
+                # A misspelled private option beside --check is quiet too, since the misspelling
+                # starts with --priv or --check-p.
+                ("--privatedir beside --check", ("--check", "--privatedir", stray)),
+                ("--check-privat beside --check", ("--check", "--check-privat", stray)),
             ):
                 rc, out = run(*args)
                 cases.check(rc == 2 and quiet in out and "usage:" in out
