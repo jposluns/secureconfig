@@ -67,8 +67,8 @@ done
 
 # The root LICENSE and NOTICE, byte for byte, at the plugin's root, where the plugin zip and an
 # installed plugin carry them. The skill zip holds only plugin/skills/secureconfig/ and does not.
-# A cp onto a symbolic link writes through it and leaves the link in place, so an existing entry
-# is removed first and each copy is a regular file.
+# A cp onto a symbolic link writes through it and leaves the link in place, so an existing file or
+# symbolic link is removed first and each copy is a regular file.
 for f in "${notices[@]}"; do
   rm -f "plugin/$f"
   cp "$f" "plugin/$f"

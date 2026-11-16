@@ -55,7 +55,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     carries them. No licence wording changes here: the root files and their copies are still the CC0 1.0 texts.
   - Not yet changed: the licence change itself lands in a later pull request, which replaces the root `LICENSE` and
     `NOTICE` with the Apache License 2.0 text and an Apache NOTICE. From that change onward, this ruling supersedes
-    the ruling below on the vendored AIQT files' licence (#343), which kept the guides under CC0.
+    in part the ruling below on the vendored AIQT files' licence (#343): its choice to keep the guides under CC0.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
     own `CHANGELOG.md` entry, and records the new ruling here.
