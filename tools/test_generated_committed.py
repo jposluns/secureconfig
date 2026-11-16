@@ -10,7 +10,7 @@ with the real script's seds, and writes a MANIFEST.sha256. The repository is bui
 clean before each case changes it. The last group runs the real scripts/build-plugin.sh, with
 stand-ins only for its guide list and its version-basis check, on SKILL.md files it must
 rewrite or refuse, in a fixture holding a LICENSE and a NOTICE that each build it passes must
-copy, byte for byte, to plugin/.
+copy, byte for byte, to plugin/, as regular files and not symbolic links.
 
 The two finding cases reproduce how each defect reaches a commit: the working tree is rebuilt
 in full, so the working-tree staleness gates pass, which each case confirms by rebuilding the
@@ -150,8 +150,9 @@ LIST_GUIDES = r"""#!/usr/bin/env bash
 printf '%s\n' guide.md
 """
 VERSION_BASIS = "import sys\nsys.exit(0)\n"
-# The root files the real build copies into plugin/, as the fixture's own text.
-NOTICES = {"LICENSE": "fixture licence text\n", "NOTICE": "fixture notice text\n"}
+# The root files the real build copies into plugin/, as the fixture's own bytes. LICENSE ends
+# its first line with CR LF, so a copy that changed its line endings fails the byte comparison.
+NOTICES = {"LICENSE": b"fixture licence text\r\nsecond line\n", "NOTICE": b"fixture notice text\n"}
 
 PLUGIN_JSON = '{\n  "name": "fixture",\n  "version": "1.0.5",\n  "license": "CC0-1.0"\n}\n'
 SKILL = "plugin/skills/secureconfig/SKILL.md"
@@ -528,8 +529,8 @@ def real_build(skill_md, expected, needle, parser=True, lock=None, extra=None, l
     with extra, also with the files it maps under tools/, and with a python3 first on PATH that
     runs this interpreter with -E and -S, which sees no installed package. On success, SKILL.md
     must name VERSION 1.0.5 and, outside its body's HTML comment blocks, 1 guide, once, on one
-    line as written, and plugin/LICENSE and plugin/NOTICE must be the fixture's root LICENSE and
-    NOTICE."""
+    line as written, and plugin/LICENSE and plugin/NOTICE must be regular files, not symbolic
+    links, holding the same bytes as the fixture's root LICENSE and NOTICE."""
     if skipped(parser):
         return 0
     with tempfile.TemporaryDirectory() as directory:
@@ -557,8 +558,8 @@ def real_build(skill_md, expected, needle, parser=True, lock=None, extra=None, l
         write(root, ".notes.md", "not a guide\n")
         write(root, "drafts.md/note.txt", "not a guide\n")
         write(root, "VERSION", "1.0.5\n")
-        for name, text in NOTICES.items():
-            write(root, name, text)
+        for name, data in NOTICES.items():
+            (root / name).write_bytes(data)
         write(root, "plugin/plugin.json", PLUGIN_JSON)
         write(root, SKILL, skill_md)
         done = subprocess.run(["bash", "scripts/build-plugin.sh"], cwd=root, capture_output=True,
@@ -572,7 +573,9 @@ def real_build(skill_md, expected, needle, parser=True, lock=None, extra=None, l
             assert '  version: "1.0.5"\n' in text and skill_counts(text) == (["1"], ["1"]), text
             for name, want in NOTICES.items():
                 copied = root / "plugin" / name
-                assert copied.is_file() and copied.read_text(encoding="utf-8") == want, (name,)
+                # is_file() follows a symbolic link, so the link is refused first.
+                assert not copied.is_symlink() and copied.is_file(), (name, "not a regular file")
+                assert copied.read_bytes() == want, (name, copied.read_bytes(), want)
     return 1
 
 

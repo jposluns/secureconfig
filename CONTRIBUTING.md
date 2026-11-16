@@ -419,7 +419,9 @@ enforces this; the suite is offline by policy and a pull request number is only 
 outside.
 
 A pull request that changes `VERSION` or a guide also runs `bash scripts/build-llms-full.sh` and
-`bash scripts/build-plugin.sh` and commits every file they change. The suite's two staleness gates
+`bash scripts/build-plugin.sh` and commits every file they change. One that changes the root
+`LICENSE` or `NOTICE` runs `bash scripts/build-plugin.sh`, which copies both, byte for byte, to
+`plugin/LICENSE` and `plugin/NOTICE`, and commits both copies. The suite's two staleness gates
 rebuild the working tree, so they pass when a rebuilt file was left unstaged.
 `tools/check_generated_committed.py` exports `HEAD` with `git archive` and fails unless the
 committed `plugin/plugin.json` and the plugin's `SKILL.md` name the committed `VERSION` and

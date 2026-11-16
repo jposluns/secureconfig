@@ -17,6 +17,37 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-15 that the whole project moves to the Apache License 2.0 from the change onward (#1336).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 17:33Z, after
+  writing on question 1b:
+  "I'm thinking of changing this project to Apache 2.0, as it now contains code. Consider and advise."
+  The advice given recommended a split, code under Apache and guides under CC0. The labels, descriptions and the
+  maintainer's words in this entry are quoted exactly. The maintainer chose "Whole project Apache-2.0", whose
+  description read:
+  "Everything moves to Apache-2.0 from the change onward (earlier versions stay CC0): one licence, simplest to state, with the attribution and NOTICE conditions applying to guide content too."
+  This overrode the recommended split, and no other reasoning was recorded. The record says the ruling supersedes
+  question 1b, and that the zips will carry `LICENSE` and `NOTICE` under the new licence.
+  - Later facts, from the same day. In a free-form answer at about 22:33Z, the maintainer wrote:
+    "only me, why is the copyright jeff posluns i thought we were doing apache 2.0 or is that how you do it with apache?, anything from other projects keep their licenses, so the template takes the license from that project (ask posluns)".
+    The record of that answer says that the project has no other contributors, that material copied from other
+    projects keeps its own licence, and that the site template's licence comes from posluns, which was asked. On the
+    copyright line, the maintainer was told that Apache-2.0 is a licence the copyright holder grants, so the holder
+    is still named, as the licence's appendix template reads "Copyright [yyyy] [name of copyright owner]". At about
+    22:46Z, the maintainer directed in the console:
+    'inform all orchestrators that we're using "Jeff Posluns" for copyright 2026 on apache 2.0'.
+    At about 22:47Z, the maintainer chose "Merge relicence overnight (Recommended)", whose description read:
+    "Predicted and best for the project: the relicence PRs (plugin copies of LICENSE/NOTICE, then the relicence itself) merge overnight after two-family QA and gates, so the first public export starts under Apache-2.0; everything already published stays CC0."
+    The overnight plan recorded with that answer reads "relicence PR A then B (Copyright 2026 Jeff Posluns; template
+    keeps CC0 per posluns; personal git identity)".
+  - Effect, in the same change as this entry, the first of the two pull requests. `scripts/build-plugin.sh` copies
+    the root `LICENSE` and `NOTICE`, byte for byte, to `plugin/LICENSE` and `plugin/NOTICE`, so the plugin zip
+    carries them. No licence wording changes here: the root files and their copies are still the CC0 1.0 texts.
+  - Not yet changed: the licence change itself lands in a later pull request, which replaces the root `LICENSE` and
+    `NOTICE` with the Apache License 2.0 text and an Apache NOTICE. From that change onward, this ruling supersedes
+    the ruling below on the vendored AIQT files' licence (#343), which kept the guides under CC0.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, and adds its
+    own `CHANGELOG.md` entry.
 - **Maintainer rulings of 2026-11-15 on the post-write mode checks and the `chat-uis.md` line-count checks in wave 2 of the exit-status sweep (#1330).**
   The maintainer gave these two rulings through AskUserQuestion in an attended session, answered at about 14:56Z and
   about 15:00Z that day, on arms the wave-2 plan left for a ruling. The record of the rulings gives only the chosen
@@ -1105,6 +1136,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   whether relicensing the repository to Apache-2.0 would be easier; the answer given was that it would put
   redistribution conditions on configuration readers copy, and that earlier releases stay CC0 regardless. They then
   chose to keep CC0 with the exception. No other reasoning was given.
+  The 2026-11-15 ruling above, that the whole project moves to Apache-2.0, supersedes this from that change onward.
 
 - **A retroactive full-panel review of #255 and #256:** run it against their current text. This overrode my
   recommendation, which was to close it without one. No reasoning was given. Its findings are rows 1.136 and 3.17.
