@@ -20,7 +20,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-11-16
 
-- `model-servers.md`: the text-generation-webui block that writes `CMD_FLAGS.txt` now exits 2 when its walk finds a `.git` entry in or above the private user-data directory and 3 when the walk cannot reach `/`, each with its own message, where it used to exit 2 for both. Its exit-status note and the walk description now match. `VERSION`, `plugin/plugin.json` and `plugin/skills/secureconfig/SKILL.md` go to 1.0.1337, and the plugin copies, `site/llms-full.txt`, the manifest and the quality table are regenerated (#1337)
+- `model-servers.md`: the text-generation-webui block that writes `CMD_FLAGS.txt` now exits 2 when its walk finds a `.git` entry in or above the private user-data directory and 3 when the walk cannot reach `/`, each with its own message, where it used to exit 2 for both, under the maintainer's ruling of 2026-11-15. Its exit-status note and the walk description now match, the sentence on directories the block leaves behind covers a walk that cannot reach `/`, and the text-generation-webui run record lists the split among the changes since its run, which did not cover the current form. DECISIONS.md gains an entry for the ruling. `VERSION`, `plugin/plugin.json` and `plugin/skills/secureconfig/SKILL.md` go to 1.0.1337, and the plugin copies, `site/llms-full.txt`, the manifest and the quality table are regenerated (#1337)
 
 ## 2026-11-15
 
