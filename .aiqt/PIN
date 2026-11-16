@@ -31,12 +31,13 @@
 #   material under the Apache License 2.0 (.aiqt/LICENSE,
 #   .aiqt/NOTICE). This pin was re-pinned on 2026-09-25 because the earlier pin predates the pack's move to
 #   Apache-2.0 (at upstream eeba6d1). From 1.0.1341 the rest of this repository is Apache-2.0 too
-#   (earlier versions are CC0 1.0), and the site template's copied files stay under the template's
-#   own CC0 1.0 with 3 exceptions, which NOTICE records: the template's fonts and the card
-#   builder's Inter fonts (SIL Open Font License 1.1), the template's GitHub, LinkedIn and ORCID
-#   marks (their owners' trademarks), and the project names the template's logos carry and the
-#   projects' domain names (licensed by neither Apache-2.0, section 6, nor the template's CC0,
-#   section 4(a)). README, CONTRIBUTING, SECURITY and CLAUDE.md/AGENTS.md name these exceptions.
+#   (earlier versions are CC0 1.0), and from template 1.15.0 so are the site template's copied
+#   files (Copyright 2026 Jeff Posluns; template 1.13.0 and earlier are CC0 1.0). There are 3
+#   exceptions, which NOTICE records: the template's fonts and the card builder's Inter fonts (SIL
+#   Open Font License 1.1), the template's GitHub, LinkedIn and ORCID marks (their owners'
+#   trademarks), and the project names the template's logos carry and the projects' domain names
+#   (Apache-2.0 grants no permission for them beyond its section 6). README, CONTRIBUTING, SECURITY
+#   and CLAUDE.md/AGENTS.md name these exceptions.
 #   The local patch carries a "LOCAL PATCH" notice in the file (Apache-2.0 section 4(b)).
 #
 # LOCAL PATCH to re-apply on upgrade:
