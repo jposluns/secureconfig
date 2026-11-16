@@ -1,11 +1,11 @@
 # Security policy
 
 secureconfig publishes deployment-exposure hardening guides, all licensed under the Apache License
-2.0 (versions before 1.0.1341 stay CC0 1.0; the site template's copied files stay under the
-template's own CC0 1.0, its fonts are under the SIL Open Font License 1.1, and its GitHub, LinkedIn
-and ORCID marks are their owners' trademarks, as `NOTICE` records). Neither licence grants the
-project names the template's logos carry or the projects' domain names, which `NOTICE` also records
-(Apache-2.0 section 6; the template's CC0 section 4(a)). The guides are
+2.0; versions before 1.0.1341 stay CC0 1.0. From template 1.15.0 the site template's copied files
+are under the Apache License 2.0 too; template 1.13.0 and earlier stay CC0 1.0. The template's
+fonts are under the SIL Open Font License 1.1, and its GitHub, LinkedIn and ORCID marks are their
+owners' trademarks, as `NOTICE` records. The Apache License 2.0 grants no permission for the project
+names the template's logos carry or the projects' domain names beyond its section 6. The guides are
 documentation; the code that ships is the Agent Plugin under `plugin/` and
 the helper scripts under `tools/` and `scripts/`, and the site serves the
 template's copy, rail and scheme scripts from `site/assets/baseline/`.
