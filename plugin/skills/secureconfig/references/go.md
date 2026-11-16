@@ -194,22 +194,27 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
     example.com|example.net|example.org|*.example.com|*.example.net|*.example.org) echo "example.com, example.net, example.org and their subdomains are not your deployment: substitute your own host name on the set -- line above; not probing"; exit 2 ;;
   esac
   shopt -u nocasematch   # every match below compares letter case exactly again
-  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss is missing, recorded only while nothing else was), which outranks 0
-  curl -q -g -sI "http://$1/"         # expect 301 with a https:// Location
-  set -- "$1" "$2" "$?"                 # the 3rd value is that request's exit status
-  [ "$3" = 0 ] || { echo "curl exit $3: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
-  curl -q -g -sI "https://$1/"        # succeeds without -k
-  set -- "$1" "$2" "$?"                 # the 3rd value is that request's exit status
-  [ "$3" = 0 ] || { echo "curl exit $3: the HTTPS request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
-  set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/api"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
-  printf '%s\n' "$4"                    # 401 or 403 without credentials
-  case "$3:$4" in
-    0:401|0:403) ;;
-    0:2??) echo "FINDING: /api answered $4 without credentials"; set -- "$1" 1 ;;
-    0:*) echo "HTTP $4 from /api is neither the 401 or 403 pass nor a 2xx finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-    *) echo "curl exit $3: the /api request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-  esac
+  set -- "$1" 0                         # the 2nd value is the block's status so far: 1 (a finding) outranks 3 (inconclusive), which outranks 2 (ss or curl is missing, recorded only while nothing else was), which outranks 0
+  if command -v curl >/dev/null; then   # a missing curl skips the three requests below and is recorded as a refusal, ranked as above
+    curl -q -g -sI "http://$1/"       # expect 301 with a https:// Location
+    set -- "$1" "$2" "$?"               # the 3rd value is that request's exit status
+    [ "$3" = 0 ] || { echo "curl exit $3: the redirect request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+    curl -q -g -sI "https://$1/"      # succeeds without -k
+    set -- "$1" "$2" "$?"               # the 3rd value is that request's exit status
+    [ "$3" = 0 ] || { echo "curl exit $3: the HTTPS request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3; }
+    set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/api"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}" # curl's exit status, then the HTTP code
+    printf '%s\n' "$4"                  # 401 or 403 without credentials
+    case "$3:$4" in
+      0:401|0:403) ;;
+      0:2??) echo "FINDING: /api answered $4 without credentials"; set -- "$1" 1 ;;
+      0:*) echo "HTTP $4 from /api is neither the 401 or 403 pass nor a 2xx finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the /api request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+  else
+    echo "curl is not installed here; not probing the redirect, HTTPS and /api routes"
+    case "$2" in 0) set -- "$1" 2 ;; esac
+  fi
   if command -v ss >/dev/null; then
     ss -tlnp   # read every listener; REPLACE_WITH_BINARY_NAME: behind a proxy: 127.0.0.1 only
     set -- "$1" "$2" "$?"               # the 3rd value is ss's exit status
@@ -218,29 +223,34 @@ Defer the full header catalogue and values to [headers.md](headers.md); do not s
     echo "ss is not installed here; not listing sockets"
     case "$2" in 0) set -- "$1" 2 ;; esac   # the refusal is the block's status only while no other part found something or was inconclusive
   fi
-  set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
-  printf '%s\n' "$4"                    # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
-  case "$3" in
-    0) ;;
-    7) echo "curl exit 7: nothing answers on loopback port 6060 at 127.0.0.1; the listener list above, if one was printed, shows any 6060 listener on another address" ;;
-    *) echo "curl exit $3: the local diagnostic request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-  esac
-  set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/debug/pprof/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
-  set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}"   # curl's exit status, then the HTTP code
-  printf '%s\n' "$4"                    # diagnostics must never be routed on your PUBLIC app: expect 404, never 200
-  case "$3:$4" in
-    0:404) ;;
-    0:200) echo "FINDING: /debug/pprof/ answered 200 on your public app"; set -- "$1" 1 ;;
-    0:*) echo "HTTP $4 from /debug/pprof/ is neither the 404 pass nor the 200 finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-    *) echo "curl exit $3: the /debug/pprof/ request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
-  esac
+  if command -v curl >/dev/null; then   # a missing curl skips both diagnostic requests below and is recorded as a refusal, ranked as above
+    set -- "$1" "$2" "$(if curl -q -g -sS --noproxy '*' -o /dev/null -w '%{http_code}\n' http://127.0.0.1:6060/debug/pprof/; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}" # curl's exit status, then the HTTP code
+    printf '%s\n' "$4"                  # local availability only: 200 here just means you enabled a diagnostic listener (section 5). What matters is off-host reachability, checked next.
+    case "$3" in
+      0) ;;
+      7) echo "curl exit 7: nothing answers on loopback port 6060 at 127.0.0.1; the listener list above, if one was printed, shows any 6060 listener on another address" ;;
+      *) echo "curl exit $3: the local diagnostic request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+    set -- "$1" "$2" "$(if curl -q -g -sS -o /dev/null -w '%{http_code}\n' "https://$1/debug/pprof/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+    set -- "$1" "$2" "${3##*$'\n'}" "${3%%$'\n'*}" # curl's exit status, then the HTTP code
+    printf '%s\n' "$4"                  # diagnostics must never be routed on your PUBLIC app: expect 404, never 200
+    case "$3:$4" in
+      0:404) ;;
+      0:200) echo "FINDING: /debug/pprof/ answered 200 on your public app"; set -- "$1" 1 ;;
+      0:*) echo "HTTP $4 from /debug/pprof/ is neither the 404 pass nor the 200 finding; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+      *) echo "curl exit $3: the /debug/pprof/ request failed; inconclusive"; [ "$2" = 1 ] || set -- "$1" 3 ;;
+    esac
+  else
+    echo "curl is not installed here; not probing the diagnostic routes"
+    case "$2" in 0) set -- "$1" 2 ;; esac
+  fi
   echo "block exit $2; the redirect and HTTPS headers, any listener list printed above and the local diagnostic answer are not classified, so judge them yourself"
   exit "$2"
 )
 ```
 
-REASONED: the missing-`ss` handling in the block above, per CONTRIBUTING rule 6 and the block's own text. When `command -v ss` finds no `ss`, the block prints `ss is not installed here; not listing sockets`, skips the listener list and still runs its other probes. That refusal makes the block's status 2 only while no other part has found something or been inconclusive, so a finding still exits 1 and an inconclusive part 3, whether it comes before or after the refusal, and a block that would otherwise pass exits 2, never 0. A `ss` that runs and fails is inconclusive and records 3.
+REASONED: the missing-`ss` and missing-`curl` handling in the block above, per CONTRIBUTING rule 6 and the block's own text. When `command -v ss` finds no `ss`, the block prints `ss is not installed here; not listing sockets`, skips the listener list and still runs its other probes. When `command -v curl` finds no `curl`, the block prints a `curl is not installed here` line for each of its two groups of curl requests, skips those requests and still lists sockets. Either refusal makes the block's status 2 only while no other part has found something or been inconclusive, so a finding still exits 1 and an inconclusive part 3, whether it comes before or after the refusal, and a block that would otherwise pass exits 2, never 0. A `ss` that runs and fails is inconclusive and records 3.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -252,6 +262,7 @@ REASONED: the missing-`ss` handling in the block above, per CONTRIBUTING rule 6 
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute the server's public address on the set -- line above; not probing"; exit 2 ;;
   esac
+  command -v curl >/dev/null || { echo "curl is not installed here; not probing"; exit 2; }
   set -- "$1" "$(if curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
        -w 'diag_6060 http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "http://$1:6060/debug/pprof/"; then printf '\n0'; else printf '\n%s' "$?"; fi)"   # run from a machine OUTSIDE the server's network: the diagnostic listener (section 5) must be UNREACHABLE (a refusal or timeout, never a 200)
   set -- "$1" "${2##*$'\n'}" "${2%%$'\n'*}"   # curl's exit status, then its diag_6060 line
@@ -369,7 +380,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "5c4b33e6d16d118aaf133645b369cb3b46099ff732119bf81755e5b05f7b12a5",
+  "body_sha256": "27254cf29e129dbd4e9064e104fc8d26a855dbef8f98a4d0568a88e438120347",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",
