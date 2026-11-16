@@ -22,7 +22,9 @@ THE CHECKS. Every one fails closed.
   G3 publishable   A hit of export/public-markers.txt in a staged text file refuses, outside
      markers       the exact rows of export/public-exceptions.tsv; a stale row refuses too.
                    Each line is scanned as written and in a folded copy: NFKC-normalized with
-                   every Unicode format character (category Cf, such as U+200B) removed.
+                   every Unicode format character (category Cf, such as U+200B) and every
+                   combining mark (category Mn, such as U+0335) removed (see DISCLOSED LIMITS
+                   for the homoglyphs folding cannot reach).
   G4 protected     Full mode only. A hit of a protected term or a private marker in a staged
      terms and     path name or in file contents refuses, outside the exact rows of the private
      private       exceptions list. Text is scanned as UTF-8 lines, each also in the folded
@@ -45,10 +47,12 @@ THE CHECKS. Every one fails closed.
      references    page and every github.com/<owner>/secureconfig blob, raw or tree link on
                    main must name a staged path. (b) Any github.com/<owner>/secureconfig link
                    to pull, commit, commits, compare or actions refuses. (c) Full mode only: a
-                   run of 12 or more hexadecimal characters in a text file that names, or holds
-                   at any offset, the first 12 characters of a commit id of the private
-                   repository (git rev-list --all, read privately) refuses; the finding never
-                   prints the characters. The repository-link, history-link, site-link and
+                   run of 12 or more hexadecimal characters in a text file, in a staged path
+                   name or in an archive member name that names, or holds at any offset, the
+                   first 12 characters of a commit id of the private repository (git rev-list
+                   --all, read privately) refuses; the finding never prints the characters,
+                   and a printed path is shown folded with every such run masked.
+                   The repository-link, history-link, site-link and
                    hexadecimal scans read each line as written and in its folded copy; the
                    relative Markdown targets are read as written (see DISCLOSED LIMITS). The
                    gate refuses a --history directory that is not the top level of its own
@@ -58,7 +62,10 @@ THE CHECKS. Every one fails closed.
   G6 drift         Full mode only. Each staged file a render line matches must equal the
                    independent fresh render the caller supplies with --fresh; each staged file
                    a copy line matches must equal its bytes in the input tree; and VERSION must
-                   equal plugin/plugin.json's version.
+                   equal plugin/plugin.json's version. Each comparison, like every read of a
+                   list or pin from a tree, opens only a regular file, with O_NOFOLLOW and
+                   O_NONBLOCK: a symbolic link, FIFO, socket or device at a compared path
+                   refuses at once rather than hanging the gate.
   G7 completeness  Every file a required line matches is present and non-empty, and README.md,
                    LICENSE, NOTICE, VERSION and CHANGELOG.md are staged. Every counted guide of
                    the input tree (the staged tree in public-only mode) has a root copy and a
@@ -66,11 +73,17 @@ THE CHECKS. Every one fails closed.
                    one's SHA-256 is listed in releases/SHA256SUMS, and every latest rule of
                    site/_redirects is a 302 to a staged versioned archive.
   G8 binaries      Full mode only. Every staged file under site/assets/baseline/ hashes to its
-                   entry in the input tree's .baseline/pin.toml. Every member of a staged zip
-                   archive, read by its central directory entry so a duplicated member name
+                   entry in the input tree's .baseline/pin.toml. A staged file or an archive
+                   member is opened as a zip archive when its name ends in .zip or its content
+                   identifies one (the local-header signature at offset 0, or an end-of-
+                   central-directory record zipfile can read), whatever it is named; one
+                   either reading identifies that cannot be scanned to its end refuses. Every
+                   member of such an archive,
+                   read by its central directory entry so a duplicated member name
                    hides nothing, is scanned as G4 scans a file (though the exact exceptions
                    never apply inside an archive), and member names are scanned, as written
-                   and folded, for terms and private markers. A text member also gets the
+                   and folded, for terms, private markers and commit ids. A text member also
+                   gets the
                    publishable-marker scan (no exception applies inside an archive), the
                    history, repository and commit scans, and, when it is Markdown or HTML, the
                    link-target checks, resolved against the archive's own members. A member
@@ -79,11 +92,15 @@ THE CHECKS. Every one fails closed.
                    inflated bytes in all; past either bound the archive refuses. Every byte of
                    a staged archive must be explained by a member entry, the central directory,
                    an end record or the archive comment: an unexplained span is scanned as G4
-                   scans bytes and refuses the archive. Any other
+                   scans bytes and refuses the archive. A member's data descriptor must hold
+                   the central directory's CRC and sizes, 8 bytes per size when the member's
+                   local zip64 extra field is present, else 4; a descriptor that does not
+                   match refuses. Any other
                    staged file or archive member the gate identifies as compressed content it
                    cannot scan inside (gzip, compress, bzip2, xz, zstandard, lzip, lzma,
                    brotli, 7z, rar, or a .woff or .woff2 font, by name suffix or, for a
-                   binary, by signature) refuses, unless it is a staged site/assets/baseline/
+                   binary that is not a PNG or a zip, by a known signature at any byte
+                   offset) refuses, unless it is a staged site/assets/baseline/
                    file, which crosses only against its pin.
 
 TWO MODES.
@@ -104,7 +121,8 @@ WHAT THE SCANS READ. A staged file is text when it holds no NUL byte and decodes
 every other file is a binary. The marker, link and hexadecimal scans read text files, each
 line as written and, except for the relative Markdown targets, in its folded copy. Binaries
 are scanned for terms and private markers as G4 above says, through their PNG text chunks and
-inflated image data, through any zlib stream the gate identifies, and through their zip
+inflated image data, through any zlib stream the gate identifies, and, when name or content
+identifies a zip, through their zip
 members, whose text members also get the marker, link and commit scans. The Markdown link
 scan is this tool's own line scanner over the same inline,
 definition, code-span and fence shapes scripts/build-llms-full.sh rewrites; it is not the
@@ -114,8 +132,9 @@ parser sees is caught at build time, not here.
 DISCLOSED LIMITS. A root-relative url(...) in a staged CSS file is not scanned here; the
 build's scripts/build-llms-full.sh scans CSS links at build time. The blob, raw and tree link
 rule is pinned to main, so such a link naming another branch is not matched here, while a
-commit-pinned link falls to G5c. The hexadecimal scan reads text files and archive text
-members only. The relative Markdown targets are read from each line as written, not from its
+commit-pinned link falls to G5c. The hexadecimal scan reads text files, archive text members,
+staged path names and archive member names; a commit id buried in a binary's bytes alone is
+not matched. The relative Markdown targets are read from each line as written, not from its
 folded copy: a link whose brackets need normalization is not a link to any renderer, and a
 target spelled in such characters matches no staged path, so the raw scan already refuses it.
 The history-link rule matches pull, commit, commits, compare and actions; an issues or
@@ -127,7 +146,13 @@ which fails closed. The zlib
 identification needs the two header bytes, so a raw deflate stream with no header, and a
 compressed format this gate does not know, are not found, which is why identified compressed
 content the gate cannot read refuses, and why a staged archive's unexplained byte spans
-refuse. Inflated image bytes are searched for encoded terms
+refuse. Folding strips format characters and combining marks and applies NFKC, but a
+homoglyph, a letter from another script that NFKC does not fold to the listed spelling,
+still defeats a literal term, marker or hexadecimal list; that is an inherent limit of
+matching literal spellings. Each staged file is read and judged whole in memory, and a large
+archive is scanned member by member within ZIP_LIMIT and ZIP_DEPTH, so a huge input costs
+minutes and memory but stays bounded; a MemoryError refuses like any other
+error. Inflated image bytes are searched for encoded terms
 only: a term shown as drawn glyphs in the pixels is a picture, not text, and no byte scan can
 read it.
 
@@ -141,6 +166,7 @@ be read, which itself refuses the export).
 """
 import argparse
 import collections
+import errno
 import hashlib
 import io
 import json
@@ -218,8 +244,10 @@ STREAM_DEPTH = 2
 # The most identified zlib streams scanned in one blob; more refuses the file.
 MAX_STREAMS = 32
 
-# Compressed content the gate cannot scan inside, by name suffix and, for a binary, by leading
-# signature. zip and PNG are not here: the gate opens both.
+# Compressed content the gate cannot scan inside, by name suffix and, for a binary, by a
+# leading signature searched at any byte offset. zip and PNG are not here: the gate opens
+# both and accounts for every byte, so their compressed innards may hold signature-like
+# bytes without naming an unscannable blob.
 COMPRESSED_SUFFIXES = (
     (".gz", "gzip"), (".tgz", "gzip"), (".bz2", "bzip2"), (".tbz2", "bzip2"),
     (".xz", "xz"), (".txz", "xz"), (".zst", "zstandard"), (".br", "brotli"),
@@ -268,9 +296,12 @@ def folded(text):
     """The folded copy of text when it differs, else None, so each scan can read a spelling
     that normalization or invisible characters would hide, without scanning unchanged text
     twice. Folding removes every Unicode format character (category Cf, such as U+200B) and
-    NFKC-normalizes what remains."""
-    normalized = unicodedata.normalize(
-        "NFKC", "".join(ch for ch in text if unicodedata.category(ch) != "Cf"))
+    every combining mark (category Mn, such as U+0335), NFKC-normalizes what remains, and
+    removes the combining marks a compatibility decomposition introduces. A homoglyph from
+    another script survives NFKC: DISCLOSED LIMITS names that residue of a literal list."""
+    kept = "".join(ch for ch in text if unicodedata.category(ch) not in ("Cf", "Mn"))
+    normalized = unicodedata.normalize("NFKC", kept)
+    normalized = "".join(ch for ch in normalized if unicodedata.category(ch) != "Mn")
     return normalized if normalized != text else None
 
 
@@ -313,17 +344,28 @@ def term_byte_patterns(text):
     return out
 
 
+def is_zip_content(data):
+    """Whether DATA identifies a zip archive by content alone: the local-header signature at
+    offset 0, or an end-of-central-directory record zipfile can read. A hit only sends the
+    bytes to the zip scan, which refuses whatever it cannot read to the end."""
+    return data.startswith(b"PK\x03\x04") or zipfile.is_zipfile(io.BytesIO(data))
+
+
 def compressed_kind(name, data):
     """A label when NAME or DATA identifies compressed content this gate cannot scan inside,
-    else None. zip and PNG are never identified here: the gate opens both. The signatures are
-    read only on a binary, so text that happens to start like one is not refused."""
+    else None. A known leading signature is searched at any byte offset of a binary, so a
+    blob embedded after a header, or inside a container such as a tar, is found, not only one
+    at offset 0. zip and PNG are never identified here: the gate opens both and accounts for
+    every byte. The signatures are
+    read only on a binary, so text that happens to hold one is not refused."""
     lowered = name.lower()
     for suffix, label in COMPRESSED_SUFFIXES:
         if lowered.endswith(suffix):
             return label
-    if is_text(data) is None:
+    if (is_text(data) is None and not data.startswith(PNG_SIGNATURE)
+            and not is_zip_content(data)):
         for magic, label in COMPRESSED_SIGNATURES:
-            if data.startswith(magic):
+            if data.find(magic) >= 0:
                 return label
     return None
 
@@ -359,6 +401,33 @@ def zlib_streams(data):
             out.append(bytes(produced))
             budget -= len(produced)
         pos = start + 1
+
+
+def read_regular(path):
+    """The bytes of PATH, opened with O_NOFOLLOW and O_NONBLOCK and read only when fstat
+    shows a regular file, so a symbolic link, FIFO, socket or device raises an OSError at
+    once instead of blocking the gate; every caller turns that into its refusal."""
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC)
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise OSError(errno.EINVAL, "it is not a regular file")
+        chunks = []
+        while True:
+            chunk = os.read(fd, 1 << 20)
+            if not chunk:
+                return b"".join(chunks)
+            chunks.append(chunk)
+    finally:
+        os.close(fd)
+
+
+def read_list(root, relative):
+    """One list file of a tree, read as read_regular reads it; Refused, quoting no content,
+    when it is absent, unreadable or not a regular file."""
+    try:
+        return read_regular(os.path.join(str(root), relative))
+    except OSError as exc:
+        raise lists.Refused(f"cannot read {relative} ({lists.os_reason(exc)})") from exc
 
 
 def walk_tree(root):
@@ -412,7 +481,7 @@ class Tree:
         self.unreadable = set()
         for rel in sorted(self.files):
             try:
-                self.data[rel] = (self.root / rel).read_bytes()
+                self.data[rel] = read_regular(self.root / rel)
             except OSError as exc:
                 self.unreadable.add(rel)
                 self.findings.append(f"{rel}: cannot be read ({lists.os_reason(exc)}); an "
@@ -565,7 +634,10 @@ def zip_gaps(data, archive):
     """[(start, end)] for the byte spans of an open archive's raw data that no member entry
     (its local header, compressed data and data descriptor), central directory record, zip64
     end record, end record or archive comment explains, worked out from the central
-    directory's offsets and sizes. ValueError for a layout this parser cannot account for,
+    directory's offsets and sizes. A data descriptor's size fields are 8 bytes each when the
+    member's local header carries a zip64 extra field, else 4, and the descriptor must hold
+    the central directory's CRC and sizes, so it can hide nothing. ValueError for a layout
+    this parser cannot account for,
     which refuses the archive."""
     spans = []
     for info in archive.infolist():
@@ -578,7 +650,21 @@ def zip_gaps(data, archive):
         if info.flag_bits & 0x08:
             if data[end:end + 4] == b"PK\x07\x08":
                 end += 4
-            end += 12 if max(info.compress_size, info.file_size) < 0xFFFFFFFF else 20
+            extra = data[start + 30 + name_len:start + 30 + name_len + extra_len]
+            zip64, cursor = False, 0
+            while cursor + 4 <= len(extra):
+                if int.from_bytes(extra[cursor:cursor + 2], "little") == 0x0001:
+                    zip64 = True
+                cursor += 4 + int.from_bytes(extra[cursor + 2:cursor + 4], "little")
+            width = 8 if zip64 else 4
+            bound = (1 << (8 * width)) - 1
+            wanted = ((info.CRC & 0xFFFFFFFF).to_bytes(4, "little")
+                      + (info.compress_size & bound).to_bytes(width, "little")
+                      + (info.file_size & bound).to_bytes(width, "little"))
+            if data[end:end + len(wanted)] != wanted:
+                raise ValueError("a data descriptor does not hold the central directory's "
+                                 "crc and sizes")
+            end += 4 + 2 * width
         if end > len(data):
             raise ValueError("a member runs past the end of the archive")
         spans.append((start, end))
@@ -656,21 +742,21 @@ class Gate:
         self.term_bytes = []
         lists_root = self.input_dir if self.full else self.staged.root
         self.publish, parse1 = lists.parse_paths(
-            lists.read_repo_file(lists_root, lists.ALLOWLIST), lists.ALLOWLIST,
+            read_list(lists_root, lists.ALLOWLIST), lists.ALLOWLIST,
             lists.PUBLISH_KINDS)
         self.findings["G1"] += parse1
         self.deny = None
         if self.full:
             self.deny, parse2 = lists.parse_paths(
-                lists.read_repo_file(lists_root, lists.PRIVATE_PATHS), lists.PRIVATE_PATHS,
+                read_list(lists_root, lists.PRIVATE_PATHS), lists.PRIVATE_PATHS,
                 ("deny",))
             self.findings["G1"] += parse2
         self.markers, parse3 = lists.parse_markers(
-            lists.read_repo_file(lists_root, lists.PUBLIC_MARKERS), lists.PUBLIC_MARKERS,
+            read_list(lists_root, lists.PUBLIC_MARKERS), lists.PUBLIC_MARKERS,
             allow_empty=False)
         self.findings["G3"] += parse3
         self.rows, parse4 = lists.parse_exceptions(
-            lists.read_repo_file(lists_root, lists.PUBLIC_EXCEPTIONS), lists.PUBLIC_EXCEPTIONS,
+            read_list(lists_root, lists.PUBLIC_EXCEPTIONS), lists.PUBLIC_EXCEPTIONS,
             {marker.ident for marker in self.markers})
         self.findings["G3"] += parse4
         if self.full:
@@ -971,6 +1057,15 @@ class Gate:
         if self.full:
             prefixes = {commit[:12] for commit in read_commits(self.history)}
             self.commit_prefixes = prefixes
+            for rel in sorted(self.staged.files) + sorted(self.staged.dirs):
+                lengths = hex_hits(rel, prefixes)
+                if lengths:
+                    shown = HEX_RUN.sub(MASK, folded(rel) or rel)
+                    for length in lengths:
+                        self.findings["G5"].append(
+                            f"{shown}: the path's name holds a run of {length} hexadecimal "
+                            f"characters that names or holds a commit of the private "
+                            f"repository")
             for rel in sorted(self.staged.data):
                 text = self.staged.text(rel)
                 if text is None:
@@ -991,12 +1086,11 @@ class Gate:
             kind = "fresh render" if entries[0].kind == "render" else "input tree"
             path = source / rel
             try:
-                if path.is_symlink():
-                    raise OSError("it is a symbolic link")
-                expected = path.read_bytes()
+                expected = read_regular(path)
             except OSError:
-                self.findings["G6"].append(f"{rel}: the {kind} has no readable file to compare "
-                                           f"against; unverifiable drift refuses the export")
+                self.findings["G6"].append(f"{rel}: the {kind} has no readable regular file "
+                                           f"to compare against; unverifiable drift refuses "
+                                           f"the export")
                 continue
             if expected != self.staged.data[rel]:
                 self.findings["G6"].append(f"{rel}: does not equal the {kind}")
@@ -1074,7 +1168,7 @@ class Gate:
                                                f"input tree's .baseline/pin.toml")
         for rel in sorted(self.staged.data):
             data = self.staged.data[rel]
-            if rel.lower().endswith(".zip"):
+            if rel.lower().endswith(".zip") or is_zip_content(data):
                 self.scan_zip(rel, data)
                 continue
             kind = compressed_kind(rel, data)
@@ -1091,8 +1185,8 @@ class Gate:
                                        "TOML, so the pin cannot be checked")
             return None
         try:
-            pin = tomllib.loads((self.input_dir / ".baseline" / "pin.toml")
-                                .read_text(encoding="utf-8"))
+            pin = tomllib.loads(read_regular(self.input_dir / ".baseline" / "pin.toml")
+                                .decode("utf-8"))
             table = pin["files"]
             return {key: str(value) for key, value in table.items()}
         except (OSError, UnicodeError, KeyError, TypeError, tomllib.TOMLDecodeError):
@@ -1167,10 +1261,12 @@ class Gate:
     def scan_zip(self, rel, data, depth=ZIP_DEPTH, budget=None):
         """Scan one staged archive. Every byte span its central directory does not explain
         is scanned as bytes and refuses the archive. Every member name is scanned, as
-        written and folded, for terms and private markers. Every member, read by its central
+        written and folded, for terms, private markers and commit ids. Every member, read by
+        its central
         directory entry so a duplicated name hides nothing, is scanned as G4 scans a file, a
         text member also with the marker, link and commit scans a staged text file gets, and
-        a nested zip the same way, at most ZIP_DEPTH archive levels below the staged archive
+        a member whose name or content identifies a zip the same way, at most ZIP_DEPTH
+        archive levels below the staged archive
         and ZIP_LIMIT inflated bytes in all. A member identified as other compressed content
         refuses, and so does an archive this gate cannot scan to the end, past either bound
         or on any error."""
@@ -1216,7 +1312,13 @@ class Gate:
                             self.findings["G4"].append(
                                 f"{self.mask(rel)}!: a member name holds a hit of private "
                                 f"marker {marker.line} of {lists.PRIVATE_MARKERS}")
-                    if zipfile.is_zipfile(io.BytesIO(member)):
+                    if self.commit_prefixes is not None:
+                        for length in hex_hits(name, self.commit_prefixes):
+                            self.findings["G5"].append(
+                                f"{self.mask(rel)}!: a member name holds a run of {length} "
+                                f"hexadecimal characters that names or holds a commit of "
+                                f"the private repository")
+                    if name.lower().endswith(".zip") or is_zip_content(member):
                         if depth == 0:
                             raise ValueError("archives nest past the depth limit")
                         self.scan_zip(f"{rel}!{name}", member, depth - 1, budget)

@@ -29,6 +29,14 @@ and in a zip member's name; gzip content staged or inside a zip; archives nested
 depth bound; a mismatched baseline pin. An unreadable staged file (a FIFO stands in when the
 suite runs as root, which chmod 0 cannot stop), a scanner that raises, and a verdicts path
 inside the staged tree. A private directory with mode 0755, and one inside the input tree.
+The round-3 review's gaps: the term in a zip staged under a non-.zip admitted name, gzip at
+a nonzero byte offset of a binary and inside an uncompressed tar, a fullwidth term in a zip
+member name, a term and a commit id interleaved with combining marks, a commit id as a
+staged file name and as a zip member name, and a member named .zip that no zip reader can
+open. A FIFO at a compared input path, as the baseline
+pin and as a list file, each run as a gate subprocess under a timeout, so a regression that
+hangs fails instead of blocking the suite. A streamed zip64 archive, whose data descriptors
+carry 8-byte sizes, passes clean.
 
 Clean full and public-only runs pass, as does a
 pinned site/assets/baseline/ font; a zip member name with a control character is escaped in
@@ -37,8 +45,9 @@ and G8; a verdicts file is written once, never overwritten, and lists every stag
 its size and SHA-256. No output of any case may hold the synthetic term or the planted commit
 prefix.
 
-Nothing here reads the network. The only subprocess is git, on the throwaway fixture
-repositories. Exit 0 ok, 1 on a finding.
+Nothing here reads the network. The only subprocesses are git, on the throwaway fixture
+repositories, and the gate itself, for the FIFO cases that must be able to time out. Exit 0
+ok, 1 on a finding.
 """
 import contextlib
 import hashlib
@@ -48,6 +57,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 import warnings
 import zipfile
@@ -249,6 +259,45 @@ def run(argv):
     with contextlib.redirect_stdout(out):
         code = export_gate.main(argv)
     return code, out.getvalue()
+
+
+def run_gate(argv, timeout=60):
+    """Run the gate as its own process, so a regression that hangs on a special file fails
+    by timeout instead of blocking the suite."""
+    command = [sys.executable, "-I", "-B", str(TOOLS / "export_gate.py"), *argv]
+    try:
+        done = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return None, "the gate did not finish before the timeout"
+    return done.returncode, done.stdout + done.stderr
+
+
+def streamed_zip64(payload):
+    """A zip written to an unseekable stream with force_zip64, so every member carries a
+    data descriptor with 8-byte sizes, as streaming writers produce."""
+    collected = io.BytesIO()
+
+    class Stream(io.RawIOBase):
+        def writable(self):
+            return True
+
+        def write(self, blob):
+            return collected.write(blob)
+
+    with zipfile.ZipFile(Stream(), "w", zipfile.ZIP_DEFLATED) as archive:
+        with archive.open("notes.txt", mode="w", force_zip64=True) as handle:
+            handle.write(payload)
+    return collected.getvalue()
+
+
+def tar_bytes(name, payload):
+    """One uncompressed tar holding one member."""
+    collected = io.BytesIO()
+    with tarfile.open(fileobj=collected, mode="w") as archive:
+        info = tarfile.TarInfo(name)
+        info.size = len(payload)
+        archive.addfile(info, io.BytesIO(payload))
+    return collected.getvalue()
 
 
 def main():
@@ -682,6 +731,90 @@ def main():
                      "--history", history])
     case("a private directory inside the input tree", code, out, 2,
          "inside the staged or input tree", absent=(str(inside),))
+
+    # The round-3 review's gaps, each expected to refuse, and its false refusal, now passing.
+    fixture = Fixture(base, history)
+    fixture.both("images/evil.png", zip_bytes([("notes.txt", f"has {TERM} inside")]))
+    code, out = run(fixture.args())
+    case("a zip staged under a non-.zip admitted name", code, out, 1, "holds term")
+
+    fixture = Fixture(base, history)
+    fixture.both("assets/offset.bin", b"\x00\x01\x02\x03\x1f\x8b\x08\x00" + bytes(12))
+    code, out = run(fixture.args())
+    case("gzip at a nonzero offset of a binary", code, out, 1,
+         "gzip content this gate cannot scan inside")
+
+    fixture = Fixture(base, history)
+    fixture.both("assets/box.bin", tar_bytes("inner.gz", b"\x1f\x8b\x08\x00" + bytes(8)))
+    code, out = run(fixture.args())
+    case("gzip inside an uncompressed tar", code, out, 1,
+         "gzip content this gate cannot scan inside")
+
+    fixture = Fixture(base, history)
+    (fixture.input / "README.md").unlink()
+    os.mkfifo(fixture.input / "README.md")
+    code, out = run_gate(fixture.args())
+    case("a FIFO at a compared input path", code, out, 1, "no readable regular file")
+
+    fixture = Fixture(base, history)
+    fixture.pin_baseline("site/assets/baseline/brand.woff2", b"wOF2\x00synthetic-font")
+    pin = fixture.input / ".baseline" / "pin.toml"
+    pin.unlink()
+    os.mkfifo(pin)
+    code, out = run_gate(fixture.args())
+    case("a FIFO as the baseline pin", code, out, 1, "pin cannot be read")
+
+    fixture = Fixture(base, history)
+    allowlist_path = fixture.input / "export" / "public-allowlist.txt"
+    allowlist_path.unlink()
+    os.mkfifo(allowlist_path)
+    code, out = run_gate(fixture.args())
+    case("a FIFO as a list file", code, out, 2, "cannot read export/public-allowlist.txt")
+
+    fixture = Fixture(base, history)
+    fixture.stage_zip(streamed_zip64(b"plain streamed content"))
+    code, out = run(fixture.args())
+    case("a streamed zip64 archive", code, out, 0, "the export may proceed")
+
+    fixture = Fixture(base, history)
+    wide_name = "".join(chr(ord(ch) + 0xFEE0) for ch in TERM) + ".txt"
+    fixture.stage_zip(zip_bytes([(wide_name, "plain")]))
+    code, out = run(fixture.args())
+    case("a fullwidth term in a member name", code, out, 1, "a member name holds term",
+         absent=(wide_name,))
+
+    fixture = Fixture(base, history)
+    marked = "̵".join(TERM)
+    fixture.append_guide(f"the name {marked} appears\n")
+    code, out = run(fixture.args())
+    case("a term interleaved with combining marks", code, out, 1, "holds term",
+         absent=(marked,))
+
+    fixture = Fixture(base, history)
+    marked_commit = "̵".join(commit[:12])
+    fixture.append_guide(f"an id {marked_commit} planted\n")
+    code, out = run(fixture.args())
+    case("a commit id interleaved with combining marks", code, out, 1,
+         "hexadecimal characters that names or holds a commit", absent=(marked_commit,))
+
+    fixture = Fixture(base, history)
+    fixture.both(f"notes/{commit[:12]}.md", b"plain\n")
+    code, out = run(fixture.args())
+    case("a commit id as a staged file name", code, out, 1,
+         "the path's name holds a run of 12 hexadecimal")
+
+    fixture = Fixture(base, history)
+    fixture.stage_zip(zip_bytes([(f"{commit[:12]}.txt", "plain")]))
+    code, out = run(fixture.args())
+    case("a commit id as a zip member name", code, out, 1,
+         "a member name holds a run of 12 hexadecimal")
+
+    fixture = Fixture(base, history)
+    packer = zlib.compressobj(wbits=-15)  # raw deflate: not a zip, whatever the name says
+    fixture.stage_zip(zip_bytes(
+        [("inner.zip", packer.compress(f"hide {TERM} now".encode()) + packer.flush())]))
+    code, out = run(fixture.args())
+    case("a member named .zip that is not a zip", code, out, 1, "cannot scan to the end")
 
     shutil.rmtree(base, ignore_errors=True)
     if failures:
