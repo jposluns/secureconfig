@@ -21,32 +21,39 @@ THE CHECKS. Every one fails closed.
                    there only 0644 passes.
   G3 publishable   A hit of export/public-markers.txt in a staged text file refuses, outside
      markers       the exact rows of export/public-exceptions.tsv; a stale row refuses too.
-                   Each line is scanned as written and in an NFKC-normalized copy.
+                   Each line is scanned as written and in a folded copy: NFKC-normalized with
+                   every Unicode format character (category Cf, such as U+200B) removed.
   G4 protected     Full mode only. A hit of a protected term or a private marker in a staged
      terms and     path name or in file contents refuses, outside the exact rows of the private
-     private       exceptions list. Text is scanned as UTF-8 lines, each also in an
-     markers       NFKC-normalized copy. A binary file's raw bytes are searched for each term's
-                   UTF-8, UTF-16LE and UTF-16BE encodings at any byte offset (case variants per
-                   character, no word boundary, so the byte search is broader than the text
-                   scan). Its decoded UTF-8, UTF-16LE and UTF-16BE readings, each UTF-16 one at
-                   both byte alignments, are scanned for the private markers and, after NFKC
-                   normalization, for the terms. The tEXt, zTXt and iTXt chunks of a PNG are
+     private       exceptions list. Text is scanned as UTF-8 lines, each also in the folded
+     markers       copy G3 above describes. A binary file's raw bytes are searched for each
+                   term's UTF-8, UTF-16LE and UTF-16BE encodings at any byte offset (case
+                   variants per character, no word boundary, so the byte search is broader than
+                   the text scan). Its decoded UTF-8, UTF-16LE and UTF-16BE readings, each
+                   UTF-16 one at both byte alignments, are scanned for the private markers and,
+                   folded, for the terms. The tEXt, zTXt and iTXt chunks of a PNG are
                    decoded and scanned, and its image data is inflated and scanned as bytes.
                    Any zlib stream the gate identifies (by its two header bytes and a
                    successful inflate) is inflated and scanned the same way, nested at most two
-                   levels down. No finding prints a term, a private marker or a private-list
+                   levels down; an identified stream or PNG image data nested deeper refuses
+                   rather than crossing unscanned, as a too-deep archive does.
+                   No finding prints a term, a private marker or a private-list
                    line: it names the list and the entry's line number, a printed path is
                    masked where it matches, and a control character in any printed name is
                    escaped, so a crafted name cannot forge an output line.
   G5 private       (a) Every relative Markdown link, every root-relative link in a staged site
      references    page and every github.com/<owner>/secureconfig blob, raw or tree link on
                    main must name a staged path. (b) Any github.com/<owner>/secureconfig link
-                   to pull, commit, compare or actions refuses. (c) Full mode only: a run of 12
-                   or more hexadecimal characters in a text file that names, or holds at any
-                   offset, the first 12 characters of a commit id of the private repository
-                   (git rev-list --all, read privately) refuses; the finding never prints the
-                   characters. The gate refuses a --history directory that is not the top
-                   level of its own repository (it never walks up into an enclosing checkout)
+                   to pull, commit, commits, compare or actions refuses. (c) Full mode only: a
+                   run of 12 or more hexadecimal characters in a text file that names, or holds
+                   at any offset, the first 12 characters of a commit id of the private
+                   repository (git rev-list --all, read privately) refuses; the finding never
+                   prints the characters. The repository-link, history-link, site-link and
+                   hexadecimal scans read each line as written and in its folded copy; the
+                   relative Markdown targets are read as written (see DISCLOSED LIMITS). The
+                   gate refuses a --history directory that is not the top level of its own
+                   repository (it never walks up into an enclosing checkout), a shallow clone
+                   and a partial (promisor-remote) clone, whose commit lists can be incomplete,
                    and a history that lists no commits.
   G6 drift         Full mode only. Each staged file a render line matches must equal the
                    independent fresh render the caller supplies with --fresh; each staged file
@@ -60,11 +67,19 @@ THE CHECKS. Every one fails closed.
                    site/_redirects is a 302 to a staged versioned archive.
   G8 binaries      Full mode only. Every staged file under site/assets/baseline/ hashes to its
                    entry in the input tree's .baseline/pin.toml. Every member of a staged zip
-                   archive is scanned as G4 scans a file (though the exact exceptions never
-                   apply inside an archive), member names are scanned for terms
-                   and private markers, and a member that is itself a zip is scanned the same
+                   archive, read by its central directory entry so a duplicated member name
+                   hides nothing, is scanned as G4 scans a file (though the exact exceptions
+                   never apply inside an archive), and member names are scanned, as written
+                   and folded, for terms and private markers. A text member also gets the
+                   publishable-marker scan (no exception applies inside an archive), the
+                   history, repository and commit scans, and, when it is Markdown or HTML, the
+                   link-target checks, resolved against the archive's own members. A member
+                   that is itself a zip is scanned the same
                    way, at most two archive levels below a staged archive and at most ZIP_LIMIT
-                   inflated bytes in all; past either bound the archive refuses. Any other
+                   inflated bytes in all; past either bound the archive refuses. Every byte of
+                   a staged archive must be explained by a member entry, the central directory,
+                   an end record or the archive comment: an unexplained span is scanned as G4
+                   scans bytes and refuses the archive. Any other
                    staged file or archive member the gate identifies as compressed content it
                    cannot scan inside (gzip, compress, bzip2, xz, zstandard, lzip, lzma,
                    brotli, 7z, rar, or a .woff or .woff2 font, by name suffix or, for a
@@ -82,13 +97,16 @@ TWO MODES.
   Public-only      --staged DIR --public-only. Runs G1 (without the private paths, which the
                    public tree does not carry), G2, G3, G5a, G5b and G7, reading the public
                    lists from the staged tree itself, so a public check needs no private input.
-                   It never approves an export, whatever it finds.
+                   It takes no --input, --fresh, --private-dir or --history, and it never
+                   approves an export, whatever it finds.
 
 WHAT THE SCANS READ. A staged file is text when it holds no NUL byte and decodes as UTF-8;
-every other file is a binary. The marker, link and hexadecimal scans read text files; binaries
+every other file is a binary. The marker, link and hexadecimal scans read text files, each
+line as written and, except for the relative Markdown targets, in its folded copy. Binaries
 are scanned for terms and private markers as G4 above says, through their PNG text chunks and
 inflated image data, through any zlib stream the gate identifies, and through their zip
-members. The Markdown link scan is this tool's own line scanner over the same inline,
+members, whose text members also get the marker, link and commit scans. The Markdown link
+scan is this tool's own line scanner over the same inline,
 definition, code-span and fence shapes scripts/build-llms-full.sh rewrites; it is not the
 pinned CommonMark parser, which is not in the standard library, so a link form only that
 parser sees is caught at build time, not here.
@@ -96,10 +114,20 @@ parser sees is caught at build time, not here.
 DISCLOSED LIMITS. A root-relative url(...) in a staged CSS file is not scanned here; the
 build's scripts/build-llms-full.sh scans CSS links at build time. The blob, raw and tree link
 rule is pinned to main, so such a link naming another branch is not matched here, while a
-commit-pinned link falls to G5c. The hexadecimal scan reads text files only. The zlib
+commit-pinned link falls to G5c. The hexadecimal scan reads text files and archive text
+members only. The relative Markdown targets are read from each line as written, not from its
+folded copy: a link whose brackets need normalization is not a link to any renderer, and a
+target spelled in such characters matches no staged path, so the raw scan already refuses it.
+The history-link rule matches pull, commit, commits, compare and actions; an issues or
+releases link is not matched, since the public repository may legitimately name its own. A
+term inside a longer word is found in a binary's bytes but not in a text line or a path name,
+which keep the word boundary export/FORMAT.md sets for terms. A latest redirect may name only
+a 1.0-series versioned archive; a later series refuses until the pattern here is widened,
+which fails closed. The zlib
 identification needs the two header bytes, so a raw deflate stream with no header, and a
 compressed format this gate does not know, are not found, which is why identified compressed
-content the gate cannot read refuses. Inflated image bytes are searched for encoded terms
+content the gate cannot read refuses, and why a staged archive's unexplained byte spans
+refuse. Inflated image bytes are searched for encoded terms
 only: a term shown as drawn glyphs in the pixels is a picture, not text, and no byte scan can
 read it.
 
@@ -170,10 +198,11 @@ TICKS = re.compile(r"`+")
 REPO_LINK = re.compile(
     r"(?i)\bhttps?://(?:www\.)?github\.com/[A-Za-z0-9-]+/secureconfig/(blob|raw|tree)/main/"
     r"([A-Za-z0-9._+@%/-]*)")
-HISTORY_LINK = re.compile(r"(?i)github\.com/[A-Za-z0-9-]+/secureconfig/(?:pull|commit|compare|actions)(?:/|\b)")
+HISTORY_LINK = re.compile(r"(?i)github\.com/[A-Za-z0-9-]+/secureconfig/(?:pull|commits?|compare|actions)(?:/|\b)")
 SITE_URL = re.compile(r"""(?i)\b(?:href|src)\s*=\s*["'](/[^"'#?]*)""")
 HEX_RUN = re.compile(r"[0-9a-fA-F]{12,}")
-# A versioned archive name, the only target a latest redirect may name.
+# A versioned archive name, the only target a latest redirect may name; pinned to the 1.0
+# series, so a redirect to a later series refuses until this is widened, which fails closed.
 ARCHIVE_NAME = re.compile(r"secureconfig(?:-plugin)?-1\.0\.[1-9][0-9]*\.zip")
 
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
@@ -236,10 +265,26 @@ def text_lines(text):
 
 
 def folded(text):
-    """The NFKC-normalized copy of text when it differs, else None, so each scan can read a
-    normalized spelling of a term or marker without scanning unchanged text twice."""
-    normalized = unicodedata.normalize("NFKC", text)
+    """The folded copy of text when it differs, else None, so each scan can read a spelling
+    that normalization or invisible characters would hide, without scanning unchanged text
+    twice. Folding removes every Unicode format character (category Cf, such as U+200B) and
+    NFKC-normalizes what remains."""
+    normalized = unicodedata.normalize(
+        "NFKC", "".join(ch for ch in text if unicodedata.category(ch) != "Cf"))
     return normalized if normalized != text else None
+
+
+def hex_hits(line, prefixes):
+    """The lengths of the hexadecimal runs of 12 or more characters in the line, read as
+    written and folded, that name or hold one of the commit prefixes, each length once."""
+    fold = folded(line)
+    lengths = set()
+    for copy in (line,) if fold is None else (line, fold):
+        for match in HEX_RUN.finditer(copy):
+            run = match.group(0).lower()
+            if any(run[i:i + 12] in prefixes for i in range(len(run) - 11)):
+                lengths.add(len(run))
+    return sorted(lengths)
 
 
 def printable(text):
@@ -415,8 +460,10 @@ def markdown_targets(text):
 def read_commits(history):
     """Every commit id of the private repository, lowercased. Refused when git cannot read
     the history, when the history directory is not the top level of its own repository (this
-    gate never walks up into an enclosing checkout), or when it lists no commits, since each
-    leaves G5 unable to answer. No message prints the path."""
+    gate never walks up into an enclosing checkout), or when it lists no commits. A shallow
+    clone and a partial (promisor-remote) clone are refused too, since their commit lists
+    can be incomplete. Each refusal leaves G5 unable to answer, and no message prints the
+    path."""
     try:
         top = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=history, check=True,
                              capture_output=True, timeout=120)
@@ -427,6 +474,28 @@ def read_commits(history):
     if not toplevel or os.path.realpath(toplevel) != os.path.realpath(history):
         raise lists.Refused("the --history directory is not the top level of its own "
                             "repository; this gate does not read an enclosing checkout")
+    try:
+        shallow = subprocess.run(["git", "rev-parse", "--is-shallow-repository"], cwd=history,
+                                 check=True, capture_output=True, timeout=120)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise lists.Refused("git cannot say whether the history is shallow "
+                            f"({type(exc).__name__})") from exc
+    if shallow.stdout.decode("ascii", "replace").strip() != "false":
+        raise lists.Refused("the history is a shallow clone, whose commit list is incomplete; "
+                            "a partial history cannot answer the commit check")
+    try:
+        promisor = subprocess.run(
+            ["git", "config", "--get-regexp",
+             r"^(remote\..*\.(promisor|partialclonefilter)|extensions\.partialclone)$"],
+            cwd=history, capture_output=True, timeout=120)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise lists.Refused("git cannot read the history's clone configuration "
+                            f"({type(exc).__name__})") from exc
+    if promisor.returncode != 1:
+        raise lists.Refused("the history is a partial clone (a promisor remote or partial-"
+                            "clone filter is configured), or its configuration cannot be "
+                            "read; a history that may be missing objects cannot answer the "
+                            "commit check")
     try:
         result = subprocess.run(["git", "rev-list", "--all"], cwd=history, check=True,
                                 capture_output=True, timeout=120)
@@ -492,6 +561,55 @@ def decompress(data):
     return out
 
 
+def zip_gaps(data, archive):
+    """[(start, end)] for the byte spans of an open archive's raw data that no member entry
+    (its local header, compressed data and data descriptor), central directory record, zip64
+    end record, end record or archive comment explains, worked out from the central
+    directory's offsets and sizes. ValueError for a layout this parser cannot account for,
+    which refuses the archive."""
+    spans = []
+    for info in archive.infolist():
+        start = info.header_offset
+        if data[start:start + 4] != b"PK\x03\x04" or start + 30 > len(data):
+            raise ValueError("a member is not where the central directory says")
+        name_len = int.from_bytes(data[start + 26:start + 28], "little")
+        extra_len = int.from_bytes(data[start + 28:start + 30], "little")
+        end = start + 30 + name_len + extra_len + info.compress_size
+        if info.flag_bits & 0x08:
+            if data[end:end + 4] == b"PK\x07\x08":
+                end += 4
+            end += 12 if max(info.compress_size, info.file_size) < 0xFFFFFFFF else 20
+        if end > len(data):
+            raise ValueError("a member runs past the end of the archive")
+        spans.append((start, end))
+    pos = archive.start_dir
+    for _ in archive.infolist():
+        if data[pos:pos + 4] != b"PK\x01\x02":
+            raise ValueError("a central directory record is not where its offset says")
+        name_len = int.from_bytes(data[pos + 28:pos + 30], "little")
+        extra_len = int.from_bytes(data[pos + 30:pos + 32], "little")
+        comment_len = int.from_bytes(data[pos + 32:pos + 34], "little")
+        pos += 46 + name_len + extra_len + comment_len
+    if data[pos:pos + 4] == b"PK\x06\x06":
+        pos += 12 + int.from_bytes(data[pos + 4:pos + 12], "little")
+        if data[pos:pos + 4] != b"PK\x06\x07":
+            raise ValueError("a zip64 end record has no locator")
+        pos += 20
+    if data[pos:pos + 4] != b"PK\x05\x06":
+        raise ValueError("the end record does not follow the central directory")
+    comment_len = int.from_bytes(data[pos + 20:pos + 22], "little")
+    spans.append((archive.start_dir, min(pos + 22 + comment_len, len(data))))
+    spans.sort()
+    gaps, covered = [], 0
+    for start, end in spans:
+        if start > covered:
+            gaps.append((covered, start))
+        covered = max(covered, end)
+    if covered < len(data):
+        gaps.append((covered, len(data)))
+    return gaps
+
+
 def verify_rows(rows, pattern_of, tree, name, show):
     """({(path, line number, casefolded REF)} for the rows whose line still matches, [findings
     for the stale rows]). A row names its file in the staged tree; with show false no finding
@@ -527,9 +645,11 @@ class Gate:
     def __init__(self, staged, input_dir=None, fresh=None, private=None, history=None):
         self.full = input_dir is not None
         self.staged = Tree(staged)
+        self.staged_dirs = set(self.staged.dirs)
         self.input_dir = Path(input_dir) if input_dir else None
         self.fresh = Path(fresh) if fresh else None
         self.history = history
+        self.commit_prefixes = None
         self.findings = {check: [] for check, _ in CHECKS}
         self.ran = set()
         self.terms, self.private_markers, self.private_rows = [], [], []
@@ -728,9 +848,10 @@ class Gate:
 
     def scan_bytes(self, place, data, depth):
         """Scan one blob of bytes: each term's encoded bytes at any offset, the decoded
-        readings (both UTF-16 alignments) for private markers and NFKC term variants, a PNG's
-        text chunks and inflated image data, and every identified zlib stream, following
-        inflated content at most depth more levels down."""
+        readings (both UTF-16 alignments) for private markers and folded term variants, a
+        PNG's text chunks and inflated image data, and every identified zlib stream, following
+        inflated content at most depth more levels down; image data or an identified stream
+        past that depth refuses rather than crossing unscanned."""
         masked = self.mask(place)
         for term, patterns in self.term_bytes:
             for encoding, pattern in patterns:
@@ -774,26 +895,35 @@ class Gate:
                 return
             for chunk in texts:
                 self.scan_private_text("chunk", place, chunk, set())
-            if image and depth:
-                self.scan_bytes(place, image, depth - 1)
-        if depth:
-            try:
-                streams = zlib_streams(data)
-            except ValueError:
-                self.findings["G4"].append(f"{masked}: holds compressed streams this gate "
-                                           f"cannot inflate within its bounds; an unscanned "
-                                           f"file refuses")
-                return
-            for stream in streams:
-                self.scan_bytes(place, stream, depth - 1)
+            if image:
+                if depth:
+                    self.scan_bytes(place, image, depth - 1)
+                else:
+                    self.findings["G4"].append(f"{masked}: holds PNG image data nested past "
+                                               f"the depth this gate follows; an unscanned "
+                                               f"stream refuses")
+        try:
+            streams = zlib_streams(data)
+        except ValueError:
+            self.findings["G4"].append(f"{masked}: holds compressed streams this gate "
+                                       f"cannot inflate within its bounds; an unscanned "
+                                       f"file refuses")
+            return
+        if streams and not depth:
+            self.findings["G4"].append(f"{masked}: holds an identified compressed stream "
+                                       f"nested past the depth this gate follows; an "
+                                       f"unscanned stream refuses")
+            return
+        for stream in streams:
+            self.scan_bytes(place, stream, depth - 1)
+
+    def staged_path(self, path, want_dir):
+        """Whether path names a staged file or directory (a directory alone with want_dir)."""
+        if want_dir:
+            return path in self.staged_dirs
+        return path in self.staged.files or path in self.staged_dirs
 
     def g5(self):
-        files, dirs = self.staged.files, set(self.staged.dirs)
-
-        def staged_path(path, want_dir):
-            if want_dir:
-                return path in dirs
-            return path in files or path in dirs
         for rel in sorted(self.staged.data):
             text = self.staged.text(rel)
             if text is None:
@@ -809,45 +939,48 @@ class Gate:
                     if path.startswith("/") or joined == ".." or joined.startswith("../"):
                         self.findings["G5"].append(f"{rel}:{number}: the link {target!r} "
                                                    f"leaves the staged tree")
-                    elif not staged_path(joined, path.endswith("/")):
+                    elif not self.staged_path(joined, path.endswith("/")):
                         self.findings["G5"].append(f"{rel}:{number}: the link {target!r} "
                                                    f"names no staged path")
             for number, line in text_lines(text):
-                for match in REPO_LINK.finditer(line):
-                    route, raw = match.group(1).lower(), unquote(match.group(2))
+                fold = folded(line)
+                copies = (line,) if fold is None else (line, fold)
+                targets = {(match.group(1).lower(), unquote(match.group(2)))
+                           for copy in copies for match in REPO_LINK.finditer(copy)}
+                for route, raw in sorted(targets):
                     path = raw.rstrip("/")
                     bad = not path or ".." in path.split("/")
-                    if bad or not staged_path(path, route == "tree"):
+                    if bad or not self.staged_path(path, route == "tree"):
                         self.findings["G5"].append(
                             f"{rel}:{number}: a {route}/main link into this project names no "
                             f"staged {'directory' if route == 'tree' else 'file'}")
-                if HISTORY_LINK.search(line):
+                if any(HISTORY_LINK.search(copy) for copy in copies):
                     self.findings["G5"].append(f"{rel}:{number}: holds a link into the "
-                                               f"development history (pull, commit, compare "
-                                               f"or actions)")
+                                               f"development history (pull, commit, commits, "
+                                               f"compare or actions)")
                 if rel.startswith("site/") and rel.endswith(".html"):
-                    for match in SITE_URL.finditer(line):
-                        target = match.group(1)
+                    links = {match.group(1) for copy in copies
+                             for match in SITE_URL.finditer(copy)}
+                    for target in sorted(links):
                         resolved = "site" + (target + "index.html" if target.endswith("/")
                                              else target)
-                        if resolved not in files:
+                        if resolved not in self.staged.files:
                             self.findings["G5"].append(
                                 f"{rel}:{number}: the root-relative link {target!r} names no "
                                 f"staged site path")
         if self.full:
             prefixes = {commit[:12] for commit in read_commits(self.history)}
+            self.commit_prefixes = prefixes
             for rel in sorted(self.staged.data):
                 text = self.staged.text(rel)
                 if text is None:
                     continue
                 for number, line in text_lines(text):
-                    for match in HEX_RUN.finditer(line):
-                        run = match.group(0).lower()
-                        if any(run[i:i + 12] in prefixes for i in range(len(run) - 11)):
-                            self.findings["G5"].append(
-                                f"{rel}:{number}: holds a run of {len(run)} hexadecimal "
-                                f"characters that names or holds a commit of the private "
-                                f"repository")
+                    for length in hex_hits(line, prefixes):
+                        self.findings["G5"].append(
+                            f"{rel}:{number}: holds a run of {length} hexadecimal "
+                            f"characters that names or holds a commit of the private "
+                            f"repository")
 
     def g6(self):
         for rel in sorted(self.staged.data):
@@ -967,32 +1100,119 @@ class Gate:
                                        "read, so the template files cannot be verified")
             return None
 
+    def scan_member_text(self, rel, name, text, names, folders):
+        """The content checks a staged text file gets, over one text member of a staged
+        archive: the publishable markers (G3; no exception applies inside an archive), the
+        history and repository link scans, and the commit scan (G5c). A Markdown or HTML
+        member also gets the link-target checks, resolved against the archive's own members.
+        G8 opens archives in full mode alone, so these member scans run there alone."""
+        place = self.mask(f"{rel}!{name}")
+        lowered = name.lower()
+        either = names | folders
+        if lowered.endswith(".md"):
+            for number, target in markdown_targets(text):
+                if KEEP.match(target) or not target:
+                    continue
+                path = target.partition("#")[0]
+                if not path:
+                    continue
+                joined = posixpath.normpath(posixpath.join(posixpath.dirname(name), path))
+                if path.startswith("/") or joined == ".." or joined.startswith("../"):
+                    self.findings["G5"].append(f"{place}:{number}: the link {target!r} "
+                                               f"leaves the archive")
+                elif joined not in (folders if path.endswith("/") else either):
+                    self.findings["G5"].append(f"{place}:{number}: the link {target!r} "
+                                               f"names no member of the archive")
+        if self.commit_prefixes is None:
+            self.findings["G5"].append(f"{place}: the commit scan over this member did not "
+                                       f"run because the history was refused; an unscanned "
+                                       f"member refuses")
+        html = lowered.endswith((".html", ".htm"))
+        for number, line in text_lines(text):
+            fold = folded(line)
+            copies = (line,) if fold is None else (line, fold)
+            for marker in self.markers:
+                if any(marker.regex.search(copy) for copy in copies):
+                    self.findings["G3"].append(
+                        f"{place}:{number}: holds a hit of the publishable marker "
+                        f"{marker.ident}; no exception applies inside an archive")
+            if any(HISTORY_LINK.search(copy) for copy in copies):
+                self.findings["G5"].append(f"{place}:{number}: holds a link into the "
+                                           f"development history (pull, commit, commits, "
+                                           f"compare or actions)")
+            targets = {(match.group(1).lower(), unquote(match.group(2)))
+                       for copy in copies for match in REPO_LINK.finditer(copy)}
+            for route, raw in sorted(targets):
+                path = raw.rstrip("/")
+                if (not path or ".." in path.split("/")
+                        or not self.staged_path(path, route == "tree")):
+                    self.findings["G5"].append(
+                        f"{place}:{number}: a {route}/main link into this project names no "
+                        f"staged {'directory' if route == 'tree' else 'file'}")
+            if html:
+                links = {match.group(1) for copy in copies
+                         for match in SITE_URL.finditer(copy)}
+                for target in sorted(links):
+                    resolved = target + "index.html" if target.endswith("/") else target
+                    if resolved.lstrip("/") not in names:
+                        self.findings["G5"].append(
+                            f"{place}:{number}: the root-relative link {target!r} names no "
+                            f"member of the archive")
+            if self.commit_prefixes is not None:
+                for length in hex_hits(line, self.commit_prefixes):
+                    self.findings["G5"].append(
+                        f"{place}:{number}: holds a run of {length} hexadecimal characters "
+                        f"that names or holds a commit of the private repository")
+
     def scan_zip(self, rel, data, depth=ZIP_DEPTH, budget=None):
-        """Scan one staged archive: every member name for terms and private markers, every
-        member as G4 scans a file, and every nested zip the same way, at most ZIP_DEPTH
-        archive levels below the staged archive and ZIP_LIMIT inflated bytes in all. A member
-        identified as other compressed content refuses, and so does an archive this gate
-        cannot scan to the end, past either bound or on any error."""
+        """Scan one staged archive. Every byte span its central directory does not explain
+        is scanned as bytes and refuses the archive. Every member name is scanned, as
+        written and folded, for terms and private markers. Every member, read by its central
+        directory entry so a duplicated name hides nothing, is scanned as G4 scans a file, a
+        text member also with the marker, link and commit scans a staged text file gets, and
+        a nested zip the same way, at most ZIP_DEPTH archive levels below the staged archive
+        and ZIP_LIMIT inflated bytes in all. A member identified as other compressed content
+        refuses, and so does an archive this gate cannot scan to the end, past either bound
+        or on any error."""
         if budget is None:
             budget = [ZIP_LIMIT]
         try:
             with zipfile.ZipFile(io.BytesIO(data)) as archive:
-                for info in archive.infolist():
+                infos = archive.infolist()
+                names, folders = set(), set()
+                for info in infos:
+                    segments = info.filename.rstrip("/").split("/")
+                    if info.filename.endswith("/"):
+                        folders.add("/".join(segments))
+                    else:
+                        names.add(info.filename)
+                    for index in range(1, len(segments)):
+                        folders.add("/".join(segments[:index]))
+                for start, end in zip_gaps(data, archive):
+                    self.scan_bytes(f"{rel}!(unattributed bytes)", data[start:end],
+                                    STREAM_DEPTH)
+                    self.findings["G8"].append(
+                        f"{self.mask(rel)}: holds {end - start} bytes at offset {start} that "
+                        f"no member, directory record or archive comment explains; bytes the "
+                        f"gate cannot attribute refuse the export")
+                for info in infos:
                     budget[0] -= max(info.file_size, 0)
                     if budget[0] < 0:
                         raise ValueError("the archive inflates past the limit")
-                    member = archive.read(info.filename)
+                    member = archive.read(info)
                     budget[0] -= max(len(member) - info.file_size, 0)
                     if budget[0] < 0:
                         raise ValueError("the archive inflates past the limit")
                     name = info.filename
+                    name_fold = folded(name)
+                    name_copies = (name,) if name_fold is None else (name, name_fold)
                     for term in self.terms:
-                        if term.regex.search(name):
+                        if any(term.regex.search(copy) for copy in name_copies):
                             self.findings["G4"].append(
                                 f"{self.mask(rel)}!: a member name holds term {term.line} of "
                                 f"{lists.TERMS}")
                     for marker in self.private_markers:
-                        if marker.regex.search(name):
+                        if any(marker.regex.search(copy) for copy in name_copies):
                             self.findings["G4"].append(
                                 f"{self.mask(rel)}!: a member name holds a hit of private "
                                 f"marker {marker.line} of {lists.PRIVATE_MARKERS}")
@@ -1011,6 +1231,7 @@ class Gate:
                     text = is_text(member)
                     if text is not None:
                         self.scan_private_text("chunk", f"{rel}!{name}", text, set())
+                        self.scan_member_text(rel, name, text, names, folders)
                     else:
                         self.scan_binary(rel, member, member=name)
         except Exception:  # noqa: BLE001  a zip the scanner cannot finish refuses the export
@@ -1056,9 +1277,9 @@ def main(argv=None):
     parser.add_argument("--private-dir", default=None,
                         help=f"the directory holding the private lists (read only); without "
                              f"it, ${lists.PRIVATE_DIR_ENV} when set, else the built-in default")
-    parser.add_argument("--history", default=str(ROOT),
+    parser.add_argument("--history", default=None,
                         help="the private repository whose commits no staged hex run may name "
-                             "(default: the one holding this tool)")
+                             "(full mode; default: the one holding this tool)")
     parser.add_argument("--verdicts", default=None,
                         help="write the per-check verdicts to this new file for the receipt")
     parser.add_argument("--public-only", action="store_true",
@@ -1067,8 +1288,9 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.public_only:
-            if args.input or args.fresh or args.private_dir:
-                raise lists.Refused("--public-only takes no --input, --fresh or --private-dir")
+            if args.input or args.fresh or args.private_dir or args.history is not None:
+                raise lists.Refused("--public-only takes no --input, --fresh, --private-dir "
+                                    "or --history")
             gate = Gate(args.staged)
         else:
             if not args.input or not args.fresh:
@@ -1079,7 +1301,8 @@ def main(argv=None):
                 if not os.path.isdir(value):
                     raise lists.Refused(f"the {name} tree is not a directory")
             private = lists.private_directory(args.private_dir, os.environ)
-            gate = Gate(args.staged, args.input, args.fresh, private, args.history)
+            history = args.history if args.history is not None else str(ROOT)
+            gate = Gate(args.staged, args.input, args.fresh, private, history)
         gate.execute(args.public_only)
         total = 0
         verdicts = {}

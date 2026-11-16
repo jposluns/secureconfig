@@ -9,15 +9,22 @@ the repository's real lists, and no fixture holds a real term.
 
 MUTATIONS, each expected to refuse. An extra staged file, a symbolic link, a hard-linked
 file, a file a deny line matches, and a publishable record identifier. The synthetic
-protected term in text, in an NFKC-normalizable spelling, in a path name, in UTF-16 bytes at
+protected term in text, in an NFKC-normalizable spelling, interleaved with zero-width
+spaces, in a path name, in UTF-16 bytes at
 an even and at an odd offset, in a PNG zTXt chunk, in inflated PNG image data, in an
-identified zlib stream, in a zip member and in a member of a nested zip. A stale public
+identified zlib stream, and in a zlib stream nested past the depth bound. The term in a zip
+member, behind a duplicated zip member name, in a member of a nested zip, and in and before
+a zip's unexplained byte spans. A stale public
 exception; a relative link, a blob/main link and a root-relative site link to unstaged
-paths; a pull/ link. A planted 12-hex commit prefix, a commit id embedded in a longer
-hexadecimal run, an empty --history, and a --history below the top of its repository. A
+paths; a pull/ link and a commits/ link. A planted 12-hex commit prefix, one in fullwidth
+characters, a fullwidth pull link, a fullwidth record identifier, a commit id embedded in a
+longer hexadecimal run, an empty --history, a shallow and a partial clone as --history, and
+a --history below the top of its repository. A commit id, a record identifier, a pull link
+and a link naming no member, each in a zip text member. A
 drifted render, a VERSION that does not equal plugin/plugin.json, a missing required file, a
 *-latest.zip file, and a latest redirect whose 302 names an unstaged archive. A 0755 file in
-public-only mode or one whose input copy is not 0755. The private marker in a UTF-16 binary
+public-only mode or one whose input copy is not 0755; --history in public-only mode. The
+private marker in a UTF-16 binary
 and in a zip member's name; gzip content staged or inside a zip; archives nested past the
 depth bound; a mismatched baseline pin. An unreadable staged file (a FIFO stands in when the
 suite runs as root, which chmod 0 cannot stop), a scanner that raises, and a verdicts path
@@ -42,6 +49,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import warnings
 import zipfile
 import zlib
 from pathlib import Path
@@ -135,7 +143,9 @@ def git_env(base):
 
 
 def make_history(base):
-    """A throwaway git repository with one deterministic commit; its id and its path."""
+    """A throwaway git repository with two deterministic commits, so a depth-one clone of it
+    is genuinely shallow; its head id and its path. The repository allows filtered fetches so
+    a partial clone of it can be built."""
     hist = Path(base) / "history"
     hist.mkdir()
     env = git_env(base)
@@ -143,9 +153,22 @@ def make_history(base):
     for command in (["git", "init", "-q"], ["git", "add", "."],
                     ["git", "commit", "-q", "-m", "fixture"]):
         subprocess.run(command, cwd=hist, env=env, check=True, capture_output=True, timeout=60)
+    (hist / "file.txt").write_text("fixture two\n", encoding="utf-8")
+    for command in (["git", "add", "."], ["git", "commit", "-q", "-m", "fixture two"],
+                    ["git", "config", "uploadpack.allowfilter", "true"]):
+        subprocess.run(command, cwd=hist, env=env, check=True, capture_output=True, timeout=60)
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=hist, env=env, check=True,
                           capture_output=True, timeout=60)
     return head.stdout.decode("ascii").strip(), str(hist)
+
+
+def make_clone(base, source, target, *options):
+    """A clone of the fixture repository over file://, so --depth and --filter act as they
+    would against a remote; its path."""
+    out = Path(base) / target
+    subprocess.run(["git", "clone", "-q", *options, "file://" + str(source), str(out)],
+                   env=git_env(base), check=True, capture_output=True, timeout=60)
+    return str(out)
 
 
 def make_empty_history(base):
@@ -481,6 +504,107 @@ def main():
     sub.mkdir(exist_ok=True)
     code, out = run(fixture.args(history=str(sub)))
     case("a history below its repository's top level", code, out, 1, "not the top level")
+
+    # The round-2 review's gaps, each expected to refuse.
+    fixture = Fixture(base, history)
+    code, out = run(fixture.args(history=make_clone(base, history, "shallow-history",
+                                                    "--depth", "1")))
+    case("a shallow clone as the history", code, out, 1, "shallow clone")
+
+    fixture = Fixture(base, history)
+    code, out = run(fixture.args(history=make_clone(base, history, "partial-history",
+                                                    "--filter=blob:none")))
+    case("a partial clone as the history", code, out, 1, "partial clone")
+
+    fixture = Fixture(base, history)
+    wide_commit = "".join(chr(ord(ch) + 0xFEE0) for ch in commit[:12])
+    fixture.append_guide(f"an id {wide_commit} planted\n")
+    code, out = run(fixture.args())
+    case("a fullwidth commit id", code, out, 1,
+         "hexadecimal characters that names or holds a commit", absent=(wide_commit,))
+
+    fixture = Fixture(base, history)
+    wide_pull = "".join(chr(ord(ch) + 0xFEE0) for ch in
+                        "github.com/example-owner/secureconfig/pull/7")
+    fixture.append_guide(f"see {wide_pull} now\n")
+    code, out = run(fixture.args())
+    case("a fullwidth pull link", code, out, 1, "development history")
+
+    fixture = Fixture(base, history)
+    wide_row = "".join("　" if ch == " " else chr(ord(ch) + 0xFEE0) for ch in "row 3.4")
+    fixture.append_guide(f"as {wide_row} records\n")
+    code, out = run(fixture.args())
+    case("a fullwidth record identifier", code, out, 1, "publishable marker id-row")
+
+    fixture = Fixture(base, history)
+    hidden = "​".join(TERM)
+    fixture.append_guide(f"the name {hidden} appears\n")
+    code, out = run(fixture.args())
+    case("a term hidden by zero-width spaces", code, out, 1, "holds term", absent=(hidden,))
+
+    fixture = Fixture(base, history)
+    fixture.append_guide("see https://github.com/example-owner/secureconfig/commits/main now\n")
+    code, out = run(fixture.args())
+    case("a commits link", code, out, 1, "development history")
+
+    fixture = Fixture(base, history)
+    buffer = io.BytesIO()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # the duplicate member name is the point of the case
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("x.txt", f"has {TERM} inside")
+            archive.writestr("x.txt", "clean")
+    fixture.stage_zip(buffer.getvalue())
+    code, out = run(fixture.args())
+    case("a term behind a duplicated member name", code, out, 1, "holds term")
+
+    fixture = Fixture(base, history)
+    deep = zlib.compress(zlib.compress(zlib.compress(f"hide {TERM} now".encode())))
+    fixture.both("assets/deep.bin", b"\x00\xfe" + deep)
+    code, out = run(fixture.args())
+    case("a stream nested past the depth bound", code, out, 1,
+         "nested past the depth this gate follows")
+
+    fixture = Fixture(base, history)
+    fixture.stage_zip(zip_bytes([("notes.txt", f"an id {commit[:12]} planted")]))
+    code, out = run(fixture.args())
+    case("a commit id in a zip member", code, out, 1,
+         "hexadecimal characters that names or holds a commit")
+
+    fixture = Fixture(base, history)
+    fixture.stage_zip(zip_bytes([("notes.txt", "as row 3.4 records")]))
+    code, out = run(fixture.args())
+    case("a record identifier in a zip member", code, out, 1, "publishable marker id-row",
+         "no exception applies inside an archive")
+
+    fixture = Fixture(base, history)
+    fixture.stage_zip(zip_bytes(
+        [("doc.md", "see https://github.com/example-owner/secureconfig/pull/7 now")]))
+    code, out = run(fixture.args())
+    case("a pull link in a zip member", code, out, 1, "development history")
+
+    fixture = Fixture(base, history)
+    fixture.stage_zip(zip_bytes([("doc.md", "see [m](missing.md) now")]))
+    code, out = run(fixture.args())
+    case("a member link naming no member", code, out, 1, "names no member of the archive")
+
+    fixture = Fixture(base, history)
+    packer = zlib.compressobj(wbits=-15)  # raw deflate, which no byte scan can identify
+    fixture.stage_zip(packer.compress(f"hide {TERM} now".encode()) + packer.flush()
+                      + zip_bytes([("notes.txt", "plain")]))
+    code, out = run(fixture.args())
+    case("unexplained bytes before a zip's first member", code, out, 1,
+         "no member, directory record or archive comment explains")
+
+    fixture = Fixture(base, history)
+    fixture.stage_zip(f"<{TERM}>".encode("ascii") + zip_bytes([("notes.txt", "plain")]))
+    code, out = run(fixture.args())
+    case("a term in a zip's unexplained bytes", code, out, 1, "its bytes hold term",
+         "archive comment explains")
+
+    fixture = Fixture(base, history)
+    code, out = run(["--staged", str(fixture.staged), "--public-only", "--history", history])
+    case("public-only with --history", code, out, 2, "--public-only takes no")
 
     fixture = Fixture(base, history)
     write(fixture.staged, "NOTICE", b"a drifted notice\n")
