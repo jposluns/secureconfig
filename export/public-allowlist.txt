@@ -1,0 +1,207 @@
+# The public allowlist: every path the export may publish, and nothing else.
+#
+# Each line is KIND<TAB>PATH<TAB>NEED. A render line may add <TAB>SOURCE when the file is
+# rendered from another input path.
+#   KIND  copy: a file to be published byte for byte as it is in the input.
+#         render: a file to be generated during the export, and published as generated.
+#   PATH  an exact path, or a narrow glob: one * in the last segment, under a fixed directory,
+#         ending in a fixed suffix such as .md. A * never matches a name that starts with a dot.
+#   NEED  required: the line must match at least one tracked path. optional: it may match none,
+#         for a file that is not in the checkout yet.
+#
+# tools/export_lists.py --check fails a tracked path that no line of this file or of the
+# private paths matches, a path two lines of this file match, a published path that is not a
+# regular file, and a required line that matches no tracked path.
+
+# Project documents, copied as they are.
+copy	README.md	required
+copy	README.sources.md	required
+copy	SECURITY.md	required
+copy	QUALITY.md	required
+copy	controls-reference.md	required
+copy	LICENSE	required
+copy	.gitignore	required
+copy	.claude-plugin/marketplace.json	required
+copy	requests/README.md	required
+copy	requests/TEMPLATE.md	required
+
+# The guides, one line each, so a new guide is published only once it is listed.
+copy	admin-uis.md	required
+copy	agent-builders.md	required
+copy	ai-infra-services.md	required
+copy	apache.md	required
+copy	authentication.md	required
+copy	bi-dashboards.md	required
+copy	caddy.md	required
+copy	chat-uis.md	required
+copy	clickhouse.md	required
+copy	cloud-firewalls.md	required
+copy	cloud-identity-proxies.md	required
+copy	cloudflare.md	required
+copy	code-server.md	required
+copy	common-mistakes.md	required
+copy	connection-poolers.md	required
+copy	container-hardening.md	required
+copy	cors.md	required
+copy	deployment-lifecycle.md	required
+copy	devops-uis.md	required
+copy	docker.md	required
+copy	dotnet.md	required
+copy	egress-metadata.md	required
+copy	elasticsearch.md	required
+copy	exposure-index.md	required
+copy	firebase-supabase.md	required
+copy	forgejo.md	required
+copy	free-certificates.md	required
+copy	frontend-frameworks.md	required
+copy	fronting-auth.md	required
+copy	gitlab.md	required
+copy	gitops-controllers.md	required
+copy	go.md	required
+copy	gpu-clouds.md	required
+copy	gradio.md	required
+copy	haproxy.md	required
+copy	headers.md	required
+copy	headless-browser-services.md	required
+copy	headless-cms-instant-api.md	required
+copy	host.md	required
+copy	identity-providers.md	required
+copy	image-gen-uis.md	required
+copy	java.md	required
+copy	jupyter.md	required
+copy	kafka.md	required
+copy	kubernetes.md	required
+copy	lighttpd.md	required
+copy	litellm.md	required
+copy	llm-observability.md	required
+copy	low-code-builders.md	required
+copy	machine-auth.md	required
+copy	mcp-clients.md	required
+copy	mcp-servers.md	required
+copy	memcached.md	required
+copy	mfa.md	required
+copy	minio.md	required
+copy	mlflow.md	required
+copy	model-servers.md	required
+copy	mongodb.md	required
+copy	mosquitto.md	required
+copy	mysql.md	required
+copy	n8n.md	required
+copy	nats.md	required
+copy	neo4j.md	required
+copy	nextjs.md	required
+copy	nginx.md	required
+copy	nodejs.md	required
+copy	nomad-consul.md	required
+copy	object-storage.md	required
+copy	observability-components.md	required
+copy	oidc-integration.md	required
+copy	ollama.md	required
+copy	open-webui.md	required
+copy	openclaw.md	required
+copy	paas.md	required
+copy	php.md	required
+copy	pocketbase.md	required
+copy	postgresql.md	required
+copy	python.md	required
+copy	rabbitmq.md	required
+copy	ray.md	required
+copy	realtime-voice-infra.md	required
+copy	realtime-webhooks.md	required
+copy	redis.md	required
+copy	ruby.md	required
+copy	search-engines.md	required
+copy	secrets.md	required
+copy	self-hosted-ci-runners.md	required
+copy	self-hosted-error-trackers.md	required
+copy	self-hosted-idp.md	required
+copy	self-signed.md	required
+copy	server-admin-panels.md	required
+copy	sqlite-http-frontends.md	required
+copy	sqlite.md	required
+copy	streamlit.md	required
+copy	supabase-self-hosted.md	required
+copy	surrealdb.md	required
+copy	tailscale.md	required
+copy	time-series-metrics-stores.md	required
+copy	traefik.md	required
+copy	transactional-email-posture.md	required
+copy	tunnels.md	required
+copy	vault.md	required
+copy	vector-databases.md	required
+copy	web-exposure.md	required
+copy	workflow-orchestrators.md	required
+
+# Root files the export generates for the public repository.
+render	VERSION	required
+render	CHANGELOG.md	required
+render	NOTICE	required
+render	CONTRIBUTING.md	required
+render	.gitattributes	required
+
+# The plugin, built from the guides.
+render	plugin/plugin.json	required
+render	plugin/skills/secureconfig/SKILL.md	required
+render	plugin/skills/secureconfig/references/*.md	required
+render	plugin/skills/secureconfig/references/MANIFEST.sha256	required
+render	plugin/skills/secureconfig/scripts/check-updates.py	required
+render	plugin/skills/secureconfig/scripts/update-guides.sh	required
+
+# The plugin file kept by hand.
+copy	plugin/always-on.md	required
+
+# The site pages and the bundle, generated from their sources.
+render	site/index.html	required
+render	site/404.html	required
+render	site/checklist/index.html	required
+render	site/disclosure/index.html	required
+render	site/for-ai/index.html	required
+render	site/for-humans/index.html	required
+render	site/guides/index.html	required
+render	site/license/index.html	required
+render	site/quality/index.html	required
+render	site/advisories/*.html	required
+render	site/advisories/*.txt	required
+render	site/llms-full.txt	required
+
+# The files the site publishes beside its pages.
+copy	site/llms.txt	required
+copy	site/robots.txt	required
+copy	site/sitemap.xml	required
+copy	site/_headers	required
+copy	site/.well-known/security.txt	required
+copy	site/favicon.svg	required
+copy	site/favicon.ico	required
+copy	site/apple-touch-icon.png	required
+copy	site/images/secureconfig-card.png	required
+
+# The site template's files, copied unchanged and held to their pin.
+copy	site/assets/baseline/LICENSE	required
+copy	site/assets/baseline/NOTICE.md	required
+copy	site/assets/baseline/baseline.css	required
+copy	site/assets/baseline/copy.js	required
+copy	site/assets/baseline/fonts.css	required
+copy	site/assets/baseline/palettes.css	required
+copy	site/assets/baseline/rail.js	required
+copy	site/assets/baseline/scheme.js	required
+copy	site/assets/baseline/fonts/dancing-script-LICENSE.txt	required
+copy	site/assets/baseline/fonts/dancing-script-wght-normal.ttf	required
+copy	site/assets/baseline/fonts/jetbrains-mono-LICENSE.txt	required
+copy	site/assets/baseline/fonts/jetbrains-mono-latin-wght-italic.woff2	required
+copy	site/assets/baseline/fonts/jetbrains-mono-latin-wght-normal.woff2	required
+copy	site/assets/baseline/fonts/newsreader-LICENSE.txt	required
+copy	site/assets/baseline/fonts/newsreader-latin-wght-italic.woff2	required
+copy	site/assets/baseline/fonts/newsreader-latin-wght-normal.woff2	required
+copy	site/assets/baseline/fonts/public-sans-LICENSE.txt	required
+copy	site/assets/baseline/fonts/public-sans-latin-wght-italic.woff2	required
+copy	site/assets/baseline/fonts/public-sans-latin-wght-normal.woff2	required
+copy	site/assets/baseline/logos/*.svg	required
+copy	site/assets/baseline/logos/*.png	required
+copy	site/assets/baseline/marks/NOTICE.md	required
+copy	site/assets/baseline/marks/*.svg	required
+copy	site/assets/baseline/marks/*.png	required
+
+# The export's public files, so public checks can run without private input.
+copy	export/public-allowlist.txt	required
+copy	export/public-markers.txt	required
+copy	export/public-exceptions.tsv	required
