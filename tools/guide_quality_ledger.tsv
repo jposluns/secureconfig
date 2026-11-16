@@ -48,7 +48,7 @@ haproxy.md	D3	PARTIAL	no		3 item(s) dated later than the heading; meaning unstat
 headers.md	D3	PARTIAL	no		32 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 headless-browser-services.md	D3	GAP	no		2 item(s) dated earlier than the heading	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 headless-cms-instant-api.md	D3	PARTIAL	no		8 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
-headless-cms-instant-api.md	G1	PARTIAL	no		5 sentence(s) repeated, max 11 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+headless-cms-instant-api.md	G1	PARTIAL	no		6 sentence(s) repeated, max 11 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 host.md	M1	PARTIAL	no		4 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
 host.md	D3	PARTIAL	no		58 item(s) dated later than the heading; meaning unstated	settle the Sources heading-month wording in the corpus D3 sweep		2026-11-10		computed
 identity-providers.md	M1	PARTIAL	no		5 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed

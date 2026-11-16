@@ -19,7 +19,7 @@ container-hardening.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	1aebec7da
 cors.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	d73aa8f8476ff0c2b05e7ce37c5b21728330ddbad7ace57ab929c61a28b583eb	2026-11-10	tool	current
 deployment-lifecycle.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	3cb896c908fe4f602806b275a4acebfdb38e223b3c2ca1c31c6932039d47bb60	2026-11-10	tool	current
 devops-uis.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	9d3fc3d3fd27a2f52538bf4e3cd4b88eb9b7ee738c9656611fd4dd0e76966079	2026-11-10	tool	current
-docker.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	495b2a2558290a6264b78d7242bd327714fe75c673d92d416b0fd2f381440b0e	2026-11-10	tool	current
+docker.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	323766913010bc6cc25dc132760af98eb4c66c0a9960ead401a603ff3820bd2a	2026-11-10	tool	current
 dotnet.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	491cc1c3bc0a7bf2272de9ea1c5c47d04f5cd7a8202aedafa9b844145ff851f0	2026-11-10	tool	current
 egress-metadata.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	a57fad00a152a13dc92f3ae4b35ab36434878f88ea76a082bf8dcd3426d10cf7	2026-11-10	tool	current
 elasticsearch.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	d36b8532fe14a0a7ef52cf296b45b1f4a264ee95394498e63418b2087394ae5b	2026-11-10	tool	current
@@ -37,12 +37,12 @@ gradio.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	4bd2c804fb80557e8eed3f354e79162d
 haproxy.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	4bfde41dbf431bd9f1e54c261e8ced0bc6aa192d56e627d782396ebe3ad204dd	2026-11-10	tool	current
 headers.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	24c0a2fa4585cd65d568589c492c001e7e7ccbca346b115b01b57c0ee5f6648e	2026-11-10	tool	current
 headless-browser-services.md	C	P	?	?	?	GAP(D3)	?	?	?	?	?	MINOR-GAPS	e3ec106629244441687d5c36d3d27d69ea54f519f8bcf8df6fb8a559c89382b5	2026-11-10	tool	current
-headless-cms-instant-api.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	47af5e3df1cb2ded25fe476892475ff38e033d18a214f38fc973a9040485852c	2026-11-10	tool	current
+headless-cms-instant-api.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	40dc71019a2532d9db2e5914c87ccc768be1250027d632513b18cedcd00bc3a6	2026-11-10	tool	current
 host.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	7d838ff31ba83ca080701a908875e898cc5031ff3fa2c9682392563b6978e967	2026-11-10	tool	current
 identity-providers.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	fdbefe28b0184721aaf4417e2f3a4e851bec9dfadcae5f5c59820a69e86b5ea4	2026-11-10	tool	current
 image-gen-uis.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	05cb4de963ebb344152aae0469390f7600f4b74ce2451c04cabd0cf8552b9f70	2026-11-10	tool	current
 java.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	48f596a614667a2f4284f778f9ce929ff800155978d0bfec39ad85686d335fcc	2026-11-10	tool	current
-jupyter.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	adb3ccc5a8344537a6c3e6ae5f2339a183de6bde4417d2de9a59723d210567d6	2026-11-10	tool	current
+jupyter.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	8326a339802f8dfc1f8b7b3f6c4db04c6388de9419ed5f6473700a9872d1e283	2026-11-10	tool	current
 kafka.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	5907c6db29f85723ec9dd9c6b75d47955f878e0aff62365516161332685693ac	2026-11-10	tool	current
 kubernetes.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	7b937fe7cf1b7fecaebe34745152c780e93ea43e74fae0a979d45910f1e69002	2026-11-10	tool	current
 lighttpd.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	b408b44fee9507e7328eb4a7d86dc8f89df051aa27999d49be595a175d7c2be0	2026-11-10	tool	current
