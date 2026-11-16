@@ -46,6 +46,12 @@ embedded gzip stream refuses, two staged names differing only by case refuse, an
 case variant of a denied path. A file that grows between the walk and its read must take its
 receipt size and hash from the same read. A homoglyph spelling of the term crosses, pinning
 the limit DISCLOSED LIMITS names.
+The round-5 review's gaps: a commit id in a zip64 end record's extensible data sector and in
+a local header's fixed fields, and a gzip term in that sector. The round-6 review's gap: a
+term in a local header's fixed fields at the top level, in a stored nested archive, in a
+deflated nested archive and at a third nesting level, and a private marker in a deflated
+nested archive's fixed fields; before the fix the deflated nested and third-level cases
+crossed with approval, hidden from the top-level byte scan by the outer deflate.
 
 Clean full and public-only runs pass, as does a
 pinned site/assets/baseline/ font; a zip member name with a control character is escaped in
@@ -969,6 +975,47 @@ def main():
     code, out = run(fixture.args())
     case("a commit id in a local header's fixed fields", code, out, 1,
          "hexadecimal characters that names or holds a commit")
+
+    # The round-6 review's gap: the only whole-bytes term and marker scan was G4's top-level
+    # one, so a term or a private marker in a nested archive's structural fixed fields, hidden
+    # by the outer deflate, crossed with approval. The top-level and stored-nested cases are
+    # the review's controls and refused before the fix; the deflated nested cases and the
+    # third-nesting-level case refuse only with the nested whole-bytes scan in scan_zip.
+    fixture = Fixture(base, history)
+    fixture.stage_zip(local_header_fixed(TERM.encode("ascii")))
+    code, out = run(fixture.args())
+    case("a term in a top-level local header's fixed fields", code, out, 1,
+         "its bytes hold term")
+
+    fixture = Fixture(base, history)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_STORED) as archive:
+        archive.writestr("inner.zip", local_header_fixed(TERM.encode("ascii")))
+    fixture.stage_zip(buffer.getvalue())
+    code, out = run(fixture.args())
+    case("a term in a stored nested local header's fixed fields", code, out, 1,
+         "its bytes hold term")
+
+    fixture = Fixture(base, history)
+    fixture.stage_zip(zip_bytes([("inner.zip", local_header_fixed(TERM.encode("ascii")))]))
+    code, out = run(fixture.args())
+    case("a term in a deflated nested local header's fixed fields", code, out, 1,
+         "its bytes hold term")
+
+    fixture = Fixture(base, history)
+    write(fixture.private, "private-markers.txt",
+          b"store-path\tinternal-store\\.invalid/[a-z]+\nfixed-mark\tqzmrk[a-z]+\n", 0o600)
+    fixture.stage_zip(zip_bytes([("inner.zip", local_header_fixed(b"qzmrkabc"))]))
+    code, out = run(fixture.args())
+    case("a marker in a deflated nested local header's fixed fields", code, out, 1,
+         "reading holds a hit of private marker", absent=("qzmrkabc",))
+
+    fixture = Fixture(base, history)
+    third = zip_bytes([("inner2.zip", local_header_fixed(TERM.encode("ascii")))])
+    fixture.stage_zip(zip_bytes([("inner1.zip", third)]))
+    code, out = run(fixture.args())
+    case("a term in a third-level local header's fixed fields", code, out, 1,
+         "its bytes hold term")
 
     fixture = Fixture(base, history)
     tampered_verdicts = str(fixture.base / "tampered-verdicts.json")

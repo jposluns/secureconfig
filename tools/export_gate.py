@@ -108,8 +108,16 @@ THE CHECKS. Every one fails closed.
                    scans a staged file's bytes get: text metadata the
                    term, marker, link and commit scans, binary metadata the byte scans, and
                    metadata holding identified compressed content refuses the archive. A commit
-                   scan also reads the archive's whole raw bytes, so a commit id in a structural
-                   region the directory explains but scans nowhere else cannot cross.
+                   scan reads the archive's whole raw bytes at every nesting level. A nested
+                   archive's whole raw bytes also get the term, private-marker and
+                   decoded-reading scans G4 gives a staged binary, as a staged archive's own
+                   bytes already get them in G4, so no structural region at any depth, a
+                   local header's fixed fields among them, is left to the commit scan alone
+                   or unscanned. The compressed-signature search alone is never run over an
+                   archive's whole raw bytes, because a member's compressed data can
+                   legitimately hold signature-like bytes; members, binary metadata fields
+                   and PNG chunks keep the signature scans G8 and G4 already give them, and
+                   an unexplained span refuses the archive whatever it holds.
                    A member's data descriptor must hold
                    the central directory's CRC and sizes, 8 bytes per size when the member's
                    local zip64 extra field is present, else 4; a descriptor that does not
@@ -1424,12 +1432,13 @@ class Gate:
                         f"that names or holds a commit of the private repository")
 
     def scan_archive_raw(self, rel, data):
-        """Scan a staged archive's whole raw bytes for a private commit id. The commit scan is
-        text-only elsewhere, so a commit prefix placed in a structural region the central
-        directory explains but hands to no scanner, the zip64 end record's extensible data
-        sector or a local header's fixed time, date, CRC and size fields among them, would
-        never meet it. A commit prefix is specific enough to raise no false hit, so the whole
-        archive, members and structure alike, is read here at every nesting level."""
+        """Scan an archive's whole raw bytes for a private commit id, at every nesting level.
+        The hexadecimal commit scan reads text elsewhere, and the whole-bytes scans these
+        same raw bytes get match terms and private markers, not commit ids, so a commit
+        prefix in a structural region such as the zip64 end record's extensible data sector
+        or a local header's fixed time, date, CRC and size fields would otherwise never meet
+        any commit scan. A commit prefix is specific enough to raise no false hit, so the
+        whole archive, members and structure alike, is read here."""
         if self.commit_prefixes is None:
             return
         masked = self.mask(rel)
@@ -1438,16 +1447,23 @@ class Gate:
                 f"{masked}: holds a run of {length} hexadecimal characters that names or "
                 f"holds a commit of the private repository")
 
-    def scan_zip(self, rel, data, depth=ZIP_DEPTH, budget=None):
+    def scan_zip(self, rel, data, depth=ZIP_DEPTH, budget=None, nested=False):
         """Scan one staged archive. Every byte span its central directory does not explain
         is scanned as bytes and refuses the archive. The archive comment, each member's
         local-header name and extra field, each central directory entry's extra field
         and comment, and the zip64 end record's extensible data sector get the scans a staged
         file's bytes get: text metadata the term, marker,
         link and commit scans, binary metadata the byte scans, and metadata holding
-        identified compressed content refuses. A commit scan also reads the archive's whole
-        raw bytes, so a commit id in a structural region the directory explains but scans
-        nowhere else cannot cross. Every member name is scanned, as
+        identified compressed content refuses. A commit scan reads the archive's whole raw
+        bytes at every nesting level, and a nested archive's whole raw bytes (nested is true
+        on every recursive call) also get the byte scans G4 gives a staged binary, as a
+        staged archive's own bytes already get them in G4, so a term, a private marker or a
+        commit id in a structural region at any depth, a local header's fixed fields among
+        them, cannot cross. The compressed-signature search alone is never run over an
+        archive's whole raw bytes, because a member's compressed data can legitimately hold
+        signature-like bytes; members, binary metadata fields and PNG chunks keep the
+        signature scans G8 and G4 already give them, and an unexplained span refuses the
+        archive whatever it holds. Every member name is scanned, as
         written and folded, for terms, private markers and commit ids. Every member, read by
         its central
         directory entry so a duplicated name hides nothing, is scanned as G4 scans a file, a
@@ -1472,6 +1488,8 @@ class Gate:
                     for index in range(1, len(segments)):
                         folders.add("/".join(segments[:index]))
                 self.scan_archive_raw(rel, data)
+                if nested:
+                    self.scan_bytes(rel, data, STREAM_DEPTH)
                 for start, end in zip_gaps(data, archive):
                     self.scan_bytes(f"{rel}!(unattributed bytes)", data[start:end],
                                     STREAM_DEPTH)
@@ -1522,7 +1540,7 @@ class Gate:
                     if name.lower().endswith(".zip") or is_zip_content(member):
                         if depth == 0:
                             raise ValueError("archives nest past the depth limit")
-                        self.scan_zip(f"{rel}!{name}", member, depth - 1, budget)
+                        self.scan_zip(f"{rel}!{name}", member, depth - 1, budget, nested=True)
                         continue
                     kind = compressed_kind(name, member)
                     if kind:
