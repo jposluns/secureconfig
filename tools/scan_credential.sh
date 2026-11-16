@@ -76,6 +76,7 @@ hit=0
 failed=
 interrupted=0
 searching=0
+scan_scope=
 # Run only by the builtin trap below; a bare trap would admit an exported trap function.
 # shellcheck disable=SC2329
 scan_signal() {
@@ -120,11 +121,13 @@ done
 # Only markers and statuses cross command substitution, on FD 5: D when Git
 # wrote to stderr (read -d '' detects NUL and ordinary bytes, avoiding
 # trailing-newline loss and Bash's NUL warning), P when the key could not be
-# written to Git in full, M after each name a search printed, and the G, R and
-# F statuses of Git, the diagnostic reader and the name forwarder, each
-# captured before any other command. FD 3 carries the scan's stdout. A
-# search's names pass through scan_forward, which ignores HUP, INT and TERM,
-# so those signals cannot stop it between printing a name and writing its M.
+# written to Git in full, M after each verified name the scan printed, V for a
+# line that names no real path in the search's scope, T for a last line cut
+# short, and the G, R and F statuses of Git, the diagnostic reader and the
+# name forwarder, each captured before any other command. FD 3 carries the
+# scan's stdout. A search's names pass through scan_forward, which ignores
+# HUP, INT and TERM, so those signals cannot stop it between printing a name
+# and writing its M.
 exec 3>&1
 scan_run() {
     if [[ $1 == grep ]]; then
@@ -151,23 +154,86 @@ scan_capture() {
     statuses=("${PIPESTATUS[@]}")
     printf 'G%s.R%s.' "${statuses[0]}" "${statuses[1]}" >&5
 }
+# Decode one core.quotePath C-quoted name into REPLY, or fail on a malformed
+# one. Git emits \a \b \f \n \r \t \v \\ \" and three-digit octal escapes.
+scan_unquote() {
+    local quoted=${1#\"} escape octal
+    quoted=${quoted%\"}
+    REPLY=
+    while [[ -n $quoted ]]; do
+        if [[ ${quoted:0:1} != \\ ]]; then
+            REPLY+=${quoted:0:1}
+            quoted=${quoted:1}
+            continue
+        fi
+        escape=${quoted:1:1}
+        case $escape in
+            a) REPLY+=$'\a' ;;
+            b) REPLY+=$'\b' ;;
+            f) REPLY+=$'\f' ;;
+            n) REPLY+=$'\n' ;;
+            r) REPLY+=$'\r' ;;
+            t) REPLY+=$'\t' ;;
+            v) REPLY+=$'\v' ;;
+            \\) REPLY+=\\ ;;
+            '"') REPLY+='"' ;;
+            [0-3])
+                octal=${quoted:1:3}
+                [[ $octal == [0-3][0-7][0-7] && $octal != 000 ]] || return 1
+                printf -v escape '%b' "\\0$octal" || return 1
+                REPLY+=$escape
+                quoted=${quoted:2}
+                ;;
+            *) return 1 ;;
+        esac
+        quoted=${quoted:2}
+    done
+}
+# A printed line counts, and reaches stdout, only when it names a real path in
+# the search's scope: for the output search an existing non-symlink path under
+# the output directory, and for a history search a path that exists in the
+# searched commit itself (git cat-file -e on commit:path). Color escapes are
+# stripped and a C-quoted name is decoded before the check; the line itself is
+# forwarded unchanged, so a garbled, empty, partial or non-path line can never
+# read as FOUND and never reaches stdout.
+scan_verify() {
+    local name=$1 color=$'\e\\[[0-9;]*m'
+    while [[ $name =~ $color ]]; do
+        name=${name//"${BASH_REMATCH[0]}"/}
+    done
+    if [[ $name == \"*\" ]]; then
+        scan_unquote "$name" || return 1
+        name=$REPLY
+    fi
+    [[ -n $name ]] || return 1
+    if [[ -n $scan_scope ]]; then
+        [[ $name == "$scan_scope":?* ]] || return 1
+        git --no-pager --literal-pathspecs cat-file -e "$name" >/dev/null 2>&1 5>&-
+    else
+        [[ $name == "${out#./}"/?* && /$name/ != */../* && /$name/ != */./* ]] || return 1
+        [[ -e ./$name && ! -L ./$name ]]
+    fi
+}
 scan_forward() {
     local line
     builtin trap '' HUP INT TERM
     while IFS= read -r line; do
-        printf '%s\n' "$line" >&3 || return 2
-        printf M
+        if scan_verify "$line"; then
+            printf '%s\n' "$line" >&3 || return 2
+            printf M
+        else
+            printf V
+        fi
     done
     if [[ -n $line ]]; then
-        printf '%s' "$line" >&3 || return 2
-        printf M
+        printf T
     fi
 }
 # Return Git's 0 or 1 when nothing failed, 3 when Git exited 0 or 1 but
 # printed a diagnostic and nothing else failed, and 2 otherwise. With the
 # whole key written to Git, a search sets git_matched to 1 when Git exited 0
-# or the scan printed a name from it. A failed search sets git_failure to how
-# it failed, in fixed wording.
+# or the scan printed a verified name from it. A failed search sets
+# git_failure to how it failed, in fixed wording.
 scan_git() {
     local result status=none detector=none forward=0
     local status_pattern='G([0-9]+)[.]' detector_pattern='R([0-9]+)[.]'
@@ -199,6 +265,10 @@ scan_git() {
     fi
     if [[ $result == *P* ]]; then
         git_failure='could not pass the key to Git'
+    elif [[ $result == *T* ]]; then
+        git_failure='printed an unterminated last line'
+    elif [[ $result == *V* ]]; then
+        git_failure='printed a line that names no path in its scope'
     elif [[ $result == *D* ]]; then
         git_failure='printed a Git diagnostic'
     elif [[ $status == none || $forward == none ]]; then
@@ -212,8 +282,8 @@ scan_git() {
     else
         return "$status"
     fi
-    if [[ $result == *D* && $result != *P* && $forward == 0 && $detector == 0 &&
-          $status == [01] ]]; then
+    if [[ $result == *D* && $result != *P* && $result != *[TV]* && $forward == 0 &&
+          $detector == 0 && $status == [01] ]]; then
         return 3
     fi
     return 2
@@ -237,14 +307,17 @@ IFS= read -rs key || scan_fail key-input
 [[ -n $key && $key != *[[:cntrl:]]* ]] || scan_refuse key-input
 # A search matched when scan_git set git_matched, even if the search failed.
 # A failed search does not stop the scan: every search still runs, so a match
-# before or after it still counts. A HUP, INT or TERM during the searches ends
-# the scan once the search in progress returns. failed keeps the first failed
-# search's wording for the INCOMPLETE line. With no match, a failed or
-# interrupted scan ends INCONCLUSIVE without a CHECK line, since --explain
-# exits before any search.
+# before or after it still counts. A HUP, INT or TERM during the searches
+# ends the scan once the search in progress returns, and is reported only
+# when it left a commit unsearched: a signal that leaves no search unrun does
+# not make the scan incomplete. failed keeps the first failed search's
+# wording for the INCOMPLETE line, naming the commit for a history search.
+# With no match, a failed or cut-short scan ends INCONCLUSIVE without a CHECK
+# line, since --explain exits before any search.
 scan_search() {
     local search=$1
-    shift
+    scan_scope=$2
+    shift 2
     scan_git grep "$@"
     rc=$?
     (( ! git_matched )) || hit=1
@@ -253,13 +326,18 @@ scan_search() {
     fi
 }
 searching=1
-scan_search 'the output search' --no-index -F -a -l -f - -- "$out"
-while (( ! interrupted )) && IFS= read -r commit; do
+scan_search 'the output search' '' --no-index -F -a -l -f - -- "$out"
+cut_short=0
+while IFS= read -r commit; do
     [[ -n $commit ]] || continue
-    scan_search 'a history search' -F -a -l -f - "$commit" --
+    if (( interrupted )); then
+        cut_short=1
+        break
+    fi
+    scan_search "the history search of commit $commit" "$commit" -F -a -l -f - "$commit" --
 done <<< "$commits"
 builtin unset -v key
-if (( interrupted )); then
+if (( cut_short )); then
     failed+="${failed:+, and }the scan was interrupted by a signal"
 fi
 if (( hit )); then
