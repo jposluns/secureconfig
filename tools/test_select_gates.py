@@ -59,7 +59,7 @@ NAMES = sg.suite_sections(SUITE_TEXT)
 DEPENDS = sg.suite_depends(SUITE_TEXT)
 NOT_A_GUIDE = re.search(r"    (CONTRIBUTING\.md\|.*?)\) return 0", SUITE_TEXT)[1].split("|")
 RECORDS = ("CHANGELOG.md", "TODO.md", "DONE.md", "DECISIONS.md", "PENDING-DECISIONS.md")
-ANY = ("secrets", "local-links", "llms-full-links")
+ANY = ("secrets", "local-links", "llms-full-links", "export-lists")
 SITE = ("copy-buttons", "baseline-pin", "palette", "overflow", "site-build", "install-blocks",
         "site-draft", "pages-build", "site-csp", "security-txt", "sitemap", "guide-wiring", "guide-categories",
         "llms-full", "plugin", "generated-committed", "prose-conventions", "aiqt-baseline") + ANY

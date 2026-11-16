@@ -1,0 +1,19 @@
+# Publishable markers: generic shapes of citations of the project's working records, and of
+# links into its development history.
+#
+# Each line is ID<TAB>REGEX, a Python regular expression. tools/export_lists.py --check refuses
+# a pattern that does not compile, draws a warning from the regular expression compiler or can
+# match an empty string, and a public exception whose line no longer holds a hit of the marker
+# it names. These shapes need no private input, so a check of the public repository can run
+# them too. A shape that would spell out what stays private, such as the names of the private
+# paths, belongs in the private markers instead.
+
+# Backlog and record identifiers.
+id-row	\b(?:[Bb]acklog |TODO )?[Rr]ows? [0-9]+\.[0-9]+\b
+id-todo	\bTODO(?:\.md)? (?:under |row )?[0-9]+(?:\.[0-9]+)?\b
+id-done	\bDONE [0-9]+\.[0-9]+\b
+id-d-number	\bO?D-[0-9]+\b
+id-f-name	\bF-[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+\b
+
+# Links into development history.
+link-history	github\.com/[A-Za-z0-9-]+/secureconfig/(?:pull|commit|compare|actions)/

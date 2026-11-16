@@ -1,0 +1,7 @@
+# Public exceptions: exact lines of published files where a publishable marker is allowed.
+#
+# Each line is PATH<TAB>LINE<TAB>SHA256<TAB>marker:ID<TAB>REASON. SHA256 is the SHA-256 of the
+# line's bytes without its LF. A row whose line has changed, or no longer holds a hit of the
+# marker it names, fails the check, so an exception never outlives the line it was written for.
+site/assets/baseline/baseline.css	246	581dc44e3ea16f8e1ae0f83d0f08176f2fb6ed7f6b3c41ccd4020bf5eca528ca	marker:id-d-number	an identifier of the upstream site template, in a file copied unchanged from it
+site/assets/baseline/baseline.css	483	4e1e9a2fa65f0dfb5643b8152c2317eaaf0ed4c440ae6ade7afeb873f6707b75	marker:id-d-number	an identifier of the upstream site template, in a file copied unchanged from it
