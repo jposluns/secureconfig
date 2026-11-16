@@ -29,19 +29,21 @@ compiler warning reaches the warnings module's output.
 THE CHECKS: check_tree on synthetic path lists (an unlisted tracked path, a required line
 matching no path, an optional line matching none, a path both denied and published, a path two
 lines publish, a path two deny lines keep private, among them a latest archive under a denied
-directory, a deny glob that overlaps another with no tracked path matching both, a published path
-that is a symbolic link or a submodule or whose name leaves the path set, a guide or public export
-file without its own exact required copy line); exception verification on fixture files
-(current, changed, past the end, no longer a hit, unreadable, a symbolic link); --check on a
-fixture checkout with a temporary git index (clean, an untracked file and an untracked guide left
-alone, a tracked unlisted file, a tracked symbolic link published, a stale exception, a missing
-list, no git); --check-private on fixture private directories built under TMPDIR (clean, from
-the environment variable, without printing any list content, each refusal of the directory or a
-list, markers whose compiler messages or warnings would quote or locate them, and private markers
-that miss a link into a deny line), leaving the fixture directory unchanged; usage errors that
-repeat no argument when one starts with --check-private or --private-dir, and no abbreviated
-option; the lists read through the directory as first opened when another takes its place; and
-an unexpected error that prints only its type.
+directory, and a deny glob that overlaps another with no tracked path matching both). The
+check_tree cases also cover a published path that is a symbolic link or a submodule or whose
+name leaves the path set, and a guide or public export file without its own exact required copy
+line. Exception verification runs on fixture files (current, changed, past the end, no longer a
+hit, unreadable, a symbolic link), and --check on a fixture checkout with a temporary git index
+(clean, an untracked file and an untracked guide left alone, a tracked unlisted file, a tracked
+symbolic link published, a stale exception, a missing list, no git). The --check-private cases
+use fixture private directories built under TMPDIR (clean, from the environment variable,
+without printing any list content, each refusal of the directory or a list, markers whose
+compiler messages or warnings would quote or locate them, and private markers that miss a link
+into a deny line), leaving the fixture directory unchanged. The usage cases check that a usage
+error repeats no argument when one starts with --priv or --check-p, a prefix of --private-dir or
+--check-private, and that no abbreviated option is taken. The rest check that the lists are read
+through the directory as first opened when another takes its place, and that an unexpected
+error prints only its type.
 
 Every term, marker and path here is synthetic. Nothing reads the default private directory or
 the network. Exit 0 ok, 1 on a finding.
@@ -759,8 +761,8 @@ def check_private_cli(cases):
 
             # A usage error repeats no argument once one starts with --priv or --check-p, a prefix
             # of --private-dir or --check-private, since an argument may be the private path.
-            quiet = ("error: the arguments do not parse; with --check-private or --private-dir "
-                     "no argument is repeated")
+            quiet = ("error: the arguments do not parse; since one starts with --priv or "
+                     "--check-p, none is repeated")
             stray = str(priv) + "-stray"
             for label, args in (
                 ("a private directory given without --private-dir",

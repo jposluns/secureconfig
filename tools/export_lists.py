@@ -846,8 +846,8 @@ class QuietParser(argparse.ArgumentParser):
         if not self.quiet:
             super().error(message)
         self.print_usage(sys.stderr)
-        self.exit(2, f"{self.prog}: error: the arguments do not parse; with --check-private or "
-                     f"--private-dir no argument is repeated\n")
+        self.exit(2, f"{self.prog}: error: the arguments do not parse; since one starts with "
+                     f"--priv or --check-p, none is repeated\n")
 
 
 def main(argv=None):
