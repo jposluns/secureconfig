@@ -19,7 +19,7 @@ container-hardening.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	1aebec7da
 cors.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	d73aa8f8476ff0c2b05e7ce37c5b21728330ddbad7ace57ab929c61a28b583eb	2026-11-10	tool	current
 deployment-lifecycle.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	3cb896c908fe4f602806b275a4acebfdb38e223b3c2ca1c31c6932039d47bb60	2026-11-10	tool	current
 devops-uis.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	9d3fc3d3fd27a2f52538bf4e3cd4b88eb9b7ee738c9656611fd4dd0e76966079	2026-11-10	tool	current
-docker.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	323766913010bc6cc25dc132760af98eb4c66c0a9960ead401a603ff3820bd2a	2026-11-10	tool	current
+docker.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	24500b6686c875b2f207d255f5d1860f293df81995b3440a341953440b08f368	2026-11-10	tool	current
 dotnet.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	491cc1c3bc0a7bf2272de9ea1c5c47d04f5cd7a8202aedafa9b844145ff851f0	2026-11-10	tool	current
 egress-metadata.md	X	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	a57fad00a152a13dc92f3ae4b35ab36434878f88ea76a082bf8dcd3426d10cf7	2026-11-10	tool	current
 elasticsearch.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	d36b8532fe14a0a7ef52cf296b45b1f4a264ee95394498e63418b2087394ae5b	2026-11-10	tool	current
