@@ -37,6 +37,15 @@ open. A FIFO at a compared input path, as the baseline
 pin and as a list file, each run as a gate subprocess under a timeout, so a regression that
 hangs fails instead of blocking the suite. A streamed zip64 archive, whose data descriptors
 carry 8-byte sizes, passes clean.
+The round-4 review's gaps: a staged name holding the term and a commit-id run, a term hidden
+by combining marks in a staged name, and a marker hit in a staged name, each masked in every
+finding; gzip content in a PNG ancillary chunk; a history link, a publishable marker and a
+commit id in a zip archive comment; the term in a nested zip's extra field; and lzip content
+by signature. Stray signature bytes whose formats' header fields do not validate pass, a real
+embedded gzip stream refuses, two staged names differing only by case refuse, and so does a
+case variant of a denied path. A file that grows between the walk and its read must take its
+receipt size and hash from the same read. A homoglyph spelling of the term crosses, pinning
+the limit DISCLOSED LIMITS names.
 
 Clean full and public-only runs pass, as does a
 pinned site/assets/baseline/ font; a zip member name with a control character is escaped in
@@ -50,6 +59,7 @@ repositories, and the gate itself, for the FIFO cases that must be able to time 
 ok, 1 on a finding.
 """
 import contextlib
+import gzip
 import hashlib
 import io
 import json
@@ -406,7 +416,7 @@ def main():
     fixture = Fixture(base, history)
     fixture.both(f"notes/{TERM}.md", b"plain\n")
     code, out = run(fixture.args())
-    case("a protected term in a path name", code, out, 1, "the path's name holds term", "[…]")
+    case("a protected term in a path name", code, out, 1, "the path's name holds term", "[...]")
 
     fixture = Fixture(base, history)
     fixture.both("assets/font16.bin", b"\x00\xff" + TERM.encode("utf-16-le") + b"\x00\xfe")
@@ -815,6 +825,128 @@ def main():
         [("inner.zip", packer.compress(f"hide {TERM} now".encode()) + packer.flush())]))
     code, out = run(fixture.args())
     case("a member named .zip that is not a zip", code, out, 1, "cannot scan to the end")
+
+    # The round-4 review's gaps, each expected to refuse with nothing echoed, and its false
+    # refusal shown never to start; the homoglyph case pins the disclosed limit.
+    fixture = Fixture(base, history)
+    fixture.both(f"notes/{TERM}-{commit[:12]}.md", b"plain\n")
+    code, out = run(fixture.args())
+    case("a term and a commit id in one staged name", code, out, 1,
+         "the path's name holds term",
+         "hexadecimal characters that names or holds a commit")
+
+    fixture = Fixture(base, history)
+    marked_name = "notes/" + "̵".join(TERM) + ".md"
+    write(fixture.staged, marked_name, b"plain\n")
+    code, out = run(fixture.args())
+    case("a term hidden by combining marks in a staged name", code, out, 1,
+         "holds a character other than", absent=(marked_name,))
+
+    fixture = Fixture(base, history)
+    fixture.both("notes/internal-store.invalid/abc.md", b"plain\n")
+    code, out = run(fixture.args())
+    case("a marker hit in a staged name", code, out, 1,
+         "the path's name holds a hit of private marker", absent=("internal-store",))
+
+    fixture = Fixture(base, history)
+    smuggled = gzip.compress(f"hide {TERM} now".encode(), mtime=0)
+    ihdr = chunk(b"IHDR", (1).to_bytes(4, "big") + (1).to_bytes(4, "big")
+                 + b"\x08\x00\x00\x00\x00")
+    sneaky = (PNG_SIG + ihdr + chunk(b"prIv", smuggled)
+              + chunk(b"IDAT", zlib.compress(b"\x00\x00")) + chunk(b"IEND", b""))
+    fixture.both("images/holder.png", sneaky)
+    code, out = run(fixture.args())
+    case("gzip content in a PNG ancillary chunk", code, out, 1,
+         "a PNG chunk outside the image data holds gzip content")
+
+    fixture = Fixture(base, history)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("notes.txt", "plain")
+        archive.comment = (f"see github.com/example-owner/secureconfig/pull/7 and row 3.4 "
+                           f"and an id {commit[:12]} here").encode("ascii")
+    fixture.stage_zip(buffer.getvalue())
+    code, out = run(fixture.args())
+    case("a link, a marker and a commit id in a zip archive comment", code, out, 1,
+         "development history", "publishable marker id-row",
+         "hexadecimal characters that names or holds a commit")
+
+    fixture = Fixture(base, history)
+    payload = f"hold {TERM} here".encode()
+    info = zipfile.ZipInfo("doc.txt")
+    info.extra = (0xCAFE).to_bytes(2, "little") + len(payload).to_bytes(2, "little") + payload
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(info, "plain")
+    fixture.stage_zip(zip_bytes([("inner.zip", buffer.getvalue())]))
+    code, out = run(fixture.args())
+    case("a term in a nested zip's extra field", code, out, 1, "its bytes hold term")
+
+    fixture = Fixture(base, history)
+    stray = (b"\x00\xff\x1f\x8b\x55\x66" + b"BZh9stray!" + b"wOFFabcdefgh"
+             + b"\x00\x1f\x9d\xff" + bytes(6))
+    fixture.both("assets/stray.bin", stray)
+    code, out = run(fixture.args())
+    case("stray signature bytes without their formats' header fields", code, out, 0,
+         "the export may proceed")
+
+    fixture = Fixture(base, history)
+    fixture.both("assets/embedded.bin",
+                 b"\x00\xfe" + gzip.compress(b"an embedded stream", mtime=0))
+    code, out = run(fixture.args())
+    case("a real gzip stream embedded in a binary", code, out, 1,
+         "gzip content this gate cannot scan inside")
+
+    fixture = Fixture(base, history)
+    fixture.both("assets/lz.bin", b"\x00\xfeLZIP\x01\x12" + bytes(10))
+    code, out = run(fixture.args())
+    case("lzip content identified by its signature", code, out, 1,
+         "lzip content this gate cannot scan inside")
+
+    fixture = Fixture(base, history)
+    fixture.both("notes/Case.md", b"plain\n")
+    fixture.both("notes/case.md", b"plain\n")
+    code, out = run(fixture.args())
+    case("two staged names differing only by case", code, out, 1,
+         "differ only by case or Unicode normalization")
+
+    fixture = Fixture(base, history)
+    write(fixture.staged, "Notes.txt", b"kept private\n")
+    code, out = run(fixture.args())
+    case("a case variant of a denied path", code, out, 1,
+         "a case or normalization variant of the path matches the deny line")
+
+    fixture = Fixture(base, history)
+    tampered_verdicts = str(fixture.base / "tampered-verdicts.json")
+    grown = fixture.staged / "README.md"
+    suffix = b"appended after the walk recorded the size\n"
+    original_read = export_gate.read_regular
+
+    def appended(path):
+        data = original_read(path)
+        return data + suffix if Path(path) == grown else data
+
+    export_gate.read_regular = appended
+    try:
+        code, out = run(fixture.args(tampered_verdicts))
+    finally:
+        export_gate.read_regular = original_read
+    case("a file that grows between the walk and its read", code, out, 1,
+         "does not equal the input tree")
+    count += 1
+    record = json.loads(Path(tampered_verdicts).read_text(encoding="utf-8"))
+    judged = README + suffix
+    wanted = {"size": len(judged), "sha256": hashlib.sha256(judged).hexdigest()}
+    if record["files"]["README.md"] != wanted:
+        failures.append(f"the receipt must take the size and the hash from the same read of "
+                        f"the judged bytes: {record['files']['README.md']!r}, wanted {wanted!r}")
+
+    fixture = Fixture(base, history)
+    homoglyph = TERM.replace("o", "о", 1)  # Cyrillic о: the homoglyph limit DISCLOSED LIMITS names
+    fixture.append_guide(f"the name {homoglyph} appears\n")
+    code, out = run(fixture.args())
+    case("a homoglyph spelling crosses, pinning the disclosed limit", code, out, 0,
+         "the export may proceed")
 
     shutil.rmtree(base, ignore_errors=True)
     if failures:
