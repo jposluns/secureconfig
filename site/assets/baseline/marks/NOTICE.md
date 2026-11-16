@@ -1,6 +1,6 @@
 # Third-party marks in this package
 
-The 4 files in this folder are trademarks of their owners. They are included unaltered, for the single use the baseline makes of them: the footer's 3 icon-only tiles that link to Jeff Posluns's GitHub, LinkedIn and ORCID profiles. They are not covered by the CC0 grant in `../LICENSE`; each is used under its owner's published terms, recorded below as read on the retrieval date. Scale them uniformly, never recolour, crop, add a plate or frame, or combine them with other words or shapes.
+The 4 files in this folder are trademarks of their owners. They are included unaltered, for the single use the baseline makes of them: the footer's 3 icon-only tiles that link to Jeff Posluns's GitHub, LinkedIn and ORCID profiles. They are not covered by the Apache License 2.0 grant in `../LICENSE`; each is used under its owner's published terms, recorded below as read on the retrieval date. Scale them uniformly, never recolour, crop, add a plate or frame, or combine them with other words or shapes.
 
 ## GitHub Invertocat (`github-invertocat-black.svg`, `github-invertocat-white.svg`)
 
