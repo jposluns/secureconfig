@@ -18,6 +18,20 @@ F = b"FOUND: remove and rotate credential\n"
 N = b"NOT FOUND: no literal credential in stated scope\n"
 I = b"INCONCLUSIVE: could not complete scan\n"
 R = b"REFUSED: unsafe or wrong use; no content searched\n"
+
+
+def incomplete(reason):
+    return b"INCOMPLETE: " + reason + b"; the result above covers only what was searched\n"
+
+
+OUTPUT_DIAGNOSTIC = incomplete(b"the output search printed a Git diagnostic")
+OUTPUT_STATUS = incomplete(b"the output search ended with a Git error status")
+INTERRUPTED = incomplete(b"the scan was interrupted by a signal")
+
+
+def history_failed(commit, reason=b"printed a Git diagnostic"):
+    # The INCOMPLETE line names a failed history search by its commit.
+    return incomplete(b"the history search of commit " + commit.encode() + b" " + reason)
 CASES = []
 COUNTS = collections.Counter()
 SKIPS = []
@@ -318,7 +332,7 @@ for kind in ["staged", "unstaged", "untracked"]:
 
 
 def corruption(f, kind, match=False):
-    f.commit()
+    h = f.commit()
     blob = f.git("rev-parse", "HEAD:source").strip().decode()
     p = f.root / ".git/objects" / blob[:2] / blob[2:]
     if kind == "missing":
@@ -329,13 +343,17 @@ def corruption(f, kind, match=False):
     else:
         f.write(".git/refs/heads/broken", b"1" * 40 + b"\n")
     if match:
+        # The output match stands; the failed history search adds INCOMPLETE,
+        # naming the commit whose search failed.
         f.write("dist/app.js", KEY)
-    f.scan(3, (b"dist/app.js\n" if match and kind != "broken ref" else b"") + I)
+        f.scan(1, b"dist/app.js\n" + F + history_failed(h))
+    else:
+        f.scan(3, I)
 
 
 for kind in ["missing", "corrupt", "broken ref"]:
     case(kind + " object", "INCONCLUSIVE", lambda f, k=kind: corruption(f, k))
-case("bundle match then corrupt blob", "INCONCLUSIVE", lambda f: corruption(f, "corrupt", True))
+case("bundle match then corrupt blob", "FOUND", lambda f: corruption(f, "corrupt", True))
 
 
 def mode(f, mode):
@@ -621,7 +639,8 @@ def help_text(f):
     p = subprocess.run(["bash", str(TOOL), "--help"], cwd=f.root, env=f.env,
                        capture_output=True, timeout=30)
     assert (p.returncode, p.stderr) == (0, b""), (p.returncode, p.stderr)
-    line = b"Exit: 0 NOT FOUND in stated scope; 1 FOUND; 2 REFUSED; 3 INCONCLUSIVE.\n"
+    line = (b"Exit: 0 NOT FOUND in stated scope; 1 FOUND, even if the scan was incomplete; "
+            b"2 REFUSED; 3 INCONCLUSIVE, result not known.\n")
     assert line in p.stdout, p.stdout
 
 
@@ -804,13 +823,23 @@ def injected(f, stage, status, diagnostic):
     emit = "printf '" + diagnostic + "' >&2" if diagnostic else ":"
     env = wrapper(f, "if " + condition + "; then\n" + emit +
                   "\nexit " + str(status) + "\nfi")
-    f.scan(3, I, env=env, stderr=b"")
+    if stage != "rev-list" and status == 0 and diagnostic:
+        # A search that exits 0 has matched, even with a diagnostic. Every
+        # history search fails here, so the line names the first one searched.
+        if stage == "output":
+            reason = OUTPUT_DIAGNOSTIC
+        else:
+            reason = history_failed(f.git("rev-list", "--all", "--reflog").decode().split()[0])
+        f.scan(1, F + reason, env=env, stderr=b"")
+    else:
+        f.scan(3, I, env=env, stderr=b"")
 
 
 for stage in ("rev-list", "output", "history"):
     for status, diagnostic in [(0, "\\n"), (1, "\\0"), (2, ""), (129, ""),
                                (0, "warning"), (1, "warning")]:
-        case(f"fault {stage} status={status} diagnostic={diagnostic!r}", "INCONCLUSIVE",
+        case(f"fault {stage} status={status} diagnostic={diagnostic!r}",
+             "FOUND" if stage != "rev-list" and status == 0 else "INCONCLUSIVE",
              lambda f, s=stage, r=status, d=diagnostic: injected(f, s, r, d))
 
 
@@ -820,6 +849,323 @@ def failed_producer(f):
 
 
 case("failed pattern producer", "INCONCLUSIVE", failed_producer)
+
+
+def fail_search(f, condition):
+    # Injected Git failure for the searches the condition selects; all other
+    # calls, including the other searches, run real Git.
+    return wrapper(f, "if " + condition + "; then\n"
+                   "printf 'fatal: injected\\n' >&2\nexit 128\nfi")
+
+
+HISTORY = '[[ $3 == grep && $4 != --no-index ]]'
+OUTPUT = '[[ $3 == grep && $4 == --no-index ]]'
+
+
+def match_then_failure(f, kind):
+    # A match wins over a failed search, before or after it: exit 1, FOUND,
+    # then one INCOMPLETE line. $9 is the commit a history search names.
+    if kind == "output match then history failure":
+        f.write("dist/app.js", KEY)
+        env = fail_search(f, HISTORY)
+        expected = b"dist/app.js\n"
+    elif kind == "history match then older history failure":
+        h = f.commit()
+        env = fail_search(f, HISTORY[:-3] + ' && $9 == ' + f.base + ' ]]')
+        expected = quoted(h + ":source")
+    else:
+        h = f.commit()
+        env = fail_search(f, OUTPUT)
+        expected = quoted(h + ":source")
+    reason = OUTPUT_DIAGNOSTIC if kind.startswith("output failure") else history_failed(f.base)
+    f.scan(1, expected + F + reason, env=env, stderr=b"")
+
+
+for kind in ["output match then history failure",
+             "history match then older history failure",
+             "output failure then history match"]:
+    case(kind, "FOUND", lambda f, k=kind: match_then_failure(f, k))
+
+
+def failure_without_match(f):
+    # The first history search fails between two clean searches, the output
+    # search before it and the next commit's search after it. The wrapper logs
+    # every search, so the case checks that both ran, in that order; with no
+    # match anywhere the result stays INCONCLUSIVE/3.
+    f.commit(b"clean again")
+    commits = f.git("rev-list", "--all", "--reflog").decode().split()
+    assert len(commits) == 2, commits
+    env = wrapper(f, "if [[ $3 == grep && $4 == --no-index ]]; then\n"
+                  "printf 'output\\n' >> searches\n"
+                  "elif [[ $3 == grep ]]; then\n"
+                  "printf '%s\\n' \"$9\" >> searches\nfi\n"
+                  "if " + HISTORY[:-3] + " && $9 == " + commits[0] + " ]]; then\n"
+                  "printf 'fatal: injected\\n' >&2\nexit 128\nfi")
+    f.scan(3, I, env=env, stderr=b"")
+    searched = (f.root / "searches").read_bytes().decode().split()
+    assert searched == ["output", *commits], searched
+
+
+case("failure between clean searches", "INCONCLUSIVE", failure_without_match)
+
+
+def matched_with_diagnostic(f):
+    # After the wrapper writes a diagnostic, real Git matches and exits 0 with
+    # its names discarded, so only that exit status shows the match: the
+    # search counts as a match, so FOUND/1 with that search's INCOMPLETE line.
+    real = shutil.which("git")
+    f.write("dist/app.js", KEY)
+    env = wrapper(f, "if " + OUTPUT + "; then\nprintf 'warning: injected\\n' >&2\n\"" +
+                  real + "\" \"$@\" > /dev/null\nexit\nfi")
+    f.scan(1, F + OUTPUT_DIAGNOSTIC, env=env, stderr=b"")
+
+
+case("match with diagnostic", "FOUND", matched_with_diagnostic)
+
+
+def names_then_failure(f, stage):
+    # Real Git prints the matching name, then the wrapper fails the search:
+    # the printed name counts as a match, so FOUND/1 with the INCOMPLETE line.
+    real = shutil.which("git")
+    if stage == "output":
+        f.write("dist/app.js", KEY)
+        condition, emit, expected, reason = OUTPUT, ":", b"dist/app.js\n", OUTPUT_STATUS
+    else:
+        h = f.commit()
+        first = f.git("rev-list", "--all", "--reflog").decode().split()[0]
+        condition, emit = HISTORY, "printf 'fatal: injected\\n' >&2"
+        expected, reason = quoted(h + ":source"), history_failed(first)
+    env = wrapper(f, "if " + condition + "; then\n\"" + real + "\" \"$@\"\n" +
+                  emit + "\nexit 128\nfi")
+    f.scan(1, expected + F + reason, env=env, stderr=b"")
+
+
+case("output names then failure without diagnostic", "FOUND",
+     lambda f: names_then_failure(f, "output"))
+case("history names then failure with diagnostic", "FOUND",
+     lambda f: names_then_failure(f, "history"))
+
+
+def unverified_output_line(f, body, expected):
+    # A printed line counts only when it names a real path under the output
+    # directory: a garbled, empty, partial or non-path line never reads as
+    # FOUND and never reaches stdout, while a printed real path still counts.
+    env = wrapper(f, "if " + OUTPUT + "; then\n" + body + "\nexit 128\nfi")
+    if expected is None:
+        f.scan(3, I, env=env, stderr=b"")
+    else:
+        f.scan(1, expected, env=env, stderr=b"")
+
+
+for kind, body, expected in [
+    ("empty line", "printf '\\n'", None),
+    ("non-path line", "printf 'no-such-path\\n'", None),
+    ("partial line", "printf 'dist/ap'", None),
+    ("real path", "printf 'dist/app.js\\n'", b"dist/app.js\n" + F + OUTPUT_STATUS),
+]:
+    case("output " + kind + " then failure",
+         "INCONCLUSIVE" if expected is None else "FOUND",
+         lambda f, b=body, e=expected: unverified_output_line(f, b, e))
+
+
+def unverified_history_line(f, alien):
+    # A history line counts only as commit:path existing in the searched
+    # commit itself: a path absent from that commit, or another commit's real
+    # path, does not read as FOUND.
+    f.commit(b"clean again")
+    commits = f.git("rev-list", "--all", "--reflog").decode().split()
+    assert len(commits) == 2, commits
+    name = commits[1] + ":source" if alien else commits[0] + ":absent"
+    env = wrapper(f, "if " + HISTORY[:-3] + " && $9 == " + commits[0] + " ]]; then\n"
+                  "printf '%s\\n' " + name + "\nexit 128\nfi")
+    f.scan(3, I, env=env, stderr=b"")
+
+
+case("history non-path line then failure", "INCONCLUSIVE",
+     lambda f: unverified_history_line(f, False))
+case("history other commit's path then failure", "INCONCLUSIVE",
+     lambda f: unverified_history_line(f, True))
+
+
+def signal_during_history(f, signame, match):
+    # The signal reaches the scanner while its first history search waits;
+    # the search then completes and the scan ends without the next search.
+    # After the output match: FOUND/1 and the interrupted INCOMPLETE line.
+    # Before any match: INCONCLUSIVE/3.
+    import signal
+    if match:
+        f.write("dist/app.js", KEY)
+    f.commit(b"clean again")
+    env = wrapper(f, "if " + HISTORY + "; then\n"
+                  "printf '%s\\n' \"$9\" >> searches\n: > started\n"
+                  "while [[ ! -e release ]]; do sleep 0.01; done\nfi")
+    p = subprocess.Popen(["bash", str(TOOL), "dist"], cwd=f.root, env={**f.env, **env},
+                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+    try:
+        p.stdin.write(KEY + b"\n")
+        p.stdin.close()
+        p.stdin = None
+        until = time.monotonic() + 30
+        while not (f.root / "started").exists():
+            assert p.poll() is None and time.monotonic() < until, "history search not reached"
+            time.sleep(0.01)
+        p.send_signal(getattr(signal, signame))
+        time.sleep(0.2)
+        (f.root / "release").write_bytes(b"")
+        out, err = p.communicate(timeout=30)
+        expected = ((1, b"dist/app.js\n" + F + INTERRUPTED, b"") if match else
+                    (3, I, b""))
+        assert (p.returncode, out, err) == expected, (p.returncode, out, err)
+        assert KEY not in out + err
+        searched = (f.root / "searches").read_bytes().split()
+        assert len(searched) == 1, searched
+    finally:
+        if p.poll() is None:
+            p.kill()
+            p.communicate()
+
+
+for signame in ("SIGHUP", "SIGINT", "SIGTERM"):
+    case(f"{signame} after output match during history search", "FOUND",
+         lambda f, s=signame: signal_during_history(f, s, True))
+    case(f"{signame} before any match during history search", "INCONCLUSIVE",
+         lambda f, s=signame: signal_during_history(f, s, False))
+
+
+def signal_during_last_search(f, match):
+    # A signal that leaves no search unrun does not make the scan incomplete:
+    # with one commit, the signal lands during the last (only) history search,
+    # which then completes cleanly, so the result carries no INCOMPLETE line
+    # and a clean scan without a match keeps NOT FOUND/0.
+    import signal
+    if match:
+        f.write("dist/app.js", KEY)
+    env = wrapper(f, "if " + HISTORY + "; then\n: > started\n"
+                  "while [[ ! -e release ]]; do sleep 0.01; done\nfi")
+    p = subprocess.Popen(["bash", str(TOOL), "dist"], cwd=f.root, env={**f.env, **env},
+                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+    try:
+        p.stdin.write(KEY + b"\n")
+        p.stdin.close()
+        p.stdin = None
+        until = time.monotonic() + 30
+        while not (f.root / "started").exists():
+            assert p.poll() is None and time.monotonic() < until, "history search not reached"
+            time.sleep(0.01)
+        p.send_signal(signal.SIGTERM)
+        time.sleep(0.2)
+        (f.root / "release").write_bytes(b"")
+        out, err = p.communicate(timeout=30)
+        expected = (1, b"dist/app.js\n" + F, b"") if match else (0, N, b"")
+        assert (p.returncode, out, err) == expected, (p.returncode, out, err)
+        assert KEY not in out + err
+    finally:
+        if p.poll() is None:
+            p.kill()
+            p.communicate()
+
+
+case("signal during last search after output match", "FOUND",
+     lambda f: signal_during_last_search(f, True))
+case("signal during last search without match", "NOT FOUND",
+     lambda f: signal_during_last_search(f, False))
+
+
+def group_signal_during_history(f):
+    # A terminal Ctrl-C signals the whole foreground process group, so Git and
+    # the capture subshells receive it too. Names already printed keep their
+    # match, the interrupted search fails, and the scan stops before the next
+    # search: FOUND/1 and one INCOMPLETE line that starts with that search's
+    # commit and ends with the signal, whatever the killed search's exact
+    # failure wording.
+    import signal
+    f.write("dist/app.js", KEY)
+    f.commit(b"clean again")
+    commits = f.git("rev-list", "--all", "--reflog").decode().split()
+    assert len(commits) == 2, commits
+    env = wrapper(f, "if " + HISTORY[:-3] + " && $9 == " + commits[0] + " ]]; then\n"
+                  "printf '%s\\n' \"$9\" >> searches\n: > started\n"
+                  "while [[ ! -e release ]]; do sleep 0.01; done\nfi")
+    p = subprocess.Popen(["bash", str(TOOL), "dist"], cwd=f.root, env={**f.env, **env},
+                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, start_new_session=True)
+    try:
+        p.stdin.write(KEY + b"\n")
+        p.stdin.close()
+        p.stdin = None
+        until = time.monotonic() + 30
+        while not (f.root / "started").exists():
+            assert p.poll() is None and time.monotonic() < until, "history search not reached"
+            time.sleep(0.01)
+        os.killpg(p.pid, signal.SIGINT)
+        time.sleep(0.2)
+        (f.root / "release").write_bytes(b"")
+        out, err = p.communicate(timeout=30)
+        prefix = (b"dist/app.js\n" + F +
+                  b"INCOMPLETE: the history search of commit " + commits[0].encode())
+        suffix = (b", and the scan was interrupted by a signal; "
+                  b"the result above covers only what was searched\n")
+        assert p.returncode == 1, (p.returncode, out, err)
+        assert out.startswith(prefix) and out.endswith(suffix), (out, err)
+        assert KEY not in out + err
+        searched = (f.root / "searches").read_bytes().split()
+        assert len(searched) == 1, searched
+    finally:
+        if p.poll() is None:
+            try:
+                os.killpg(p.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            p.communicate()
+
+
+case("SIGINT to the process group after output match", "FOUND",
+     group_signal_during_history)
+
+
+def root_check(f, kind, explain=False):
+    # The repository-root check refuses with 2 whenever rev-parse fails with
+    # a status other than 0 or 1, including inside a broken repository.
+    env = None
+    if kind == "rev-parse status=128":
+        env = fail_search(f, '[[ $3 == rev-parse ]]')
+    elif kind == "unsupported repository format":
+        f.git("config", "core.repositoryformatversion", "99")
+    elif kind == "unparsable config":
+        f.write(".git/config", b"[core\n")
+    elif kind == "gitfile to missing directory":
+        shutil.rmtree(f.root / ".git")
+        f.write(".git", b"gitdir: missing\n")
+    if env is None:
+        # Git refuses this broken repository rather than skipping it and
+        # searching the parent directories, so the scan meets a broken one.
+        p = subprocess.run(["git", "rev-parse", "--show-prefix"], cwd=f.root, env=f.env,
+                           capture_output=True, timeout=30)
+        assert p.returncode == 128 and b"(or any " not in p.stderr, (p.returncode, p.stderr)
+    args = ["--explain", "dist"] if explain else None
+    f.scan(2, R + (b"CHECK: repository-root\n" if explain else b""),
+           env=env, args=args, data=b"" if explain else None)
+
+
+for kind in ["rev-parse status=128", "unsupported repository format",
+             "unparsable config", "gitfile to missing directory"]:
+    case("root check refusal " + kind, "REFUSED", lambda f, k=kind: root_check(f, k))
+case("explain root check refusal rev-parse status=128", "CHECK",
+     lambda f: root_check(f, "rev-parse status=128", True))
+case("explain root check refusal unsupported repository format", "CHECK",
+     lambda f: root_check(f, "unsupported repository format", True))
+
+
+def root_check_diagnostic(f):
+    # A rev-parse that exits 0 but prints a diagnostic is a failed check, 3.
+    env = wrapper(f, "if [[ $3 == rev-parse ]]; then\n"
+                  "printf 'warning: injected\\n' >&2\nexit 0\nfi")
+    f.scan(3, I + b"CHECK: repository-root\n", env=env, args=["--explain", "dist"], data=b"")
+
+
+case("explain root check diagnostic", "CHECK", root_check_diagnostic)
 
 
 def race(f):
