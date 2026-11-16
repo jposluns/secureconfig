@@ -18,6 +18,7 @@ F = b"FOUND: remove and rotate credential\n"
 N = b"NOT FOUND: no literal credential in stated scope\n"
 I = b"INCONCLUSIVE: could not complete scan\n"
 R = b"REFUSED: unsafe or wrong use; no content searched\n"
+INCOMPLETE = b"INCOMPLETE: a search failed; the result above covers only what was searched\n"
 CASES = []
 COUNTS = collections.Counter()
 SKIPS = []
@@ -329,13 +330,16 @@ def corruption(f, kind, match=False):
     else:
         f.write(".git/refs/heads/broken", b"1" * 40 + b"\n")
     if match:
+        # The output match stands; the failed history search adds INCOMPLETE.
         f.write("dist/app.js", KEY)
-    f.scan(3, (b"dist/app.js\n" if match and kind != "broken ref" else b"") + I)
+        f.scan(1, b"dist/app.js\n" + F + INCOMPLETE)
+    else:
+        f.scan(3, I)
 
 
 for kind in ["missing", "corrupt", "broken ref"]:
     case(kind + " object", "INCONCLUSIVE", lambda f, k=kind: corruption(f, k))
-case("bundle match then corrupt blob", "INCONCLUSIVE", lambda f: corruption(f, "corrupt", True))
+case("bundle match then corrupt blob", "FOUND", lambda f: corruption(f, "corrupt", True))
 
 
 def mode(f, mode):
@@ -621,7 +625,8 @@ def help_text(f):
     p = subprocess.run(["bash", str(TOOL), "--help"], cwd=f.root, env=f.env,
                        capture_output=True, timeout=30)
     assert (p.returncode, p.stderr) == (0, b""), (p.returncode, p.stderr)
-    line = b"Exit: 0 NOT FOUND in stated scope; 1 FOUND; 2 REFUSED; 3 INCONCLUSIVE.\n"
+    line = (b"Exit: 0 NOT FOUND in stated scope; 1 FOUND, even if a search failed; "
+            b"2 REFUSED; 3 INCONCLUSIVE.\n")
     assert line in p.stdout, p.stdout
 
 
@@ -820,6 +825,87 @@ def failed_producer(f):
 
 
 case("failed pattern producer", "INCONCLUSIVE", failed_producer)
+
+
+def fail_search(f, condition):
+    # Injected Git failure for the searches the condition selects; all other
+    # calls, including the other searches, run real Git.
+    return wrapper(f, "if " + condition + "; then\n"
+                   "printf 'fatal: injected\\n' >&2\nexit 128\nfi")
+
+
+HISTORY = '[[ $3 == grep && $4 != --no-index ]]'
+OUTPUT = '[[ $3 == grep && $4 == --no-index ]]'
+
+
+def match_then_failure(f, kind):
+    # A match wins over a failed search, before or after it: exit 1, FOUND,
+    # then one INCOMPLETE line. $9 is the commit a history search names.
+    if kind == "output match then history failure":
+        f.write("dist/app.js", KEY)
+        env = fail_search(f, HISTORY)
+        expected = b"dist/app.js\n"
+    elif kind == "history match then older history failure":
+        h = f.commit()
+        env = fail_search(f, HISTORY[:-3] + ' && $9 == ' + f.base + ' ]]')
+        expected = quoted(h + ":source")
+    else:
+        h = f.commit()
+        env = fail_search(f, OUTPUT)
+        expected = quoted(h + ":source")
+    f.scan(1, expected + F + INCOMPLETE, env=env, stderr=b"")
+
+
+for kind in ["output match then history failure",
+             "history match then older history failure",
+             "output failure then history match"]:
+    case(kind, "FOUND", lambda f, k=kind: match_then_failure(f, k))
+
+
+def failure_without_match(f):
+    # Clean searches run before (output) and after (base commit) the failed
+    # one; with no match anywhere the result stays INCONCLUSIVE/3.
+    h = f.commit(b"clean again")
+    f.scan(3, I, env=fail_search(f, HISTORY[:-3] + ' && $9 == ' + h + ' ]]'), stderr=b"")
+
+
+case("failure between clean searches", "INCONCLUSIVE", failure_without_match)
+
+
+def root_check(f, kind, explain=False):
+    # The repository-root check refuses with 2 whenever rev-parse fails with
+    # a status other than 0 or 1, including inside a broken repository.
+    env = None
+    if kind == "rev-parse status=128":
+        env = fail_search(f, '[[ $3 == rev-parse ]]')
+    elif kind == "unsupported repository format":
+        f.git("config", "core.repositoryformatversion", "99")
+    elif kind == "unparsable config":
+        f.write(".git/config", b"[core\n")
+    elif kind == "invalid HEAD":
+        f.write(".git/HEAD", b"not a ref\n")
+    args = ["--explain", "dist"] if explain else None
+    f.scan(2, R + (b"CHECK: repository-root\n" if explain else b""),
+           env=env, args=args, data=b"" if explain else None)
+
+
+for kind in ["rev-parse status=128", "unsupported repository format",
+             "unparsable config", "invalid HEAD"]:
+    case("root check refusal " + kind, "REFUSED", lambda f, k=kind: root_check(f, k))
+case("explain root check refusal rev-parse status=128", "CHECK",
+     lambda f: root_check(f, "rev-parse status=128", True))
+case("explain root check refusal unsupported repository format", "CHECK",
+     lambda f: root_check(f, "unsupported repository format", True))
+
+
+def root_check_diagnostic(f):
+    # A rev-parse that exits 0 but prints a diagnostic is a failed check, 3.
+    env = wrapper(f, "if [[ $3 == rev-parse ]]; then\n"
+                  "printf 'warning: injected\\n' >&2\nexit 0\nfi")
+    f.scan(3, I + b"CHECK: repository-root\n", env=env, args=["--explain", "dist"], data=b"")
+
+
+case("explain root check diagnostic", "CHECK", root_check_diagnostic)
 
 
 def race(f):
