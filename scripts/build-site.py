@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the secureconfig.ai pages on the shared site template (baseline 1.13.0).
+"""Build the secureconfig.ai pages on the shared site template (baseline 1.15.0).
 
 Usage:
   python3 -I -B scripts/build-site.py                 write the pages under site/
@@ -674,7 +674,7 @@ class Builder:
                 summary.append("<ul>" + "".join(f"<li>{self.inline(x)}</li>" for x in p["list"]) + "</ul>")
             else:
                 summary.append(f"<p>{self.inline(p['text'])}</p>")
-        summary.append("<h3>Earlier versions, and the template's files, under CC0 1.0</h3>")
+        summary.append("<h3>Earlier versions under CC0 1.0</h3>")
         summary += [f"<p>{self.inline(p['text'])}</p>" for p in lic["cc0"]]
         summary.append("<h3>The fonts under the SIL Open Font License</h3>")
         summary += [f"<p>{self.inline(p['text'])}</p>" for p in lic["ofl"]]
