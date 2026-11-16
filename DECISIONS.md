@@ -17,6 +17,17 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-15 on the public identity: personal identity everywhere (#1336).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 22:46Z. The
+  record gives only the chosen option, noting that it was not the recommended project identity, and no reasoning
+  beyond the choice. The label and description are quoted exactly. The maintainer chose
+  "Personal identity everywhere", whose description read:
+  "Export commits use your own git identity, and the README keeps its maintainer section."
+  - Effect. This pull request changes no file under this ruling; it enters the ruling here. The part of the
+    overnight plan that the next entry quotes includes "personal git identity".
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
+    own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-15 that the whole project moves to the Apache License 2.0 from the change onward (#1336).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 17:33Z, after
   writing on question 1b:
@@ -37,7 +48,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     'inform all orchestrators that we're using "Jeff Posluns" for copyright 2026 on apache 2.0'.
     At about 22:47Z, the maintainer chose "Merge relicence overnight (Recommended)", whose description read:
     "Predicted and best for the project: the relicence PRs (plugin copies of LICENSE/NOTICE, then the relicence itself) merge overnight after two-family QA and gates, so the first public export starts under Apache-2.0; everything already published stays CC0."
-    The overnight plan recorded with that answer reads "relicence PR A then B (Copyright 2026 Jeff Posluns; template
+    The overnight plan recorded with that answer begins "relicence PR A then B (Copyright 2026 Jeff Posluns; template
     keeps CC0 per posluns; personal git identity)".
   - Effect, in the same change as this entry, the first of the two pull requests. `scripts/build-plugin.sh` copies
     the root `LICENSE` and `NOTICE`, byte for byte, to `plugin/LICENSE` and `plugin/NOTICE`, so the plugin zip
@@ -46,8 +57,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     `NOTICE` with the Apache License 2.0 text and an Apache NOTICE. From that change onward, this ruling supersedes
     the ruling below on the vendored AIQT files' licence (#343), which kept the guides under CC0.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
-    that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, and adds its
-    own `CHANGELOG.md` entry.
+    that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
+    own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer rulings of 2026-11-15, D1 to D7, on the `command -v` guards sweep (#1332).**
   The maintainer gave these seven rulings through AskUserQuestion, each recorded as attended, answered between about
   12:26Z and about 13:30Z that day. They settle how the sweep applies the maintainer's ruling of 2026-11-14 on
@@ -1175,7 +1186,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   whether relicensing the repository to Apache-2.0 would be easier; the answer given was that it would put
   redistribution conditions on configuration readers copy, and that earlier releases stay CC0 regardless. They then
   chose to keep CC0 with the exception. No other reasoning was given.
-  The 2026-11-15 ruling above, that the whole project moves to Apache-2.0, supersedes this from that change onward.
+  The 2026-11-15 ruling above, that the whole project moves to Apache-2.0, supersedes in part this ruling: from the
+  later pull request that changes the licence onward, it supersedes the choice to keep the guides under CC0. The
+  re-pin, the vendored `.aiqt/` LICENSE and NOTICE, and that earlier releases stay CC0 still stand.
 
 - **A retroactive full-panel review of #255 and #256:** run it against their current text. This overrode my
   recommendation, which was to close it without one. No reasoning was given. Its findings are rows 1.136 and 3.17.
