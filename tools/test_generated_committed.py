@@ -10,7 +10,8 @@ with the real script's seds, and writes a MANIFEST.sha256. The repository is bui
 clean before each case changes it. The last group runs the real scripts/build-plugin.sh, with
 stand-ins only for its guide list and its version-basis check, on SKILL.md files it must
 rewrite or refuse, in a fixture holding a LICENSE and a NOTICE that each build it passes must
-copy, byte for byte, to plugin/, as regular files and not symbolic links. One of those cases
+copy, byte for byte, to plugin/ and to plugin/skills/secureconfig/, as regular files and not
+symbolic links. One of those cases
 starts with plugin/LICENSE as a symbolic link that the build must replace without writing
 through it.
 
@@ -158,7 +159,7 @@ NOTICES = {"LICENSE": b"fixture licence text\r\nsecond line\n", "NOTICE": b"fixt
 # What a plugin/LICENSE left as a symbolic link points to, which the build must leave unchanged.
 LINKED = b"the link's target\n"
 
-PLUGIN_JSON = '{\n  "name": "fixture",\n  "version": "1.0.5",\n  "license": "CC0-1.0"\n}\n'
+PLUGIN_JSON = '{\n  "name": "fixture",\n  "version": "1.0.5",\n  "license": "Apache-2.0"\n}\n'
 SKILL = "plugin/skills/secureconfig/SKILL.md"
 SKILL_MD = ('---\nname: fixture\nmetadata:\n  version: "1.0.5"\n---\n\n'
             "This skill carries 1 short guides.\n")
@@ -535,9 +536,9 @@ def real_build(skill_md, expected, needle, parser=True, lock=None, extra=None, l
     runs this interpreter with -E and -S, which sees no installed package. With linked,
     plugin/LICENSE starts as a symbolic link to linked.txt at the fixture's root. On success,
     SKILL.md must name VERSION 1.0.5 and, outside its body's HTML comment blocks, 1 guide, once,
-    on one line as written, and plugin/LICENSE and plugin/NOTICE must be regular files, not
-    symbolic links, holding the same bytes as the fixture's root LICENSE and NOTICE; with linked,
-    linked.txt must still hold LINKED."""
+    on one line as written, and the LICENSE and NOTICE copies in plugin/ and in
+    plugin/skills/secureconfig/ must be regular files, not symbolic links, holding the same bytes
+    as the fixture's root LICENSE and NOTICE; with linked, linked.txt must still hold LINKED."""
     if skipped(parser):
         return 0
     with tempfile.TemporaryDirectory() as directory:
@@ -582,10 +583,12 @@ def real_build(skill_md, expected, needle, parser=True, lock=None, extra=None, l
             text = (root / SKILL).read_text(encoding="utf-8")
             assert '  version: "1.0.5"\n' in text and skill_counts(text) == (["1"], ["1"]), text
             for name, want in NOTICES.items():
-                copied = root / "plugin" / name
-                # is_file() follows a symbolic link, so the link is refused first.
-                assert not copied.is_symlink() and copied.is_file(), (name, "not a regular file")
-                assert copied.read_bytes() == want, (name, copied.read_bytes(), want)
+                for copied in (root / "plugin" / name,
+                               root / "plugin" / "skills" / "secureconfig" / name):
+                    # is_file() follows a symbolic link, so the link is refused first.
+                    assert not copied.is_symlink() and copied.is_file(), \
+                        (copied, "not a regular file")
+                    assert copied.read_bytes() == want, (copied, copied.read_bytes(), want)
             if linked:
                 target = (root / "linked.txt").read_bytes()
                 assert target == LINKED, ("linked.txt was written through", target, LINKED)

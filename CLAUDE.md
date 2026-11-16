@@ -66,14 +66,15 @@ blocked upstream.
 ## What this repository is
 
 secureconfig publishes deployment-exposure guides: TLS, authentication, MFA, secret handling, and
-network exposure for services that AI-assisted projects commonly run. Everything is public domain
-under CC0, except the AIQT Guardrails material listed in `.aiqt/PIN`, which is Apache-2.0, and the
-site template's 3 exceptions, which `NOTICE` records. The template's 4 fonts, under
-`site/assets/baseline/fonts/`, and the card builder's Inter fonts, under `.baseline/card-fonts/`
+network exposure for services that AI-assisted projects commonly run. Everything is licensed under the
+Apache License 2.0 (versions before 1.0.1341 stay CC0 1.0), including the AIQT Guardrails material
+listed in `.aiqt/PIN`, which keeps its own `.aiqt/NOTICE`. The site template's copied files stay
+under the template's own CC0 1.0, with 3 exceptions, which `NOTICE` records. The template's 4 fonts,
+under `site/assets/baseline/fonts/`, and the card builder's Inter fonts, under `.baseline/card-fonts/`
 (not served), are under the SIL OFL 1.1, and the template's GitHub, LinkedIn and ORCID marks, under
 `site/assets/baseline/marks/`, are their owners' trademarks. The project names the template's logos
-carry and the projects' domain names are the projects' own names and marks, which CC0 does not
-license (its section 4(a)). The
+carry and the projects' domain names are the projects' own names and marks, which neither Apache-2.0
+(its section 6) nor the template's CC0 (its section 4(a)) licenses. The
 scope boundary and the requirements for a guide live in `CONTRIBUTING.md` and they
 bind: verified syntax with a linked vendor source, the standard structure, honesty where a tool has
 no native control, and working links.

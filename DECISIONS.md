@@ -17,6 +17,31 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **The relicence pull request: the whole project moves to the Apache License 2.0, carrying out the maintainer's
+  ruling of 2026-11-15 (#1341).**
+  This pull request is the second of the two that the ruling's entry below (#1336) describes; it carries the ruling
+  out. It follows the facts recorded with that ruling: the copyright line "Copyright 2026 Jeff Posluns", the
+  template owner's licence facts (the pinned template is CC0 1.0, its fonts SIL OFL 1.1, its marks their owners'
+  trademarks), that the project has no other contributors, and that material copied from other projects keeps its
+  own licence.
+  - Effect, applied in the same change as this entry. `LICENSE` is the Apache License 2.0 text, byte for byte the
+    vendored `.aiqt/LICENSE`. `NOTICE` is an Apache NOTICE: the project name and URL, the line
+    "Copyright 2026 Jeff Posluns", and the third-party attributions (the AIQT Guardrails material with its own
+    `.aiqt/NOTICE`, the site template's CC0 1.0 files, the template's fonts and the card builder's Inter fonts
+    under the SIL OFL 1.1, and the marks and names neither licence grants). `scripts/build-plugin.sh` now copies
+    the root `LICENSE` and `NOTICE` into `plugin/skills/secureconfig/` too, so the skill zip carries them, as the
+    entry below says this pull request does, and `tools/test_generated_committed.py` checks all 4 copies. Every
+    licence statement is updated: README.md, CONTRIBUTING.md (its contribution clause now licenses contributions
+    under Apache-2.0 section 5), SECURITY.md, CLAUDE.md and AGENTS.md, the `license` fields of `plugin/plugin.json`
+    and `plugin/skills/secureconfig/SKILL.md`, `.aiqt/PIN`, `site-src/content.json` and `site/llms.txt`. The header
+    `scripts/build-llms-full.sh` writes into `site/llms-full.txt` now points the llms-full release asset at the
+    repository's `LICENSE` and `NOTICE`, and the licence and disclosure pages are regenerated.
+  - Unchanged. Versions before 1.0.1341, including the releases `v1.0.1211`, `v1.0.1295` and `v1.0.1317`, remain
+    under CC0 1.0 Universal, and no published tag moves. The third-party exceptions stay as they were, stated for
+    the new licence. No per-file licence headers are added.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces the 2026-11-15 ruling, then a
+    pull request that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`,
+    adds its own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-15 on the public identity: personal identity everywhere (#1336).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 22:46Z. The
   record gives only the chosen option, noting that it was not the recommended project identity, and no reasoning

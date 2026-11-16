@@ -480,7 +480,7 @@ trap 'rm -f "$built"' EXIT
 {
   echo "# secureconfig.ai: all guides in one file"
   echo
-  echo "> Generated from https://github.com/jposluns/secureconfig (CC0 1.0, except the AIQT Guardrails material listed in .aiqt/PIN, Apache-2.0)."
+  echo "> Generated from https://github.com/jposluns/secureconfig (Apache-2.0; see LICENSE and NOTICE there. Versions before 1.0.1341 are CC0 1.0)."
   echo "> Per-guide index: https://secureconfig.ai/llms.txt"
   echo "> Each file below starts with a line such as \`==> nginx.md\` between two lines of \`=\` characters."
   echo "> Every link to a guide or another repository file is an absolute URL in https://github.com/jposluns/secureconfig on the \`main\` branch, not a page on secureconfig.ai. If GitHub is unreachable, a guide's text is the section below that starts with its file name."
