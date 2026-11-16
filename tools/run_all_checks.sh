@@ -1319,6 +1319,19 @@ else
   bad "test_release.py failed"
 fi
 
+# section: plugin-distribution
+echo "== the hosted catalog and the latest links match the release record =="
+# tools/check_hosted.py holds site/marketplace.json and site/_redirects to what
+# tools/gen_hosted.py writes from the cumulative release record releases/SHA256SUMS, which gains
+# each release's lines newest first. It checks that each recorded zip is staged in
+# site/downloads/ with its recorded SHA-256 or redirected to its own release asset by a
+# tools/redirects_allowlist.txt entry, and compares the staged plugin zip's manifest version
+# with its record. With no record it requires only that no generated file claims one, so a tree
+# with no release record passes. The self-test runs first, on fixtures under TMPDIR, so what
+# runs against the checkout is the shipped check.
+run_gate test_hosted.py python3 -I -B tools/test_hosted.py
+run_gate check_hosted.py python3 -I -B tools/check_hosted.py
+
 # section: todo-rows
 echo "== TODO.md: one backlog row per line =="
 # Finding F-TODO-ROW-CONCATENATION: a lost line break joins two banded-table rows onto one line,

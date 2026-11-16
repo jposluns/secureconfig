@@ -6,7 +6,8 @@ be, written out here rather than read from the selector: a page, a page source, 
 that is not a script, a palette, site/llms.txt, a name that only begins like a script's, an
 `.html`, a `.css` and a `.json` file under site-src/, a page named in upper case, a file under
 site/ and one under site-src/ for each allowed ending (SITE_CONTENT, written out here) in upper
-case, and each of the root project records CHANGELOG.md (with version-basis, llms-full, plugin and
+case, site/marketplace.json (the site sections plus plugin-distribution, whose gate holds the
+hosted catalog to the release record), and each of the root project records CHANGELOG.md (with version-basis, llms-full, plugin and
 generated-committed), TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md. A list of scoped
 paths, mixed, selects the union of their sections in the suite's order, and never every section.
 Every scoped selection that holds generated-committed holds llms-full and plugin, and so does a
@@ -98,6 +99,7 @@ SCOPED = (
     ("a served image", "site/assets/baseline/logos/secureconfig.svg", SITE),
     ("a palette", "site/assets/baseline/palettes.css", SITE),
     ("the llms.txt index", "site/llms.txt", SITE),
+    ("the hosted catalog", "site/marketplace.json", SITE + ("plugin-distribution",)),
     ("a name that only begins like a script's", "site/assets/baseline/scheme.json", SITE),
     *((f"an allowed ending {ending} under {top}/, in upper case",
        f"{top}/assets/x{ending.upper()}", SITE)
