@@ -221,6 +221,8 @@
         "scripts/build-llms-full.sh",
         "scripts/build-plugin.sh",
         "VERSION",
+        "LICENSE",
+        "NOTICE",
         "search-engines.md",
         "secrets.md",
         "vault.md",
