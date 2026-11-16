@@ -59,6 +59,24 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
     own `CHANGELOG.md` entry, and records the new ruling here.
+- **Maintainer ruling of 2026-11-15 splitting the walk arm of the text-generation-webui `CMD_FLAGS.txt` block into statuses 2 and 3 (#1337).**
+  The maintainer gave this ruling through AskUserQuestion, recorded as attended, answered at about 17:20Z that day,
+  on the walk arm at `model-servers.md` line 317 on main that wave 2c of the exit-status sweep held back. It is the
+  arm whose question the entry for #1330 below records as still open. The record of the ruling gives only the chosen
+  option, not the other options offered, and no reasoning beyond the choice. The label and description are quoted
+  exactly.
+  The maintainer chose "Split: 2 and 3 (Recommended)", whose description read "Predicted and best for the project: the .git case stays a refusal with 2, the could-not-reach-/ case becomes a failed operation with 3, each with its own message, matching rule 6 and how the chat-uis count checks were split. Done in a small follow-up PR with a DECISIONS entry."
+  - Effect, applied in the same change as this entry, pull request #1337. The arm after the walk above the private
+    user-data directory, which exited 2 both when the walk found a `.git` entry and when it could not reach `/`, now
+    refuses a `.git` entry with 2 and reports a walk that cannot reach `/` with 3, each with its own message. The
+    block's exit-status note follows, the sentence "It refuses if any step fails." becomes one that gives status 3,
+    and the sentence on directories the block leaves behind and the run record's list of later changes cover the
+    split, as the `CHANGELOG.md` entry of #1337 says.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
+    that restores the single status 2 and the shared message at that arm, or changes them to match the new ruling,
+    with the note and sentences that describe them, and regenerates the plugin copies, `site/llms-full.txt`, the
+    manifest and the quality table. It keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own
+    `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer rulings of 2026-11-15, D1 to D7, on the `command -v` guards sweep (#1332).**
   The maintainer gave these seven rulings through AskUserQuestion, each recorded as attended, answered between about
   12:26Z and about 13:30Z that day. They settle how the sweep applies the maintainer's ruling of 2026-11-14 on

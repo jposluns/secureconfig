@@ -56,7 +56,7 @@ memcached.md	S	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	57ef35d716df1dc97e6
 mfa.md	X	PARTIAL(M1)	?	?	?	n/a	?	?	?	?	?	SOLID	bac1bf62e7639167fa222996b6f207cddd47b7e52a35a30260af1b0d9b23c5a0	2026-11-10	tool	current
 minio.md	S	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	PARTIAL(G1)	?	?	SOLID	85740b262253dedbe64449ab7f401420e3f298980c920d0f573476995316c498	2026-11-10	tool	current
 mlflow.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	229b7fe148bd06baf56a819e4b39abd955e9bea96468ff4d6aea73f8b076b04d	2026-11-10	tool	current
-model-servers.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1) ?(G2,G3)	?	?	SOLID	105098a1318f99ea84e5718e3bc42fb43db119075b403629fd0079ad269981a2	2026-11-10	tool	current
+model-servers.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1) ?(G2,G3)	?	?	SOLID	8a7a992dbf366a6cc0292e6705ab51c314a06b3d6409d0684172e805f688bdf0	2026-11-10	tool	current
 mongodb.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	1bb9e73717f13c924ac93b39d92f444534291f5f1a536195180052d14b41d682	2026-11-10	tool	current
 mosquitto.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	1a338374bc949536319551bfd205fe9cee9b44986c2d2bb5521ddf90c2955941	2026-11-10	tool	current
 mysql.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f2d816e86442c44d0bb64fc147557151ea41ddccb731d3992fb1f870244bc5ba	2026-11-10	tool	current
