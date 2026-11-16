@@ -1927,10 +1927,10 @@ echo "== the export allowlist and the private paths account for every tracked pa
 # deny lines keep private, a published path that is not a regular file or whose name leaves the
 # path characters, a required line that matches no tracked path, a copy or render line that can
 # match a denied path, a tracked guide without its own exact copy line, a publishable marker that
-# does not compile or can match an empty string, and a public exception whose line has changed or
-# lost its hit. It reads git's list of tracked paths and writes nothing. The private lists are
-# not read here: they never enter a checkout. The self-test runs first, on fixtures under TMPDIR,
-# so what runs against the checkout is the shipped check.
+# does not compile, draws a compiler warning or can match an empty string, and a public exception
+# whose line has changed or lost its hit. It reads git's list of tracked paths and writes nothing.
+# The private lists are not read here: they never enter a checkout. The self-test runs first, on
+# fixtures under TMPDIR, so what runs against the checkout is the shipped check.
 run_gate test_export_lists.py python3 -I -B tools/test_export_lists.py
 run_gate "export_lists.py --check" python3 -I -B tools/export_lists.py --check
 

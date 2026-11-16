@@ -6,9 +6,10 @@ of the allowlist are exactly the counted guides (the tracked ones, when git can 
 README.md, controls-reference.md and three named project documents; every exact required copy
 line names a regular file in this checkout; the default private directory is absolute and
 outside this checkout, and no file under export/ names it; each publishable marker matches its
-recorded shapes and none of its recorded near misses, and the marker for links into private
-paths finds a link into every shipped deny line; the tool's source holds no call that creates or
-writes a file.
+recorded shapes and none of its recorded near misses; no publishable marker finds a link that
+--check-private builds into a shipped deny line, since such a marker would spell out the private
+paths, and each such link names a path its deny line keeps private; the tool's source holds no
+call that creates or writes a file.
 
 THE PARSERS, on synthetic text: each refusal (a ** outside a deny line, more than one *, a *
 outside the last segment, a glob at the root or with no fixed suffix, a duplicate line, a carriage
@@ -18,24 +19,29 @@ need, a deny line in the allowlist or a copy line among the private paths, a den
 many fields, a source on a copy line or a glob, an absolute path, a . or .. or .git or empty
 segment, a character outside the path set, a ** inside a segment, a deny line that denies
 everything, an empty file, an exact path another line of the same file also matches, a copy or
-render line that can match a path a deny line matches, and a marker that can match an empty
-string) and the clean twin; the glob semantics; the exact overlap of a publish pattern and a deny
-pattern; the marker, term and exception rules; and that a finding about a private list never
-quotes it, nor a compiler message that would.
+render line that can match a path a deny line matches, a marker that can match an empty string,
+a marker the compiler warns about, and a marker whose shortest match cannot be worked out) and
+the clean twin; overlapping deny patterns, which parse; the glob semantics; the exact overlap of
+a publish pattern and a deny pattern; the marker, term and exception rules; and that a finding
+about a private list never quotes it, nor a compiler message or warning that would, and that no
+compiler warning reaches the warnings module's output.
 
 THE CHECKS: check_tree on synthetic path lists (an unlisted tracked path, a required line
 matching no path, an optional line matching none, a path both denied and published, a path two
-lines publish, a path two deny lines keep private, a published path that is a symbolic link or a
-submodule or whose name leaves the path set, a guide or public export file without its own exact
-required copy line); exception verification on fixture files (current, changed, past the end, no
-longer a hit, unreadable, a symbolic link); --check on a fixture checkout with a temporary git
-index (clean, an untracked file and an untracked guide left alone, a tracked unlisted file, a
-tracked symbolic link published, a stale exception, a missing list, no git); --check-private on
-fixture private directories built under TMPDIR (clean, from the environment variable, without
-printing any list content, each refusal of the directory or a list, and markers whose compiler
-messages would quote them), leaving the fixture directory unchanged; the lists read through the
-directory as first opened when another takes its place; and an unexpected error that prints only
-its type.
+lines publish, a path two deny lines keep private, among them a latest archive under a denied
+directory, a deny glob that overlaps another with no tracked path matching both, a published path
+that is a symbolic link or a submodule or whose name leaves the path set, a guide or public export
+file without its own exact required copy line); exception verification on fixture files
+(current, changed, past the end, no longer a hit, unreadable, a symbolic link); --check on a
+fixture checkout with a temporary git index (clean, an untracked file and an untracked guide left
+alone, a tracked unlisted file, a tracked symbolic link published, a stale exception, a missing
+list, no git); --check-private on fixture private directories built under TMPDIR (clean, from
+the environment variable, without printing any list content, each refusal of the directory or a
+list, markers whose compiler messages or warnings would quote or locate them, and private markers
+that miss a link into a deny line), leaving the fixture directory unchanged; usage errors that
+repeat no argument when one starts with --check-private or --private-dir, and no abbreviated
+option; the lists read through the directory as first opened when another takes its place; and
+an unexpected error that prints only its type.
 
 Every term, marker and path here is synthetic. Nothing reads the default private directory or
 the network. Exit 0 ok, 1 on a finding.
@@ -48,6 +54,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import warnings
 from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent
@@ -63,7 +70,12 @@ ROOT_DOCS = {"README.sources.md", "SECURITY.md", "QUALITY.md"}
 # Synthetic protected terms and a synthetic private marker; none is a real term.
 TERM_A, TERM_B = "Qwertyfolk", "Zorblat Quennix"
 SAMPLE_MARKER = "sample-shape\tSMP-[0-9]{3}\n"
-# A link into this project's repository, for the marker of links into private paths.
+# A synthetic private marker that finds both links --check-private builds into each deny line of
+# the fixture checkout.
+LINK_MARKER = ("sample-link\t(?:github\\.com/[A-Za-z0-9-]+/secureconfig/blob|raw\\."
+               "githubusercontent\\.com/[A-Za-z0-9-]+/secureconfig)/[^/\\s]+/(?:CLAUDE\\.md|"
+               "tools/|export/private-paths\\.txt)\n")
+# A link into this project's repository.
 BLOB = "https://github.com/example-org/secureconfig/blob/main/"
 
 # For each shipped publishable marker: shapes it must find, and near misses it must not.
@@ -79,16 +91,6 @@ MARKER_CASES = {
                       "https://github.com/example-org/secureconfig/commit/abc",
                       "https://github.com/example-org/secureconfig/actions/runs/9"],
                      [BLOB + "README.md", "https://github.com/example-org/other/pull/9"]),
-    "link-denied-path": ([BLOB + "TODO.md#top", "github.com/example-org/secureconfig/tree/main/tools",
-                          "github.com/example-org/secureconfig/raw/v1/.github/workflows/a.yml",
-                          BLOB + "site/downloads/x-latest.zip", BLOB + "export/FORMAT.md"],
-                         [BLOB + "README.md", BLOB + "toolsx/a.py", BLOB + "TODO.mdx",
-                          BLOB + "docs/tools/a.py", BLOB + "export/public-markers.txt",
-                          "https://github.com/example-org/other/blob/main/tools/a.py",
-                          "https://github.com/example-org/secureconfig/pull/9"]),
-    "link-private-repo": (["https://github.com/example-org/abc_private",
-                           "github.com/example-org/abc_private/tree/main"],
-                          ["ray.init(_private_flag=1)", "github.com/example-org/abc_privates"]),
 }
 
 
@@ -167,13 +169,18 @@ def shipped(cases):
         for text in misses:
             cases.check(regex is not None and not regex.search(text),
                         f"{ident} should not find {text!r}")
-    # The marker of links into private paths keeps up with the private paths.
-    link = by_id.get("link-denied-path")
+    # The links --check-private builds into the private paths: each names a path its deny line
+    # keeps private, and no publishable marker finds one, since such a marker would spell out the
+    # private paths in a published file.
     for entry in den:
-        url = BLOB + entry.pattern.replace("**", "x").replace("*", "x")
-        cases.check(link is not None and link.search(url),
-                    f"link-denied-path should find a link into the deny line {entry.pattern!r}: "
-                    f"{url!r}")
+        path = el.link_path(entry.pattern)
+        cases.check(entry.regex.fullmatch(path),
+                    f"the deny line {entry.pattern!r} should keep {path!r} private")
+        for label, form in el.LINK_FORMS:
+            link = form.format(path)
+            hits = sorted(ident for ident, regex in by_id.items() if regex.search(link))
+            cases.check(not hits, f"no publishable marker should find {label} link into the deny "
+                        f"line {entry.pattern!r}: {hits!r}")
     cases.check(all(r.ref.startswith("marker:") for r in rows),
                 "every public exception names a marker")
     source = TOOL.read_text(encoding="utf-8")
@@ -249,6 +256,9 @@ def parsers(cases):
          "an exact deny path a deny glob also matches"),
     ):
         refused(cases, deny(text), needle, label)
+    # Two deny globs may overlap; only a tracked path both match is refused (see tree_checks).
+    clean(cases, deny("deny\ttools/**\ndeny\t**/*-latest.zip\toptional\n"),
+          "overlapping deny globs")
 
     # A copy or render line that can match a path a deny line matches.
     pub, _ = publish("copy\ttools/x.py\trequired\ncopy\ttools/*.py\toptional\n"
@@ -335,6 +345,47 @@ def parsers(cases):
                     and not any(fragment in f for f in findings),
                     f"a private marker {source!r} should fail without its compiler message: "
                     f"{findings!r}")
+
+    # A compiler warning is a finding, with its message only for a public marker, and is never
+    # passed to the warnings module's output, even for a pattern re has compiled before or one
+    # that warns and then fails to compile.
+    for source, words in (("[[qzx]", "nested set"), ("[a&&qzx]", "set intersection"),
+                          ("[*--qzx]", "set difference"), ("[qzx||y]", "set union"),
+                          ("[qzv--x]", "set difference")):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            try:
+                re.compile(source)  # put the pattern in re's cache first
+            except re.error:
+                pass
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            _, public = el.parse_markers(b(f"id-one\t{source}\n"), "m", False)
+            _, private = el.parse_markers(b(f"sample-shape\t{source}\n"), "m", True, show=False)
+        cases.check(len(public) == 1 and "the regular expression compiler warns about the "
+                    "pattern" in public[0] and words in public[0].lower(),
+                    f"a public marker {source!r} the compiler warns about: {public!r}")
+        cases.check(private == ["m:1: the regular expression compiler warns about the pattern"],
+                    f"a private marker {source!r} the compiler warns about should fail with no "
+                    f"detail: {private!r}")
+        cases.check(not caught, f"a marker {source!r} should send no warning to the warnings "
+                    f"module's output: {[str(w.message) for w in caught]!r}")
+
+    # A pattern whose shortest match cannot be worked out is refused for that reason.
+    class BrokenParser:
+        @staticmethod
+        def parse(_source):
+            raise RuntimeError("the parser failed")
+
+    saved_parser = el.regex_parser
+    el.regex_parser = BrokenParser
+    try:
+        _, findings = el.parse_markers(b"id-one\tfixture [0-9]+\n", "m", False)
+    finally:
+        el.regex_parser = saved_parser
+    cases.check(findings == ["m:1: the shortest match of the pattern cannot be worked out, so it "
+                             "is refused"],
+                f"a marker whose shortest match cannot be worked out: {findings!r}")
 
     # Protected terms.
     terms, findings = el.parse_terms(b(f"# synthetic\n{TERM_A}\n{TERM_B}\n"))
@@ -433,6 +484,11 @@ def tree_checks(cases):
           "a path two globs publish")
     finds(base, den_text + "deny\t**/*.py\n", paths, ["alpha.md"],
           "tools/x.py: kept private by 2 deny lines", "a path two deny lines keep private")
+    passes(base, den_text + "deny\t**/*-latest.zip\toptional\n", paths, ["alpha.md"],
+           "a deny glob that overlaps another, with no tracked path matching both")
+    finds(base, den_text + "deny\t**/*-latest.zip\toptional\n", paths + ["tools/x-latest.zip"],
+          ["alpha.md"], "tools/x-latest.zip: kept private by 2 deny lines",
+          "a latest archive tracked under a denied directory")
     finds(base.replace("alpha.md\trequired", "alpha.md\toptional"), den_text, paths,
           ["alpha.md"], "alpha.md: needs its own exact copy line", "a guide marked optional")
     finds(base.replace("copy\talpha.md", "render\talpha.md"), den_text, paths, ["alpha.md"],
@@ -559,7 +615,7 @@ def snapshot(directory):
                   for p in Path(directory).iterdir())
 
 
-def private_dir(parent, terms=f"{TERM_A}\n", markers=SAMPLE_MARKER, exceptions=""):
+def private_dir(parent, terms=f"{TERM_A}\n", markers=SAMPLE_MARKER + LINK_MARKER, exceptions=""):
     directory = Path(parent) / "private"
     directory.mkdir(mode=0o700)
     directory.chmod(0o700)
@@ -573,7 +629,7 @@ def check_private_cli(cases):
     alpha_line = ALPHA.split("\n")[4].encode()
     good_row = f"alpha.md\t5\t{el.line_sha256(alpha_line)}\tterm:{TERM_A}\tsynthetic\n"
     rendered_row = f"rendered.txt\t1\t{'b' * 64}\tmarker:sample-shape\tsynthetic\n"
-    secrets = (TERM_A, TERM_B, "sample-shape", "SMP-", "alpha.md", "synthetic")
+    secrets = (TERM_A, TERM_B, "sample-shape", "SMP-", "sample-link", "alpha.md", "synthetic")
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory) / "repo"
         root.mkdir()
@@ -592,8 +648,10 @@ def check_private_cli(cases):
                             f"{label}: the private directory should be left unchanged")
 
         case("a clean private directory", 0, "  ok    private lists: 1 protected terms, "
-             "1 private markers and 2 exceptions parse; 1 exceptions match their lines in the "
-             "checkout and 1 name rendered files", exceptions=good_row + rendered_row)
+             "2 private markers and 2 exceptions parse; 1 exceptions match their lines in the "
+             "checkout and 1 name rendered files, which this tool does not check; the private "
+             "markers find both links into each of the 3 deny lines",
+             exceptions=good_row + rendered_row)
         case("the list digests", 0, f"        {el.TERMS} sha256 "
              f"{hashlib.sha256(b(TERM_A + chr(10))).hexdigest()}")
         case("a duplicate term", 1, f"  FAIL  {el.TERMS}:2: repeats the term of line 1",
@@ -612,6 +670,22 @@ def check_private_cli(cases):
         case("a tab inside a private marker's pattern", 1, f"{el.PRIVATE_MARKERS}:1: is not "
              "ID<TAB>REGEX: it has 3 tab-separated fields", extra=("qzx", "QZX"),
              markers="sample-shape\tQZX\tqzx\n")
+        for source in ("[[qzx]", "[a&&qzx]", "[*--qzx]", "[qzv--x]"):
+            case(f"a private marker the compiler warns about, {source}", 1,
+                 f"  FAIL  {el.PRIVATE_MARKERS}:2: the regular expression compiler warns about "
+                 "the pattern\n", extra=("qzx", "Warning", "position", "nested", "set "),
+                 markers=LINK_MARKER + f"sample-shape\t{source}\n")
+        case("private markers that miss the links into one deny line", 1,
+             f"  FAIL  {el.PRIVATE_PATHS}:2: no private marker finds a github.com blob link into "
+             "a path this deny line keeps private\n", extra=("tools/x",),
+             markers=SAMPLE_MARKER + LINK_MARKER.replace("tools/|", ""))
+        case("private markers that miss the raw link into a deny line", 1,
+             f"  FAIL  {el.PRIVATE_PATHS}:1: no private marker finds a raw.githubusercontent.com "
+             "link into a path this deny line keeps private\n",
+             markers=SAMPLE_MARKER + "sample-link\tgithub\\.com/[^/\\s]+/secureconfig/blob/"
+                                     "[^/\\s]+/(?:CLAUDE\\.md|tools/|export/private-paths\\.txt)\n")
+        case("no private marker at all", 1, f"  FAIL  {el.PRIVATE_PATHS}:3: no private marker "
+             "finds a raw.githubusercontent.com link", markers="# none\n")
         case("a stale private exception", 1, f"{el.PRIVATE_EXCEPTIONS}:1: stale: the line it "
              "names no longer has the recorded SHA-256",
              exceptions=good_row.replace(el.line_sha256(alpha_line), "c" * 64))
@@ -682,6 +756,36 @@ def check_private_cli(cases):
             rc, out = run("--check-private", "--root", root, env=env)
             cases.check(rc == 2 and "is not an absolute path" in out,
                         f"an empty {el.PRIVATE_DIR_ENV} should be refused: {rc}, {out!r}")
+
+            # A usage error repeats no argument once one starts with --check-private or
+            # --private-dir, since an argument may be the private directory's path.
+            quiet = ("error: the arguments do not parse; with --check-private or --private-dir "
+                     "no argument is repeated")
+            stray = str(priv) + "-stray"
+            for label, args in (
+                ("a private directory given without --private-dir",
+                 ("--check-private", "--root", root, stray)),
+                ("an unknown option beside --private-dir",
+                 ("--check", "--private-dir", priv, "--root", root, "--" + stray)),
+                ("--check-private given a value", (f"--check-private={stray}", "--root", root)),
+                ("--check-private beside --check", ("--check-private", "--check", stray)),
+                ("--private-dir with no mode", (f"--private-dir={stray}",)),
+            ):
+                rc, out = run(*args)
+                cases.check(rc == 2 and quiet in out and "usage:" in out
+                            and str(holder) not in out and "stray" not in out,
+                            f"{label}: a usage error should repeat no argument: {rc}, {out!r}")
+            rc, out = run("--check", "--root", root, "stray-argument")
+            cases.check(rc == 2 and "unrecognized arguments: stray-argument" in out
+                        and quiet not in out,
+                        f"a usage error without the private options names its argument: "
+                        f"{rc}, {out!r}")
+            # No abbreviated option is taken for --check-private.
+            env = dict(os.environ, **{el.PRIVATE_DIR_ENV: str(Path(holder) / "absent")})
+            rc, out = run("--check-priv", "--root", root, env=env)
+            cases.check(rc == 2 and "usage:" in out and "private directory" not in out
+                        and "private lists" not in out,
+                        f"an abbreviated --check-private should not run: {rc}, {out!r}")
 
         # The lists are read through the directory as it was opened, even when another directory
         # takes its path after the checks.

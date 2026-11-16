@@ -16,13 +16,17 @@ with --private-dir, or else by the SECURECONFIG_EXPORT_PRIVATE environment varia
 DEFAULT_PRIVATE_DIR. This tool never creates that directory:
 
   protected-terms.txt  one literal term per line, matched case-insensitively at word boundaries.
-  private-markers.txt  ID<TAB>REGEX, as export/public-markers.txt.
+  private-markers.txt  ID<TAB>REGEX, as export/public-markers.txt, for shapes that would
+                       disclose something if published, such as links into the private paths.
   exceptions.tsv       as export/public-exceptions.tsv; REF may also be term:TERM.
 
 Nothing read from a private list, and no part of the private directory's path, is printed: a
-finding in one names its file and line number and the rule it breaks, never a message of the
-regular expression compiler, which can quote the pattern. A pass prints counts and each list's
-SHA-256, and an unexpected error in --check-private prints only its type.
+finding in one names its file and the rule it breaks, with the line number for a line or the
+byte offset of the first byte that is not UTF-8, never a message or warning of the regular
+expression compiler, which can quote or locate the pattern. A pass prints counts and each list's
+SHA-256, and an unexpected error in --check-private prints only its type. When an argument
+starts with --check-private or --private-dir, a usage error prints the usage and a fixed message
+and repeats no argument.
 
 Every list is UTF-8 with LF line endings, no byte order mark, no carriage return and no control
 or format character other than the tab that separates fields, and its last line ends in LF.
@@ -51,9 +55,9 @@ MODES.
                    paths matches at least one tracked path; every tracked guide, and each of the
                    three public export files, has its own exact copy line, marked required; no
                    copy or render line can match a path that a deny line matches; every
-                   publishable marker compiles and can never match an empty string; and every
-                   public exception names a copied file whose line still has the recorded
-                   SHA-256 and still holds a hit of the marker it names.
+                   publishable marker compiles without a compiler warning and can never match
+                   an empty string; and every public exception names a copied file whose line
+                   still has the recorded SHA-256 and still holds a hit of the marker it names.
   --check-private  Open the private directory once, without following a symbolic link, and
                    refuse it unless it is an absolute path outside the repository, owned by the
                    effective user and not group- or world-writable. Read each of the three lists
@@ -61,7 +65,10 @@ MODES.
                    unless it is a regular 0600 file owned by that user. Then parse them, and check
                    each private exception that names a copied file against the checkout. An
                    exception that names a rendered file can only be checked on the staged tree,
-                   which this tool does not build, so it is counted and not checked.
+                   which this tool does not build, so it is counted and not checked. Last, for
+                   each deny line, build a path it keeps private (each ** and * written as x)
+                   and the two links of LINK_FORMS to that path, and fail the deny line unless
+                   some private marker finds each link.
 
 Exit 0 when every check passes, 1 on a finding, 2 when an input cannot be read, git cannot list
 the tracked files, the private directory or one of its lists is refused, or --check-private
@@ -77,9 +84,13 @@ import stat
 import subprocess
 import sys
 import unicodedata
+import warnings
 from pathlib import Path
 
-try:  # the re module's own pattern parser, used to find a pattern's shortest match
+# The re module's own pattern parser, used to find a pattern's shortest match. The re module has
+# no public call for that width; if this private module changes, shortest_match fails and the
+# marker is refused, never accepted.
+try:
     from re import _parser as regex_parser
 except ImportError:  # Python before 3.11
     import sre_parse as regex_parser
@@ -105,6 +116,13 @@ TERMS = "protected-terms.txt"
 PRIVATE_MARKERS = "private-markers.txt"
 PRIVATE_EXCEPTIONS = "exceptions.tsv"
 PRIVATE_FILES = (TERMS, PRIVATE_MARKERS, PRIVATE_EXCEPTIONS)
+# The links --check-private builds into a path each deny line keeps private; the private markers
+# must find each of them. The owner is synthetic and the ref has no /.
+LINK_FORMS = (("a github.com blob", "https://github.com/example-org/secureconfig/blob/main/{}"),
+              ("a raw.githubusercontent.com",
+               "https://raw.githubusercontent.com/example-org/secureconfig/main/{}"))
+# The arguments that put a usage error in quiet mode, since one may carry the private path.
+PRIVATE_ARGUMENTS = ("--check-private", "--private-dir")
 
 PUBLISH_KINDS = ("copy", "render")
 NEEDS = ("required", "optional")
@@ -345,16 +363,30 @@ def overlap_findings(publish, deny):
 
 def shortest_match(source):
     """The fewest characters a match of the compiled pattern SOURCE can span, as the re module's
-    own parser works it out; 0 when it cannot be worked out, so such a pattern is refused."""
+    own parser works it out, or None when it cannot be worked out, so the pattern is refused. A
+    warning the parser raises as an exception is passed on."""
     try:
         return regex_parser.parse(source).getwidth()[0]
-    except Exception:  # noqa: BLE001  any failure is treated as a pattern that can match nothing
-        return 0
+    except Warning:
+        raise
+    except Exception:  # noqa: BLE001  any other failure leaves the width unknown
+        return None
+
+
+def compile_marker(source):
+    """(compiled pattern, shortest match) for SOURCE. Every warning raised while it compiles and
+    parses SOURCE is raised as an exception, so none is printed. shortest_match parses SOURCE
+    again, which re does not cache, so a parser warning is raised even when re.compile returns a
+    pattern it compiled earlier."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        compiled = re.compile(source)
+        return compiled, shortest_match(source)
 
 
 def parse_markers(data, name, allow_empty, show=True):
     """([Marker], [findings]) for a marker file; with show false no finding quotes the file or
-    passes on a compiler message, which can quote the pattern."""
+    passes on a compiler message or warning, which can quote or locate the pattern."""
     lines, findings = split_lines(data, name)
     markers, seen = [], {}
     for number, line in lines:
@@ -374,12 +406,21 @@ def parse_markers(data, name, allow_empty, show=True):
             findings.append(f"{where}: repeats the id of line {seen[ident]}")
             continue
         try:
-            compiled = re.compile(source)
+            compiled, width = compile_marker(source)
+        except Warning as exc:
+            detail = f" ({exc})" if show else ""
+            findings.append(f"{where}: the regular expression compiler warns about the "
+                            f"pattern{detail}")
+            continue
         except (re.error, OverflowError, RecursionError, ValueError) as exc:
             detail = f" ({exc.msg})" if show and isinstance(exc, re.error) else ""
             findings.append(f"{where}: the pattern does not compile{detail}")
             continue
-        if shortest_match(source) == 0:
+        if width is None:
+            findings.append(f"{where}: the shortest match of the pattern cannot be worked out, "
+                            f"so it is refused")
+            continue
+        if width == 0:
             findings.append(f"{where}: the pattern can match an empty string, so it would hit "
                             f"every line")
             continue
@@ -718,6 +759,24 @@ def read_private(dir_fd, name):
     return b"".join(chunks)
 
 
+def link_path(pattern):
+    """A path the deny PATTERN matches: each ** and each * written as the name x."""
+    return pattern.replace("**", "x").replace("*", "x")
+
+
+def link_findings(deny, markers):
+    """A deny line for which no private marker finds one of the LINK_FORMS links into a path it
+    keeps private. No finding quotes a marker."""
+    findings = []
+    for entry in deny:
+        for label, form in LINK_FORMS:
+            link = form.format(link_path(entry.pattern))
+            if not any(marker.regex.search(link) for marker in markers):
+                findings.append(f"{PRIVATE_PATHS}:{entry.line}: no private marker finds {label} "
+                                f"link into a path this deny line keeps private")
+    return findings
+
+
 def run_check_private(root, directory):
     dir_fd = open_private_dir(directory, root)
     try:
@@ -725,13 +784,14 @@ def run_check_private(root, directory):
     finally:
         os.close(dir_fd)
     publish, f1 = parse_paths(read_repo_file(root, ALLOWLIST), ALLOWLIST, PUBLISH_KINDS)
+    deny, f5 = parse_paths(read_repo_file(root, PRIVATE_PATHS), PRIVATE_PATHS, ("deny",))
     terms, f2 = parse_terms(data[TERMS])
     markers, f3 = parse_markers(data[PRIVATE_MARKERS], PRIVATE_MARKERS, allow_empty=True,
                                 show=False)
     rows, f4 = parse_exceptions(data[PRIVATE_EXCEPTIONS], PRIVATE_EXCEPTIONS,
                                 {marker.ident for marker in markers},
                                 {term.text.casefold() for term in terms}, show=False)
-    findings = f1 + f2 + f3 + f4
+    findings = f1 + f5 + f2 + f3 + f4
     checked = []
     if not findings:
         for row in rows:
@@ -748,6 +808,7 @@ def run_check_private(root, directory):
             return term_regex(ref[len("term:"):])
 
         findings += verify_exceptions(checked, PRIVATE_EXCEPTIONS, root, pattern_of, show=False)
+        findings += link_findings(deny, markers)
     if findings:
         for finding in findings:
             print(f"  FAIL  {finding}")
@@ -755,7 +816,8 @@ def run_check_private(root, directory):
     print(f"  ok    private lists: {len(terms)} protected terms, {len(markers)} private markers "
           f"and {len(rows)} exceptions parse; {len(checked)} exceptions match their lines in "
           f"the checkout and {len(rows) - len(checked)} name rendered files, which this tool "
-          f"does not check")
+          f"does not check; the private markers find both links into each of the {len(deny)} "
+          f"deny lines")
     for name in PRIVATE_FILES:
         print(f"        {name} sha256 {hashlib.sha256(data[name]).hexdigest()}")
     return 0
@@ -771,8 +833,29 @@ def private_directory(given, environ):
     return DEFAULT_PRIVATE_DIR
 
 
+class QuietParser(argparse.ArgumentParser):
+    """An argument parser whose usage error, when quiet, prints the usage and a fixed message and
+    repeats no argument, since an argument may be the private directory's path."""
+
+    def __init__(self, *args, quiet=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.quiet = quiet
+
+    def error(self, message):
+        if not self.quiet:
+            super().error(message)
+        self.print_usage(sys.stderr)
+        self.exit(2, f"{self.prog}: error: the arguments do not parse; with --check-private or "
+                     f"--private-dir no argument is repeated\n")
+
+
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Parse and check the export lists.")
+    argv = sys.argv[1:] if argv is None else [str(arg) for arg in argv]
+    # Abbreviations are off, so --check-private runs only when an argument names it in full, and
+    # any argument that starts with it or with --private-dir makes a usage error quiet.
+    quiet = any(arg.startswith(PRIVATE_ARGUMENTS) for arg in argv)
+    parser = QuietParser(description="Parse and check the export lists.", allow_abbrev=False,
+                         quiet=quiet)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check", action="store_true",
                       help="hold the files under export/ to the tracked paths of the checkout")

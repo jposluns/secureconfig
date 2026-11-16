@@ -27,9 +27,11 @@ Every path the export may publish, and nothing else. It lists itself, so it name
 
 Every tracked path that stays private. The allowlist does not list it. Each line is `deny<TAB>PATTERN`, and may add `<TAB>NEED` with the meaning above; a line without one is `required`. A PATTERN is an exact path or a glob in which `**` stands for any number of whole segments (at least one when it ends the pattern) and each other segment holds at most one `*`. A tracked path that stays private matches exactly one deny line.
 
+Two deny patterns may overlap: the rule above holds for tracked paths only, so `--check` fails a tracked path that two deny lines match, not the two patterns themselves. The shipped `**/*-latest.zip` line overlaps the directory lines on purpose, so that `--check` refuses any copy or render line that can match a latest archive anywhere.
+
 ### public-markers.txt
 
-Generic shapes of citations of the project's working records, and of links into the paths that stay private. The allowlist lists it. Each line is `ID<TAB>REGEX`: ID is lowercase ASCII letters and digits in words joined by single hyphens, unique in the file, and REGEX is a Python regular expression that compiles and can never match an empty string, so a pattern that can match zero characters, such as `\b` or `(?=x)` alone, is refused.
+Generic shapes of citations of the project's working records, and of links into its development history. The allowlist lists it, so it holds no shape that spells out what stays private, such as the names of the private paths; such a shape belongs in `private-markers.txt`. Each line is `ID<TAB>REGEX`: ID is lowercase ASCII letters and digits in words joined by single hyphens, unique in the file, and REGEX is a Python regular expression that compiles without a warning from the compiler and can never match an empty string, so a pattern that can match zero characters, such as `\b` or `(?=x)` alone, is refused. A compiler warning, such as the one for a possible nested set in `[[x]`, is a finding, and so is a pattern whose shortest match the tool cannot work out.
 
 ### public-exceptions.tsv
 
@@ -45,7 +47,7 @@ The same PATH, LINE and REF appear once. A row whose line is gone, has another S
 
 ## The private lists
 
-The private lists are never committed. They are kept in a private directory outside every checkout. The tool reads them from the directory given with `--private-dir`, else from the one the `SECURECONFIG_EXPORT_PRIVATE` environment variable names, else from its built-in default. It never creates, writes or lists that directory, and never prints what a list holds or any part of the directory's path: a finding names the list, the line number and the rule broken, never a message of the regular expression compiler, which can quote a pattern, and a pass prints counts and each list's SHA-256.
+The private lists are never committed. They are kept in a private directory outside every checkout. The tool reads them from the directory given with `--private-dir`, else from the one the `SECURECONFIG_EXPORT_PRIVATE` environment variable names, else from its built-in default. It never creates, writes or lists that directory, and never prints what a list holds or any part of the directory's path. A finding names the list and the rule broken, with the line number for a line, or the byte offset of the first byte that is not UTF-8, and never a message or warning of the regular expression compiler, which can quote or locate a pattern. A pass prints counts and each list's SHA-256. The tool accepts no abbreviated option, and when an argument starts with `--check-private` or `--private-dir`, a usage error prints the usage and a fixed message and repeats no argument.
 
 `--check-private` opens the directory once, without following a symbolic link, and refuses it unless it is an absolute path that lies outside the repository, is owned by the user running the tool and is not group or world writable. It opens each list through that open directory, without following a symbolic link, and refuses it unless it is a regular file with mode 0600 owned by the same user. The directories above the private directory are not checked.
 
@@ -55,7 +57,11 @@ One literal term per line, matched without regard to case at word boundaries. A 
 
 ### private-markers.txt
 
-The same format as `public-markers.txt`, for shapes that would disclose something if published. It may hold no markers.
+The same format as `public-markers.txt`, for shapes that would disclose something if published, such as links into the paths that stay private, which spell out their names, and the naming of private repositories.
+
+For each deny line of `private-paths.txt`, `--check-private` builds a path the line keeps private, with each `**` and `*` written as `x`, and two links to it: `https://github.com/example-org/secureconfig/blob/main/PATH` and `https://raw.githubusercontent.com/example-org/secureconfig/main/PATH`. It fails the deny line unless some private marker finds each link, so a list that passes holds at least one marker.
+
+A link whose ref holds a `/`, such as a branch named `feature/x`, is not built: in such a link the ref cannot be told apart from a directory, so a marker that finds it would also find a link into a public file under a directory with a private name.
 
 ### exceptions.tsv
 
