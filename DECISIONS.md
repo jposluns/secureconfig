@@ -38,8 +38,10 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   "Everything moves to Apache-2.0 from the change onward (earlier versions stay CC0): one licence, simplest to state, with the attribution and NOTICE conditions applying to guide content too."
   This overrode the recommended split, and no other reasoning was recorded. The record says the ruling supersedes
   question 1b. The record's note on question 1b, which is the orchestrator's summary and not the maintainer's
-  words, says that the zips will carry `LICENSE` and `NOTICE` under the new licence. When the record was written,
-  the release built two zips, the skill zip and the plugin zip, so the note covers both.
+  words, says that the zips will carry `LICENSE` and `NOTICE` under the new licence. The orchestrator, who wrote
+  that note at 17:33Z, meant both the skill zip and the plugin zip. The release did not yet build both zips then:
+  pull request #1333, which made each release carry a skill zip and a plugin zip and dropped the plugin `.tar.gz`,
+  merged at 21:27Z the same day.
   - Later facts, from the same day. In a free-form answer at about 22:33Z, the maintainer wrote:
     "only me, why is the copyright jeff posluns i thought we were doing apache 2.0 or is that how you do it with apache?, anything from other projects keep their licenses, so the template takes the license from that project (ask posluns)".
     The record of that answer says that the project has no other contributors, that material copied from other
@@ -57,11 +59,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     carries them. No licence wording changes here: the root files and their copies are still the current CC0-era
     `LICENSE` and `NOTICE`.
   - Not yet changed: the licence change itself lands in a later pull request, which replaces the root `LICENSE` and
-    `NOTICE` with the Apache License 2.0 text and an Apache NOTICE. From that change onward, this ruling supersedes
-    in part the ruling below on the vendored AIQT files' licence (#343): its choice to keep the guides under CC0.
-    The skill zip does not yet carry `LICENSE` or `NOTICE`, only the `license:` line in the front matter of
-    `plugin/skills/secureconfig/SKILL.md`. This pull request makes the plugin zip carry them, and adding them to
-    the skill zip is left to a later pull request.
+    `NOTICE` with the Apache License 2.0 text and an Apache NOTICE and also adds `LICENSE` and `NOTICE` to the
+    skill zip. From that change onward, this ruling supersedes in part the ruling below on the vendored AIQT files'
+    licence (#343): its choice to keep the guides under CC0. The skill zip does not yet carry `LICENSE` or `NOTICE`,
+    only the `license:` line in the front matter of `plugin/skills/secureconfig/SKILL.md`. This pull request makes
+    the plugin zip carry them, and the second pull request, which changes the licence, adds them to the skill zip.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
     own `CHANGELOG.md` entry, and records the new ruling here.
