@@ -36,17 +36,23 @@ PART 1, INDEXABILITY AND NO DRAFT TREE:
     live site carries no /draft/ tree (SPECIFICATION section 4.1 items 0 and 3). Any case is
     refused, as a case-insensitive file system or server could serve `Draft/` at /draft/;
   - site/_redirects, when present, holds only the fixed generator header (its first line), the
-    entries of tools/redirects_allowlist.txt and, as the last 2 lines, exactly the two latest
-    links, /downloads/secureconfig-latest.zip then /downloads/secureconfig-plugin-latest.zip,
-    each `SOURCE TARGET 302` with single spaces and both targets one version's zips staged in
-    site/downloads/. Every other line is refused, so a missing path still returns the 404 page
-    with status 404. An allowlist entry is `SOURCE TARGET 302<TAB>REASON` with a non-empty
-    reason; its target is a root-relative path naming a file under site/, or an aged-out
-    versioned zip's own GitHub release asset URL reached from /downloads/<zip>. The literal 302
-    is required everywhere: a latest link answers 302, never 301, and so does every gated
-    redirect. No source or target in the file or the allowlist names /draft/ in any case, and
-    no file under site/ has a `-latest.zip` name, since a latest link is a 302 redirect with no
-    bytes of its own. tools/check_hosted.py holds the file to the generator's output;
+    entries of tools/redirects_allowlist.txt and, written only once a release record exists, the
+    two latest links as the last 2 lines. Those are /downloads/secureconfig-latest.zip then
+    /downloads/secureconfig-plugin-latest.zip, each `SOURCE TARGET 302` with single spaces and
+    both targets one version's zips staged in site/downloads/. Every other line is refused, so a
+    missing path still returns the 404 page with status 404. An allowlist entry is
+    `SOURCE TARGET 302<TAB>REASON` with a non-empty reason; its target is a root-relative path
+    naming a file under site/ outside /downloads/, or an aged-out versioned zip's own GitHub
+    release asset URL reached from /downloads/<zip>. An entry's source never names a file under
+    site/, staged archives included: whether the server would answer with the redirect or the
+    file is not verified here, so an entry that could shadow served bytes is refused, and a
+    target under /downloads/ is refused too, since a staged archive is reached by its own URL or
+    the generated latest links, never through a gated redirect. tools/check_hosted.py also holds
+    each release-asset entry to the release record: a recorded zip that is no longer staged. The
+    literal 302 is required everywhere: a latest link answers 302, never 301, and so does every
+    gated redirect. No source or target in the file or the allowlist names /draft/ in any case,
+    and no file under site/ has a `-latest.zip` name, since a latest link is a 302 redirect with
+    no bytes of its own. tools/check_hosted.py holds the file to the generator's output;
     tools/check_csp_hashes.py holds site/_headers, X-Robots-Tag included.
 
 PART 2, SELF-CONTAINED:
@@ -166,6 +172,7 @@ LATEST_RULES = (
      re.compile(r"/downloads/secureconfig-plugin-(1\.0\.[1-9][0-9]*)\.zip")),
 )
 LATEST_SOURCES = tuple(source for source, _ in LATEST_RULES)
+DOWNLOADS_NAME = "downloads"
 ALLOW_ENTRY = re.compile(r"(/\S+) (\S+) 302")
 # An aged-out zip's redirect target: that release's own GitHub asset, same version and name.
 ASSET_TARGET = re.compile(r"https://github\.com/jposluns/secureconfig/releases/download/"
@@ -442,6 +449,15 @@ def draft_path(value):
     return in_draft(Path(unquote(value.lstrip("/"))))
 
 
+def downloads_path(value):
+    """True when a redirect field lies under /downloads/: a root-relative path whose first
+    segment, in any case and percent-decoded, is DOWNLOADS_NAME."""
+    if not value.startswith("/"):
+        return False
+    parts = Path(unquote(value.lstrip("/"))).parts
+    return bool(parts) and parts[0].casefold() == DOWNLOADS_NAME
+
+
 def allowlist_entries(root):
     """(the valid rules of tools/redirects_allowlist.txt, the findings for the others). A missing
     file is an empty list, so site/_redirects then admits only the header and the latest links."""
@@ -473,9 +489,17 @@ def allowlist_entries(root):
                 or (target.startswith("/") and target.lower().endswith(LATEST_SUFFIX))):
             problems.append("names a -latest file; the two latest links are generated, never "
                             "listed here")
+        if resolves(root, source):
+            problems.append("has a source naming a file under site/; whether the server would "
+                            "answer with the redirect or the file is not verified, so no entry "
+                            "shadows staged bytes")
         asset = ASSET_TARGET.fullmatch(target)
         if target.startswith("/"):
-            if not resolves(root, target):
+            if downloads_path(target):
+                problems.append("has a target under /downloads/; a staged archive is reached by "
+                                "its own URL or the generated latest links, never through a "
+                                "gated redirect")
+            elif not resolves(root, target):
                 problems.append("has a target naming no file under site/")
         elif asset:
             if source != f"/downloads/{asset.group(2)}":

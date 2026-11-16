@@ -21,11 +21,15 @@ WHAT IT CHECKS:
     with the record's SHA-256, or, for a version older than the newest, an allowlist entry of
     tools/redirects_allowlist.txt redirects /downloads/<zip> to that release's GitHub asset at
     https://github.com/jposluns/secureconfig/releases/download/v1.0.<N>/<zip>;
+  - every release-asset entry of tools/redirects_allowlist.txt is held to the record in turn:
+    it names a recorded zip that is no longer staged, so a reviewed entry cannot send a reader
+    to an asset URL no release carries or shadow a staged copy (tools/check_draft.py refuses
+    every other source and target shape);
   - the newest record's zips must be staged, since the latest links and the catalog point at
     hosted copies;
   - the newest record's staged plugin zip holds a plugin.json at its root whose version equals
     the record's version, so the catalog cannot name bytes of another version. When the zip
-    gains .claude-plugin/plugin.json, this check extends to it.
+    gains .claude-plugin/plugin.json, this check will be extended to it.
 
 Offline, standard library only, and it writes nothing. Exit 0 ok, 1 on a finding, 2 on a read
 error. Usage: python3 -I -B tools/check_hosted.py [--root <repository root>]
@@ -82,21 +86,48 @@ def generated_findings(root, records):
     """The findings for the generated files: each exists exactly when it has content and equals
     the generator's output byte for byte."""
     findings = []
-    for rel, expected in ((gen_hosted.MARKETPLACE,
-                           gen_hosted.marketplace_text(root, records) if records else None),
-                          (gen_hosted.REDIRECTS, gen_hosted.redirects_text(root, records))):
+    for rel, expected, behind in ((gen_hosted.MARKETPLACE,
+                                   gen_hosted.marketplace_text(root, records) if records
+                                   else None, "no recorded release"),
+                                  (gen_hosted.REDIRECTS,
+                                   gen_hosted.redirects_text(root, records),
+                                   "no recorded release or allowlist entry")):
         path = root / rel
         found = path.read_text(encoding="utf-8") if path.is_file() else None
         if expected is None and found is not None:
-            findings.append(f"{rel} exists with no recorded release or allowlist entry behind "
-                            f"it; the generator would write nothing for this tree, so remove "
-                            f"the file or commit what it should come from")
+            findings.append(f"{rel} exists with {behind} behind it; the generator would write "
+                            f"nothing for this tree, so remove the file or commit what it "
+                            f"should come from")
         elif expected is not None and found is None:
             findings.append(f"{rel} is missing; run python3 -I -B tools/gen_hosted.py and commit "
                             f"what it writes")
         elif expected != found:
             findings.append(f"{rel} does not equal the generator's output; it is generated and "
                             f"never hand-edited, so run python3 -I -B tools/gen_hosted.py")
+    return findings
+
+
+def allowlist_findings(root, records, rules):
+    """The findings for the allowlist's release-asset redirects, each held to the release
+    record: the entry names a recorded zip that is no longer staged, so the record vouches for
+    every asset URL a reader is sent to (tools/check_draft.py refuses every other asset shape,
+    and a still-staged source also fails its shadow rule)."""
+    findings = []
+    recorded = {name for names in records.values() for name in names}
+    for rule in rules:
+        matched = ASSET_RULE.fullmatch(rule)
+        if not matched:
+            continue
+        name = matched.group(1)
+        if name not in recorded:
+            findings.append(f"{gen_hosted.ALLOWLIST} redirects /downloads/{name} to a release "
+                            f"asset, but no record names {name}; an entry redirects only a "
+                            f"recorded zip, so the record vouches for the asset URL it names")
+        elif (root / DOWNLOADS / name).is_file():
+            findings.append(f"{gen_hosted.ALLOWLIST} redirects /downloads/{name} to its release "
+                            f"asset, but {DOWNLOADS}/{name} is still staged; an entry covers "
+                            f"only an aged-out zip, so remove the entry until the zip ages out "
+                            f"of {DOWNLOADS}")
     return findings
 
 
@@ -140,8 +171,8 @@ def record_findings(root, records, rules):
 def check(root):
     records = gen_hosted.read_records(root)
     rules = gen_hosted.read_allowlist(root)
-    return (generated_findings(root, records) + record_findings(root, records, rules),
-            len(records))
+    return (generated_findings(root, records) + allowlist_findings(root, records, rules)
+            + record_findings(root, records, rules), len(records))
 
 
 def main(argv=None):

@@ -16,10 +16,12 @@ latest link edited to 301, and an extra redirect appended. The record half: a st
 bytes differ from its record, a missing staged archive for the newest release, a newest release
 not staged at all even though redirected, and an aged-out zip with no redirect. The record's own
 shape: a record naming a -latest file, a record missing a zip line, a corrupted record line, a
-line whose name carries no version, a release's lines repeated after another release's (a
-duplicate version), an out-of-order record with the older release first, and a stray entry under
-releases/. The rest: a plugin zip whose root plugin.json version differs from its record, and an
-allowlist entry without a reason. One in-process case holds check_draft.REDIRECTS_HEADER to
+record without a trailing newline, a line whose name carries no version, a release's lines
+repeated after another release's (a duplicate version), an out-of-order record with the older
+release first, and a stray entry under releases/. The allowlist half: an asset redirect naming a
+zip no record names, an asset redirect for a recorded zip that is still staged, and an allowlist
+entry without a reason. The rest: a plugin zip whose root plugin.json version differs from its
+record. One in-process case holds check_draft.REDIRECTS_HEADER to
 gen_hosted.HEADER, so the gate and the generator cannot drift apart on the file's first line.
 
 Nothing here reads git history or the network. Exit 0 ok, 1 on a finding.
@@ -192,6 +194,15 @@ CASES = (
     ("an allowlist entry without a reason",
      lambda d: fixture(d, versions=(), allow="/old / 302\n", generate=False),
      "non-empty reason", 1),
+    ("an asset redirect naming a zip no record names",
+     lambda d: fixture(d, allow=ASSET.format("1.0.99")),
+     "no record names", 1),
+    ("an asset redirect for a recorded zip that is still staged",
+     lambda d: fixture(d, versions=("1.0.5", "1.0.7"), allow=ASSET.format("1.0.5")),
+     "is still staged", 1),
+    ("a record without a trailing newline",
+     lambda d: (fixture(d), write(d, "releases/SHA256SUMS", "\n".join(record_lines(d)))),
+     "does not end with a newline", 1),
 )
 
 
@@ -211,7 +222,7 @@ def check_generator(failures):
     d = Path(tempfile.mkdtemp())
     try:
         fixture(d, versions=("1.0.5", "1.0.7"),
-                allow="/old /downloads/secureconfig-1.0.5.zip 302\tthe old download URL\n")
+                allow="/old /marketplace.json 302\tthe old URL of the catalog\n")
         first = {rel: (d / rel).read_bytes() for rel in ("site/marketplace.json",
                                                          "site/_redirects")}
         rc, out = run("gen_hosted.py", d)
@@ -231,7 +242,7 @@ def check_generator(failures):
                             f"{catalog!r}")
         lines = first["site/_redirects"].decode("utf-8").split("\n")
         count += 1
-        if lines != [gen_hosted.HEADER, "/old /downloads/secureconfig-1.0.5.zip 302",
+        if lines != [gen_hosted.HEADER, "/old /marketplace.json 302",
                      "/downloads/secureconfig-latest.zip "
                      "/downloads/secureconfig-1.0.7.zip 302",
                      "/downloads/secureconfig-plugin-latest.zip "

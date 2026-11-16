@@ -34,13 +34,15 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   template's own checks require that no live `/draft` redirect is in `_redirects`, so the gate keeps refusing any
   `/draft` entry.
   - Effect, in the same change as this entry. `tools/check_draft.py` admits `site/_redirects` only when it holds
-    the generator's header, entries of the new gated `tools/redirects_allowlist.txt` (each `SOURCE TARGET 302`
-    with a reason, its target a file under `site/` or an aged-out versioned zip's own GitHub release asset) and
-    exactly the two `-latest` 302 lines, naming one version's archives staged in `site/downloads/`. It still
-    refuses every other redirect and any `/draft` entry, in the file or the allowlist, so a missing path still
-    gets the 404 page with status 404. `tools/gen_hosted.py` writes the file whole from the allowlist and the
-    cumulative release record `releases/SHA256SUMS` (the 1c ruling of 2026-11-15: one file gaining each
-    release's lines, newest first), and `tools/check_hosted.py` holds the committed file to that output.
+    the generator's header, entries of the new gated `tools/redirects_allowlist.txt` and, written only once a
+    release record exists, the two `-latest` 302 lines, naming one version's archives staged in
+    `site/downloads/`. An entry is `SOURCE TARGET 302` with a reason; its source names no file under `site/`,
+    and its target is a file under `site/` outside `/downloads/` or an aged-out versioned zip's own GitHub
+    release asset. It still refuses every other redirect and any `/draft` entry, in the file or the allowlist,
+    so a missing path still gets the 404 page with status 404. `tools/gen_hosted.py` writes the file whole from
+    the allowlist and the cumulative release record `releases/SHA256SUMS` (the 1c ruling of 2026-11-15: one
+    file gaining each release's lines, newest first), and `tools/check_hosted.py` holds the committed file to
+    that output and every release-asset entry to the record: a recorded zip that is no longer staged.
   - Revert. Restore the `site/_redirects exists` refusal in `tools/check_draft.py` and its test case, remove
     `tools/gen_hosted.py`, `tools/check_hosted.py`, `tools/test_hosted.py`,
     `tools/redirects_allowlist.txt` and the `plugin-distribution` section, and record the withdrawing ruling

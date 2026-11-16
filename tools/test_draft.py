@@ -49,13 +49,16 @@ bytes, so they translate no newline. A second robots meta whose first name attri
 read by that first name, as a browser reads it.
 
 site/_redirects is no longer refused outright: the gate admits only the generator's header, the
-entries of tools/redirects_allowlist.txt and, as the last 2 lines, the two latest 302 links
-naming one version's archives staged in site/downloads/. The cases cover an accepted full file,
-an allowlisted entry, an aged-out zip redirected to its own release asset, a headerless file, a
-301, a wrong-kind target, a missing staged archive, a lone latest link and the reversed order.
-They also cover 2 versions, a third rule, a /draft rule (allowlisted or not), an entry without a
-reason, an aged-out redirect from a foreign source, and a -latest file under site/, in
-downloads/ and elsewhere.
+entries of tools/redirects_allowlist.txt and, written only once a release record exists, the two
+latest 302 links as the last 2 lines, naming one version's archives staged in site/downloads/.
+The cases cover an accepted full file, the accepted record-less shape (the header and an
+allowlisted rule, no latest line), an allowlisted entry, an aged-out zip redirected to its own
+release asset, a headerless file, a 301, a wrong-kind target, a missing staged archive, a lone
+latest link and the reversed order. They also cover 2 versions, a third rule, a /draft rule
+(allowlisted or not), an entry without a reason, an aged-out redirect from a foreign source, an
+entry whose source names a staged archive or an existing page (it would shadow served bytes), an
+entry whose target lies under /downloads/, and a -latest file under site/, in downloads/ and
+elsewhere.
 
 The generated() cases keep the source-to-generated-page path: a Unicode host written in
 content.json survives the build and its own --check and is refused by this gate, and a site.css
@@ -489,6 +492,22 @@ CASES = [
      redirects(LATEST, allow=ASSET.replace("/downloads/secureconfig-1.0.5.zip ", "/old ", 1)
                + "\tx\n"),
      "a source other than its own /downloads/<zip> path", 1),
+    ("an allowlisted redirect whose source is a staged archive",
+     redirects(f"/downloads/{SKILL_ZIP} / 302\n" + LATEST,
+               allow=f"/downloads/{SKILL_ZIP} / 302\tmoved to the landing page\n"),
+     "has a source naming a file under site/", 1),
+    ("an allowlisted redirect whose source is an existing page",
+     redirects("/404.html /index.html 302\n" + LATEST,
+               allow="/404.html /index.html 302\tmoved\n"),
+     "has a source naming a file under site/", 1),
+    ("an allowlisted redirect whose target lies under /downloads/",
+     redirects("/old /downloads/extra.zip 302\n" + LATEST,
+               allow="/old /downloads/extra.zip 302\tserve the staged copy\n",
+               zips=(SKILL_ZIP, PLUGIN_ZIP, "extra.zip")),
+     "has a target under /downloads/", 1),
+    ("the record-less shape: the header and an allowlisted rule, no latest line",
+     redirects("/old / 302\n", allow="/old / 302\tthe old URL of the landing page\n", zips=()),
+     OK_LINE, 0),
     ("a -latest file under site/downloads/",
      write("site/downloads/secureconfig-latest.zip", "x\n"), "has a latest name", 1),
     ("a -latest file elsewhere under site/",

@@ -34,8 +34,10 @@ tab, in file order), then, only when a record exists, the two latest lines, in t
     /downloads/secureconfig-plugin-latest.zip /downloads/secureconfig-plugin-1.0.<N>.zip 302
 
 An allowlist entry line is `SOURCE TARGET 302<TAB>REASON` with single spaces and a non-empty
-reason; tools/check_draft.py checks each entry's shape and target, and refuses any `/draft`
-entry. With no record and no allowlist entry there is nothing to serve, so neither file is
+reason; tools/check_draft.py checks each entry's shape, source and target, and refuses any
+`/draft` entry, while tools/check_hosted.py holds each release-asset entry to the record: a
+recorded zip that is no longer staged. With no record and no allowlist entry there is nothing to
+serve, so neither file is
 written. This generator deletes nothing: a stale committed file is a finding for
 tools/check_hosted.py, never something quietly removed here.
 

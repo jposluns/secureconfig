@@ -4,9 +4,11 @@
 # with single spaces and a non-empty reason. tools/gen_hosted.py copies each entry's rule (the
 # part before the tab), in file order, into site/_redirects between its header and the latest
 # links. tools/check_draft.py checks each entry: the status is the literal 302, the source is a
-# root-relative path that is not a latest name, and no source or target names /draft/. The
-# target is a root-relative path naming a file under site/, or an aged-out versioned zip's own
+# root-relative path that is not a latest name and names no file under site/ (an entry never
+# shadows staged bytes), and no source or target names /draft/. The target is a root-relative
+# path naming a file under site/ outside /downloads/, or an aged-out versioned zip's own
 # GitHub release asset URL
 # (https://github.com/jposluns/secureconfig/releases/download/v1.0.<N>/<zip> from
-# /downloads/<zip>). Entries are added one at a time, each reviewed with its reason; the file
-# ships empty until the first one is needed.
+# /downloads/<zip>). tools/check_hosted.py holds each release-asset entry to the release
+# record: it names a recorded zip that is no longer staged. Entries are added one at a time,
+# each reviewed with its reason; the file ships empty until the first one is needed.
