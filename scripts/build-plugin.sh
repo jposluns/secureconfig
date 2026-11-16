@@ -12,10 +12,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 dest="plugin/skills/secureconfig/references"
-# The repository's licence and notice files, copied to the plugin's root below, so the plugin
-# zip, which holds every file under plugin/, carries them. The listing below and the copy both
-# read this one array, so the generated-file record cannot name other files than the copy uses.
+# The repository's licence and notice files, copied to the plugin's root and to the skill's
+# root below, so the plugin zip, which holds every file under plugin/, and the skill zip, which
+# holds only plugin/skills/secureconfig/, both carry them. The listing below and the copies all
+# read this one array, so the generated-file record cannot name other files than the copies use.
 notices=(LICENSE NOTICE)
+notice_dirs=(plugin plugin/skills/secureconfig)
 
 mapfile -t files < <(bash scripts/build-llms-full.sh --list-guides)
 if [ "${#files[@]}" -eq 0 ]; then
@@ -26,8 +28,8 @@ fi
 if [ "${1:-}" = "--list-inputs" ]; then
   # The guide list, the script it came from, VERSION, and LICENSE and NOTICE: changing
   # build-llms-full.sh changes what this bundle contains, VERSION sets plugin.json's version
-  # below, and LICENSE and NOTICE are copied into plugin/ below, so all of them are inputs to this
-  # build and the generated-file record has to say so.
+  # below, and LICENSE and NOTICE are copied into plugin/ and plugin/skills/secureconfig/ below,
+  # so all of them are inputs to this build and the generated-file record has to say so.
   printf '%s\n' "${files[@]}" scripts/build-llms-full.sh VERSION "${notices[@]}" \
     tools/version_basis.py tools/version_basis_guides.txt tools/version_basis_sources_baseline.txt tools/_markdown.py tools/check_guide_shape.py tools/check_verify_marking.py tools/_verify_sections.py CHANGELOG.md
   exit 0
@@ -65,13 +67,16 @@ for f in "${files[@]}"; do
   cp "$f" "$dest/$f"
 done
 
-# The root LICENSE and NOTICE, byte for byte, at the plugin's root, where the plugin zip and an
-# installed plugin carry them. The skill zip holds only plugin/skills/secureconfig/ and does not.
-# A cp onto a symbolic link writes through it and leaves the link in place, so an existing file or
-# symbolic link is removed first and each copy is a regular file.
+# The root LICENSE and NOTICE, byte for byte, at the plugin's root and at the skill's root, so
+# the plugin zip, the skill zip (which holds only plugin/skills/secureconfig/), an installed
+# plugin and a copied skill all carry them. A cp onto a symbolic link writes through it and
+# leaves the link in place, so an existing file or symbolic link is removed first and each copy
+# is a regular file.
 for f in "${notices[@]}"; do
-  rm -f "plugin/$f"
-  cp "$f" "plugin/$f"
+  for d in "${notice_dirs[@]}"; do
+    rm -f "$d/$f"
+    cp "$f" "$d/$f"
+  done
 done
 
 # Keep the plugin manifest's version in lockstep with the repository VERSION (1.0.<pull request
