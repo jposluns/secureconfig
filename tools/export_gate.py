@@ -57,8 +57,9 @@ THE CHECKS. Every one fails closed.
                    main must name a staged path. (b) Any github.com/<owner>/secureconfig link
                    to pull, commit, commits, compare or actions refuses. (c) Full mode only: a
                    run of 12 or more hexadecimal characters in a text file, in a staged path
-                   name or in an archive member name that names, or holds at any offset, the
-                   first 12 characters of a commit id of the private repository (git rev-list
+                   name, in an archive member name or in a staged archive's raw bytes that
+                   names, or holds at any offset, the
+                   first 12 characters of a private commit id (git rev-list
                    --all, read privately) refuses; the finding never prints the characters,
                    and a printed path is shown folded with every such run masked.
                    The repository-link, history-link, site-link and
@@ -102,10 +103,13 @@ THE CHECKS. Every one fails closed.
                    a staged archive must be explained by a member entry, the central directory,
                    an end record or the archive comment: an unexplained span is scanned as G4
                    scans bytes and refuses the archive. The archive comment, each member's
-                   local-header name and extra field, and each central directory entry's extra
-                   field and comment get the scans a staged file's bytes get: text metadata the
+                   local-header name and extra field, each central directory entry's extra
+                   field and comment, and the zip64 end record's extensible data sector get the
+                   scans a staged file's bytes get: text metadata the
                    term, marker, link and commit scans, binary metadata the byte scans, and
-                   metadata holding identified compressed content refuses the archive.
+                   metadata holding identified compressed content refuses the archive. A commit
+                   scan also reads the archive's whole raw bytes, so a commit id in a structural
+                   region the directory explains but scans nowhere else cannot cross.
                    A member's data descriptor must hold
                    the central directory's CRC and sizes, 8 bytes per size when the member's
                    local zip64 extra field is present, else 4; a descriptor that does not
@@ -148,8 +152,9 @@ DISCLOSED LIMITS. A root-relative url(...) in a staged CSS file is not scanned h
 build's scripts/build-llms-full.sh scans CSS links at build time. The blob, raw and tree link
 rule is pinned to main, so such a link naming another branch is not matched here, while a
 commit-pinned link falls to G5c. The hexadecimal scan reads text files, archive text members
-and text archive metadata, staged path names and archive member names; a commit id buried in
-a binary's bytes alone is not matched. The relative Markdown targets are read from each line as written, not from its
+and text archive metadata, staged path names, archive member names, and the whole raw bytes
+of a staged archive and of every archive member; a commit id buried in a non-archive binary's
+bytes alone is not matched. The relative Markdown targets are read from each line as written, not from its
 folded copy: a link whose brackets need normalization is not a link to any renderer, and a
 target spelled in such characters matches no staged path, so the raw scan already refuses it.
 The history-link rule matches pull, commit, commits, compare and actions; an issues or
@@ -786,8 +791,9 @@ def zip_gaps(data, archive):
 def zip_metadata(data, archive):
     """[(what, bytes)] for an open archive's metadata fields that zip_gaps explains but that
     hold no member data: the archive comment, each member's local-header name and extra field,
-    and each central directory entry's extra field and comment, each non-empty field once, so
-    the caller can give every explained byte the scans a staged file's bytes get."""
+    each central directory entry's extra field and comment, and the zip64 end record's
+    extensible data sector, each non-empty field once, so the caller can
+    scan these structural fields as it scans a staged file's bytes."""
     out = []
     if archive.comment:
         out.append(("archive comment", archive.comment))
@@ -803,6 +809,17 @@ def zip_metadata(data, archive):
                            ("central comment", info.comment)):
             if blob:
                 out.append((what, blob))
+    pos = archive.start_dir
+    for _ in archive.infolist():
+        name_len = int.from_bytes(data[pos + 28:pos + 30], "little")
+        extra_len = int.from_bytes(data[pos + 30:pos + 32], "little")
+        comment_len = int.from_bytes(data[pos + 32:pos + 34], "little")
+        pos += 46 + name_len + extra_len + comment_len
+    if data[pos:pos + 4] == b"PK\x06\x06":
+        size = int.from_bytes(data[pos + 4:pos + 12], "little")
+        sector = data[pos + 56:pos + 12 + size]
+        if sector:
+            out.append(("zip64 end record extensible data", sector))
     return out
 
 
@@ -1406,13 +1423,31 @@ class Gate:
                         f"{place}:{number}: holds a run of {length} hexadecimal characters "
                         f"that names or holds a commit of the private repository")
 
+    def scan_archive_raw(self, rel, data):
+        """Scan a staged archive's whole raw bytes for a private commit id. The commit scan is
+        text-only elsewhere, so a commit prefix placed in a structural region the central
+        directory explains but hands to no scanner, the zip64 end record's extensible data
+        sector or a local header's fixed time, date, CRC and size fields among them, would
+        never meet it. A commit prefix is specific enough to raise no false hit, so the whole
+        archive, members and structure alike, is read here at every nesting level."""
+        if self.commit_prefixes is None:
+            return
+        masked = self.mask(rel)
+        for length in hex_hits(data.decode("latin-1"), self.commit_prefixes):
+            self.findings["G5"].append(
+                f"{masked}: holds a run of {length} hexadecimal characters that names or "
+                f"holds a commit of the private repository")
+
     def scan_zip(self, rel, data, depth=ZIP_DEPTH, budget=None):
         """Scan one staged archive. Every byte span its central directory does not explain
         is scanned as bytes and refuses the archive. The archive comment, each member's
-        local-header name and extra field, and each central directory entry's extra field
-        and comment get the scans a staged file's bytes get: text metadata the term, marker,
+        local-header name and extra field, each central directory entry's extra field
+        and comment, and the zip64 end record's extensible data sector get the scans a staged
+        file's bytes get: text metadata the term, marker,
         link and commit scans, binary metadata the byte scans, and metadata holding
-        identified compressed content refuses. Every member name is scanned, as
+        identified compressed content refuses. A commit scan also reads the archive's whole
+        raw bytes, so a commit id in a structural region the directory explains but scans
+        nowhere else cannot cross. Every member name is scanned, as
         written and folded, for terms, private markers and commit ids. Every member, read by
         its central
         directory entry so a duplicated name hides nothing, is scanned as G4 scans a file, a
@@ -1436,6 +1471,7 @@ class Gate:
                         names.add(info.filename)
                     for index in range(1, len(segments)):
                         folders.add("/".join(segments[:index]))
+                self.scan_archive_raw(rel, data)
                 for start, end in zip_gaps(data, archive):
                     self.scan_bytes(f"{rel}!(unattributed bytes)", data[start:end],
                                     STREAM_DEPTH)

@@ -310,6 +310,38 @@ def tar_bytes(name, payload):
     return collected.getvalue()
 
 
+def zip64_with_sector(sector):
+    """A zip whose zip64 end-of-central-directory record carries an extensible data sector
+    holding SECTOR; zipfile ignores the sector, and the gate must still scan it."""
+    base = zip_bytes([("notes.txt", b"plain")])
+    eocd = base.rfind(b"PK\x05\x06")
+    entries = int.from_bytes(base[eocd + 10:eocd + 12], "little")
+    cd_size = int.from_bytes(base[eocd + 12:eocd + 16], "little")
+    cd_offset = int.from_bytes(base[eocd + 16:eocd + 20], "little")
+    head = base[:cd_offset + cd_size]
+    z64 = (b"PK\x06\x06" + (44 + len(sector)).to_bytes(8, "little")
+           + (45).to_bytes(2, "little") + (45).to_bytes(2, "little")
+           + (0).to_bytes(4, "little") + (0).to_bytes(4, "little")
+           + entries.to_bytes(8, "little") + entries.to_bytes(8, "little")
+           + cd_size.to_bytes(8, "little") + cd_offset.to_bytes(8, "little") + sector)
+    loc = (b"PK\x06\x07" + (0).to_bytes(4, "little")
+           + (cd_offset + cd_size).to_bytes(8, "little") + (1).to_bytes(4, "little"))
+    end = (b"PK\x05\x06" + (0).to_bytes(4, "little")
+           + entries.to_bytes(2, "little") + entries.to_bytes(2, "little")
+           + cd_size.to_bytes(4, "little") + cd_offset.to_bytes(4, "little")
+           + (0).to_bytes(2, "little"))
+    return head + z64 + loc + end
+
+
+def local_header_fixed(payload):
+    """A zip whose first local header carries PAYLOAD across its fixed time, date, CRC and
+    size fields, which the reader takes from the central directory; the gate must scan these
+    bytes, not only the member name and extra field."""
+    data = bytearray(zip_bytes([("notes.txt", b"plain content here")]))
+    data[14:14 + len(payload)] = payload  # inside the 16-byte fixed window at offset 10..26
+    return bytes(data)
+
+
 def main():
     failures = []
     count = 0
@@ -915,6 +947,28 @@ def main():
     code, out = run(fixture.args())
     case("a case variant of a denied path", code, out, 1,
          "a case or normalization variant of the path matches the deny line")
+
+    # The round-5 review's gaps: three zip regions the central directory explains but hands to
+    # no scanner. A private commit id in the zip64 end record's extensible data sector or in a
+    # local header's fixed fields, and a gzip-compressed term in that sector, each crossed with
+    # approval before the fix; each must now refuse with nothing echoed.
+    fixture = Fixture(base, history)
+    fixture.stage_zip(zip64_with_sector(b"SEC-" + commit[:12].encode("ascii") + b"-SEC"))
+    code, out = run(fixture.args())
+    case("a commit id in a zip64 end record's data sector", code, out, 1,
+         "hexadecimal characters that names or holds a commit")
+
+    fixture = Fixture(base, history)
+    fixture.stage_zip(zip64_with_sector(gzip.compress(f"hide {TERM} now".encode(), mtime=0)))
+    code, out = run(fixture.args())
+    case("a gzip term in a zip64 end record's data sector", code, out, 1,
+         "gzip content this gate cannot scan inside")
+
+    fixture = Fixture(base, history)
+    fixture.stage_zip(local_header_fixed(commit[:12].encode("ascii")))
+    code, out = run(fixture.args())
+    case("a commit id in a local header's fixed fields", code, out, 1,
+         "hexadecimal characters that names or holds a commit")
 
     fixture = Fixture(base, history)
     tampered_verdicts = str(fixture.base / "tampered-verdicts.json")
