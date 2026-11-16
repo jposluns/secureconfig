@@ -52,10 +52,14 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     keeps CC0 per posluns; personal git identity)".
   - Effect, in the same change as this entry, the first of the two pull requests. `scripts/build-plugin.sh` copies
     the root `LICENSE` and `NOTICE`, byte for byte, to `plugin/LICENSE` and `plugin/NOTICE`, so the plugin zip
-    carries them. No licence wording changes here: the root files and their copies are still the CC0 1.0 texts.
+    carries them. No licence wording changes here: the root files and their copies are still the current CC0-era
+    `LICENSE` and `NOTICE`.
   - Not yet changed: the licence change itself lands in a later pull request, which replaces the root `LICENSE` and
     `NOTICE` with the Apache License 2.0 text and an Apache NOTICE. From that change onward, this ruling supersedes
     in part the ruling below on the vendored AIQT files' licence (#343): its choice to keep the guides under CC0.
+    The skill zip carries neither `LICENSE` nor `NOTICE`, only the `license:` line in the front matter of
+    `plugin/skills/secureconfig/SKILL.md`. Whether it should carry them is open for the maintainer and is not
+    decided by this pull request.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
     own `CHANGELOG.md` entry, and records the new ruling here.
