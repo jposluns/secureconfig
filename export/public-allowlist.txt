@@ -144,6 +144,8 @@ render	plugin/plugin.json	required
 render	plugin/LICENSE	required
 render	plugin/NOTICE	required
 render	plugin/skills/secureconfig/SKILL.md	required
+render	plugin/skills/secureconfig/LICENSE	required
+render	plugin/skills/secureconfig/NOTICE	required
 render	plugin/skills/secureconfig/references/*.md	required
 render	plugin/skills/secureconfig/references/MANIFEST.sha256	required
 render	plugin/skills/secureconfig/scripts/check-updates.py	required

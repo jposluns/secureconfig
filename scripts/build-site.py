@@ -668,23 +668,24 @@ class Builder:
     def license(self):
         lic = self.c["license"]
         parts = "".join(f"<li>{self.inline(p['text'])}</li>" for p in lic["parts"])
-        summary = [f"<p>{self.inline(p['text'])}</p>" for p in lic["cc0"]]
-        summary.append("<h3>The Apache-licensed AIQT material</h3>")
+        summary = []
         for p in lic["apache"]:
             if "list" in p:
                 summary.append("<ul>" + "".join(f"<li>{self.inline(x)}</li>" for x in p["list"]) + "</ul>")
             else:
                 summary.append(f"<p>{self.inline(p['text'])}</p>")
+        summary.append("<h3>Earlier versions, and the template's files, under CC0 1.0</h3>")
+        summary += [f"<p>{self.inline(p['text'])}</p>" for p in lic["cc0"]]
         summary.append("<h3>The fonts under the SIL Open Font License</h3>")
         summary += [f"<p>{self.inline(p['text'])}</p>" for p in lic["ofl"]]
         body = [f'<p class="meta">{self.inline(lic["meta"]["text"])}</p>',
                 '<p class="lbl blk">The licence</p>', f'<p>{self.inline(lic["scope"]["text"])}</p>',
-                '<p class="lbl sec">Parts</p>', "<h2>Parts under a different licence</h2>",
+                '<p class="lbl sec">Parts</p>', "<h2>Parts under their own terms</h2>",
                 f"<ul>{parts}</ul>", '<p class="lbl sec">In plain language</p>', "<h2>What you may do</h2>",
                 "".join(summary), f'<p>{esc(lic["governs"]["text"])}</p>',
                 '<p class="lbl accent blk">Note</p>',
                 f'<div class="callout"><p>{esc(lic["note"]["text"])}</p></div>', self.next_block(lic["next"])]
-        return self.page("Licence", "license/", self.doc("Licence", "CC0 1.0 Universal", self.rail(), body),
+        return self.page("Licence", "license/", self.doc("Licence", "Apache License 2.0", self.rail(), body),
                          **self.indexable("license", "license/"))
 
     def notfound(self):
