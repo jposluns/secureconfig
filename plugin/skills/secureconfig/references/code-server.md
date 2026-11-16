@@ -68,7 +68,7 @@ REASONED: following block; listener inventory and direct-origin reachability, pe
 # Shell syntax and guard checks do not demonstrate origin isolation.
 # Direct-origin reachability: connect straight to the public IP and published port while keeping the URL
 # hostname for TLS. From an untrusted external host, repeat for every public IPv4/IPv6 address and port.
-# This block cannot exit 0: it exits 1 for any HTTP response and 3 for none.
+# This block cannot exit 0: it exits 2 if a guard refuses or curl is not installed, otherwise 1 for any HTTP response and 3 for none.
 (
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_ORIGIN_URL' 'REPLACE_WITH_PUBLIC_IP' 'REPLACE_WITH_PUBLISHED_PORT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not probing'; exit 2; }
@@ -85,6 +85,7 @@ REASONED: following block; listener inventory and direct-origin reachability, pe
   case "$3" in
     ''|*[!0123456789]*) echo 'a numeric published port is required; not probing'; exit 2 ;;
   esac
+  command -v curl >/dev/null || { echo 'curl is not installed here; not probing'; exit 2; }
   # bracket an IPv6 literal in REPLACE_WITH_PUBLIC_IP. Any HTTP response (incl 401/403) = a finding;
   # http=000 is not a pass (a certificate, timeout, or local error is inconclusive). Never add -k.
   set -- "$1" "$2" "$3" "$(if curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -127,6 +128,7 @@ REASONED: following block; listener inventory and direct-origin reachability, pe
     https://*) ;;
     *) echo 'an HTTPS URL is required; not probing'; exit 2 ;;
   esac
+  command -v curl >/dev/null || { echo 'curl is not installed here; not probing'; exit 2; }
   # 2) Authenticated positive control: paste a cookie from a valid browser session; it enters via stdin
   #    (curl --header @-), never argv. The authenticated response must contain the editor.
   #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
@@ -167,7 +169,7 @@ REASONED: following block; listener inventory and direct-origin reachability, pe
 )
 ```
 
-REASONED: preceding block; paired editor access and MFA, with the listener inventory and direct-origin block above, per the guide's cited code-server v4.145.2 deployment guide and HTTP controls. No editor, proxy, IdP or external probe host is available; listeners are denied locally. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics and config YAML parsed. Placeholder, missing-assignment, short, empty and embedded-placeholder inputs printed refusal messages without reaching curl stubs; substituted inputs reached the stubs; under a pseudo-terminal, empty, placeholder and control-character cookies exited 2 before the authenticated request, and a fixture cookie exited 0 and reached curl only on stdin as a `Cookie:` header. Those checks and runs used an earlier form: one fence whose exit status was the authenticated request's, with the cookie prompt after the unauthenticated request and a bare exit 2 when the prompt failed. The current direct-origin block exits 1 for any HTTP response and 3 for none. The current editor block reads the cookie before either request and exits 3 if that read fails, if a request fails or if the authenticated request ends on a non-2xx status; it exits 2 on a refused input and otherwise 0, leaving both final bodies for you to judge. On 2026-10-31 both current blocks passed bash -n and ran whole against stubs with no network; ShellCheck 0.11.0 runs on them in the repository's gate suite, not in that review. Live outcomes remain unobserved: exposed access opens the editor anonymously or bypasses MFA; fixed access isolates the origin, challenges anonymous users and requires the second factor while admitting the authenticated control. An unauthenticated editor in a private browser window means whoever finds the URL owns the host. Paste the cookie value alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
+REASONED: preceding block; paired editor access and MFA, with the listener inventory and direct-origin block above, per the guide's cited code-server v4.145.2 deployment guide and HTTP controls. No editor, proxy, IdP or external probe host is available; listeners are denied locally. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics and config YAML parsed. Placeholder, missing-assignment, short, empty and embedded-placeholder inputs printed refusal messages without reaching curl stubs; substituted inputs reached the stubs; under a pseudo-terminal, empty, placeholder and control-character cookies exited 2 before the authenticated request, and a fixture cookie exited 0 and reached curl only on stdin as a `Cookie:` header. Those checks and runs used an earlier form: one fence whose exit status was the authenticated request's, with the cookie prompt after the unauthenticated request and a bare exit 2 when the prompt failed. The current direct-origin block exits 2 on a refused input or when curl is not installed, and otherwise 1 for any HTTP response and 3 for none. The current editor block checks for curl before it reads the cookie, reads the cookie before either request and exits 3 if that read fails, if a request fails or if the authenticated request ends on a non-2xx status; it exits 2 on a refused input or when curl is not installed, and otherwise 0, leaving both final bodies for you to judge. On 2026-10-31 both blocks' previous forms, which had no `curl` guard, passed bash -n and ran whole against stubs with no network; ShellCheck 0.11.0 runs on the blocks in the repository's gate suite, not in that review. The current forms add a `command -v curl` guard to each block, which refuses with status 2 and no curl call when curl is not installed; the bash -n check, the ShellCheck 0.11.0 check and the stub runs were not repeated on them, and those guards were not run. Live outcomes remain unobserved: exposed access opens the editor anonymously or bypasses MFA; fixed access isolates the origin, challenges anonymous users and requires the second factor while admitting the authenticated control. An unauthenticated editor in a private browser window means whoever finds the URL owns the host. Paste the cookie value alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ## Sources (checked November 2026)
 
@@ -225,7 +227,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-11",
-  "body_sha256": "9b98e33f64642356b7ff76e3118b9bf636593a50b889e7cf3edc030618826da5",
+  "body_sha256": "4d4a9b2bec001d1b933c808f5d25db3bef11ea9deac9b4b4ff736c3f9f69113e",
   "components": {
     "server": {
       "name": "code-server",
