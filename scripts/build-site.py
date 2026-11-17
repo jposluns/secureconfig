@@ -996,7 +996,8 @@ def hosted_problems(out):
     both read beside out (out's parent folder holds releases/ and tools/), and then only equal to
     that output byte for byte, the rule tools/check_hosted.py holds the committed copies to. A
     record or allowlist that cannot be used refuses the check whole, so nothing unchecked ships.
-    This build writes neither file. OSError or UnicodeError on a read error."""
+    This build writes neither file. OSError or UnicodeError on a read error, and ValueError on a
+    plugin/plugin.json that is not JSON."""
     root = out.parent
     try:
         records = gen_hosted.read_records(root)
@@ -1095,9 +1096,9 @@ def main(argv=None):
                     return 2
                 try:
                     problems += hosted_problems(out)
-                except (OSError, UnicodeError) as exc:
-                    print(f"  FAIL  cannot read the release record, the allowlist or the "
-                          f"generated hosted files: {exc}")
+                except (OSError, UnicodeError, ValueError) as exc:
+                    print(f"  FAIL  cannot read the release record, the allowlist, the plugin "
+                          f"manifest or the generated hosted files: {exc}")
                     return 2
         if problems:
             for p in problems:

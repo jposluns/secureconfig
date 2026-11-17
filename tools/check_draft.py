@@ -42,41 +42,43 @@ PART 1, INDEXABILITY AND NO DRAFT TREE:
     both targets one version's zips staged in site/downloads/. Every other line is refused, so a
     missing path still returns the 404 page with status 404. An allowlist entry is
     `SOURCE TARGET 302<TAB>REASON` with a non-empty reason, and its raw source and target hold
-    only printable ASCII (`!` to `~`). Every root-relative source and target is read in a
-    normal form first: it is percent-decoded until it stops changing (at most DECODE_ROUNDS
-    rounds). A field is refused when the decoding does not settle, when its decoded form
-    carries any character outside printable ASCII (a space, control, invisible or non-ASCII
-    character) or a backslash, when it carries a `.`, `..` or empty segment, when it carries a
-    `*`, `:`, `?` or `#` (FIELD_MARKS), or when it starts `//` (scheme-relative). A host can
-    read `*` as a splat and `:` as a placeholder, each matching more than one path, and `?`
-    and `#` as a query or fragment the rules below would not read; a browser reads a backslash
-    as a slash, and how a browser or a host reads any other refused character is not verified
-    here, so a gated field is one exact literal path, spelled in printable ASCII. A source
-    with a trailing slash is refused too: whether a host folds `/x/` and `/x` onto one request
-    is not verified here, so a gated source has no second spelling. A source that an earlier
-    entry already names, in any case once decoded, is refused as well: a host applies the
-    first rule whose source matches, so a repeated source would make one entry shadow the
-    other. A target is such a normal root-relative path naming a
-    file under site/ that lies outside /downloads/, has no `.zip` name in any case, and whose
-    bytes carry none of the archive signatures this gate reads (ARCHIVE_MAGICS at the start, or
-    a tar magic at TAR_MAGIC_OFFSET), or an aged-out versioned zip's own GitHub release asset
-    URL reached from /downloads/<zip>; any other absolute URL is refused. An entry's source
-    never names a file under site/ by its exact path, an `.html`, `.htm`, `/index.html` or
-    `/index.htm` completion, or another case, staged archives included: whether the server
-    would answer with the redirect or the file is not verified here, so a source that reads as
-    a staged file in any of those spellings is refused. A target under /downloads/ is refused
+    only printable ASCII (`!` to `~`). Every root-relative source and target is read in a normal
+    form first: it is percent-decoded until it stops changing (at most DECODE_ROUNDS rounds). A
+    field is refused when the decoding does not settle, when its decoded form carries any
+    character outside printable ASCII (a space, control, invisible or non-ASCII character) or a
+    backslash, when it carries a `.`, `..` or empty segment, when it carries a `*`, `:`, `?` or
+    `#` (FIELD_MARKS), or when it starts `//` (scheme-relative). A host can read `*` as a splat
+    and `:` as a placeholder, each matching more than one path, and `?` and `#` as a query or
+    fragment the rules below would not read; a browser reads a backslash as a slash, and how a
+    browser or a host reads any other refused character is not verified here, so a gated field
+    is one exact literal path, spelled in printable ASCII. A source with a trailing slash is
+    refused too: whether a host folds `/x/` and `/x` onto one request is not verified here, so a
+    gated source has no second spelling. A source that an earlier entry already names, in any
+    case once decoded, is refused as well: a host applies the first rule whose source matches,
+    so a repeated source would make one entry shadow the other. A target is such a normal
+    root-relative path naming a page, or a published file in PUBLISHED_TARGETS
+    (scripts/build-site.py's PUBLISHED without _headers), under site/ that lies outside
+    /downloads/, has no `.zip` name in any case, and whose bytes carry none of the archive
+    signatures this gate reads (ARCHIVE_MAGICS at the start, or a tar magic at
+    TAR_MAGIC_OFFSET), or an aged-out versioned zip's own GitHub release asset URL reached from
+    /downloads/<zip>; any other absolute URL is refused. A target naming any other file under
+    site/, the host's own _headers or _redirects among them, is refused, because a gated
+    redirect leads only to a page or a file the site build publishes. An entry's source never
+    names a file under site/ by its exact path, an `.html`, `.htm`, `/index.html` or
+    `/index.htm` completion, or another case, staged archives included: whether the server would
+    answer with the redirect or the file is not verified here, so a source that reads as a
+    staged file in any of those spellings is refused. A target under /downloads/ is refused
     because a staged archive is reached by its own URL or the generated latest links, never
     through a gated redirect. A `.zip`-named or archive-signed target elsewhere under site/ is
     refused because the release record vouches for no archive outside /downloads/.
-    tools/check_hosted.py also holds each release-asset entry to the release record (a
-    recorded zip that is no longer staged) and refuses any file under site/downloads/ that no
-    record names. The literal 302 is required everywhere: a latest link answers 302, never
-    301, and so does every gated redirect. No
-    source or target in the file or the allowlist names /draft/ in any case, percent-encoding
-    or dot-segment spelling, and no file under site/ has a `-latest.zip` name, since a latest
-    link is a 302 redirect with no bytes of its own. tools/check_hosted.py holds the file to
-    the generator's output; tools/check_csp_hashes.py holds site/_headers, X-Robots-Tag
-    included.
+    tools/check_hosted.py also holds each release-asset entry to the release record (a recorded
+    zip that is no longer staged) and refuses any file under site/downloads/ that no record
+    names. The literal 302 is required everywhere: a latest link answers 302, never 301, and so
+    does every gated redirect. No source or target in the file or the allowlist names /draft/ in
+    any case, percent-encoding or dot-segment spelling, and no file under site/ has a
+    `-latest.zip` name, since a latest link is a 302 redirect with no bytes of its own.
+    tools/check_hosted.py holds the file to the generator's output; tools/check_csp_hashes.py
+    holds site/_headers, X-Robots-Tag included.
 
 PART 2, SELF-CONTAINED:
   - every URL a page carries, in any attribute whose name ends in `href` or `src` (so `xlink:href`
@@ -196,6 +198,12 @@ LATEST_RULES = (
 )
 LATEST_SOURCES = tuple(source for source, _ in LATEST_RULES)
 DOWNLOADS_NAME = "downloads"
+# The files beside the pages a gated redirect may target: scripts/build-site.py's PUBLISHED
+# without _headers, which, like _redirects, is the host's own configuration, not a page or a
+# published file. tools/test_draft.py holds this list to PUBLISHED.
+PUBLISHED_TARGETS = (".well-known/security.txt", "apple-touch-icon.png", "favicon.ico",
+                     "favicon.svg", "images/secureconfig-card.png", "llms-full.txt", "llms.txt",
+                     "robots.txt", "sitemap.xml")
 # The rule shape: each raw field is printable ASCII (`!` to `~`), so no control or invisible
 # character, a raw U+FEFF included, can hide in a field or act as a second separator for a
 # parser that splits a rule on more than a plain space.
@@ -646,6 +654,13 @@ def allowlist_entries(root):
                                     "name, or bytes carrying a known archive signature); the "
                                     "release record vouches for no archive outside "
                                     "/downloads/")
+                elif (name_suffix(file.name) not in (".html", ".htm")
+                      and file.relative_to((root / SITE).resolve()).as_posix()
+                      not in PUBLISHED_TARGETS):
+                    problems.append("has a target naming a file that is neither a page nor a "
+                                    "published file in PUBLISHED_TARGETS, such as the host's "
+                                    "own _headers or _redirects; a gated redirect leads only "
+                                    "to a page or a file the site build publishes")
         elif asset:
             if source != f"/downloads/{asset.group(2)}":
                 problems.append("redirects a release asset from a source other than its own "

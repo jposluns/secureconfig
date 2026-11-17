@@ -26,7 +26,8 @@ release first, and a stray entry under releases/. The allowlist half: an asset r
 zip no record names, an asset redirect for a recorded zip that is still staged, an allowlist
 entry without a reason, an entry whose source a second entry repeats, and an entry with a raw
 U+FEFF in its source. The rest: a plugin zip whose root plugin.json version differs from its
-record. One in-process case holds check_draft.REDIRECTS_HEADER to
+record, and, with a record behind it, an unparsable plugin/plugin.json (a read error, exit 2)
+and one that is a JSON array. One in-process case holds check_draft.REDIRECTS_HEADER to
 gen_hosted.HEADER, so the gate and the generator cannot drift apart on the file's first line.
 
 Nothing here reads git history or the network. Exit 0 ok, 1 on a finding.
@@ -251,6 +252,14 @@ CASES = (
      lambda d: fixture(d, versions=(), allow="/draft﻿ /index.html 302\tan old link\n",
                        generate=False),
      "printable ASCII", 1),
+    # A plugin/plugin.json that is not JSON is a read error and one that is not an object is
+    # unusable: each is reported in 1 FAIL line, never a traceback.
+    ("an unparsable plugin/plugin.json with a record behind it",
+     lambda d: (fixture(d), write(d, "plugin/plugin.json", "{\n")),
+     "cannot read the record, the allowlist, the plugin manifest or the site", 2),
+    ("a plugin/plugin.json that is a JSON array, with a record behind it",
+     lambda d: (fixture(d), write(d, "plugin/plugin.json", "[]\n")),
+     "is not a JSON object", 1),
 )
 
 
@@ -269,8 +278,11 @@ def check_generator(failures):
         shutil.rmtree(d, ignore_errors=True)
     d = Path(tempfile.mkdtemp())
     try:
+        # The entry's target is a published file beside the pages, which check_draft.py admits
+        # as a gated target (the generated catalog and the host's config files are not).
         fixture(d, versions=("1.0.5", "1.0.7"),
-                allow="/old /marketplace.json 302\tthe old URL of the catalog\n")
+                allow="/old /llms.txt 302\tthe old URL of the index\n")
+        write(d, "site/llms.txt", "secureconfig\n")
         first = {rel: (d / rel).read_bytes() for rel in ("site/marketplace.json",
                                                          "site/_redirects")}
         rc, out = run("gen_hosted.py", d)
@@ -290,7 +302,7 @@ def check_generator(failures):
                             f"{catalog!r}")
         lines = first["site/_redirects"].decode("utf-8").split("\n")
         count += 1
-        if lines != [gen_hosted.HEADER, "/old /marketplace.json 302",
+        if lines != [gen_hosted.HEADER, "/old /llms.txt 302",
                      "/downloads/secureconfig-latest.zip "
                      "/downloads/secureconfig-1.0.7.zip 302",
                      "/downloads/secureconfig-plugin-latest.zip "

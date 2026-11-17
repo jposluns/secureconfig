@@ -216,8 +216,9 @@ def main(argv=None):
     except gen_hosted.HostedError as exc:
         print(f"  FAIL  {exc}")
         return 1
-    except (OSError, UnicodeError) as exc:
-        print(f"  FAIL  cannot read the record, the allowlist or the site: {exc}")
+    except (OSError, UnicodeError, ValueError) as exc:
+        print(f"  FAIL  cannot read the record, the allowlist, the plugin manifest or the site: "
+              f"{exc}")
         return 2
     if findings:
         for finding in findings:

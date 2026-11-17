@@ -61,7 +61,8 @@ At the root, --check also admits the 2 generated hosted files, `_redirects` and
 `marketplace.json`, only when each equals, byte for byte, what tools/gen_hosted.py writes from
 the release record and the redirect allowlist read beside the output folder. Those cases cover
 both files admitted as generated, an edited catalog digest, an appended redirect, a missing
-`_redirects` with a record behind it, and a `marketplace.json` left behind with no record.
+`_redirects` with a record behind it, a `marketplace.json` left behind with no record, and an
+unparsable plugin/plugin.json with a record behind it (a read error, exit 2, no traceback).
 """
 import hashlib
 import html
@@ -718,6 +719,15 @@ def main():
         rc, text = run("--check", "--out", str(out))
         if rc != 0:
             failures.append(f"--check at the root refused the generated hosted files: {text!r}")
+        # An unparsable plugin/plugin.json with a record behind it is a read error (exit 2) in 1
+        # FAIL line, never a traceback.
+        manifest = (d / "plugin" / "plugin.json").read_bytes()
+        (d / "plugin" / "plugin.json").write_text("{\n", encoding="utf-8")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 2 or "the plugin manifest" not in text or "Traceback" in text:
+            failures.append(f"--check at the root did not exit 2 with 1 FAIL line on an "
+                            f"unparsable plugin/plugin.json: {rc} {text!r}")
+        (d / "plugin" / "plugin.json").write_bytes(manifest)
         data = (out / "marketplace.json").read_bytes()
         (out / "marketplace.json").write_bytes(data.replace(b'"sha256": "', b'"sha256": "0'))
         rc, text = run("--check", "--out", str(out))
@@ -821,7 +831,8 @@ def main():
           f"{', an unlistable folder' if os.geteuid() != 0 else ''}, an oversized file counted in "
           f"the total, the total cap and the 20 MiB and 200 MiB values)")
     print("  ok    the 2 generated hosted files at the root: admitted when byte-equal to the "
-          "generator's output, refused when edited, missing or with no record behind them")
+          "generator's output, refused when edited, missing or with no record behind them, and "
+          "an unparsable plugin/plugin.json a read error (exit 2)")
     if os.geteuid() == 0:
         print("  note  run as root, so the 2 unlistable downloads/ cases were skipped")
     return 0

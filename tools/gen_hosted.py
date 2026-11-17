@@ -157,6 +157,8 @@ def entry_fields(root):
     """The catalog's name, description and owner, read from plugin/plugin.json. If these fields
     ever move, only this function changes."""
     manifest = json.loads((root / "plugin" / "plugin.json").read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        raise HostedError("plugin/plugin.json is not a JSON object")
     fields = {"name": manifest.get("name"), "description": manifest.get("description"),
               "author": manifest.get("author")}
     if (not all(isinstance(value, str) and value for value in

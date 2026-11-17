@@ -77,7 +77,10 @@ two entries share a source: the cases refuse two identical entries, a repeated s
 another target, a case-varied and a percent-encoded repeat, and a page rule repeating an
 aged-out zip's asset-redirect source, which would mask that redirect. The archive target rule
 reads bytes as well as names: a target outside /downloads/ whose file opens with a zip or gzip
-signature under a .bin, .tar.gz or .zip.txt name is refused.
+signature under a .bin, .tar.gz or .zip.txt name is refused. A target is a page or a published
+file in check_draft.PUBLISHED_TARGETS, which one case holds to scripts/build-site.py's
+PUBLISHED without _headers: the host's own _headers and _redirects are refused as targets, and
+llms.txt is accepted.
 
 The generated() cases keep the source-to-generated-page path: a Unicode host written in
 content.json survives the build and its own --check and is refused by this gate, and a site.css
@@ -87,6 +90,7 @@ build: the staged --check passes, so the staging form keeps working, and on this
 `main`, the root --check and this gate each refuse the draft tree (baseline SPECIFICATION
 section 4.1 items 0 and 3).
 """
+import importlib.util
 import shutil
 import subprocess
 import sys
@@ -769,6 +773,18 @@ CASES = [
                 redirects("/get /assets/extra.zip.txt 302\n" + LATEST,
                           allow="/get /assets/extra.zip.txt 302\tserve the extra file\n")(d)),
      "bytes carrying a known archive signature", 1),
+    # A target is a page or a published file (PUBLISHED_TARGETS), never the host's own
+    # configuration files.
+    ("an allowlisted redirect whose target is the host's _headers file",
+     redirects("/old /_headers 302\n" + LATEST, allow="/old /_headers 302\tthe header rules\n"),
+     "neither a page nor a published file", 1),
+    ("an allowlisted redirect whose target is the host's _redirects file",
+     redirects("/old /_redirects 302\n" + LATEST,
+               allow="/old /_redirects 302\tthe redirect rules\n"),
+     "neither a page nor a published file", 1),
+    ("an allowlisted redirect whose target is a published file beside the pages",
+     redirects("/old /llms.txt 302\n" + LATEST, allow="/old /llms.txt 302\tthe old index URL\n"),
+     OK_LINE, 0),
     ("the record-less shape: the header and an allowlisted rule, no latest line",
      redirects("/old / 302\n", allow="/old / 302\tthe old URL of the landing page\n", zips=()),
      OK_LINE, 0),
@@ -939,6 +955,15 @@ def main():
         forms = "".join(f for f, p in zip("abcde", DRAFT_REFS) if p.search(normalized(line)))
         if forms != form:
             failures.append(f"{line.strip()!r}: expected only form {form} to match, got {forms!r}")
+    # The gate's published targets are scripts/build-site.py's PUBLISHED without _headers, so the
+    # two lists cannot drift apart.
+    from check_draft import PUBLISHED_TARGETS
+    spec = importlib.util.spec_from_file_location("build_site", ROOT / "scripts" / "build-site.py")
+    build_site = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(build_site)
+    if set(PUBLISHED_TARGETS) != set(build_site.PUBLISHED) - {"_headers"}:
+        failures.append(f"check_draft.PUBLISHED_TARGETS {PUBLISHED_TARGETS!r} is not "
+                        f"scripts/build-site.py's PUBLISHED without _headers")
     # Source to generated page: a Unicode host written in content.json is generated, passes the
     # build's own --check, and is refused by this gate.
     (b, bout), (c, cout), (g, gout) = generated(
