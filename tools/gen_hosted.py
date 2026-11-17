@@ -103,10 +103,12 @@ def read_records(root):
     folder = root / RECORDS
     if not folder.is_dir():
         return {}
+    # A file name and a record line's name are untrusted text, so each is printed escaped
+    # (ascii()): no character in one can end the FAIL line, forge another or fail to encode.
     for entry in sorted(folder.iterdir()):
         if entry.name != RECORD_NAME or not entry.is_file():
-            raise HostedError(f"{RECORDS}/{entry.name} is not the cumulative release record "
-                              f"{RECORDS}/{RECORD_NAME}, the only entry kept there")
+            raise HostedError(f"{str(RECORDS / entry.name)!a} is not the cumulative release "
+                              f"record {RECORDS}/{RECORD_NAME}, the only entry kept there")
     path = folder / RECORD_NAME
     if not path.is_file():
         return {}
@@ -122,11 +124,11 @@ def read_records(root):
             raise HostedError(f"{where} is not `<64 hex>  <name>` as sha256sum writes it")
         digest, name = matched.group(1), matched.group(2)
         if name.lower().endswith(LATEST_SUFFIX):
-            raise HostedError(f"{where} names {name}; a latest link is a 302 redirect with "
+            raise HostedError(f"{where} names {name!a}; a latest link is a 302 redirect with "
                               f"no bytes of its own, so no record lists one")
         version = name_version(name)
         if version is None:
-            raise HostedError(f"{where} names {name}, which is no release archive's name, so "
+            raise HostedError(f"{where} names {name!a}, which is no release archive's name, so "
                               f"the line belongs to no release")
         if version != last:
             if version in records:

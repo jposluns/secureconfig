@@ -31,9 +31,11 @@ one nested too deeply to parse (a read error, exit 2, for the gate and the gener
 one that is a JSON array. The newest record's staged plugin zip is a finding (exit 1) in 1 FAIL
 line, never a traceback, when its root plugin.json is nested too deeply to parse, is a JSON
 array, is UTF-16 rather than UTF-8 or opens with a UTF-8 byte order mark, and when the zip's
-deflated data is damaged or names a compression method zipfile does not support. One in-process
-case holds check_draft.REDIRECTS_HEADER to gen_hosted.HEADER, so the gate and the generator
-cannot drift apart on the file's first line.
+deflated data is damaged or names a compression method zipfile does not support. Its root
+plugin.json version is printed escaped, so one that is a lone surrogate and one that carries a
+newline and a forged ok line are each exit 1 in exactly 1 FAIL line, with no traceback and no
+forged line. One in-process case holds check_draft.REDIRECTS_HEADER to gen_hosted.HEADER, so the
+gate and the generator cannot drift apart on the file's first line.
 
 Nothing here reads git history or the network. Exit 0 ok, 1 on a finding.
 """
@@ -191,7 +193,7 @@ CASES = (
      "the newest record's zips", 1),
     ("a plugin zip whose root plugin.json version differs from its record",
      lambda d: fixture(d, zip_version="1.0.6"),
-     "says version 1.0.6 in its root plugin.json", 1),
+     "says version '1.0.6' in its root plugin.json", 1),
     ("an aged-out release redirected to its own release assets",
      lambda d: fixture(d, versions=("1.0.5", "1.0.7"), stage=("1.0.7",),
                        allow=ASSET.format("1.0.5")),
@@ -317,6 +319,34 @@ CASES = (
      "its root plugin.json cannot be read (That compression method is not supported)", 1),
 )
 
+# (description, root plugin.json version of the newest staged plugin zip, expected text): the
+# version is the zip's own text, so the gate prints it escaped, and each case is exit 1 in
+# exactly 1 FAIL line, with no traceback and no line the version forged.
+ESCAPED_CASES = (
+    ("a staged plugin zip whose root plugin.json version is a lone surrogate",
+     "\ud800", "says version '\\ud800' in its root plugin.json"),
+    ("a staged plugin zip whose root plugin.json version carries a newline and a forged ok line",
+     "9.9.9\n  ok    1 recorded release(s): forged",
+     "says version '9.9.9\\n  ok    1 recorded release(s): forged' in its root plugin.json"),
+)
+
+
+def check_escaped(failures):
+    """ESCAPED_CASES: exit 1 and a single output line, the FAIL line carrying the escaped
+    version (run() strips the leading spaces of the first line)."""
+    for desc, version, expected in ESCAPED_CASES:
+        d = Path(tempfile.mkdtemp())
+        try:
+            fixture(d, zip_version=version)
+            rc, out = run("check_hosted.py", d)
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+        lines = out.splitlines()
+        if rc != 1 or len(lines) != 1 or not lines[0].startswith("FAIL  ") or expected not in out:
+            failures.append(f"{desc}: expected exit 1 in 1 FAIL line containing {expected!r}, "
+                            f"got {rc}: {out!r}")
+    return len(ESCAPED_CASES)
+
 
 def check_generator(failures):
     """The generator's own behaviour: nothing to write, byte-equal reruns, exact content."""
@@ -406,6 +436,7 @@ def main():
             failures.append(f"{desc}: expected the output to contain {expected!r}: {out!r}")
         if "Traceback (most recent call last):" in out:
             failures.append(f"{desc}: the gate crashed: {out!r}")
+    count += check_escaped(failures)
     count += check_generator(failures)
     if failures:
         for failure in failures:

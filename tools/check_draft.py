@@ -632,7 +632,7 @@ def allowlist_entries(root):
         if src is not None:
             shadow = next((staged[form] for form in source_forms(src) if form in staged), None)
         if shadow is not None:
-            problems.append(f"has a source naming a file under site/ ({SITE}/{shadow}) by its "
+            problems.append(f"has a source naming a file under site/ ({str(SITE / shadow)!a}) by its "
                             f"exact path, an index, .html or .htm form, or another case; "
                             f"whether the server would answer with the redirect or the file is "
                             f"not verified, so no entry names a staged file's path in a "
@@ -745,7 +745,10 @@ def check(root):
     if not pages:
         findings.append(f"{SITE} holds no pages")
     for page in pages:
-        rel = page.relative_to(root)
+        # A file name, like a page's attribute name or URL, is untrusted text, so each is printed
+        # escaped, with ascii() or repr(): no character in one can end the FAIL line or forge
+        # another.
+        rel = ascii(str(page.relative_to(root)))
         page_rel = page.relative_to(root / SITE).as_posix()
         parsed = parse(page.read_text(encoding="utf-8"))
         robots = [" ".join(c.lower().replace(",", " , ").split()) for _, c in parsed.robots]
@@ -764,7 +767,7 @@ def check(root):
         for line, name, value in parsed.urls:
             why = check_url(root, value)
             if why:
-                findings.append(f"{rel}:{line}: {name}={value!r} {why}")
+                findings.append(f"{rel}:{line}: {name!a}={value!r} {why}")
         # A canonical is this page's own absolute URL, byte for byte: exactly 1 on each indexable
         # page, none on the 404 or the unlisted advisory (NO_CANONICAL_PAGES), and at most its own
         # on any other page.
@@ -793,10 +796,10 @@ def check(root):
                 continue
             target = resolved(root, value)
             if page_rel not in ABOUT_PAGES and target in about:
-                findings.append(f"{rel}:{line}: links {value}; only the landing page, the "
+                findings.append(f"{rel}:{line}: links {value!a}; only the landing page, the "
                                 f"Disclosure page and the Licence page link those 2 pages")
             if target is not None and in_draft(target.relative_to(site)):
-                findings.append(f"{rel}:{line}: links {value}; no live page links /draft/, which "
+                findings.append(f"{rel}:{line}: links {value!a}; no live page links /draft/, which "
                                 f"the live site does not carry")
         for line, label in parsed.newtab:
             if NEWTAB not in label:
@@ -807,7 +810,7 @@ def check(root):
         for entry in sorted((root / SITE).iterdir()):
             if in_draft(Path(entry.name)):
                 kind = "folder" if entry.is_dir() else "file"
-                findings.append(f"{SITE}/{entry.name} exists ({kind}); the live site carries no "
+                findings.append(f"{str(SITE / entry.name)!a} exists ({kind}); the live site carries no "
                                 f"/draft/ tree: a draft is built and reviewed on the `draft` branch "
                                 f"at https://draft.secureconfig.pages.dev/draft/ (baseline "
                                 f"SPECIFICATION section 4.1 items 0 and 3)")
@@ -815,7 +818,7 @@ def check(root):
     if (root / SITE).is_dir():
         for entry in sorted(p for p in (root / SITE).rglob("*")
                             if p.is_file() and p.name.lower().endswith(LATEST_SUFFIX)):
-            findings.append(f"{entry.relative_to(root)} has a latest name; a latest link is a "
+            findings.append(f"{str(entry.relative_to(root))!a} has a latest name; a latest link is a "
                             f"302 redirect with no bytes of its own, so no file under site/ "
                             f"carries one")
     # PART 3: the published indexes do not refer to /draft/ (fail-closed).
@@ -826,7 +829,7 @@ def check(root):
     assets = (root / SITE / "assets").resolve()
     css_files = sorted(p for p in (root / SITE).rglob("*") if p.is_file() and name_suffix(p.name) == ".css")
     for css in css_files:
-        rel = css.relative_to(root)
+        rel = ascii(str(css.relative_to(root)))  # printed escaped, like a page's name above
         text = CSS_COMMENT.sub(" ", css.read_text(encoding="utf-8"))
         for m in AT_KEYWORD.finditer(text):
             if css_unescape(m.group(1)).lower() == "import":
@@ -837,12 +840,12 @@ def check(root):
             parts = urlsplit(ref)
             target = (css.parent / unquote(parts.path)).resolve()
             if parts.scheme or ref.startswith("/") or "\\" in ref or not target.is_file():
-                findings.append(f"{rel}: url({ref}) is not a relative path to a file in the site")
+                findings.append(f"{rel}: url({ref!a}) is not a relative path to a file in the site")
                 continue
             try:
                 target.relative_to(assets)
             except ValueError:
-                findings.append(f"{rel}: url({ref}) resolves outside {SITE}/assets/")
+                findings.append(f"{rel}: url({ref!a}) resolves outside {SITE}/assets/")
     site_css = root / SITE / "assets" / "site.css"
     if site_css.is_file():
         body = CSS_COMMENT.sub(" ", site_css.read_text(encoding="utf-8"))

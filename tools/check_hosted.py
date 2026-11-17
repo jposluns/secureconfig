@@ -191,7 +191,9 @@ def record_findings(root, records, rules):
             if why:
                 findings.append(f"{DOWNLOADS}/{name}: {why}")
             elif version != current:
-                findings.append(f"{DOWNLOADS}/{name} says version {version} in its root "
+                # The version is the zip's own text, so it is printed escaped (ascii()): no
+                # character in it can end the FAIL line, forge another or fail to encode.
+                findings.append(f"{DOWNLOADS}/{name} says version {version!a} in its root "
                                 f"plugin.json, but its record says {current}; the catalog names "
                                 f"one version of one zip")
     return findings
@@ -207,12 +209,13 @@ def staged_findings(root, records):
         return findings
     recorded = {name for names in records.values() for name in names}
     for entry in sorted(folder.iterdir()):
+        shown = ascii(str(DOWNLOADS / entry.name))  # a file name is printed escaped, as above
         # is_file() alone would follow a symbolic link, so a link is refused by its own type.
         if entry.is_symlink() or not entry.is_file():
-            findings.append(f"{DOWNLOADS}/{entry.name} is not a regular file; {DOWNLOADS} "
+            findings.append(f"{shown} is not a regular file; {DOWNLOADS} "
                             f"holds the record's zips and nothing else")
         elif entry.name not in recorded:
-            findings.append(f"{DOWNLOADS}/{entry.name} is staged, but no record names it; "
+            findings.append(f"{shown} is staged, but no record names it; "
                             f"every file under {DOWNLOADS} is a recorded release zip, held to "
                             f"its recorded SHA-256 by this gate")
     return findings
