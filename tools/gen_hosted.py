@@ -43,7 +43,8 @@ file is written. This generator deletes nothing: a stale committed file is a fin
 tools/check_hosted.py, never something quietly removed here.
 
 Exit 0 with each written path printed (or a note that there is nothing to write), 1 when the
-record or the allowlist cannot be used (HostedError), 2 on a read error.
+record, the allowlist or plugin/plugin.json cannot be used (HostedError), 2 on a read error,
+a plugin/plugin.json that cannot be parsed as JSON included.
 Usage: python3 -I -B tools/gen_hosted.py [--root <repository root>]
 """
 import argparse
@@ -83,7 +84,7 @@ PLUGIN_KIND = next(kind for kind in ARCHIVES if kind.root_file == "plugin.json")
 
 
 class HostedError(ValueError):
-    """The records or the allowlist cannot be used; the message says why."""
+    """The records, the allowlist or plugin/plugin.json cannot be used; the message says why."""
 
 
 def name_version(name):
@@ -156,7 +157,13 @@ def newest(records):
 def entry_fields(root):
     """The catalog's name, description and owner, read from plugin/plugin.json. If these fields
     ever move, only this function changes."""
-    manifest = json.loads((root / "plugin" / "plugin.json").read_text(encoding="utf-8"))
+    text = (root / "plugin" / "plugin.json").read_text(encoding="utf-8")
+    try:
+        manifest = json.loads(text)
+    except RecursionError:
+        # json.loads recurses once per nesting level, so a deeply nested manifest passes the
+        # interpreter's recursion limit; it is a manifest that cannot be read, like bad JSON.
+        raise ValueError("plugin/plugin.json is nested too deeply to parse as JSON") from None
     if not isinstance(manifest, dict):
         raise HostedError("plugin/plugin.json is not a JSON object")
     fields = {"name": manifest.get("name"), "description": manifest.get("description"),

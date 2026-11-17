@@ -995,9 +995,9 @@ def hosted_problems(out):
     only when tools/gen_hosted.py would write it from the release record and the gated allowlist,
     both read beside out (out's parent folder holds releases/ and tools/), and then only equal to
     that output byte for byte, the rule tools/check_hosted.py holds the committed copies to. A
-    record or allowlist that cannot be used refuses the check whole, so nothing unchecked ships.
-    This build writes neither file. OSError or UnicodeError on a read error, and ValueError on a
-    plugin/plugin.json that is not JSON."""
+    record, allowlist or plugin/plugin.json that cannot be used refuses the check whole, so
+    nothing unchecked ships. This build writes neither file. OSError or UnicodeError on a read
+    error, and ValueError on a plugin/plugin.json that cannot be parsed as JSON."""
     root = out.parent
     try:
         records = gen_hosted.read_records(root)
@@ -1005,8 +1005,9 @@ def hosted_problems(out):
                     "marketplace.json": (gen_hosted.marketplace_text(root, records)
                                          if records else None)}
     except gen_hosted.HostedError as exc:
-        return [f"_redirects and marketplace.json cannot be checked, because the release record "
-                f"or the allowlist beside the output folder cannot be used: {exc}"]
+        return [f"_redirects and marketplace.json cannot be checked, because the release record, "
+                f"the allowlist or plugin/plugin.json beside the output folder cannot be used: "
+                f"{exc}"]
     problems = []
     for name in HOSTED:
         path = out / name

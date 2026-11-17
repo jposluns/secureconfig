@@ -26,8 +26,9 @@ release first, and a stray entry under releases/. The allowlist half: an asset r
 zip no record names, an asset redirect for a recorded zip that is still staged, an allowlist
 entry without a reason, an entry whose source a second entry repeats, and an entry with a raw
 U+FEFF in its source. The rest: a plugin zip whose root plugin.json version differs from its
-record, and, with a record behind it, an unparsable plugin/plugin.json (a read error, exit 2)
-and one that is a JSON array. One in-process case holds check_draft.REDIRECTS_HEADER to
+record, and, with a record behind it, an unparsable plugin/plugin.json (a read error, exit 2),
+one nested too deeply to parse (a read error, exit 2, for the gate and the generator alike) and
+one that is a JSON array. One in-process case holds check_draft.REDIRECTS_HEADER to
 gen_hosted.HEADER, so the gate and the generator cannot drift apart on the file's first line.
 
 Nothing here reads git history or the network. Exit 0 ok, 1 on a finding.
@@ -53,6 +54,8 @@ ASSET = ("/downloads/secureconfig-{0}.zip https://github.com/jposluns/secureconf
          "download/v{0}/secureconfig-{0}.zip 302\taged out\n"
          "/downloads/secureconfig-plugin-{0}.zip https://github.com/jposluns/secureconfig/"
          "releases/download/v{0}/secureconfig-plugin-{0}.zip 302\taged out\n")
+# Valid JSON nested far past the interpreter's recursion limit, which json.loads cannot parse.
+NESTED = "[" * 100000 + "]" * 100000 + "\n"
 
 
 def plugin_zip(version):
@@ -260,6 +263,9 @@ CASES = (
     ("a plugin/plugin.json that is a JSON array, with a record behind it",
      lambda d: (fixture(d), write(d, "plugin/plugin.json", "[]\n")),
      "is not a JSON object", 1),
+    ("a plugin/plugin.json nested too deeply to parse, with a record behind it",
+     lambda d: (fixture(d), write(d, "plugin/plugin.json", NESTED)),
+     "nested too deeply to parse", 2),
 )
 
 
@@ -274,6 +280,18 @@ def check_generator(failures):
         if rc != 0 or "nothing to write" not in out or (d / "site").exists():
             failures.append(f"the generator on a root with no record should write nothing: "
                             f"{rc}, {out!r}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    d = Path(tempfile.mkdtemp())
+    try:
+        fixture(d, generate=False)
+        write(d, "plugin/plugin.json", NESTED)
+        rc, out = run("gen_hosted.py", d)
+        count += 1
+        if (rc != 2 or "nested too deeply to parse" not in out
+                or "Traceback (most recent call last):" in out):
+            failures.append(f"the generator on a plugin/plugin.json nested too deeply to parse "
+                            f"should exit 2 in 1 FAIL line: {rc}, {out!r}")
     finally:
         shutil.rmtree(d, ignore_errors=True)
     d = Path(tempfile.mkdtemp())

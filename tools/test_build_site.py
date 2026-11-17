@@ -62,7 +62,8 @@ At the root, --check also admits the 2 generated hosted files, `_redirects` and
 the release record and the redirect allowlist read beside the output folder. Those cases cover
 both files admitted as generated, an edited catalog digest, an appended redirect, a missing
 `_redirects` with a record behind it, a `marketplace.json` left behind with no record, and an
-unparsable plugin/plugin.json with a record behind it (a read error, exit 2, no traceback).
+unparsable plugin/plugin.json and one nested too deeply to parse, each with a record behind it
+(a read error, exit 2, no traceback).
 """
 import hashlib
 import html
@@ -727,6 +728,14 @@ def main():
         if rc != 2 or "the plugin manifest" not in text or "Traceback" in text:
             failures.append(f"--check at the root did not exit 2 with 1 FAIL line on an "
                             f"unparsable plugin/plugin.json: {rc} {text!r}")
+        # So is valid JSON nested past the interpreter's recursion limit, which json.loads
+        # cannot parse.
+        (d / "plugin" / "plugin.json").write_text("[" * 100000 + "]" * 100000 + "\n",
+                                                  encoding="utf-8")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 2 or "nested too deeply to parse" not in text or "Traceback" in text:
+            failures.append(f"--check at the root did not exit 2 with 1 FAIL line on a "
+                            f"plugin/plugin.json nested too deeply to parse: {rc} {text!r}")
         (d / "plugin" / "plugin.json").write_bytes(manifest)
         data = (out / "marketplace.json").read_bytes()
         (out / "marketplace.json").write_bytes(data.replace(b'"sha256": "', b'"sha256": "0'))
@@ -832,7 +841,8 @@ def main():
           f"the total, the total cap and the 20 MiB and 200 MiB values)")
     print("  ok    the 2 generated hosted files at the root: admitted when byte-equal to the "
           "generator's output, refused when edited, missing or with no record behind them, and "
-          "an unparsable plugin/plugin.json a read error (exit 2)")
+          "an unparsable plugin/plugin.json and one nested too deeply to parse each a read error "
+          "(exit 2)")
     if os.geteuid() == 0:
         print("  note  run as root, so the 2 unlistable downloads/ cases were skipped")
     return 0

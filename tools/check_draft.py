@@ -62,15 +62,15 @@ PART 1, INDEXABILITY AND NO DRAFT TREE:
     signatures this gate reads (ARCHIVE_MAGICS at the start, or a tar magic at
     TAR_MAGIC_OFFSET), or an aged-out versioned zip's own GitHub release asset URL reached from
     /downloads/<zip>; any other absolute URL is refused. A target naming any other file under
-    site/, the host's own _headers or _redirects among them, is refused, because a gated
-    redirect leads only to a page or a file the site build publishes. An entry's source never
-    names a file under site/ by its exact path, an `.html`, `.htm`, `/index.html` or
-    `/index.htm` completion, or another case, staged archives included: whether the server would
-    answer with the redirect or the file is not verified here, so a source that reads as a
-    staged file in any of those spellings is refused. A target under /downloads/ is refused
-    because a staged archive is reached by its own URL or the generated latest links, never
-    through a gated redirect. A `.zip`-named or archive-signed target elsewhere under site/ is
-    refused because the release record vouches for no archive outside /downloads/.
+    site/, the host's own _headers or _redirects and the advisory's plain-text copy among them,
+    is refused, because a gated redirect leads only to a page or a file in PUBLISHED_TARGETS.
+    An entry's source never names a file under site/ by its exact path, an `.html`, `.htm`,
+    `/index.html` or `/index.htm` completion, or another case, staged archives included: whether
+    the server would answer with the redirect or the file is not verified here, so a source that
+    reads as a staged file in any of those spellings is refused. A target under /downloads/ is
+    refused because a staged archive is reached by its own URL or the generated latest links,
+    never through a gated redirect. A `.zip`-named or archive-signed target elsewhere under site/
+    is refused because the release record vouches for no archive outside /downloads/.
     tools/check_hosted.py also holds each release-asset entry to the release record (a recorded
     zip that is no longer staged) and refuses any file under site/downloads/ that no record
     names. The literal 302 is required everywhere: a latest link answers 302, never 301, and so
@@ -659,8 +659,9 @@ def allowlist_entries(root):
                       not in PUBLISHED_TARGETS):
                     problems.append("has a target naming a file that is neither a page nor a "
                                     "published file in PUBLISHED_TARGETS, such as the host's "
-                                    "own _headers or _redirects; a gated redirect leads only "
-                                    "to a page or a file the site build publishes")
+                                    "own _headers or _redirects or the advisory's plain-text "
+                                    "copy; a gated redirect leads only to a page or a file in "
+                                    "PUBLISHED_TARGETS")
         elif asset:
             if source != f"/downloads/{asset.group(2)}":
                 problems.append("redirects a release asset from a source other than its own "
