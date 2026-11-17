@@ -282,9 +282,11 @@ class Builder:
 
     def read_sources(self):
         try:
-            self.c = json.loads(self.read(CONTENT))
+            self.c = gen_hosted.json_object(self.read(CONTENT), CONTENT)
         except json.JSONDecodeError as exc:
             raise SourceError(f"{CONTENT} is not valid JSON: {exc}") from exc
+        except ValueError as exc:  # nested too deeply to parse, or not a JSON object
+            raise SourceError(f"{CONTENT} cannot be used: {exc}") from exc
         readme = self.read(README)
         lines = readme.splitlines()
         self.categories = []

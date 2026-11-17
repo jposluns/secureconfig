@@ -28,8 +28,12 @@ entry without a reason, an entry whose source a second entry repeats, and an ent
 U+FEFF in its source. The rest: a plugin zip whose root plugin.json version differs from its
 record, and, with a record behind it, an unparsable plugin/plugin.json (a read error, exit 2),
 one nested too deeply to parse (a read error, exit 2, for the gate and the generator alike) and
-one that is a JSON array. One in-process case holds check_draft.REDIRECTS_HEADER to
-gen_hosted.HEADER, so the gate and the generator cannot drift apart on the file's first line.
+one that is a JSON array. The newest record's staged plugin zip is a finding (exit 1) in 1 FAIL
+line, never a traceback, when its root plugin.json is nested too deeply to parse, is a JSON
+array, is UTF-16 rather than UTF-8 or opens with a UTF-8 byte order mark, and when the zip's
+deflated data is damaged or names a compression method zipfile does not support. One in-process
+case holds check_draft.REDIRECTS_HEADER to gen_hosted.HEADER, so the gate and the generator
+cannot drift apart on the file's first line.
 
 Nothing here reads git history or the network. Exit 0 ok, 1 on a finding.
 """
@@ -58,12 +62,33 @@ ASSET = ("/downloads/secureconfig-{0}.zip https://github.com/jposluns/secureconf
 NESTED = "[" * 100000 + "]" * 100000 + "\n"
 
 
-def plugin_zip(version):
-    """A minimal plugin zip: a plugin.json at its root carrying version."""
+def plugin_zip(version, manifest=None, compression=zipfile.ZIP_STORED):
+    """A minimal plugin zip: a plugin.json at its root carrying version, or the manifest bytes
+    given instead."""
     out = io.BytesIO()
-    with zipfile.ZipFile(out, "w") as archive:
-        archive.writestr("plugin.json", json.dumps({"version": version}))
+    with zipfile.ZipFile(out, "w", compression=compression) as archive:
+        archive.writestr("plugin.json", json.dumps({"version": version}) if manifest is None
+                         else manifest)
     return out.getvalue()
+
+
+def damaged_zip():
+    """A plugin zip whose deflated plugin.json data opens with deflate's reserved block type, so
+    reading the member raises zlib.error, which zipfile does not wrap."""
+    data = bytearray(plugin_zip("1.0.7", compression=zipfile.ZIP_DEFLATED))
+    # The data follows the local header: 30 fixed bytes, the name and the extra field.
+    start = 30 + int.from_bytes(data[26:28], "little") + int.from_bytes(data[28:30], "little")
+    data[start] = 0xFF
+    return bytes(data)
+
+
+def unsupported_zip():
+    """A plugin zip whose plugin.json names compression method 99 in both headers, which zipfile
+    refuses with NotImplementedError."""
+    data = bytearray(plugin_zip("1.0.7"))
+    central = data.find(b"PK\x01\x02")
+    data[8:10] = data[central + 10:central + 12] = (99).to_bytes(2, "little")
+    return bytes(data)
 
 
 def write(d, rel, data):
@@ -81,12 +106,13 @@ def run(tool, d):
     return r.returncode, (r.stdout + r.stderr).strip()
 
 
-def fixture(d, versions=("1.0.7",), stage=None, generate=True, allow=None, zip_version=None):
+def fixture(d, versions=("1.0.7",), stage=None, generate=True, allow=None, zip_version=None,
+            zip_data=None):
     """A root with plugin/plugin.json, the cumulative record releases/SHA256SUMS holding the two
     zip lines of each version, newest release first, the zips of the stage versions (every
     version when stage is None) staged in site/downloads/, an optional allowlist, and the
     generated files; the plugin zips carry zip_version (their own version when None) in their
-    root plugin.json."""
+    root plugin.json, or are the bytes zip_data, recorded as they are, when it is given."""
     write(d, "plugin/plugin.json", json.dumps(MANIFEST))
     if allow is not None:
         write(d, "tools/redirects_allowlist.txt", allow)
@@ -94,7 +120,7 @@ def fixture(d, versions=("1.0.7",), stage=None, generate=True, allow=None, zip_v
     for version in versions:
         archives[version] = {f"secureconfig-{version}.zip": b"skill " + version.encode(),
                              f"secureconfig-plugin-{version}.zip":
-                                 plugin_zip(zip_version or version)}
+                                 zip_data or plugin_zip(zip_version or version)}
     lines = []
     for version in sorted(versions, key=lambda v: int(v.rsplit(".", 1)[1]), reverse=True):
         lines += [f"{hashlib.sha256(data).hexdigest()}  {name}"
@@ -266,6 +292,29 @@ CASES = (
     ("a plugin/plugin.json nested too deeply to parse, with a record behind it",
      lambda d: (fixture(d), write(d, "plugin/plugin.json", NESTED)),
      "nested too deeply to parse", 2),
+    # The newest record's staged plugin zip is held to its record's version: a zip or a root
+    # plugin.json the gate cannot read or use is a finding in 1 FAIL line, never a traceback.
+    ("a staged plugin zip whose root plugin.json is nested too deeply to parse",
+     lambda d: fixture(d, zip_data=plugin_zip("1.0.7", NESTED.encode())),
+     "its root plugin.json cannot be read (plugin.json is nested too deeply to parse as JSON)",
+     1),
+    ("a staged plugin zip whose root plugin.json is a JSON array",
+     lambda d: fixture(d, zip_data=plugin_zip("1.0.7", b"[]\n")),
+     "its root plugin.json cannot be used (plugin.json is not a JSON object)", 1),
+    ("a staged plugin zip whose root plugin.json is UTF-16, not UTF-8",
+     lambda d: fixture(d, zip_data=plugin_zip("1.0.7",
+                                              json.dumps({"version": "1.0.7"}).encode("utf-16"))),
+     "its root plugin.json cannot be read ('utf-8' codec can't decode", 1),
+    ("a staged plugin zip whose root plugin.json opens with a UTF-8 byte order mark",
+     lambda d: fixture(d, zip_data=plugin_zip("1.0.7", b"\xef\xbb\xbf"
+                                              + json.dumps({"version": "1.0.7"}).encode())),
+     "its root plugin.json cannot be read (Unexpected UTF-8 BOM", 1),
+    ("a staged plugin zip whose deflated plugin.json data is damaged",
+     lambda d: fixture(d, zip_data=damaged_zip()),
+     "its root plugin.json cannot be read (Error -3 while decompressing data", 1),
+    ("a staged plugin zip whose plugin.json names an unsupported compression method",
+     lambda d: fixture(d, zip_data=unsupported_zip()),
+     "its root plugin.json cannot be read (That compression method is not supported)", 1),
 )
 
 

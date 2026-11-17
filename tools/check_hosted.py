@@ -34,16 +34,21 @@ WHAT IT CHECKS:
     anything that is not a regular file, a symbolic link included, are refused, so with the
     digest check above every file staged there is a recorded zip whose bytes match the record;
   - the newest record's staged plugin zip holds a plugin.json at its root whose version equals
-    the record's version, so the catalog cannot name bytes of another version. When the zip
-    gains .claude-plugin/plugin.json, this check will be extended to it.
+    the record's version, so the catalog cannot name bytes of another version. A zip that
+    cannot be read or has no root plugin.json, and a root plugin.json that is not UTF-8, cannot
+    be parsed as JSON (one nested too deeply to parse included) or is not a JSON object, are
+    each a finding in 1 FAIL line, never a traceback. When the zip gains
+    .claude-plugin/plugin.json, this check will be extended to it.
 
-Offline, standard library only, and it writes nothing. Exit 0 ok, 1 on a finding, 2 on a read
-error. Usage: python3 -I -B tools/check_hosted.py [--root <repository root>]
+Offline, standard library only, and it writes nothing. Exit 0 ok; 1 on a finding, which
+includes a record, an allowlist or a plugin/plugin.json that cannot be used; 2 on a read error,
+which includes a plugin/plugin.json that is not UTF-8 or cannot be parsed as JSON, one nested
+too deeply to parse among them. Each is reported in FAIL lines.
+Usage: python3 -I -B tools/check_hosted.py [--root <repository root>]
 """
 import argparse
 import hashlib
 import io
-import json
 import re
 import sys
 import zipfile
@@ -77,11 +82,25 @@ def staged_digest(root, name):
 
 
 def zip_manifest_version(data):
-    """The version in the plugin.json at a plugin zip's root, or the reason it cannot be read."""
+    """The version in the plugin.json at a plugin zip's root, or the reason it cannot be used:
+    any archive or manifest it cannot read or use is a reason, never an exception."""
     try:
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
-            manifest = json.loads(archive.read("plugin.json"))
-    except (KeyError, ValueError, zipfile.BadZipFile) as exc:
+            raw = archive.read("plugin.json")
+    except Exception as exc:  # noqa: BLE001  a zip this cannot read is a finding
+        # The bytes are an untrusted archive, already in memory, and zipfile and its
+        # decompressors raise many unrelated types on damaged ones (BadZipFile, KeyError,
+        # ValueError, OSError, NotImplementedError, RuntimeError, zlib.error and lzma.LZMAError
+        # among them), so any failure to read the one member is a finding; nothing but that
+        # read is guarded here.
+        return None, f"its root plugin.json cannot be read ({exc})"
+    try:
+        # Read as UTF-8 only, as plugin/plugin.json is, so a UTF-16 or UTF-32 manifest, or one
+        # opening with a byte order mark, which json.loads would accept from bytes, is refused.
+        manifest = gen_hosted.json_object(raw.decode("utf-8"), "plugin.json")
+    except gen_hosted.HostedError as exc:
+        return None, f"its root plugin.json cannot be used ({exc})"
+    except ValueError as exc:  # not UTF-8, not JSON, or nested too deeply to parse
         return None, f"its root plugin.json cannot be read ({exc})"
     version = manifest.get("version")
     if not isinstance(version, str):

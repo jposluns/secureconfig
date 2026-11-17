@@ -63,7 +63,8 @@ the release record and the redirect allowlist read beside the output folder. Tho
 both files admitted as generated, an edited catalog digest, an appended redirect, a missing
 `_redirects` with a record behind it, a `marketplace.json` left behind with no record, and an
 unparsable plugin/plugin.json and one nested too deeply to parse, each with a record behind it
-(a read error, exit 2, no traceback).
+(a read error, exit 2, no traceback). A site-src/content.json nested too deeply to parse and one
+that is a JSON array each raise the build's read error, SourceError (exit 2), in process.
 """
 import hashlib
 import html
@@ -156,6 +157,37 @@ def build_from_readme(text, readme):
             return None, str(exc)
     finally:
         shutil.rmtree(root, ignore_errors=True)
+
+
+def content_cases():
+    """The failures for a site-src/content.json the build cannot use: valid JSON nested past the
+    interpreter's recursion limit and a JSON array each raise SourceError, the build's read
+    error (exit 2), never another exception."""
+    failures = []
+    for desc, text, expected in (
+            ("nested too deeply to parse", "[" * 100000 + "]" * 100000 + "\n",
+             "nested too deeply to parse as JSON"),
+            ("a JSON array", "[]\n", "is not a JSON object")):
+        root = Path(tempfile.mkdtemp())
+        try:
+            for rel in (build_site.VERSIONED, build_site.README):
+                (root / rel).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT / rel, root / rel)
+            (root / build_site.CONTENT).parent.mkdir(parents=True)
+            (root / build_site.CONTENT).write_text(text, encoding="utf-8")
+            try:
+                build_site.Builder("/", root=root)
+                why = None
+            except build_site.SourceError as exc:
+                why = str(exc)
+            except Exception as exc:  # noqa: BLE001  an escaping exception is the failure
+                why = f"{type(exc).__name__} escaped"
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+        if why is None or expected not in why:
+            failures.append(f"a site-src/content.json {desc} is not a read error naming "
+                            f"{expected!r}: {why!r}")
+    return failures
 
 
 def sized(path, size):
@@ -814,6 +846,7 @@ def main():
         failures.append(f"a base path without slashes was accepted: {text!r}")
     more, downloads = download_cases()
     failures += more
+    failures += content_cases()
 
     if failures:
         for f in failures:
@@ -842,7 +875,8 @@ def main():
     print("  ok    the 2 generated hosted files at the root: admitted when byte-equal to the "
           "generator's output, refused when edited, missing or with no record behind them, and "
           "an unparsable plugin/plugin.json and one nested too deeply to parse each a read error "
-          "(exit 2)")
+          "(exit 2); a site-src/content.json nested too deeply to parse and one that is a JSON "
+          "array each a read error")
     if os.geteuid() == 0:
         print("  note  run as root, so the 2 unlistable downloads/ cases were skipped")
     return 0

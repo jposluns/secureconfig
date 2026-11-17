@@ -154,18 +154,27 @@ def newest(records):
     return max(records, key=lambda version: int(version.rsplit(".", 1)[1]))
 
 
+def json_object(text, where):
+    """The JSON object that text, read from where, holds. ValueError when text cannot be parsed
+    as JSON (json.JSONDecodeError), one nested too deeply to parse included, and HostedError,
+    itself a ValueError, when it parses to anything but an object, so a caller that catches
+    ValueError meets no other exception from bad input."""
+    try:
+        value = json.loads(text)
+    except RecursionError:
+        # json.loads recurses once per nesting level, so a deeply nested document passes the
+        # interpreter's recursion limit; it is a document that cannot be read, like bad JSON.
+        raise ValueError(f"{where} is nested too deeply to parse as JSON") from None
+    if not isinstance(value, dict):
+        raise HostedError(f"{where} is not a JSON object")
+    return value
+
+
 def entry_fields(root):
     """The catalog's name, description and owner, read from plugin/plugin.json. If these fields
     ever move, only this function changes."""
     text = (root / "plugin" / "plugin.json").read_text(encoding="utf-8")
-    try:
-        manifest = json.loads(text)
-    except RecursionError:
-        # json.loads recurses once per nesting level, so a deeply nested manifest passes the
-        # interpreter's recursion limit; it is a manifest that cannot be read, like bad JSON.
-        raise ValueError("plugin/plugin.json is nested too deeply to parse as JSON") from None
-    if not isinstance(manifest, dict):
-        raise HostedError("plugin/plugin.json is not a JSON object")
+    manifest = json_object(text, "plugin/plugin.json")
     fields = {"name": manifest.get("name"), "description": manifest.get("description"),
               "author": manifest.get("author")}
     if (not all(isinstance(value, str) and value for value in
