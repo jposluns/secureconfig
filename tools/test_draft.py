@@ -41,7 +41,9 @@ next line, whose label spans 2 lines, or that sits in a blockquote or a list ite
 for forms b, d and e that only that form catches), while its prose ("drafting", "drafted",
 "a draft.", "the draft's", "draft / final", "and Raft", "Choose draft" wrapped before
 "/ final wording." in the text and in a link title, "draft-ietf-oauth-v2-1", a datatracker draft
-URL and a description meta saying "draft") is accepted. A 9-times percent-encoded path exceeds
+URL and a description meta saying "draft") is accepted. site/secureconfig-instructions.md, the
+generated chat fallback file, is read with the same corpus forms, and one case plants a /draft/
+path in it. A 9-times percent-encoded path exceeds
 the round limit and is refused. Each refusal names the file and line, counted by `\\n` only (a
 U+2028 or a `\\r` ends no line, and llms-full.txt written with `\\r\\n` line endings reports a
 reference on line 2 as line 2). The edit, append, prepend and crlf mutations read and write
@@ -351,6 +353,12 @@ INDEX_CASES += [("llms-full.txt with \\r\\n line endings and /draft/ on line 2",
                 ("llms-full.txt with \\r\\n line endings",
                  crlf("site/llms-full.txt", "Keep drafting the policy until it is reviewed."),
                  OK_LINE, 0)]
+# The generated chat fallback file is a published index too: PART 3 reads it with the same
+# corpus forms as llms-full.txt, so a planted /draft/ path is refused there.
+INDEX_CASES += [("secureconfig-instructions.md naming /draft/",
+                 append("site/secureconfig-instructions.md",
+                        "The next version is staged at /draft/ for review.\n"),
+                 refused_at("site/secureconfig-instructions.md"), 1)]
 # Guide-corpus prose and draft-ietf names that the llms-full.txt rule accepts.
 CORPUS_PROSE = ("Keep drafting the policy until it is reviewed.\n",
                 "Read the draft's scope before the policy.\n",

@@ -6,14 +6,19 @@
 # user to attach it, so the guide that is applied is always the published one, never a stale
 # copy frozen in this file.
 #
-# Run from the repository root after changing plugin/skills/secureconfig/SKILL.md,
-# plugin/always-on.md or README.md's "## Guide index" section. `--check` builds in memory and
-# compares with the committed file, writing nothing, so the staleness gate in
-# tools/run_all_checks.sh can run it without rewriting the working tree.
+# Run from the repository root after changing any of the 4 SKILL.md sections named in SECTIONS
+# below, plugin/always-on.md's closing paragraph or README.md's "## Guide index" section.
+# `--check` builds in memory and compares with the committed file, writing nothing, so the
+# staleness gate in tools/run_all_checks.sh can run it without rewriting the working tree.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 out="site/secureconfig-instructions.md"
+
+if [ "$#" -gt 1 ]; then
+  echo "scripts/build-instructions.sh: $# arguments given; this build takes --list-inputs, --check or no argument" >&2
+  exit 1
+fi
 
 # Say what we build from, so the generated-file record in .aiqt/gensrc.json does not have to
 # work it out. As in scripts/build-llms-full.sh, anything that changes this list has to happen
@@ -26,15 +31,17 @@ fi
 
 # The whole build, standard library only, so it runs wherever the gates run and needs no
 # network and no installed package. It reads the 3 inputs listed above and nothing else:
-#   - plugin/always-on.md whole, the rules that apply to every deployment in the wording that
-#     already names each guide by bare file name, which is how this file's reader fetches one;
-#   - the 3 SKILL.md rule sections named in SECTIONS, with each code-span `references/<file>`
-#     path rewritten to the bare `<file>`, because a chat reader has no references/ folder; a
-#     references/ path left in any other form fails the build rather than shipping unresolved;
+#   - the 4 SKILL.md sections named in SECTIONS, the rules among them, with each code-span
+#     `references/<file>` path rewritten to the bare `<file>`, because a chat reader has no
+#     references/ folder; a references/ path left in any other form fails the build rather
+#     than shipping unresolved;
+#   - plugin/always-on.md's closing paragraph only, the pointer line after its rules that
+#     SKILL.md's rules section does not carry, placed after the rules here too;
 #   - README.md's "## Guide index" section, re-emitted as one `- <file>: <covers>` line per
 #     guide under its category heading, so the reader can name the guide to fetch or request.
-# The fetch section and the framing lines are written here. A missing or repeated section, or
-# an index with no category or no guide row, fails the build with the input named.
+# The fetch section and the framing lines are written here. A missing or repeated section, an
+# index with no category or no guide row, an index row the build cannot read, or a site/
+# folder it cannot write into, fails the build with the input or path named.
 IFS= read -r -d '' build <<'PY' || true
 import re
 import sys
@@ -43,15 +50,21 @@ SKILL = "plugin/skills/secureconfig/SKILL.md"
 ALWAYS = "plugin/always-on.md"
 README = "README.md"
 NAME = "scripts/build-instructions.sh"
-# The SKILL.md sections carried beyond the always-on rules, in SKILL.md's own order. The
-# "## Rules that apply to every deployment" section is not read from SKILL.md, because
-# plugin/always-on.md is that section in the wording that names each guide by bare file name
-# (CONTRIBUTING.md, "Shipping a change"), the form a reader of this file needs.
-SECTIONS = ("## Verify steps are the point, not the configuration",
+# The SKILL.md sections this build carries, in SKILL.md's own order. The rules are read from
+# SKILL.md itself, so the guide routes its rules 2, 5, 7 and 8 name survive into this file,
+# rewritten like every other references/ span, and the rules here cannot drift from the
+# skill's. plugin/always-on.md, the hand-kept snippet of that section, contributes only its
+# closing paragraph, the pointer line SKILL.md's rules section does not carry.
+RULES = "## Rules that apply to every deployment"
+SECTIONS = (RULES,
+            "## Verify steps are the point, not the configuration",
             "## Choosing guides",
             "## What this skill does not do")
 # A README guide-index row, as scripts/build-site.py reads one.
 GUIDE_ROW = re.compile(r"^\| \[([a-z0-9.-]+)\.md\]\(\1\.md\) \| (.+) \|$")
+# The index's table frame: its header row and its separator row carry no guide.
+TABLE_HEAD = "| Guide | Covers |"
+TABLE_RULE = re.compile(r"\|[-: ]+\|[-: ]+\|")
 
 HEAD = """\
 # secureconfig instructions for AI assistants
@@ -105,6 +118,18 @@ def section(lines, heading, name):
     return lines[starts[0]:end]
 
 
+def closing_paragraph(text):
+    """plugin/always-on.md's closing paragraph: the pointer line after its rules, the one part
+    of that file SKILL.md's rules section does not carry."""
+    paragraphs = [p for p in re.split(r"\n[ \t]*\n", text.strip("\n")) if p.strip()]
+    last = paragraphs[-1] if paragraphs else ""
+    if len(paragraphs) < 2 or last.lstrip().startswith("#") or re.match(r"[0-9]+\.",
+                                                                        last.lstrip()):
+        fail(f"{ALWAYS} does not end in a closing paragraph after its rules; this build "
+             f"carries only that paragraph")
+    return last
+
+
 def guide_index(lines):
     """README.md's guide index as `- <file>: <covers>` lines under its category headings."""
     out, categories, rows = ["## Guide index"], 0, 0
@@ -117,13 +142,15 @@ def guide_index(lines):
                 fail(f"{README} has a guide-index row before any category heading")
             out.append(f"- `{match.group(1)}.md`: {match.group(2)}")
             rows += 1
+        elif line.startswith("|") and line != TABLE_HEAD and not TABLE_RULE.fullmatch(line):
+            fail(f"{README} has a guide-index row this build cannot read: {line!r}")
     if not categories or not rows:
         fail(f"{README} yielded {categories} categories and {rows} guide rows; this build "
              f"needs at least 1 of each")
     return "\n".join(out)
 
 
-parts = [HEAD, read(ALWAYS).rstrip("\n")]
+parts = [HEAD]
 skill_lines = read(SKILL).split("\n")
 for heading in SECTIONS:
     body = "\n".join(section(skill_lines, heading, SKILL))
@@ -135,6 +162,8 @@ for heading in SECTIONS:
         fail(f"{SKILL} section {heading!r} holds a references/ path outside the `references/"
              f"<file>` code-span form, the only form this build rewrites")
     parts.append(body)
+    if heading == RULES:
+        parts.append(closing_paragraph(read(ALWAYS)))
 parts += [FETCH, guide_index(read(README).split("\n"))]
 text = "\n\n".join(parts) + "\n"
 
@@ -154,8 +183,11 @@ if mode == "--check":
         sys.exit(1)
     print(f"  ok    {out} matches a fresh build of its sources ({len(text)} characters)")
 elif mode == "":
-    with open(out, "w", encoding="utf-8", newline="") as handle:
-        handle.write(text)
+    try:
+        with open(out, "w", encoding="utf-8", newline="") as handle:
+            handle.write(text)
+    except OSError as exc:
+        fail(f"cannot write {out}: {exc}")
     print(f"wrote {out} ({len(text)} characters)")
 else:
     fail(f"unknown argument {mode!r}; this build takes --list-inputs, --check or no argument")

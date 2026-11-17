@@ -689,8 +689,9 @@ rm -rf "$plugin_tmp"
 
 # section: instructions
 echo "== the chat fallback file is current =="
-# site/secureconfig-instructions.md is generated from SKILL.md's rule sections, the always-on
-# rules and README.md's guide index by scripts/build-instructions.sh, for the same reason the two
+# site/secureconfig-instructions.md is generated from the 4 SKILL.md sections the build reads
+# (the rules among them), plugin/always-on.md's closing paragraph and README.md's guide index
+# by scripts/build-instructions.sh, for the same reason the two
 # bundles above are gated: a fallback file that has drifted from those sources hands a chat
 # reader stale rules while the repository looks correct. The fixture tests run first, so what
 # runs is the shipped build; then --check builds the file in memory and compares it with the

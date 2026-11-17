@@ -31,8 +31,9 @@ name: Checks
 # .ico, .woff2, .txt or .xml and is not _headers, _redirects or a requirements file, and the
 # root project records CHANGELOG.md, TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md, run
 # their mapped sections. A CHANGELOG.md change also selects version-basis, llms-full, plugin and
-# generated-committed, and tools/run_all_checks.sh --sections adds llms-full and plugin to any
-# list that names generated-committed, as its `# depends:` line says. Every other file under
+# generated-committed, and tools/run_all_checks.sh --sections adds llms-full, plugin and
+# instructions to any list that names generated-committed, as its `# depends:` line says. Every
+# other file under
 # site/ or site-src/ (_headers, which holds the CSP, _redirects, requirements files, scripts,
 # Markdown, YAML such as action.yml, unknown types and files without a suffix) runs every
 # section, and so does any other changed path: every guide, README.md,
@@ -226,7 +227,8 @@ jobs:
       # .png, .jpg, .jpeg, .webp, .ico, .woff2, .txt or .xml and are not _headers, _redirects or
       # a requirements file are scoped, and any other path selects every section. A CHANGELOG.md
       # change also selects version-basis, llms-full, plugin and generated-committed, and
-      # --sections adds llms-full and plugin to a list that names generated-committed. If the
+      # --sections adds llms-full, plugin and instructions to a list that names
+      # generated-committed. If the
       # changed paths cannot be listed, every section runs. The weekly schedule and a manual run
       # run the whole suite with no argument, which is the only run that ends with "All gates
       # passed.". NODE_PATH and PLAYWRIGHT_BROWSERS_PATH point the overflow gate at the playwright

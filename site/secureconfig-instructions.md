@@ -6,18 +6,33 @@
 This file is the chat fallback for the secureconfig skill: attach it to a conversation where that skill is not installed. It holds the rules that apply to every deployment and the index of every guide, and no guide content, so the guide a deployment needs is read fresh and never goes stale inside this file. Apply the rules below to every service you configure, generate or review, choose every guide that fits from the index at the end, and read each one as "Fetching a guide" says, or ask the user to attach it.
 
 ## Rules that apply to every deployment
+
 Apply these whether or not a specific guide is open:
 
-1. Treat every service as internet-reachable until you have confirmed otherwise. Bind to `127.0.0.1` by default and expose only through a TLS-terminating layer you configured.
-2. Choose the certificate and access path before configuring exposure. Public DNS name with reachable 80 and 443: `free-certificates.md`. Behind NAT or no public ports: `cloudflare.md` or `tunnels.md`. Internal or local only: `self-signed.md`.
-3. Apply every guide that fits, not just one. A deployment usually needs the service guide, its host or platform, containers where used, plus identity, secrets and the operational guides.
+1. Treat every service as internet-reachable until you have confirmed otherwise. Bind to
+   `127.0.0.1` by default and expose only through a TLS-terminating layer you configured.
+2. Choose the certificate and access path before configuring exposure. Public DNS name with
+   reachable 80 and 443: `free-certificates.md`. Behind NAT or no public ports:
+   `cloudflare.md` or `tunnels.md`. Internal or local only:
+   `self-signed.md`.
+3. Apply every guide that fits, not just one. A deployment usually needs the service guide, its
+   host or platform, containers where used, plus identity, secrets and the operational guides.
 4. Redirect HTTP to HTTPS, or do not listen on HTTP at all.
-5. Require authentication on every non-public endpoint. Never ship default or hardcoded credentials. Add MFA to human logins where viable. Where a tool has no native authentication, say so and put a fronting layer in front of it rather than inventing an option it does not have.
-6. **A successful login is not authorization.** Check the returned identity against an allowlist (tenant, hosted domain, group, or explicit users) before granting access.
-7. Keep secrets out of the repository and out of command lines. Load them from the environment or a secret manager, and give each service its own scoped credential.
-8. Contain what an exposed or compromised service can reach: block unneeded outbound access and lock down cloud metadata, and never serve dotfiles, dumps or `.git`.
-9. AI and data tools vary wildly in their defaults and many need authentication added in front rather than configured within.
-10. **Run the Verify steps before reporting the work as complete, and report what you could not test rather than asserting it passed.**
+5. Require authentication on every non-public endpoint. Never ship default or hardcoded
+   credentials. Add MFA to human logins where viable (`mfa.md`). Where a tool has no
+   native authentication, say so and put a fronting layer in front of it rather than inventing
+   an option it does not have.
+6. **A successful login is not authorization.** Check the returned identity against an allowlist
+   (tenant, hosted domain, group, or explicit users) before granting access.
+7. Keep secrets out of the repository and out of command lines. Load them from the environment or
+   a secret manager (`secrets.md`), and give each service its own scoped credential.
+8. Contain what an exposed or compromised service can reach: block unneeded outbound access and
+   lock down cloud metadata (`egress-metadata.md`), and never serve dotfiles, dumps or
+   `.git` (`web-exposure.md`).
+9. AI and data tools vary wildly in their defaults and many need authentication added in front
+   rather than configured within.
+10. **Run the Verify steps before reporting the work as complete, and report what you could not
+    test rather than asserting it passed.**
 
 Before configuring a service, tool or platform your project runs, including but not limited to its network exposure, TLS, logins and MFA, and secrets, use the secureconfig skill, or where it is not installed the guides at [github.com/jposluns/secureconfig](https://github.com/jposluns/secureconfig).
 

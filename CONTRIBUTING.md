@@ -423,9 +423,11 @@ A pull request that changes `VERSION` or a guide also runs `bash scripts/build-l
 `bash scripts/build-plugin.sh` and commits every file they change. One that changes the root
 `LICENSE` or `NOTICE` runs `bash scripts/build-plugin.sh`, which copies both, byte for byte, to
 `plugin/LICENSE` and `plugin/NOTICE` and to `plugin/skills/secureconfig/LICENSE` and
-`plugin/skills/secureconfig/NOTICE`, and commits all 4 copies. One that changes the rule
-sections of the plugin's `SKILL.md`, `plugin/always-on.md` or README.md's guide index also runs
-`bash scripts/build-instructions.sh` and commits `site/secureconfig-instructions.md`, the
+`plugin/skills/secureconfig/NOTICE`, and commits all 4 copies. One that changes any of the 4
+sections of the plugin's `SKILL.md` that the chat fallback build reads (the rules, Verify steps,
+Choosing guides and What this skill does not do sections), `plugin/always-on.md`'s closing
+paragraph or README.md's guide index also runs
+`bash scripts/build-instructions.sh` and commits `site/secureconfig-instructions.md`. That is the
 generated chat fallback file the site serves beside `site/llms.txt`. The suite's instructions
 section runs that script's `--check` form, which compares in memory and rewrites nothing, and
 `.aiqt/gensrc.json` records the file's sources. The suite's two staleness gates
