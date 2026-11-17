@@ -41,19 +41,29 @@ PART 1, INDEXABILITY AND NO DRAFT TREE:
     /downloads/secureconfig-plugin-latest.zip, each `SOURCE TARGET 302` with single spaces and
     both targets one version's zips staged in site/downloads/. Every other line is refused, so a
     missing path still returns the 404 page with status 404. An allowlist entry is
-    `SOURCE TARGET 302<TAB>REASON` with a non-empty reason; its target is a root-relative path
-    naming a file under site/ outside /downloads/, or an aged-out versioned zip's own GitHub
-    release asset URL reached from /downloads/<zip>. An entry's source never names a file under
-    site/, staged archives included: whether the server would answer with the redirect or the
-    file is not verified here, so an entry that could shadow served bytes is refused, and a
-    target under /downloads/ is refused too, since a staged archive is reached by its own URL or
-    the generated latest links, never through a gated redirect. tools/check_hosted.py also holds
-    each release-asset entry to the release record: a recorded zip that is no longer staged. The
-    literal 302 is required everywhere: a latest link answers 302, never 301, and so does every
-    gated redirect. No source or target in the file or the allowlist names /draft/ in any case,
-    and no file under site/ has a `-latest.zip` name, since a latest link is a 302 redirect with
-    no bytes of its own. tools/check_hosted.py holds the file to the generator's output;
-    tools/check_csp_hashes.py holds site/_headers, X-Robots-Tag included.
+    `SOURCE TARGET 302<TAB>REASON` with a non-empty reason. Every root-relative source and
+    target is read in a normal form first: it is percent-decoded until it stops changing (at
+    most DECODE_ROUNDS rounds). A field is refused when the decoding does not settle, when it
+    decodes to whitespace, a control character or a backslash, when it carries a `.`, `..` or
+    empty segment, or when it starts `//` (scheme-relative), because a browser folds each of
+    those onto a URL the rules below would not read. A target is such a normal root-relative path
+    naming a file under site/ that lies outside /downloads/ and has no `.zip` name, or an
+    aged-out versioned zip's own GitHub release asset URL reached from /downloads/<zip>; any
+    other absolute URL is refused. An entry's source never names a file under site/ by its
+    exact path, an index or .html form, or another case, staged archives included: whether the
+    server would answer with the redirect or the file is not verified here, so an entry that
+    could shadow served bytes is refused. A target under /downloads/ is refused because a
+    staged archive is reached by its own URL or the generated latest links, never through a
+    gated redirect. A `.zip` target elsewhere under site/ is refused because the release
+    record vouches for no archive outside /downloads/, so a gated redirect sends a reader to
+    no archive but a recorded one. tools/check_hosted.py also holds each release-asset entry to
+    the release record: a recorded zip that is no longer staged. The literal 302 is required
+    everywhere: a latest link answers 302, never 301, and so does every gated redirect. No
+    source or target in the file or the allowlist names /draft/ in any case, percent-encoding
+    or dot-segment spelling, and no file under site/ has a `-latest.zip` name, since a latest
+    link is a 302 redirect with no bytes of its own. tools/check_hosted.py holds the file to
+    the generator's output; tools/check_csp_hashes.py holds site/_headers, X-Robots-Tag
+    included.
 
 PART 2, SELF-CONTAINED:
   - every URL a page carries, in any attribute whose name ends in `href` or `src` (so `xlink:href`
@@ -441,6 +451,44 @@ def css_unescape(text):
     return CSS_ESCAPE.sub(lambda m: chr(int(m.group(1), 16)) if m.group(1) else m.group(2), text)
 
 
+def clean_field(value):
+    """(the normal form of a root-relative redirect field, None), or (None, why it is refused).
+    The field is percent-decoded until it stops changing (at most DECODE_ROUNDS rounds). It is
+    refused when the decoding does not settle, when it decodes to whitespace, a control
+    character or a backslash, when it carries a `.`, `..` or empty segment, or when it is
+    scheme-relative, because a browser folds each of those onto a URL the redirect rules would
+    not read; every rule then reads the normal form, the path a browser would request."""
+    if value.startswith("//"):
+        return None, "is scheme-relative, which a browser reads as a URL on another host"
+    for _ in range(DECODE_ROUNDS + 1):
+        decoded = unquote(value)
+        if decoded == value:
+            break
+        value = decoded
+    else:
+        return None, f"still changes after {DECODE_ROUNDS} rounds of percent-decoding"
+    if BAD_URL_CHARS.search(value):
+        return None, ("percent-decodes to whitespace, a control character or a backslash, "
+                      "which a browser strips or reads as a slash")
+    segments = value.split("/")[1:]
+    if "." in segments or ".." in segments:
+        return None, ("carries a `.` or `..` segment, which a browser folds onto another path "
+                      "before requesting it")
+    if "" in segments[:-1]:
+        return None, "carries an empty segment, which can be read as another path"
+    return value, None
+
+
+def source_forms(value):
+    """The staged files a redirect source could be served as, relative to site/ and case folded:
+    the path itself, its .html, .htm and index.html completions, and, for the empty or
+    trailing-slash folder form, that folder's index.html."""
+    rel = value.lstrip("/").casefold()
+    if rel == "" or rel.endswith("/"):
+        return (rel + "index.html",)
+    return (rel, rel + ".html", rel + ".htm", rel + "/index.html")
+
+
 def draft_path(value):
     """True when a redirect field names /draft/: a root-relative path whose first segment, in any
     case and percent-decoded, is DRAFT_NAME."""
@@ -465,6 +513,13 @@ def allowlist_entries(root):
     rules, findings = [], []
     if not path.is_file():
         return rules, findings
+    # Every file under site/, case folded, for the source shadow rule below; the original
+    # spelling is kept for the finding.
+    staged = {}
+    if (root / SITE).is_dir():
+        for entry in sorted(p for p in (root / SITE).rglob("*") if p.is_file()):
+            rel = entry.relative_to(root / SITE).as_posix()
+            staged.setdefault(rel.casefold(), rel)
     for n, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
         if not line or line.startswith("#"):
             continue
@@ -482,25 +537,52 @@ def allowlist_entries(root):
             continue
         source, target = matched.group(1), matched.group(2)
         problems = []
-        if draft_path(source) or draft_path(target):
+        # Each root-relative field is read in its normal form, so no rule below reads a path a
+        # browser would fold onto another one.
+        normal = {}
+        for name, field in (("source", source), ("target", target)):
+            if not field.startswith("/"):
+                continue
+            value, why = clean_field(field)
+            if why is None:
+                normal[name] = value
+            else:
+                problems.append(f"has a {name} that {why}; every root-relative source and "
+                                f"target is read in the normal form a browser would request, "
+                                f"so a field that does not normalize cleanly is refused")
+        src, tgt = normal.get("source"), normal.get("target")
+        if (src is not None and draft_path(src)) or (tgt is not None and draft_path(tgt)):
             problems.append("names /draft/; the live site carries no /draft/ tree and no "
                             "redirect, gated or generated, names it")
-        if (source.lower().endswith(LATEST_SUFFIX)
-                or (target.startswith("/") and target.lower().endswith(LATEST_SUFFIX))):
+        if ((src is not None and src.lower().endswith(LATEST_SUFFIX))
+                or (tgt is not None and tgt.lower().endswith(LATEST_SUFFIX))):
             problems.append("names a -latest file; the two latest links are generated, never "
                             "listed here")
-        if resolves(root, source):
-            problems.append("has a source naming a file under site/; whether the server would "
-                            "answer with the redirect or the file is not verified, so no entry "
-                            "shadows staged bytes")
+        shadow = None
+        if src is not None:
+            shadow = next((staged[form] for form in source_forms(src) if form in staged), None)
+        if shadow is not None:
+            problems.append(f"has a source naming a file under site/ ({SITE}/{shadow}) by its "
+                            f"exact path, an index or .html form, or another case; whether the "
+                            f"server would answer with the redirect or the file is not "
+                            f"verified, so no entry shadows staged bytes")
         asset = ASSET_TARGET.fullmatch(target)
         if target.startswith("/"):
-            if downloads_path(target):
+            if tgt is None:
+                pass
+            elif downloads_path(tgt):
                 problems.append("has a target under /downloads/; a staged archive is reached by "
                                 "its own URL or the generated latest links, never through a "
                                 "gated redirect")
-            elif not resolves(root, target):
-                problems.append("has a target naming no file under site/")
+            else:
+                file = resolved(root, tgt)
+                if file is None or not file.is_file():
+                    problems.append("has a target naming no file under site/")
+                elif file.name.casefold().endswith(".zip"):
+                    problems.append("has a target naming an archive under site/; the release "
+                                    "record vouches for no archive outside /downloads/, so a "
+                                    "gated redirect sends a reader to no archive but a "
+                                    "recorded one")
         elif asset:
             if source != f"/downloads/{asset.group(2)}":
                 problems.append("redirects a release asset from a source other than its own "

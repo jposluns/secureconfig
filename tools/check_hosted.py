@@ -23,8 +23,10 @@ WHAT IT CHECKS:
     https://github.com/jposluns/secureconfig/releases/download/v1.0.<N>/<zip>;
   - every release-asset entry of tools/redirects_allowlist.txt is held to the record in turn:
     it names a recorded zip that is no longer staged, so a reviewed entry cannot send a reader
-    to an asset URL no release carries or shadow a staged copy (tools/check_draft.py refuses
-    every other source and target shape);
+    to an asset URL the committed record does not name or shadow a staged copy. This gate
+    reads only the committed record, never GitHub: what a published release really carries is
+    checked at release time, not here (tools/check_draft.py refuses every other source and
+    target shape);
   - the newest record's zips must be staged, since the latest links and the catalog point at
     hosted copies;
   - the newest record's staged plugin zip holds a plugin.json at its root whose version equals
@@ -50,7 +52,7 @@ from _archives import ARCHIVES, archive_name  # noqa: E402
 SITE = Path("site")
 DOWNLOADS = SITE / "downloads"
 # An aged-out zip's redirect: /downloads/<zip> to that release's own GitHub asset, same version
-# and same name (the ruled form for keeping every published versioned URL working).
+# and same name (the form that keeps every published versioned URL working).
 ASSET_RULE = re.compile(r"/downloads/(secureconfig(?:-plugin)?-(1\.0\.[1-9][0-9]*)\.zip) "
                         r"https://github\.com/jposluns/secureconfig/releases/download/"
                         r"v\2/\1 302")

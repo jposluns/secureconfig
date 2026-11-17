@@ -36,8 +36,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   - Effect, in the same change as this entry. `tools/check_draft.py` admits `site/_redirects` only when it holds
     the generator's header, entries of the new gated `tools/redirects_allowlist.txt` and, written only once a
     release record exists, the two `-latest` 302 lines, naming one version's archives staged in
-    `site/downloads/`. An entry is `SOURCE TARGET 302` with a reason; its source names no file under `site/`,
-    and its target is a file under `site/` outside `/downloads/` or an aged-out versioned zip's own GitHub
+    `site/downloads/`. An entry is `SOURCE TARGET 302` with a reason; each root-relative source and target is
+    percent-decoded to a normal form and refused when it keeps a `.`, `..` or empty segment or is
+    scheme-relative. The source names no file under `site/` by its exact path, an index or `.html` form, or
+    another case, and the target is a file under `site/` outside `/downloads/` with no `.zip` name, or an
+    aged-out versioned zip's own GitHub
     release asset. It still refuses every other redirect and any `/draft` entry, in the file or the allowlist,
     so a missing path still gets the 404 page with status 404. `tools/gen_hosted.py` writes the file whole from
     the allowlist and the cumulative release record `releases/SHA256SUMS` (the 1c ruling of 2026-11-15: one

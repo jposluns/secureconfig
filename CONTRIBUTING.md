@@ -611,7 +611,11 @@ list of pull requests and a link to `CHANGELOG.md` at the tag.
    lines come first and each release's lines sit together. Then run
    `python3 -I -B tools/gen_hosted.py`, which writes `site/marketplace.json` and
    `site/_redirects` from the record and `tools/redirects_allowlist.txt`, and commit both
-   generated files; never edit either by hand. `tools/check_hosted.py` holds the committed
+   generated files; never edit either by hand. Add one exact `copy` line, marked `required`,
+   to `export/public-allowlist.txt` for each zip now staged in `site/downloads/`, and remove
+   the line of any zip that has aged out of `site/downloads/`; the record itself is covered by
+   that file's optional `releases/SHA256SUMS` line, and `tools/export_lists.py --check` fails
+   a staged zip no line names. `tools/check_hosted.py` holds the committed
    files to the record, so a typed digest, a stale latest link or a missing staged zip fails
    the suite.
 10. Ask the posluns orchestrator, which owns https://posluns.dev/hashes.txt, to add the release:

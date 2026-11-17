@@ -10,7 +10,7 @@ install at the wrong bytes. tools/check_hosted.py holds the committed files to t
 output, and tools/check_draft.py holds site/_redirects to the shapes this module writes.
 
 THE RELEASE RECORD is releases/SHA256SUMS, one cumulative file that gains each release's lines,
-newest release first (the maintainer's ruling of 2026-11-15 on release question 1c): the records
+newest release first: the records
 pull request (CONTRIBUTING.md "Releasing" step 9) prepends a byte copy of the lines of that
 release's `SHA256SUMS` asset. Each line is `<64 hex>  <name>` as sha256sum writes it, and each
 name is a release archive name, secureconfig-1.0.<N>.zip or secureconfig-plugin-1.0.<N>.zip, so
@@ -24,7 +24,7 @@ site/marketplace.json names the catalog `secureconfig`, this project's own catal
 name, and lists one plugin whose source is the archive form
 `{"source": "archive", "url": "https://secureconfig.ai/downloads/<plugin zip>", "sha256": ...}`
 for the newest record. Its name, description and owner come from entry_fields(), which reads
-plugin/plugin.json; a later decision on where those fields live changes only that function.
+plugin/plugin.json; if those fields ever move, only that function changes.
 
 site/_redirects is written whole, so the whole file is generated and drift-checked: the fixed
 HEADER line, then the rule of each entry of tools/redirects_allowlist.txt (the part before the
@@ -34,11 +34,11 @@ tab, in file order), then, only when a record exists, the two latest lines, in t
     /downloads/secureconfig-plugin-latest.zip /downloads/secureconfig-plugin-1.0.<N>.zip 302
 
 An allowlist entry line is `SOURCE TARGET 302<TAB>REASON` with single spaces and a non-empty
-reason; tools/check_draft.py checks each entry's shape, source and target, and refuses any
-`/draft` entry, while tools/check_hosted.py holds each release-asset entry to the record: a
-recorded zip that is no longer staged. With no record and no allowlist entry there is nothing to
-serve, so neither file is
-written. This generator deletes nothing: a stale committed file is a finding for
+reason; tools/check_draft.py reads each entry's source and target in a percent-decoded normal
+form, refuses one that does not normalize cleanly, and refuses any `/draft` entry, while
+tools/check_hosted.py holds each release-asset entry to the record: a recorded zip that is no
+longer staged. With no record and no allowlist entry there is nothing to serve, so neither
+file is written. This generator deletes nothing: a stale committed file is a finding for
 tools/check_hosted.py, never something quietly removed here.
 
 Exit 0 with each written path printed (or a note that there is nothing to write), 1 when the
@@ -151,8 +151,8 @@ def newest(records):
 
 
 def entry_fields(root):
-    """The catalog's name, description and owner, read from plugin/plugin.json. A decision that
-    moves these fields changes only this function."""
+    """The catalog's name, description and owner, read from plugin/plugin.json. If these fields
+    ever move, only this function changes."""
     manifest = json.loads((root / "plugin" / "plugin.json").read_text(encoding="utf-8"))
     fields = {"name": manifest.get("name"), "description": manifest.get("description"),
               "author": manifest.get("author")}

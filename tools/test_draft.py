@@ -56,9 +56,12 @@ allowlisted rule, no latest line), an allowlisted entry, an aged-out zip redirec
 release asset, a headerless file, a 301, a wrong-kind target, a missing staged archive, a lone
 latest link and the reversed order. They also cover 2 versions, a third rule, a /draft rule
 (allowlisted or not), an entry without a reason, an aged-out redirect from a foreign source, an
-entry whose source names a staged archive or an existing page (it would shadow served bytes), an
-entry whose target lies under /downloads/, and a -latest file under site/, in downloads/ and
-elsewhere.
+entry whose source names a staged archive or an existing page (it would shadow served bytes, and
+the folder, index and other-case forms of a page's path are read too), and a -latest file under
+site/, in downloads/ and elsewhere. Further refusals cover an entry whose target lies under
+/downloads/ (written plainly or through a plain or percent-encoded dot segment), a /draft source
+written through a plain or percent-encoded dot segment, a scheme-relative target, an absolute
+target that is no release asset, and a .zip target outside /downloads/.
 
 The generated() cases keep the source-to-generated-page path: a Unicode host written in
 content.json survives the build and its own --check and is refused by this gate, and a site.css
@@ -505,6 +508,51 @@ CASES = [
                allow="/old /downloads/extra.zip 302\tserve the staged copy\n",
                zips=(SKILL_ZIP, PLUGIN_ZIP, "extra.zip")),
      "has a target under /downloads/", 1),
+    ("an allowlisted redirect whose target reaches /downloads/ through a dot segment",
+     redirects("/get /assets/../downloads/extra.zip 302\n" + LATEST,
+               allow="/get /assets/../downloads/extra.zip 302\tserve the staged copy\n",
+               zips=(SKILL_ZIP, PLUGIN_ZIP, "extra.zip")),
+     "carries a `.` or `..` segment", 1),
+    ("an allowlisted redirect whose target reaches /downloads/ through a percent-encoded dot "
+     "segment",
+     redirects("/get /assets/%2e%2e/downloads/extra.zip 302\n" + LATEST,
+               allow="/get /assets/%2e%2e/downloads/extra.zip 302\tserve the staged copy\n",
+               zips=(SKILL_ZIP, PLUGIN_ZIP, "extra.zip")),
+     "carries a `.` or `..` segment", 1),
+    ("an allowlisted /draft rule whose source carries a dot segment",
+     redirects("/assets/../draft/ /index.html 302\n" + LATEST,
+               allow="/assets/../draft/ /index.html 302\tan old draft link\n"),
+     "carries a `.` or `..` segment", 1),
+    ("an allowlisted /draft splat rule whose source carries a percent-encoded dot segment",
+     redirects("/assets/%2e%2e/draft/* /index.html 302\n" + LATEST,
+               allow="/assets/%2e%2e/draft/* /index.html 302\tan old draft link\n"),
+     "carries a `.` or `..` segment", 1),
+    ("an allowlisted redirect whose target is an archive outside /downloads/",
+     lambda d: (write("site/assets/extra.zip", "zip bytes\n")(d),
+                redirects("/get /assets/extra.zip 302\n" + LATEST,
+                          allow="/get /assets/extra.zip 302\tserve the extra archive\n")(d)),
+     "has a target naming an archive under site/", 1),
+    ("an allowlisted redirect whose source is a page's folder path without its slash",
+     redirects("/checklist /index.html 302\n" + LATEST,
+               allow="/checklist /index.html 302\tmoved\n"),
+     "has a source naming a file under site/", 1),
+    ("an allowlisted redirect whose source is a page's index path without its .html",
+     redirects("/checklist/index /index.html 302\n" + LATEST,
+               allow="/checklist/index /index.html 302\tmoved\n"),
+     "has a source naming a file under site/", 1),
+    ("an allowlisted redirect whose source is a page's folder in another case",
+     redirects("/CHECKLIST/ /index.html 302\n" + LATEST,
+               allow="/CHECKLIST/ /index.html 302\tmoved\n"),
+     "has a source naming a file under site/", 1),
+    ("an allowlisted redirect with a scheme-relative target",
+     lambda d: (write("site/assets/site.css", ".statement { --sw: 14; }\n")(d),
+                redirects("/old //assets/site.css 302\n" + LATEST,
+                          allow="/old //assets/site.css 302\tmoved\n")(d)),
+     "is scheme-relative", 1),
+    ("an allowlisted redirect whose target is an absolute URL that is no release asset",
+     redirects("/old https://example.net/secureconfig-1.0.5.zip 302\n" + LATEST,
+               allow="/old https://example.net/secureconfig-1.0.5.zip 302\ta mirror\n"),
+     "neither a root-relative path", 1),
     ("the record-less shape: the header and an allowlisted rule, no latest line",
      redirects("/old / 302\n", allow="/old / 302\tthe old URL of the landing page\n", zips=()),
      OK_LINE, 0),
