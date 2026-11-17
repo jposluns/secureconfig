@@ -38,7 +38,10 @@ forged line. One in-process case holds check_draft.REDIRECTS_HEADER to gen_hoste
 gate and the generator cannot drift apart on the file's first line. In-process cases hold
 gen_hosted.json_object to its depth limit, MAX_JSON_DEPTH: an object nested exactly that deep is
 read, one a level deeper and one whose deep nesting sits inside one value are nested too deeply to
-parse, and a string holding 100000 brackets, an escaped quote and an escaped backslash is read.
+parse, and a string holding 300000 brackets, an escaped quote and an escaped backslash is read.
+101 unmatched closing brackets followed by 150 opening ones are refused by json.loads at the first
+character, where the depth count stops, and an object holding a 5000-digit integer is a ValueError
+(the interpreter's 4300-digit integer limit), never a HostedError.
 
 Nothing here reads git history or the network. Exit 0 ok, 1 on a finding.
 """
@@ -425,7 +428,8 @@ def check_generator(failures):
 
 def check_depth(failures):
     """gen_hosted.json_object at its depth limit, in process: the depth counts brackets open at
-    once outside strings, so the result never depends on how deep json.loads can recurse."""
+    once outside strings, up to the first closing bracket with no open bracket to close, so the
+    result never depends on how deep json.loads can recurse."""
     limit = gen_hosted.MAX_JSON_DEPTH
     deep = "[" * 100000 + "]" * 100000
     cases = (
@@ -437,9 +441,15 @@ def check_depth(failures):
          '{"name": "secureconfig", "deep": ' + deep + "}", "nested too deeply to parse as JSON"),
         # The escaped quote must not end the string and the escaped backslash must not escape the
         # closing quote; a reader that got either wrong would count the brackets after it.
-        ("a string holding 100000 brackets, an escaped quote and an escaped backslash",
+        ("a string holding 300000 brackets, an escaped quote and an escaped backslash",
          '{"s": "' + deep + '\\"' + "{" * 100000 + '\\\\", "t": "' + "[" * (limit + 1) + '"}',
          None),
+        # The count stops at the first closing bracket with no open bracket to close, where
+        # json.loads fails, so 150 brackets opened after it are never counted.
+        ("101 unmatched closing brackets followed by 150 opening ones",
+         "]" * 101 + "[" * 150, "Expecting value: line 1 column 1 (char 0)"),
+        ("an object holding a 5000-digit integer",
+         '{"n": ' + "1" * 5000 + "}", "for integer string conversion"),
     )
     for desc, text, expected in cases:
         try:

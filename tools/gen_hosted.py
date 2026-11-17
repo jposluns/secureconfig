@@ -84,11 +84,13 @@ PLUGIN_KIND = next(kind for kind in ARCHIVES if kind.root_file == "plugin.json")
 # The most brackets a document json_object reads may hold open at once, counted outside JSON
 # strings. json.loads recurses once per level, and whether a deep parse raises RecursionError
 # depends on the interpreter build and its stack, so json_object refuses a deeper document
-# before parsing it and the answer is the same on every Python. The documents it reads, the
-# plugin manifests and site-src/content.json, nest only a few levels.
+# before parsing it, unless a closing bracket with no open bracket to close comes first, and
+# json.loads then fails no deeper than that bracket, so the answer is the same on every Python.
+# The documents it reads, the plugin manifests and site-src/content.json, nest only a few levels.
 MAX_JSON_DEPTH = 100
-# One JSON string (its escapes, and an unterminated string running to the end, included) or one
-# bracket, so nested_deeper_than skips every bracket inside a string.
+# One JSON string (its escapes, and an unterminated string running to the end of the text less a
+# last backslash that has no character after it, included) or one bracket, so
+# nested_deeper_than skips every bracket inside a string.
 JSON_STRING_OR_BRACKET = re.compile(r'"[^"\\]*(?:\\.[^"\\]*)*"?|[\[\]{}]', re.S)
 
 
@@ -169,7 +171,9 @@ def newest(records):
 
 def nested_deeper_than(text, limit):
     """Whether text opens more than limit brackets (`[` or `{`) at once, counted outside JSON
-    strings: a string's brackets do not nest, and an escaped quote does not end it."""
+    strings up to the first closing bracket (`]` or `}`) with no open bracket to close: a
+    string's brackets do not nest, an escaped quote does not end it, and json.loads refuses any
+    text holding such a closing bracket, so the count stops there."""
     depth = 0
     for match in JSON_STRING_OR_BRACKET.finditer(text):
         token = match.group()
@@ -178,16 +182,22 @@ def nested_deeper_than(text, limit):
             if depth > limit:
                 return True
         elif token in ("]", "}"):
+            if not depth:
+                return False
             depth -= 1
     return False
 
 
 def json_object(text, where):
     """The JSON object that text, read from where, holds. ValueError when text cannot be parsed
-    as JSON (json.JSONDecodeError), one nested too deeply to parse included, and HostedError,
-    itself a ValueError, when it parses to anything but an object, so a caller that catches
-    ValueError meets no other exception from bad input. Nested too deeply to parse means more
-    than MAX_JSON_DEPTH brackets open at once outside strings, refused before parsing."""
+    as JSON: json.JSONDecodeError for text that is not JSON, the plain ValueError json.loads
+    raises for an integer with more digits than the interpreter's integer string conversion
+    limit allows (4300 by default where there is one), and a ValueError for text nested too
+    deeply to parse. HostedError, itself a ValueError, when it parses to anything but an object,
+    so a caller that catches ValueError meets no other exception from bad input. Nested too
+    deeply to parse means more than MAX_JSON_DEPTH brackets open at once outside strings, as
+    nested_deeper_than counts them, refused before parsing, or a parse that raises
+    RecursionError."""
     if nested_deeper_than(text, MAX_JSON_DEPTH):
         raise ValueError(f"{where} is nested too deeply to parse as JSON")
     try:
