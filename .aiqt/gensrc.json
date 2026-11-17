@@ -381,6 +381,17 @@
         "tools/version_basis_guides.txt",
         "tools/guide_quality.tsv"
       ]
+    },
+    {
+      "kind": "file",
+      "target": "site/secureconfig-instructions.md",
+      "regenerate": "bash scripts/build-instructions.sh",
+      "sources": [
+        "scripts/build-instructions.sh",
+        "plugin/skills/secureconfig/SKILL.md",
+        "plugin/always-on.md",
+        "README.md"
+      ]
     }
   ]
 }

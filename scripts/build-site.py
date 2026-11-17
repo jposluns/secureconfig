@@ -56,9 +56,9 @@ and also fails on any other file under the output folder outside assets/baseline
 assets/site.css:
 an extra page (a .html or .htm file in any case, as the CSP gate names one) at any base, and any
 other file except, at base `/` only, the published files the root holds beside the pages
-(PUBLISHED: llms.txt, llms-full.txt, robots.txt, sitemap.xml, _headers, .well-known/security.txt,
-favicon.svg, favicon.ico, apple-touch-icon.png and images/secureconfig-card.png). A new published
-file is added to PUBLISHED before it ships. At base `/` only, the folder may also hold release
+(PUBLISHED: llms.txt, llms-full.txt, secureconfig-instructions.md, robots.txt, sitemap.xml,
+_headers, .well-known/security.txt, favicon.svg, favicon.ico, apple-touch-icon.png and
+images/secureconfig-card.png). A new published file is added to PUBLISHED before it ships. At base `/` only, the folder may also hold release
 archives, which the build never writes (download_problems()): regular files directly in downloads/
 named secureconfig-1.0.<N>.zip or secureconfig-plugin-1.0.<N>.zip, with <N> in the form `VERSION`
 uses (ASCII digits, no leading zero, no `v`). Each file may be at most DOWNLOAD_MAX bytes, and
@@ -108,7 +108,7 @@ SITE_CSS = "assets/site.css"  # the optional per-site constants file (baseline R
 # every other file, so a stray file cannot ship unnoticed.
 PUBLISHED = (".well-known/security.txt", "_headers", "apple-touch-icon.png", "favicon.ico",
              "favicon.svg", "images/secureconfig-card.png", "llms-full.txt", "llms.txt", "robots.txt",
-             "sitemap.xml")
+             "secureconfig-instructions.md", "sitemap.xml")
 # The release archives a root --check admits in downloads/ (plan-v3 sections 1.3 and 1.6): the
 # records pull request copies each released zip there byte for byte, and this build writes none.
 # Only the 2 versioned names, with the version in the form `VERSION` uses (1.0.<N>, no `v`), and no

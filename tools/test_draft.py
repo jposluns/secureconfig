@@ -883,8 +883,8 @@ def generated(edit_content, extra=None):
             (d / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / rel, d / rel)
         shutil.copytree(ROOT / "site" / "assets", d / "site" / "assets")
-        for name in ("_headers", "llms.txt", "llms-full.txt", "robots.txt", "sitemap.xml",
-                     "favicon.svg"):
+        for name in ("_headers", "llms.txt", "llms-full.txt", "secureconfig-instructions.md",
+                     "robots.txt", "sitemap.xml", "favicon.svg"):
             if (ROOT / "site" / name).is_file():
                 shutil.copyfile(ROOT / "site" / name, d / "site" / name)
         if edit_content:
