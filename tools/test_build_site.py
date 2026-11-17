@@ -160,9 +160,9 @@ def build_from_readme(text, readme):
 
 
 def content_cases():
-    """The failures for a site-src/content.json the build cannot use: valid JSON nested past the
-    interpreter's recursion limit and a JSON array each raise SourceError, the build's read
-    error (exit 2), never another exception."""
+    """The failures for a site-src/content.json the build cannot use: valid JSON nested past
+    gen_hosted.MAX_JSON_DEPTH and a JSON array each raise SourceError, the build's read error
+    (exit 2), never another exception."""
     failures = []
     for desc, text, expected in (
             ("nested too deeply to parse", "[" * 100000 + "]" * 100000 + "\n",
@@ -760,8 +760,8 @@ def main():
         if rc != 2 or "the plugin manifest" not in text or "Traceback" in text:
             failures.append(f"--check at the root did not exit 2 with 1 FAIL line on an "
                             f"unparsable plugin/plugin.json: {rc} {text!r}")
-        # So is valid JSON nested past the interpreter's recursion limit, which json.loads
-        # cannot parse.
+        # So is valid JSON nested past gen_hosted.MAX_JSON_DEPTH, which the JSON object reader
+        # refuses before parsing.
         (d / "plugin" / "plugin.json").write_text("[" * 100000 + "]" * 100000 + "\n",
                                                   encoding="utf-8")
         rc, text = run("--check", "--out", str(out))

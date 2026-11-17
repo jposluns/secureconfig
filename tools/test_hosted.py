@@ -35,7 +35,10 @@ deflated data is damaged or names a compression method zipfile does not support.
 plugin.json version is printed escaped, so one that is a lone surrogate and one that carries a
 newline and a forged ok line are each exit 1 in exactly 1 FAIL line, with no traceback and no
 forged line. One in-process case holds check_draft.REDIRECTS_HEADER to gen_hosted.HEADER, so the
-gate and the generator cannot drift apart on the file's first line.
+gate and the generator cannot drift apart on the file's first line. In-process cases hold
+gen_hosted.json_object to its depth limit, MAX_JSON_DEPTH: an object nested exactly that deep is
+read, one a level deeper and one whose deep nesting sits inside one value are nested too deeply to
+parse, and a string holding 100000 brackets, an escaped quote and an escaped backslash is read.
 
 Nothing here reads git history or the network. Exit 0 ok, 1 on a finding.
 """
@@ -60,7 +63,8 @@ ASSET = ("/downloads/secureconfig-{0}.zip https://github.com/jposluns/secureconf
          "download/v{0}/secureconfig-{0}.zip 302\taged out\n"
          "/downloads/secureconfig-plugin-{0}.zip https://github.com/jposluns/secureconfig/"
          "releases/download/v{0}/secureconfig-plugin-{0}.zip 302\taged out\n")
-# Valid JSON nested far past the interpreter's recursion limit, which json.loads cannot parse.
+# Valid JSON nested far past gen_hosted.MAX_JSON_DEPTH, which json_object refuses before parsing,
+# whether or not json.loads could parse it on this interpreter.
 NESTED = "[" * 100000 + "]" * 100000 + "\n"
 
 
@@ -419,6 +423,42 @@ def check_generator(failures):
     return count
 
 
+def check_depth(failures):
+    """gen_hosted.json_object at its depth limit, in process: the depth counts brackets open at
+    once outside strings, so the result never depends on how deep json.loads can recurse."""
+    limit = gen_hosted.MAX_JSON_DEPTH
+    deep = "[" * 100000 + "]" * 100000
+    cases = (
+        ("an object nested exactly MAX_JSON_DEPTH deep",
+         '{"a": ' + "[" * (limit - 1) + "]" * (limit - 1) + "}", None),
+        ("an object nested one level deeper than MAX_JSON_DEPTH",
+         '{"a": ' + "[" * limit + "]" * limit + "}", "nested too deeply to parse as JSON"),
+        ("an object whose deep nesting sits inside one value",
+         '{"name": "secureconfig", "deep": ' + deep + "}", "nested too deeply to parse as JSON"),
+        # The escaped quote must not end the string and the escaped backslash must not escape the
+        # closing quote; a reader that got either wrong would count the brackets after it.
+        ("a string holding 100000 brackets, an escaped quote and an escaped backslash",
+         '{"s": "' + deep + '\\"' + "{" * 100000 + '\\\\", "t": "' + "[" * (limit + 1) + '"}',
+         None),
+    )
+    for desc, text, expected in cases:
+        try:
+            value = gen_hosted.json_object(text, "case.json")
+            why = None
+        except gen_hosted.HostedError as exc:
+            value, why = None, f"HostedError: {exc}"
+        except ValueError as exc:
+            value, why = None, str(exc)
+        except RecursionError:
+            value, why = None, "RecursionError escaped"
+        if expected is None and not isinstance(value, dict):
+            failures.append(f"json_object refused {desc}: {why!r}")
+        elif expected is not None and (why is None or why.startswith("HostedError")
+                                       or expected not in why):
+            failures.append(f"json_object did not refuse {desc} as {expected!r}: {why!r}")
+    return len(cases)
+
+
 def main():
     failures = []
     count = 0
@@ -438,6 +478,7 @@ def main():
             failures.append(f"{desc}: the gate crashed: {out!r}")
     count += check_escaped(failures)
     count += check_generator(failures)
+    count += check_depth(failures)
     if failures:
         for failure in failures:
             print(f"  FAIL  {failure}")
