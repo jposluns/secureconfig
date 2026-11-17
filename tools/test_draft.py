@@ -67,9 +67,17 @@ exact literal path. The cases refuse the splat sources /downloads/*, /*, /checkl
 and the query and fragment sources /draft?x, /draft#x, /checklist?x, /checklist/?x,
 /checklist/#x, /assets/site.css?x, /assets/site.css#x, /downloads/<staged zip>?x and
 /downloads/secureconfig-plugin-latest.zip?x. They also refuse the trailing-slash sources
-/assets/site.css/, /downloads/<staged zip>/ and /downloads/secureconfig-latest.zip/. The
-archive target rule reads bytes as well as names: a target outside /downloads/ whose file
-opens with a zip or gzip signature under a .bin, .tar.gz or .zip.txt name is refused.
+/assets/site.css/, /downloads/<staged zip>/ and /downloads/secureconfig-latest.zip/. A gated
+field is printable ASCII, raw and percent-decoded: the cases refuse a raw U+FEFF at the end of
+each gated source shape (/draft, a page, the stylesheet, both latest names, a staged and an
+aged-out zip) and inside a target. They also refuse sources that percent-decode to U+FEFF, a
+no-break space, an ideographic space or a U+2028 line separator, and a source carrying a
+fullwidth letter, a fullwidth solidus, a zero-width space or a raw C1 control character. No
+two entries share a source: the cases refuse two identical entries, a repeated source with
+another target, a case-varied and a percent-encoded repeat, and a page rule repeating an
+aged-out zip's asset-redirect source, which would mask that redirect. The archive target rule
+reads bytes as well as names: a target outside /downloads/ whose file opens with a zip or gzip
+signature under a .bin, .tar.gz or .zip.txt name is refused.
 
 The generated() cases keep the source-to-generated-page path: a Unicode host written in
 content.json survives the build and its own --check and is refused by this gate, and a site.css
@@ -652,6 +660,98 @@ CASES = [
      redirects("/downloads/secureconfig-plugin-latest.zip?x /index.html 302\n" + LATEST,
                allow="/downloads/secureconfig-plugin-latest.zip?x /index.html 302\tmoved\n"),
      "one exact literal path", 1),
+    # A gated field is printable ASCII, raw and percent-decoded: a raw U+FEFF, another
+    # invisible or non-ASCII character or a raw C1 control character in a field is refused, and
+    # so is a field that percent-decodes to one, so no rule can shadow a staged path or take
+    # over /draft or a latest link for a parser that trims or splits on more than a space.
+    ("an allowlisted /draft source carrying a raw U+FEFF",
+     redirects("/draft﻿ /index.html 302\n" + LATEST,
+               allow="/draft﻿ /index.html 302\tan old draft link\n"),
+     "printable ASCII", 1),
+    ("an allowlisted page source carrying a raw U+FEFF",
+     redirects("/checklist﻿ /index.html 302\n" + LATEST,
+               allow="/checklist﻿ /index.html 302\tmoved\n"),
+     "printable ASCII", 1),
+    ("an allowlisted stylesheet source carrying a raw U+FEFF",
+     redirects("/assets/site.css﻿ /index.html 302\n" + LATEST,
+               allow="/assets/site.css﻿ /index.html 302\tmoved\n"),
+     "printable ASCII", 1),
+    ("an allowlisted latest-name source carrying a raw U+FEFF",
+     redirects("/downloads/secureconfig-latest.zip﻿ /index.html 302\n" + LATEST,
+               allow="/downloads/secureconfig-latest.zip﻿ /index.html 302\tmoved\n"),
+     "printable ASCII", 1),
+    ("an allowlisted plugin-latest-name source carrying a raw U+FEFF",
+     redirects("/downloads/secureconfig-plugin-latest.zip﻿ /index.html 302\n" + LATEST,
+               allow="/downloads/secureconfig-plugin-latest.zip﻿ /index.html 302\tmoved\n"),
+     "printable ASCII", 1),
+    ("an allowlisted staged-archive source carrying a raw U+FEFF",
+     redirects(f"/downloads/{SKILL_ZIP}﻿ /index.html 302\n" + LATEST,
+               allow=f"/downloads/{SKILL_ZIP}﻿ /index.html 302\tmoved\n"),
+     "printable ASCII", 1),
+    ("an allowlisted aged-out-zip source carrying a raw U+FEFF",
+     redirects("/downloads/secureconfig-1.0.5.zip﻿ /index.html 302\n" + LATEST,
+               allow="/downloads/secureconfig-1.0.5.zip﻿ /index.html 302\tmoved\n"),
+     "printable ASCII", 1),
+    ("an allowlisted target carrying a raw U+FEFF",
+     redirects("/old /index.html﻿ 302\n" + LATEST,
+               allow="/old /index.html﻿ 302\tmoved\n"),
+     "printable ASCII", 1),
+    ("an allowlisted source that percent-decodes to a U+FEFF",
+     redirects("/draft%EF%BB%BF /index.html 302\n" + LATEST,
+               allow="/draft%EF%BB%BF /index.html 302\tan old draft link\n"),
+     "outside printable ASCII", 1),
+    ("an allowlisted source that percent-decodes to a no-break space",
+     redirects("/draft%C2%A0 /index.html 302\n" + LATEST,
+               allow="/draft%C2%A0 /index.html 302\tan old draft link\n"),
+     "outside printable ASCII", 1),
+    ("an allowlisted source that percent-decodes to an ideographic space",
+     redirects("/draft%E3%80%80 /index.html 302\n" + LATEST,
+               allow="/draft%E3%80%80 /index.html 302\tan old draft link\n"),
+     "outside printable ASCII", 1),
+    ("an allowlisted source that percent-decodes to a U+2028 line separator",
+     redirects("/draft%E2%80%A8 /index.html 302\n" + LATEST,
+               allow="/draft%E2%80%A8 /index.html 302\tan old draft link\n"),
+     "outside printable ASCII", 1),
+    ("an allowlisted source carrying a fullwidth letter",
+     redirects("/ｄraft /index.html 302\n" + LATEST,
+               allow="/ｄraft /index.html 302\tan old draft link\n"),
+     "printable ASCII", 1),
+    ("an allowlisted source carrying a fullwidth solidus",
+     redirects("/draft／x /index.html 302\n" + LATEST,
+               allow="/draft／x /index.html 302\tan old draft link\n"),
+     "printable ASCII", 1),
+    ("an allowlisted source carrying a zero-width space",
+     redirects("/dra​ft /index.html 302\n" + LATEST,
+               allow="/dra​ft /index.html 302\tan old draft link\n"),
+     "printable ASCII", 1),
+    ("an allowlisted source carrying a raw C1 control character",
+     redirects("/draft\u0085x /index.html 302\n" + LATEST,
+               allow="/draft\u0085x /index.html 302\tan old draft link\n"),
+     "printable ASCII", 1),
+    # No two entries share a source: a host applies the first rule whose source matches, so a
+    # repeated source, identical, retargeted, case-varied or percent-encoded, is refused, and a
+    # page rule cannot mask an aged-out zip's asset redirect.
+    ("two identical allowlisted entries",
+     redirects("/old / 302\n/old / 302\n" + LATEST,
+               allow="/old / 302\tmoved\n/old / 302\tmoved again\n"),
+     "already names", 1),
+    ("two allowlisted entries sharing a source, with different targets",
+     redirects("/old / 302\n/old /checklist/ 302\n" + LATEST,
+               allow="/old / 302\tmoved\n/old /checklist/ 302\tmoved again\n"),
+     "already names", 1),
+    ("two allowlisted entries sharing a source in different cases",
+     redirects("/old / 302\n/OLD /checklist/ 302\n" + LATEST,
+               allow="/old / 302\tmoved\n/OLD /checklist/ 302\tmoved again\n"),
+     "already names", 1),
+    ("two allowlisted entries sharing a source, one percent-encoded",
+     redirects("/old / 302\n/%6Fld /checklist/ 302\n" + LATEST,
+               allow="/old / 302\tmoved\n/%6Fld /checklist/ 302\tmoved again\n"),
+     "already names", 1),
+    ("a page rule repeating an aged-out zip's asset-redirect source, which would mask it",
+     redirects("/downloads/secureconfig-1.0.5.zip / 302\n" + ASSET + "\n" + LATEST,
+               allow="/downloads/secureconfig-1.0.5.zip / 302\tserve the home page\n"
+                     + ASSET + "\taged out of site/downloads/\n"),
+     "already names", 1),
     # The archive target rule reads bytes as well as names: a known signature under another
     # name is still an archive target.
     ("an allowlisted redirect whose target is a zip's bytes under a .bin name",
@@ -761,6 +861,7 @@ def generated(edit_content, extra=None):
     d = Path(tempfile.mkdtemp())
     try:
         for rel in ("scripts/build-site.py", "tools/check_csp_hashes.py", "tools/check_draft.py",
+                    "tools/gen_hosted.py", "tools/_archives.py",
                     "site-src/content.json", "README.md", "tools/version_basis_guides.txt",
                     "tools/guide_quality.tsv"):
             (d / rel).parent.mkdir(parents=True, exist_ok=True)
@@ -792,6 +893,7 @@ def staged():
     d = Path(tempfile.mkdtemp())
     try:
         for rel in ("scripts/build-site.py", "tools/check_csp_hashes.py", "tools/check_draft.py",
+                    "tools/gen_hosted.py", "tools/_archives.py",
                     "site-src/content.json", "README.md", "tools/version_basis_guides.txt",
                     "tools/guide_quality.tsv"):
             (d / rel).parent.mkdir(parents=True, exist_ok=True)

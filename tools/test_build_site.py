@@ -57,9 +57,16 @@ name), a symbolic link to a file and to a folder under a valid name, a FIFO unde
 once. The total counts every regular file with a valid name, an oversized one included, and no
 refused entry. downloads/ itself as a symbolic link is refused, a downloads/ that cannot be listed
 raises OSError (skipped as root), and the caps are exactly 20 MiB and 200 MiB.
+At the root, --check also admits the 2 generated hosted files, `_redirects` and
+`marketplace.json`, only when each equals, byte for byte, what tools/gen_hosted.py writes from
+the release record and the redirect allowlist read beside the output folder. Those cases cover
+both files admitted as generated, an edited catalog digest, an appended redirect, a missing
+`_redirects` with a record behind it, and a `marketplace.json` left behind with no record.
 """
+import hashlib
 import html
 import importlib.util
+import json
 import os
 import shutil
 import subprocess
@@ -70,6 +77,9 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 SCRIPT = ROOT / "scripts" / "build-site.py"
+sys.path.insert(0, str(TOOLS))
+import gen_hosted  # noqa: E402  (writes the byte-exact generated hosted files in fixtures)
+
 spec = importlib.util.spec_from_file_location("build_site", SCRIPT)
 build_site = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build_site)
@@ -681,6 +691,56 @@ def main():
                 failures.append(f"--check at the root did not exit 2 on a downloads/ it cannot "
                                 f"list: {rc} {text!r}")
         shutil.rmtree(out / "downloads")
+        # The 2 generated hosted files are admitted at the root only when each equals, byte for
+        # byte, what tools/gen_hosted.py writes from the release record and the allowlist read
+        # beside the output folder; an edited copy, a missing one and one with nothing behind
+        # it are refused, so the records pull request's committed files pass and nothing else.
+        digest = hashlib.sha256(b"zip bytes\n").hexdigest()
+        (d / "plugin").mkdir()
+        (d / "plugin" / "plugin.json").write_text(json.dumps(
+            {"name": "secureconfig", "description": "guides",
+             "author": {"name": "Jeff Posluns", "url": "https://secureconfig.ai"}}),
+            encoding="utf-8")
+        (d / "releases").mkdir()
+        record = (f"{digest}  secureconfig-1.0.1234.zip\n"
+                  f"{digest}  secureconfig-plugin-1.0.1234.zip\n")
+        (d / "releases" / "SHA256SUMS").write_text(record, encoding="utf-8")
+        (d / "tools").mkdir()
+        (d / "tools" / "redirects_allowlist.txt").write_text(
+            "/old / 302\tthe old URL of the landing page\n", encoding="utf-8")
+        (out / "downloads").mkdir()
+        for name in ("secureconfig-1.0.1234.zip", "secureconfig-plugin-1.0.1234.zip"):
+            (out / "downloads" / name).write_bytes(b"zip bytes\n")
+        records = gen_hosted.read_records(d)
+        (out / "_redirects").write_text(gen_hosted.redirects_text(d, records), encoding="utf-8")
+        (out / "marketplace.json").write_text(gen_hosted.marketplace_text(d, records),
+                                              encoding="utf-8")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 0:
+            failures.append(f"--check at the root refused the generated hosted files: {text!r}")
+        data = (out / "marketplace.json").read_bytes()
+        (out / "marketplace.json").write_bytes(data.replace(b'"sha256": "', b'"sha256": "0'))
+        rc, text = run("--check", "--out", str(out))
+        if rc != 1 or "marketplace.json does not equal what tools/gen_hosted.py writes" not in text:
+            failures.append(f"--check at the root accepted an edited marketplace.json: {text!r}")
+        (out / "marketplace.json").write_bytes(data)
+        (out / "_redirects").write_bytes((out / "_redirects").read_bytes() + b"/x / 302\n")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 1 or "_redirects does not equal what tools/gen_hosted.py writes" not in text:
+            failures.append(f"--check at the root accepted an edited _redirects: {text!r}")
+        (out / "_redirects").unlink()
+        rc, text = run("--check", "--out", str(out))
+        if rc != 1 or "_redirects is missing" not in text:
+            failures.append(f"--check at the root missed a missing _redirects: {text!r}")
+        shutil.rmtree(d / "releases")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 1 or "marketplace.json exists, but" not in text:
+            failures.append(f"--check at the root accepted a marketplace.json with no record "
+                            f"behind it: {text!r}")
+        (out / "marketplace.json").unlink()
+        shutil.rmtree(out / "downloads")
+        shutil.rmtree(d / "plugin")
+        shutil.rmtree(d / "tools")
         # SPECIFICATION 4.1 items 0 and 3: the staged build written under draft/ beside the root
         # pages, as on the `draft` branch, is refused at the root, page and copied file alike.
         rc, text = run("--base", "/draft/", "--out", str(out / "draft"))
@@ -760,6 +820,8 @@ def main():
           f"symbolic links{', a FIFO' if hasattr(os, 'mkfifo') else ''}"
           f"{', an unlistable folder' if os.geteuid() != 0 else ''}, an oversized file counted in "
           f"the total, the total cap and the 20 MiB and 200 MiB values)")
+    print("  ok    the 2 generated hosted files at the root: admitted when byte-equal to the "
+          "generator's output, refused when edited, missing or with no record behind them")
     if os.geteuid() == 0:
         print("  note  run as root, so the 2 unlistable downloads/ cases were skipped")
     return 0

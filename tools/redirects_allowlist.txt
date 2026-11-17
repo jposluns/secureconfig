@@ -1,14 +1,16 @@
 # The gated redirect list: every site/_redirects line beyond the two generated latest links.
 #
 # A line that is empty or starts with `#` is a comment. An entry is `SOURCE TARGET 302<TAB>REASON`
-# with single spaces and a non-empty reason. tools/gen_hosted.py copies each entry's rule (the
-# part before the tab), in file order, into site/_redirects between its header and the latest
-# links. tools/check_draft.py checks each entry: the status is the literal 302, and every
+# with single spaces, printable ASCII fields (`!` to `~`) and a non-empty reason, and no two
+# entries share a source. tools/gen_hosted.py copies each entry's rule (the part before the
+# tab), in file order, into site/_redirects between its header and the latest links.
+# tools/check_draft.py checks each entry: the status is the literal 302, and every
 # root-relative source and target is percent-decoded to a normal form first. A field that does
-# not normalize cleanly is refused: an unsettled decoding, whitespace, a control character, a
-# backslash, a `.`, `..` or empty segment, a `*`, `:`, `?` or `#`, or a scheme-relative `//`
-# form. So a gated field is one exact literal path, never a splat, placeholder, query or
-# fragment form. The source is such a path with no trailing slash that is not a latest name and
+# not normalize cleanly is refused: an unsettled decoding, any character outside `!` to `~` (a
+# space, control, invisible or non-ASCII character), a backslash, a `.`, `..` or empty segment,
+# a `*`, `:`, `?` or `#`, or a scheme-relative `//` form. So a gated field is one exact literal
+# path, never a splat, placeholder, query or fragment form, and a repeated source cannot shadow
+# another entry. The source is such a path with no trailing slash that is not a latest name and
 # names no file under site/ by its exact path, an index, `.html` or `.htm` completion, or
 # another case (an entry never names a staged file's path in a spelling that gate reads), and
 # no source or target names /draft/. The target is a root-relative path naming a file under

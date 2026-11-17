@@ -41,17 +41,22 @@ PART 1, INDEXABILITY AND NO DRAFT TREE:
     /downloads/secureconfig-plugin-latest.zip, each `SOURCE TARGET 302` with single spaces and
     both targets one version's zips staged in site/downloads/. Every other line is refused, so a
     missing path still returns the 404 page with status 404. An allowlist entry is
-    `SOURCE TARGET 302<TAB>REASON` with a non-empty reason. Every root-relative source and
-    target is read in a normal form first: it is percent-decoded until it stops changing (at
-    most DECODE_ROUNDS rounds). A field is refused when the decoding does not settle, when it
-    decodes to whitespace, a control character or a backslash, when it carries a `.`, `..` or
-    empty segment, when it carries a `*`, `:`, `?` or `#` (FIELD_MARKS), or when it starts
-    `//` (scheme-relative). A host can read `*` as a splat and `:` as a placeholder, each
-    matching more than one path, and `?` and `#` as a query or fragment the rules below would
-    not read, and a browser folds the other refused forms onto a URL the rules below would not
-    read, so a gated field is one exact literal path. A source with a trailing slash is
-    refused too: whether a host folds `/x/` and `/x` onto one request is not verified here, so
-    a gated source has no second spelling. A target is such a normal root-relative path naming a
+    `SOURCE TARGET 302<TAB>REASON` with a non-empty reason, and its raw source and target hold
+    only printable ASCII (`!` to `~`). Every root-relative source and target is read in a
+    normal form first: it is percent-decoded until it stops changing (at most DECODE_ROUNDS
+    rounds). A field is refused when the decoding does not settle, when its decoded form
+    carries any character outside printable ASCII (a space, control, invisible or non-ASCII
+    character) or a backslash, when it carries a `.`, `..` or empty segment, when it carries a
+    `*`, `:`, `?` or `#` (FIELD_MARKS), or when it starts `//` (scheme-relative). A host can
+    read `*` as a splat and `:` as a placeholder, each matching more than one path, and `?`
+    and `#` as a query or fragment the rules below would not read; a browser reads a backslash
+    as a slash, and how a browser or a host reads any other refused character is not verified
+    here, so a gated field is one exact literal path, spelled in printable ASCII. A source
+    with a trailing slash is refused too: whether a host folds `/x/` and `/x` onto one request
+    is not verified here, so a gated source has no second spelling. A source that an earlier
+    entry already names, in any case once decoded, is refused as well: a host applies the
+    first rule whose source matches, so a repeated source would make one entry shadow the
+    other. A target is such a normal root-relative path naming a
     file under site/ that lies outside /downloads/, has no `.zip` name in any case, and whose
     bytes carry none of the archive signatures this gate reads (ARCHIVE_MAGICS at the start, or
     a tar magic at TAR_MAGIC_OFFSET), or an aged-out versioned zip's own GitHub release asset
@@ -65,8 +70,8 @@ PART 1, INDEXABILITY AND NO DRAFT TREE:
     refused because the release record vouches for no archive outside /downloads/.
     tools/check_hosted.py also holds each release-asset entry to the release record (a
     recorded zip that is no longer staged) and refuses any file under site/downloads/ that no
-    record names. The literal 302 is required
-    everywhere: a latest link answers 302, never 301, and so does every gated redirect. No
+    record names. The literal 302 is required everywhere: a latest link answers 302, never
+    301, and so does every gated redirect. No
     source or target in the file or the allowlist names /draft/ in any case, percent-encoding
     or dot-segment spelling, and no file under site/ has a `-latest.zip` name, since a latest
     link is a 302 redirect with no bytes of its own. tools/check_hosted.py holds the file to
@@ -191,7 +196,10 @@ LATEST_RULES = (
 )
 LATEST_SOURCES = tuple(source for source, _ in LATEST_RULES)
 DOWNLOADS_NAME = "downloads"
-ALLOW_ENTRY = re.compile(r"(/\S+) (\S+) 302")
+# The rule shape: each raw field is printable ASCII (`!` to `~`), so no control or invisible
+# character, a raw U+FEFF included, can hide in a field or act as a second separator for a
+# parser that splits a rule on more than a plain space.
+ALLOW_ENTRY = re.compile(r"(/[!-~]+) ([!-~]+) 302")
 # An aged-out zip's redirect target: that release's own GitHub asset, same version and name.
 ASSET_TARGET = re.compile(r"https://github\.com/jposluns/secureconfig/releases/download/"
                           r"v(1\.0\.[1-9][0-9]*)/(secureconfig(?:-plugin)?-\1\.zip)")
@@ -473,11 +481,12 @@ def css_unescape(text):
 def clean_field(value):
     """(the normal form of a root-relative redirect field, None), or (None, why it is refused).
     The field is percent-decoded until it stops changing (at most DECODE_ROUNDS rounds). It is
-    refused when the decoding does not settle, when it decodes to whitespace, a control
-    character or a backslash, when it carries a `.`, `..` or empty segment, when it carries one
-    of FIELD_MARKS (`*`, `:`, `?` or `#`), or when it is scheme-relative: a browser or a host
-    reads each of those as more, or as other, than one exact literal path. Every rule then
-    reads the normal form, the one path the entry is about."""
+    refused when the decoding does not settle, when its decoded form carries any character
+    outside printable ASCII (`!` to `~`) or a backslash, when it carries a `.`, `..` or empty
+    segment, when it carries one of FIELD_MARKS (`*`, `:`, `?` or `#`), or when it is
+    scheme-relative. A browser or a host reads each of those as more, or as other, than one
+    exact literal path, or reads it in a way this gate does not verify. Every rule then reads
+    the normal form, the one path the entry is about."""
     if value.startswith("//"):
         return None, "is scheme-relative, which a browser reads as a URL on another host"
     for _ in range(DECODE_ROUNDS + 1):
@@ -487,9 +496,11 @@ def clean_field(value):
         value = decoded
     else:
         return None, f"still changes after {DECODE_ROUNDS} rounds of percent-decoding"
-    if BAD_URL_CHARS.search(value):
-        return None, ("percent-decodes to whitespace, a control character or a backslash, "
-                      "which a browser strips or reads as a slash")
+    if not value.isascii() or not value.isprintable() or " " in value or "\\" in value:
+        return None, ("decodes to a character outside printable ASCII `!` to `~` (a space, "
+                      "control, invisible or non-ASCII character), or to a backslash; how a "
+                      "browser or a host reads such a character in a rule is not verified "
+                      "here, so a gated field carries none of them")
     segments = value.split("/")[1:]
     if "." in segments or ".." in segments:
         return None, ("carries a `.` or `..` segment, which a browser folds onto another path "
@@ -555,6 +566,9 @@ def allowlist_entries(root):
         for entry in sorted(p for p in (root / SITE).rglob("*") if p.is_file()):
             rel = entry.relative_to(root / SITE).as_posix()
             staged.setdefault(rel.casefold(), rel)
+    # Each decoded source, case folded, and the line that first named it: a later entry naming
+    # the same source is refused, since a host applies the first rule whose source matches.
+    seen = {}
     for n, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
         if not line or line.startswith("#"):
             continue
@@ -567,8 +581,9 @@ def allowlist_entries(root):
         matched = ALLOW_ENTRY.fullmatch(rule)
         if not matched:
             findings.append(f"{where}: the rule before the tab is `SOURCE TARGET 302` with "
-                            f"single spaces, a root-relative source and the literal 302 (every "
-                            f"redirect here answers 302, never 301)")
+                            f"single spaces, a root-relative source, printable ASCII fields "
+                            f"(`!` to `~`) and the literal 302 (every redirect here answers "
+                            f"302, never 301)")
             continue
         source, target = matched.group(1), matched.group(2)
         problems = []
@@ -591,6 +606,13 @@ def allowlist_entries(root):
                             "literal path, and whether a host folds `/x/` and `/x` onto one "
                             "request is not verified here, so a second spelling of a path is "
                             "refused")
+        if src is not None:
+            first = seen.setdefault(src.casefold(), n)
+            if first != n:
+                problems.append(f"has a source that line {first} already names, in some case "
+                                f"or percent-encoding; a host applies the first rule whose "
+                                f"source matches, so a repeated source would make one entry "
+                                f"shadow the other")
         if (src is not None and draft_path(src)) or (tgt is not None and draft_path(tgt)):
             problems.append("names /draft/; the live site carries no /draft/ tree and no "
                             "redirect, gated or generated, names it")

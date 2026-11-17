@@ -67,7 +67,13 @@ DOWNLOADS_TOTAL_MAX bytes. Every other entry in downloads/ is refused, including
 or not), a symbolic link, a special file, any other name and any `-latest.zip` name, because the
 latest links are planned as 302 redirects with no bytes of their own. download_problems() reads
 only the top level of downloads/, so only top-level regular files can be admitted there. A
-downloads/ folder that cannot be read is a read error (exit 2).
+downloads/ folder that cannot be read is a read error (exit 2). At base `/` only, the folder may
+also hold the 2 generated hosted files, `_redirects` and `marketplace.json` (HOSTED):
+hosted_problems() admits each exactly when tools/gen_hosted.py would write it from
+releases/SHA256SUMS and tools/redirects_allowlist.txt, both read beside the output folder, and
+the file on disk equals that output byte for byte. That is the rule tools/check_hosted.py holds
+the committed copies to, so the records pull request of CONTRIBUTING.md's Releasing step 9
+passes this check, while a hand-written, hand-edited or stale copy fails it.
 
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error
 or a source the build cannot read as it needs.
@@ -86,6 +92,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from check_csp_hashes import STYLE_ATTR, VALUED_HANDLER, name_suffix  # noqa: E402  (shared rules)
+import gen_hosted  # noqa: E402  (the one place the generated hosted files' content is defined)
 
 CONTENT = Path("site-src") / "content.json"
 README = Path("README.md")
@@ -113,6 +120,11 @@ DOWNLOADS = "downloads/"
 DOWNLOAD_NAME = re.compile(r"secureconfig(?:-plugin)?-1\.0\.[1-9][0-9]*\.zip")
 DOWNLOAD_MAX = 20 * 1024 * 1024
 DOWNLOADS_TOTAL_MAX = 200 * 1024 * 1024
+# The 2 generated hosted files a root --check admits beside the pages, each only when it equals
+# what tools/gen_hosted.py writes from the release record and the gated redirect allowlist read
+# beside the output folder (hosted_problems()), the same output tools/check_hosted.py holds the
+# committed copies to.
+HOSTED = ("_redirects", "marketplace.json")
 # The unlisted n8n advisory (the maintainer's instruction of 2026-11-07: a dated name) and its
 # plain-text copy. tools/check_draft.py admits the page as noindex with no canonical by this exact
 # path, and the overflow page list in tools/run_all_checks.sh names it.
@@ -978,6 +990,41 @@ def download_problems(out, max_file=DOWNLOAD_MAX, max_total=DOWNLOADS_TOTAL_MAX)
     return problems
 
 
+def hosted_problems(out):
+    """The root --check problems for the 2 generated hosted files (HOSTED): each may sit in out
+    only when tools/gen_hosted.py would write it from the release record and the gated allowlist,
+    both read beside out (out's parent folder holds releases/ and tools/), and then only equal to
+    that output byte for byte, the rule tools/check_hosted.py holds the committed copies to. A
+    record or allowlist that cannot be used refuses the check whole, so nothing unchecked ships.
+    This build writes neither file. OSError or UnicodeError on a read error."""
+    root = out.parent
+    try:
+        records = gen_hosted.read_records(root)
+        expected = {"_redirects": gen_hosted.redirects_text(root, records),
+                    "marketplace.json": (gen_hosted.marketplace_text(root, records)
+                                         if records else None)}
+    except gen_hosted.HostedError as exc:
+        return [f"_redirects and marketplace.json cannot be checked, because the release record "
+                f"or the allowlist beside the output folder cannot be used: {exc}"]
+    problems = []
+    for name in HOSTED:
+        path = out / name
+        found = path.read_bytes() if path.is_file() else None
+        want = expected[name].encode("utf-8") if expected[name] is not None else None
+        if want is None and found is not None:
+            problems.append(f"{name} exists, but the release record and the allowlist beside "
+                            f"the output folder give tools/gen_hosted.py nothing to write; the "
+                            f"file is generated, never written by hand")
+        elif want is not None and found is None:
+            problems.append(f"{name} is missing; run python3 -I -B tools/gen_hosted.py and "
+                            f"commit what it writes")
+        elif want is not None and want != found:
+            problems.append(f"{name} does not equal what tools/gen_hosted.py writes from the "
+                            f"release record and the allowlist; the file is generated and "
+                            f"never hand-edited, so rerun that generator")
+    return problems
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--base", default="/")
@@ -1020,7 +1067,9 @@ def main(argv=None):
         # constants (its grammar is held by tools/check_draft.py). A page is .html or .htm in any
         # case, read as the CSP gate reads one (name_suffix). At the root after promotion the folder
         # also holds the published files, named one by one in PUBLISHED. At the root it may also
-        # hold the release archives that download_problems() admits in downloads/.
+        # hold the release archives that download_problems() admits in downloads/, and the 2
+        # generated hosted files (HOSTED) that hosted_problems() holds to tools/gen_hosted.py's
+        # output.
         if out.is_dir():
             for path in sorted(p for p in out.rglob("*") if not p.is_dir()):
                 rel = path.relative_to(out).as_posix()
@@ -1033,6 +1082,8 @@ def main(argv=None):
                                     f"template file under {COPIED}")
                 elif rel.startswith(DOWNLOADS):
                     continue  # held by download_problems() below
+                elif rel in HOSTED:
+                    continue  # held by hosted_problems() below
                 elif rel not in PUBLISHED:
                     problems.append(f"{rel} is neither a page this build writes, a copied template "
                                     f"file under {COPIED}, nor a published file in PUBLISHED")
@@ -1041,6 +1092,12 @@ def main(argv=None):
                     problems += download_problems(out)
                 except OSError as exc:
                     print(f"  FAIL  cannot read {out / DOWNLOADS}: {exc}")
+                    return 2
+                try:
+                    problems += hosted_problems(out)
+                except (OSError, UnicodeError) as exc:
+                    print(f"  FAIL  cannot read the release record, the allowlist or the "
+                          f"generated hosted files: {exc}")
                     return 2
         if problems:
             for p in problems:

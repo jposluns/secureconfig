@@ -31,8 +31,8 @@ WHAT IT CHECKS:
   - the newest record's zips must be staged, since the latest links and the catalog point at
     hosted copies;
   - every entry under site/downloads/ is one of the record's zips: a file no record names, and
-    anything that is not a regular file, are refused, so with the digest check above every file
-    staged there is a recorded zip whose bytes match the record;
+    anything that is not a regular file, a symbolic link included, are refused, so with the
+    digest check above every file staged there is a recorded zip whose bytes match the record;
   - the newest record's staged plugin zip holds a plugin.json at its root whose version equals
     the record's version, so the catalog cannot name bytes of another version. When the zip
     gains .claude-plugin/plugin.json, this check will be extended to it.
@@ -68,9 +68,10 @@ def asset_redirects(rules):
 
 
 def staged_digest(root, name):
-    """The staged archive's SHA-256, or None when site/downloads/<name> is not a regular file."""
+    """The staged archive's SHA-256, or None when site/downloads/<name> is not a regular file
+    (a symbolic link, which is not one, is never followed here)."""
     path = root / DOWNLOADS / name
-    if not path.is_file():
+    if path.is_symlink() or not path.is_file():
         return None
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -99,15 +100,18 @@ def generated_findings(root, records):
                                    gen_hosted.redirects_text(root, records),
                                    "no recorded release or allowlist entry")):
         path = root / rel
-        found = path.read_text(encoding="utf-8") if path.is_file() else None
-        if expected is None and found is not None:
+        # Both sides compared as bytes, so a CRLF or lone-CR rewrite, which a text-mode read
+        # would fold back onto LF, is a finding too.
+        found = path.read_bytes() if path.is_file() else None
+        want = expected.encode("utf-8") if expected is not None else None
+        if want is None and found is not None:
             findings.append(f"{rel} exists with {behind} behind it; the generator would write "
                             f"nothing for this tree, so remove the file or commit what it "
                             f"should come from")
-        elif expected is not None and found is None:
+        elif want is not None and found is None:
             findings.append(f"{rel} is missing; run python3 -I -B tools/gen_hosted.py and commit "
                             f"what it writes")
-        elif expected != found:
+        elif want != found:
             findings.append(f"{rel} does not equal the generator's output; it is generated and "
                             f"never hand-edited, so run python3 -I -B tools/gen_hosted.py")
     return findings
@@ -184,7 +188,8 @@ def staged_findings(root, records):
         return findings
     recorded = {name for names in records.values() for name in names}
     for entry in sorted(folder.iterdir()):
-        if not entry.is_file():
+        # is_file() alone would follow a symbolic link, so a link is refused by its own type.
+        if entry.is_symlink() or not entry.is_file():
             findings.append(f"{DOWNLOADS}/{entry.name} is not a regular file; {DOWNLOADS} "
                             f"holds the record's zips and nothing else")
         elif entry.name not in recorded:

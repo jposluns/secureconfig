@@ -12,16 +12,20 @@ two releases in one record, newest first and both staged, and a generated root w
 release's zips are redirected to their own release assets by allowlist entries. The refusals
 cover each half of the gate. The drift half: a generated file with no recorded release behind it (the catalog and a
 latest link), a missing generated file with a record behind it, an edited catalog digest, a
-latest link edited to 301, and an extra redirect appended. The record half: a staged zip whose
+latest link edited to 301, and an extra redirect appended. Both generated files are compared
+as bytes, so the cases also rewrite each file with CRLF line endings and put a lone CR in
+place of the header's LF and between the two latest links. The record half: a staged zip whose
 bytes differ from its record, a missing staged archive for the newest release, a newest release
-not staged at all even though redirected, an aged-out zip with no redirect, and a staged file in
+not staged at all even though redirected, an aged-out zip with no redirect, a recorded zip
+staged as a symbolic link to identical bytes outside site/, and a staged file in
 site/downloads/ that no record names, beside recorded zips and with no record. The record's own
 shape: a record naming a -latest file, a record missing a zip line, a corrupted record line, a
 record without a trailing newline, a line whose name carries no version, a release's lines
 repeated after another release's (a duplicate version), an out-of-order record with the older
 release first, and a stray entry under releases/. The allowlist half: an asset redirect naming a
-zip no record names, an asset redirect for a recorded zip that is still staged, and an allowlist
-entry without a reason. The rest: a plugin zip whose root plugin.json version differs from its
+zip no record names, an asset redirect for a recorded zip that is still staged, an allowlist
+entry without a reason, an entry whose source a second entry repeats, and an entry with a raw
+U+FEFF in its source. The rest: a plugin zip whose root plugin.json version differs from its
 record. One in-process case holds check_draft.REDIRECTS_HEADER to
 gen_hosted.HEADER, so the gate and the generator cannot drift apart on the file's first line.
 
@@ -210,6 +214,43 @@ CASES = (
     ("a staged zip with no record at all",
      lambda d: (fixture(d, versions=()), write(d, "site/downloads/extra.zip", "x\n")),
      "no record names it", 1),
+    # The generated files are compared as bytes, so a line-ending rewrite, which a text-mode
+    # read would fold back onto LF, is a finding.
+    ("site/_redirects rewritten with CRLF line endings",
+     lambda d: (fixture(d), write(d, "site/_redirects",
+                                  (d / "site/_redirects").read_bytes().replace(b"\n", b"\r\n"))),
+     "does not equal the generator's output", 1),
+    ("site/_redirects with a lone CR in place of the header's LF",
+     lambda d: (fixture(d), write(d, "site/_redirects",
+                                  (d / "site/_redirects").read_bytes().replace(b"\n", b"\r", 1))),
+     "does not equal the generator's output", 1),
+    ("site/_redirects with a lone CR between the two latest links",
+     lambda d: (fixture(d), write(d, "site/_redirects",
+                                  (d / "site/_redirects").read_bytes().replace(
+                                      b"302\n/downloads/secureconfig-plugin-latest.zip",
+                                      b"302\r/downloads/secureconfig-plugin-latest.zip"))),
+     "does not equal the generator's output", 1),
+    ("site/marketplace.json rewritten with CRLF line endings",
+     lambda d: (fixture(d), write(d, "site/marketplace.json",
+                                  (d / "site/marketplace.json").read_bytes()
+                                  .replace(b"\n", b"\r\n"))),
+     "does not equal the generator's output", 1),
+    ("a recorded zip staged as a symbolic link to identical bytes outside site/",
+     lambda d: (fixture(d),
+                write(d, "elsewhere.zip",
+                      (d / "site/downloads/secureconfig-1.0.7.zip").read_bytes()),
+                (d / "site/downloads/secureconfig-1.0.7.zip").unlink(),
+                (d / "site/downloads/secureconfig-1.0.7.zip").symlink_to(d / "elsewhere.zip")),
+     "is not a regular file", 1),
+    ("an allowlist entry whose source a second entry repeats",
+     lambda d: fixture(d, versions=(),
+                       allow="/a /index.html 302\tmoved\n/a /checklist/ 302\tmoved again\n",
+                       generate=False),
+     "repeats the source", 1),
+    ("an allowlist entry with a raw U+FEFF in its source",
+     lambda d: fixture(d, versions=(), allow="/draft﻿ /index.html 302\tan old link\n",
+                       generate=False),
+     "printable ASCII", 1),
 )
 
 
