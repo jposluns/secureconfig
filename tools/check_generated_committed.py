@@ -4,8 +4,9 @@
 WHAT THIS CATCHES: two findings closed on 2026-09-28. F-PLUGIN-MANIFEST-PARTIAL-STAGE is a
 plugin bundle rebuilt in the working tree and only partly staged, so the commit carried
 generated files that no build of that commit produces. F-VERSION-BUMP-NO-REGEN is a VERSION
-bump committed without the plugin/plugin.json it regenerates. The two staleness gates in
-tools/run_all_checks.sh rebuild site/llms-full.txt and plugin/ in the WORKING TREE and
+bump committed without the plugin/plugin.json it regenerates. The 3 staleness gates in
+tools/run_all_checks.sh, its llms-full, plugin and instructions sections, build
+site/llms-full.txt, plugin/ and site/secureconfig-instructions.md from the WORKING TREE and
 compare, so they pass whenever the working tree is right, including when the rebuilt files
 were never committed. CI checks out the commit, so there those gates already decide the
 commit; this gate gives a local run after committing the same answer before a push.
@@ -47,10 +48,10 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
   removes is a finding, and a symbolic link is compared by its target.
 
 WHEN IT DOES NOT REBUILD: when the commit is HEAD and `git status` reports nothing, no staged,
-modified or untracked file, the working tree is the commit, and the two staleness gates, which
-run earlier in tools/run_all_checks.sh, have already rebuilt exactly this commit, whose chat
-fallback file the instructions section has compared in place. The gate then
-checks the version and stops, which saves the minutes the two builds take; that is the CI case.
+modified or untracked file, the working tree is the commit, and the llms-full and plugin
+staleness gates, which run earlier in tools/run_all_checks.sh, have already rebuilt exactly this
+commit, whose chat fallback file the instructions section has compared in place. The gate then
+checks the version and stops, which saves the minutes the 3 builds take; that is the CI case.
 Run on its own with a clean tree, it relies on those staleness gates and says so in its ok
 line. Any staged, modified or untracked file, a --rev other than HEAD, a `git status` that
 cannot run, or --rebuild makes it rebuild the export. The skip trusts `git status`, which does
@@ -294,7 +295,7 @@ def parser_failure():
 
 
 def build_findings(tree):
-    """Run both builds in the export; a finding for the first one that does not exit 0."""
+    """Run the 3 builds in the export; a finding for the first one that does not exit 0."""
     for script in BUILDS:
         try:
             done = subprocess.run(["bash", script], cwd=tree, capture_output=True, text=True,

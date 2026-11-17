@@ -378,8 +378,8 @@ LLMS_LINKS = "== llms-full.txt links are absolute"
 PREFLIGHT_CALL = "-I -B tools/check_parser_pin.py"
 WALKER_CALL = "-B tools/test_walk.py"
 SECRETS_CALL = "-I -B tools/test_secrets_scan.py"
-# generated-committed's self-test and gate, after the two builds and the chat fallback check its
-# clean-tree skip relies on.
+# generated-committed's self-test and gate, after the llms-full and plugin builds and the chat
+# fallback check its clean-tree skip relies on.
 GENERATED_CALLS = ["build-llms-full.sh", "build-plugin.sh",
                    "-I -B tools/test_build_instructions.py", "build-instructions.sh",
                    "-I -B tools/test_generated_committed.py",
