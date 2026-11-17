@@ -62,6 +62,8 @@ SECTIONS = (RULES,
             "## What this skill does not do")
 # A README guide-index row, as scripts/build-site.py reads one.
 GUIDE_ROW = re.compile(r"^\| \[([a-z0-9.-]+)\.md\]\(\1\.md\) \| (.+) \|$")
+# An unescaped pipe in a row's Covers text starts a third column, which this build cannot read.
+CELL_PIPE = re.compile(r"(?<!\\)\|")
 # The index's table frame: its header row and its separator row carry no guide.
 TABLE_HEAD = "| Guide | Covers |"
 TABLE_RULE = re.compile(r"\|[-: ]+\|[-: ]+\|")
@@ -137,12 +139,15 @@ def guide_index(lines):
         if line.startswith("### "):
             out += ["", f"### {line[4:].strip()}", ""]
             categories += 1
-        elif match := GUIDE_ROW.match(line):
+        elif (match := GUIDE_ROW.match(line)) and not CELL_PIPE.search(match.group(2)):
             if not categories:
                 fail(f"{README} has a guide-index row before any category heading")
             out.append(f"- `{match.group(1)}.md`: {match.group(2)}")
             rows += 1
-        elif line.startswith("|") and line != TABLE_HEAD and not TABLE_RULE.fullmatch(line):
+        elif "|" in line and line != TABLE_HEAD and not TABLE_RULE.fullmatch(line):
+            # Any other line with a pipe may be a table row: an indented one, one with an extra
+            # column or one without its leading pipe would be dropped or misread, so each is
+            # refused.
             fail(f"{README} has a guide-index row this build cannot read: {line!r}")
     if not categories or not rows:
         fail(f"{README} yielded {categories} categories and {rows} guide rows; this build "

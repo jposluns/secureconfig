@@ -430,8 +430,9 @@ paragraph or README.md's guide index also runs
 `bash scripts/build-instructions.sh` and commits `site/secureconfig-instructions.md`. That is the
 generated chat fallback file the site serves beside `site/llms.txt`. The suite's instructions
 section runs that script's `--check` form, which compares in memory and rewrites nothing, and
-`.aiqt/gensrc.json` records the file's sources. The suite's two staleness gates
-rebuild the working tree, so they pass when a rebuilt file was left unstaged.
+`.aiqt/gensrc.json` records the file's sources. The suite's 3 staleness gates, its llms-full,
+plugin and instructions sections, check the working tree, so they pass when a rebuilt file was
+left unstaged.
 `tools/check_generated_committed.py` exports `HEAD` with `git archive` and fails unless the
 committed `plugin/plugin.json` and the plugin's `SKILL.md` name the committed `VERSION` and
 `SKILL.md` states the committed guide count; when the working tree differs from

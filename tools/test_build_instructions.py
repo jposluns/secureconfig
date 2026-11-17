@@ -116,6 +116,7 @@ def main():
         # A second argument is refused, counted, and builds nothing.
         status, output = run(root, "--list-inputs", "--check")
         assert status != 0 and "2 arguments given" in output, (status, output)
+        assert "Traceback" not in output, output
         assert not (root / OUT).exists(), "a refused argument list wrote the output file"
         count += 1
 
@@ -185,6 +186,7 @@ def main():
         # An unknown argument is refused, named.
         status, output = run(root, "--frobnicate")
         assert status != 0 and "unknown argument '--frobnicate'" in output, (status, output)
+        assert "Traceback" not in output, output
         count += 1
 
         # A missing site/ folder is a named failure, not a traceback.
@@ -219,14 +221,35 @@ def main():
         (dict(readme=README_MD.replace("| [nginx.md](nginx.md) | nginx: TLS, redirect, HSTS |",
                                        "| [nginx.md](other.md) | nginx: TLS, redirect, HSTS |")),
          "guide-index row this build cannot read"),
+        # So is a row indented by spaces or a tab, a row with an extra column, and a row
+        # without its leading pipe, each of which would otherwise be dropped or misread.
+        (dict(readme=README_MD.replace("| [nginx.md](nginx.md)", "  | [nginx.md](nginx.md)")),
+         "guide-index row this build cannot read: '  | [nginx.md]"),
+        (dict(readme=README_MD.replace("| [nginx.md](nginx.md)", "\t| [nginx.md](nginx.md)")),
+         "guide-index row this build cannot read: '\\t| [nginx.md]"),
+        (dict(readme=README_MD.replace("TLS, redirect, HSTS |", "TLS, redirect, HSTS | extra |")),
+         "guide-index row this build cannot read: '| [nginx.md]"),
+        (dict(readme=README_MD.replace("| [nginx.md](nginx.md) | nginx: TLS, redirect, HSTS |",
+                                       "[nginx.md](nginx.md) | nginx: TLS, redirect, HSTS |")),
+         "guide-index row this build cannot read: '[nginx.md]"),
     )
     for changes, needle in cases:
         with tempfile.TemporaryDirectory() as directory:
             root = tree(Path(directory), **changes)
             status, output = run(root)
             assert status != 0 and needle in output, (needle, status, output)
+            assert "Traceback" not in output, output
             assert not (root / OUT).exists(), f"a refused build wrote {OUT}"
             count += 1
+
+    # An escaped pipe in a row's Covers text is part of that text, not a third column.
+    with tempfile.TemporaryDirectory() as directory:
+        root = tree(Path(directory), readme=README_MD.replace("TLS, redirect, HSTS |",
+                                                              "TLS \\| HSTS |"))
+        status, output = run(root)
+        assert status == 0, (status, output)
+        assert "- `nginx.md`: nginx: TLS \\| HSTS\n" in (root / OUT).read_text(encoding="utf-8")
+        count += 1
 
     print(f"  ok    {count} recorded cases for the chat fallback build")
     return 0
