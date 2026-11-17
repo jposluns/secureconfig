@@ -1947,6 +1947,17 @@ echo "== the export allowlist and the private paths account for every tracked pa
 run_gate test_export_lists.py python3 -I -B tools/test_export_lists.py
 run_gate "export_lists.py --check" python3 -I -B tools/export_lists.py --check
 
+# section: export-gate-tests
+echo "== the export gate refuses every mutation and prints no protected term =="
+# tools/export_gate.py judges a staged export tree and fails closed: checks G1 to G8 cover the
+# allowlist, file hygiene, the publishable markers, the protected terms and private markers, the
+# private references, drift against a fresh render, completeness and the binary scans. The gate
+# itself runs only during an export, so this section runs its cases: tools/test_export_gate.py
+# builds synthetic trees, lists and a throwaway git repository under TMPDIR, never reading the
+# real private lists, and holds every mutation to a refusal and every finding to printing no
+# term, no private-list line and no private path.
+run_gate test_export_gate.py python3 -I -B tools/test_export_gate.py
+
 # section: check-updates-tests
 echo "== the skill's version-currency check and guide updater, tested offline =="
 # tools/test_check_updates.py runs plugin/skills/secureconfig/scripts/check-updates.py on fixture
