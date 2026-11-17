@@ -45,19 +45,27 @@ PART 1, INDEXABILITY AND NO DRAFT TREE:
     target is read in a normal form first: it is percent-decoded until it stops changing (at
     most DECODE_ROUNDS rounds). A field is refused when the decoding does not settle, when it
     decodes to whitespace, a control character or a backslash, when it carries a `.`, `..` or
-    empty segment, or when it starts `//` (scheme-relative), because a browser folds each of
-    those onto a URL the rules below would not read. A target is such a normal root-relative path
-    naming a file under site/ that lies outside /downloads/ and has no `.zip` name, or an
-    aged-out versioned zip's own GitHub release asset URL reached from /downloads/<zip>; any
-    other absolute URL is refused. An entry's source never names a file under site/ by its
-    exact path, an index or .html form, or another case, staged archives included: whether the
-    server would answer with the redirect or the file is not verified here, so an entry that
-    could shadow served bytes is refused. A target under /downloads/ is refused because a
-    staged archive is reached by its own URL or the generated latest links, never through a
-    gated redirect. A `.zip` target elsewhere under site/ is refused because the release
-    record vouches for no archive outside /downloads/, so a gated redirect sends a reader to
-    no archive but a recorded one. tools/check_hosted.py also holds each release-asset entry to
-    the release record: a recorded zip that is no longer staged. The literal 302 is required
+    empty segment, when it carries a `*`, `:`, `?` or `#` (FIELD_MARKS), or when it starts
+    `//` (scheme-relative). A host can read `*` as a splat and `:` as a placeholder, each
+    matching more than one path, and `?` and `#` as a query or fragment the rules below would
+    not read, and a browser folds the other refused forms onto a URL the rules below would not
+    read, so a gated field is one exact literal path. A source with a trailing slash is
+    refused too: whether a host folds `/x/` and `/x` onto one request is not verified here, so
+    a gated source has no second spelling. A target is such a normal root-relative path naming a
+    file under site/ that lies outside /downloads/, has no `.zip` name in any case, and whose
+    bytes carry none of the archive signatures this gate reads (ARCHIVE_MAGICS at the start, or
+    a tar magic at TAR_MAGIC_OFFSET), or an aged-out versioned zip's own GitHub release asset
+    URL reached from /downloads/<zip>; any other absolute URL is refused. An entry's source
+    never names a file under site/ by its exact path, an `.html`, `.htm`, `/index.html` or
+    `/index.htm` completion, or another case, staged archives included: whether the server
+    would answer with the redirect or the file is not verified here, so a source that reads as
+    a staged file in any of those spellings is refused. A target under /downloads/ is refused
+    because a staged archive is reached by its own URL or the generated latest links, never
+    through a gated redirect. A `.zip`-named or archive-signed target elsewhere under site/ is
+    refused because the release record vouches for no archive outside /downloads/.
+    tools/check_hosted.py also holds each release-asset entry to the release record (a
+    recorded zip that is no longer staged) and refuses any file under site/downloads/ that no
+    record names. The literal 302 is required
     everywhere: a latest link answers 302, never 301, and so does every gated redirect. No
     source or target in the file or the allowlist names /draft/ in any case, percent-encoding
     or dot-segment spelling, and no file under site/ has a `-latest.zip` name, since a latest
@@ -223,6 +231,17 @@ DRAFT_REFS = (
     re.compile(r"""\b(?:href|src|action|formaction|content|url)\s*=\s*["']?\s*(?:\./)*draft(?![a-z0-9_-])"""),
 )
 DECODE_ROUNDS = 8
+# A redirect field is one exact literal path, so each of these marks is refused in a decoded
+# root-relative field: a host can read `*` as a splat and `:` as a placeholder, each matching
+# more than one path, and `?` and `#` as a query or fragment the redirect rules would not read.
+FIELD_MARKS = "*:?#"
+# The archive signatures the target rule reads by content: the zip local-file, empty and
+# spanned headers, gzip, bzip2, xz, zstd, 7z and rar at offset 0, and the two ustar magics of a
+# tar header at offset TAR_MAGIC_OFFSET.
+ARCHIVE_MAGICS = (b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08", b"\x1f\x8b", b"BZh",
+                  b"\xfd7zXZ\x00", b"\x28\xb5\x2f\xfd", b"7z\xbc\xaf\x27\x1c", b"Rar!\x1a\x07")
+TAR_MAGIC_OFFSET = 257
+TAR_MAGICS = (b"ustar\x00", b"ustar ")
 # The pages that carry a robots meta, each exactly 'noindex, nofollow', and what every other page
 # must not carry at all. The 404 page is the not-found page; ADVISORY is the one unlisted
 # advisory the maintainer keeps out of search (reachable only by its URL, linked from no page, and
@@ -455,9 +474,10 @@ def clean_field(value):
     """(the normal form of a root-relative redirect field, None), or (None, why it is refused).
     The field is percent-decoded until it stops changing (at most DECODE_ROUNDS rounds). It is
     refused when the decoding does not settle, when it decodes to whitespace, a control
-    character or a backslash, when it carries a `.`, `..` or empty segment, or when it is
-    scheme-relative, because a browser folds each of those onto a URL the redirect rules would
-    not read; every rule then reads the normal form, the path a browser would request."""
+    character or a backslash, when it carries a `.`, `..` or empty segment, when it carries one
+    of FIELD_MARKS (`*`, `:`, `?` or `#`), or when it is scheme-relative: a browser or a host
+    reads each of those as more, or as other, than one exact literal path. Every rule then
+    reads the normal form, the one path the entry is about."""
     if value.startswith("//"):
         return None, "is scheme-relative, which a browser reads as a URL on another host"
     for _ in range(DECODE_ROUNDS + 1):
@@ -476,17 +496,32 @@ def clean_field(value):
                       "before requesting it")
     if "" in segments[:-1]:
         return None, "carries an empty segment, which can be read as another path"
+    for mark in FIELD_MARKS:
+        if mark in value:
+            return None, (f"carries `{mark}`; a gated field is one exact literal path, and a "
+                          f"host can read `*` as a splat, `:` as a placeholder, and `?` or `#` "
+                          f"as a query or fragment, each matching or meaning more than that "
+                          f"one path")
     return value, None
 
 
 def source_forms(value):
     """The staged files a redirect source could be served as, relative to site/ and case folded:
-    the path itself, its .html, .htm and index.html completions, and, for the empty or
-    trailing-slash folder form, that folder's index.html."""
+    the path itself and its .html, .htm, /index.html and /index.htm completions, and, for the
+    empty or trailing-slash folder form, that folder's index.html and index.htm."""
     rel = value.lstrip("/").casefold()
     if rel == "" or rel.endswith("/"):
-        return (rel + "index.html",)
-    return (rel, rel + ".html", rel + ".htm", rel + "/index.html")
+        return (rel + "index.html", rel + "index.htm")
+    return (rel, rel + ".html", rel + ".htm", rel + "/index.html", rel + "/index.htm")
+
+
+def looks_like_archive(path):
+    """True when the file's bytes open with one of ARCHIVE_MAGICS or carry a ustar magic at
+    TAR_MAGIC_OFFSET: the archive forms this gate identifies by content, not by name."""
+    with path.open("rb") as handle:
+        head = handle.read(TAR_MAGIC_OFFSET + 6)
+    return (head.startswith(ARCHIVE_MAGICS)
+            or head[TAR_MAGIC_OFFSET:TAR_MAGIC_OFFSET + 6] in TAR_MAGICS)
 
 
 def draft_path(value):
@@ -551,6 +586,11 @@ def allowlist_entries(root):
                                 f"target is read in the normal form a browser would request, "
                                 f"so a field that does not normalize cleanly is refused")
         src, tgt = normal.get("source"), normal.get("target")
+        if src is not None and src.endswith("/"):
+            problems.append("has a source with a trailing slash; a gated source is one exact "
+                            "literal path, and whether a host folds `/x/` and `/x` onto one "
+                            "request is not verified here, so a second spelling of a path is "
+                            "refused")
         if (src is not None and draft_path(src)) or (tgt is not None and draft_path(tgt)):
             problems.append("names /draft/; the live site carries no /draft/ tree and no "
                             "redirect, gated or generated, names it")
@@ -563,9 +603,10 @@ def allowlist_entries(root):
             shadow = next((staged[form] for form in source_forms(src) if form in staged), None)
         if shadow is not None:
             problems.append(f"has a source naming a file under site/ ({SITE}/{shadow}) by its "
-                            f"exact path, an index or .html form, or another case; whether the "
-                            f"server would answer with the redirect or the file is not "
-                            f"verified, so no entry shadows staged bytes")
+                            f"exact path, an index, .html or .htm form, or another case; "
+                            f"whether the server would answer with the redirect or the file is "
+                            f"not verified, so no entry names a staged file's path in a "
+                            f"spelling this gate reads")
         asset = ASSET_TARGET.fullmatch(target)
         if target.startswith("/"):
             if tgt is None:
@@ -578,11 +619,11 @@ def allowlist_entries(root):
                 file = resolved(root, tgt)
                 if file is None or not file.is_file():
                     problems.append("has a target naming no file under site/")
-                elif file.name.casefold().endswith(".zip"):
-                    problems.append("has a target naming an archive under site/; the release "
-                                    "record vouches for no archive outside /downloads/, so a "
-                                    "gated redirect sends a reader to no archive but a "
-                                    "recorded one")
+                elif file.name.casefold().endswith(".zip") or looks_like_archive(file):
+                    problems.append("has a target naming an archive under site/ (a `.zip` "
+                                    "name, or bytes carrying a known archive signature); the "
+                                    "release record vouches for no archive outside "
+                                    "/downloads/")
         elif asset:
             if source != f"/downloads/{asset.group(2)}":
                 problems.append("redirects a release asset from a source other than its own "

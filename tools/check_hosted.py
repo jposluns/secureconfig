@@ -11,9 +11,10 @@ WHAT IT CHECKS:
   - the cumulative record releases/SHA256SUMS parses (gen_hosted.read_records: sha256sum lines
     whose names carry each release's version, one block per release, newest release first, both
     zips named per release, nothing named twice, no `-latest` name);
-  - with no record: site/marketplace.json does not exist, and site/_redirects, when present,
-    equals the generator's output, which then holds no latest line; a tree with no record, no
-    zip and no generated file passes, so this half of the gate requires nothing today;
+  - with no record: site/marketplace.json does not exist, site/_redirects, when present,
+    equals the generator's output, which then holds no latest line, and nothing sits in
+    site/downloads/; a tree with no record, no zip and no generated file passes, so this half
+    of the gate requires nothing of a tree like today's main;
   - with records: site/marketplace.json and site/_redirects each exist and equal the generator's
     output byte for byte, which pins the catalog's url and sha256 to the newest record and the
     two latest links, each 302, to that record's versioned zips, exactly;
@@ -29,6 +30,9 @@ WHAT IT CHECKS:
     target shape);
   - the newest record's zips must be staged, since the latest links and the catalog point at
     hosted copies;
+  - every entry under site/downloads/ is one of the record's zips: a file no record names, and
+    anything that is not a regular file, are refused, so with the digest check above every file
+    staged there is a recorded zip whose bytes match the record;
   - the newest record's staged plugin zip holds a plugin.json at its root whose version equals
     the record's version, so the catalog cannot name bytes of another version. When the zip
     gains .claude-plugin/plugin.json, this check will be extended to it.
@@ -170,11 +174,32 @@ def record_findings(root, records, rules):
     return findings
 
 
+def staged_findings(root, records):
+    """The findings for site/downloads/ itself: every entry there is one of the record's zips,
+    staged as a regular file (record_findings holds each recorded name's bytes to the record's
+    digest), so no unrecorded file sits among the hosted archives."""
+    findings = []
+    folder = root / DOWNLOADS
+    if not folder.is_dir():
+        return findings
+    recorded = {name for names in records.values() for name in names}
+    for entry in sorted(folder.iterdir()):
+        if not entry.is_file():
+            findings.append(f"{DOWNLOADS}/{entry.name} is not a regular file; {DOWNLOADS} "
+                            f"holds the record's zips and nothing else")
+        elif entry.name not in recorded:
+            findings.append(f"{DOWNLOADS}/{entry.name} is staged, but no record names it; "
+                            f"every file under {DOWNLOADS} is a recorded release zip, held to "
+                            f"its recorded SHA-256 by this gate")
+    return findings
+
+
 def check(root):
     records = gen_hosted.read_records(root)
     rules = gen_hosted.read_allowlist(root)
     return (generated_findings(root, records) + allowlist_findings(root, records, rules)
-            + record_findings(root, records, rules), len(records))
+            + record_findings(root, records, rules) + staged_findings(root, records),
+            len(records))
 
 
 def main(argv=None):

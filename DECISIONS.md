@@ -37,15 +37,18 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     the generator's header, entries of the new gated `tools/redirects_allowlist.txt` and, written only once a
     release record exists, the two `-latest` 302 lines, naming one version's archives staged in
     `site/downloads/`. An entry is `SOURCE TARGET 302` with a reason; each root-relative source and target is
-    percent-decoded to a normal form and refused when it keeps a `.`, `..` or empty segment or is
-    scheme-relative. The source names no file under `site/` by its exact path, an index or `.html` form, or
-    another case, and the target is a file under `site/` outside `/downloads/` with no `.zip` name, or an
-    aged-out versioned zip's own GitHub
-    release asset. It still refuses every other redirect and any `/draft` entry, in the file or the allowlist,
-    so a missing path still gets the 404 page with status 404. `tools/gen_hosted.py` writes the file whole from
-    the allowlist and the cumulative release record `releases/SHA256SUMS` (the 1c ruling of 2026-11-15: one
-    file gaining each release's lines, newest first), and `tools/check_hosted.py` holds the committed file to
-    that output and every release-asset entry to the record: a recorded zip that is no longer staged.
+    percent-decoded to a normal form and refused when it keeps a `.`, `..` or empty segment, carries a `*`,
+    `:`, `?` or `#`, or is scheme-relative, so a gated field is one exact literal path, never a splat,
+    placeholder, query or fragment form. The source has no trailing slash and names no file under `site/` by
+    its exact path, an index, `.html` or `.htm` completion, or another case, and the target is a file under
+    `site/` outside `/downloads/` whose name does not end `.zip` and whose bytes carry no archive signature
+    the gate reads, or an aged-out versioned zip's own GitHub release asset. It still refuses every other
+    redirect and any `/draft` entry, in the file or the allowlist, so a missing path still gets the 404 page
+    with status 404. `tools/gen_hosted.py` writes the file whole from the allowlist and the cumulative
+    release record `releases/SHA256SUMS` (the 1c ruling of 2026-11-15: one file gaining each release's lines,
+    newest first). `tools/check_hosted.py` holds the committed file to that output, every release-asset
+    entry to the record (a recorded zip that is no longer staged), and `site/downloads/` itself to the
+    record: a staged file no record names is refused.
   - Revert. Restore the `site/_redirects exists` refusal in `tools/check_draft.py` and its test case, remove
     `tools/gen_hosted.py`, `tools/check_hosted.py`, `tools/test_hosted.py`,
     `tools/redirects_allowlist.txt` and the `plugin-distribution` section, and record the withdrawing ruling

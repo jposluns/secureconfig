@@ -10,15 +10,15 @@ install at the wrong bytes. tools/check_hosted.py holds the committed files to t
 output, and tools/check_draft.py holds site/_redirects to the shapes this module writes.
 
 THE RELEASE RECORD is releases/SHA256SUMS, one cumulative file that gains each release's lines,
-newest release first: the records
-pull request (CONTRIBUTING.md "Releasing" step 9) prepends a byte copy of the lines of that
-release's `SHA256SUMS` asset. Each line is `<64 hex>  <name>` as sha256sum writes it, and each
-name is a release archive name, secureconfig-1.0.<N>.zip or secureconfig-plugin-1.0.<N>.zip, so
-a line's release is the version its name carries. One release's lines sit together, each release
-appears once with both of its zips named, and no name appears twice. No line names a `-latest`
-file: a latest link is a 302 redirect with no bytes of its own. A name carrying no version, a
-repeated or split release block, an older release above a newer one, and anything else under
-releases/ are refused (HostedError), so a merged or reordered line cannot pass as a record.
+newest release first: the records pull request (CONTRIBUTING.md "Releasing" step 9) prepends a
+byte copy of the lines of that release's `SHA256SUMS` asset. Each line is `<64 hex>  <name>` as
+sha256sum writes it, and each name is a release archive name, secureconfig-1.0.<N>.zip or
+secureconfig-plugin-1.0.<N>.zip, so a line's release is the version its name carries. One
+release's lines sit together, each release appears once with both of its zips named, and no
+name appears twice. No line names a `-latest` file: a latest link is a 302 redirect with no
+bytes of its own. A name carrying no version, a repeated or split release block, an older
+release above a newer one, and anything else under releases/ are refused (HostedError), so a
+merged or reordered line cannot pass as a record.
 
 site/marketplace.json names the catalog `secureconfig`, this project's own catalog under its own
 name, and lists one plugin whose source is the archive form

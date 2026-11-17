@@ -61,7 +61,15 @@ the folder, index and other-case forms of a page's path are read too), and a -la
 site/, in downloads/ and elsewhere. Further refusals cover an entry whose target lies under
 /downloads/ (written plainly or through a plain or percent-encoded dot segment), a /draft source
 written through a plain or percent-encoded dot segment, a scheme-relative target, an absolute
-target that is no release asset, and a .zip target outside /downloads/.
+target that is no release asset, and a .zip target outside /downloads/. A gated field is one
+exact literal path. The cases refuse the splat sources /downloads/*, /*, /checklist/*,
+/assets/* and /check*, the placeholder sources /:page, /:dir/index.html and /downloads/:file,
+and the query and fragment sources /draft?x, /draft#x, /checklist?x, /checklist/?x,
+/checklist/#x, /assets/site.css?x, /assets/site.css#x, /downloads/<staged zip>?x and
+/downloads/secureconfig-plugin-latest.zip?x. They also refuse the trailing-slash sources
+/assets/site.css/, /downloads/<staged zip>/ and /downloads/secureconfig-latest.zip/. The
+archive target rule reads bytes as well as names: a target outside /downloads/ whose file
+opens with a zip or gzip signature under a .bin, .tar.gz or .zip.txt name is refused.
 
 The generated() cases keep the source-to-generated-page path: a Unicode host written in
 content.json survives the build and its own --check and is refused by this gate, and a site.css
@@ -109,6 +117,14 @@ def write(rel, text):
     def mutate(d):
         (d / rel).parent.mkdir(parents=True, exist_ok=True)
         (d / rel).write_text(text, encoding="utf-8")
+    return mutate
+
+
+def write_bytes(rel, data):
+    """rel written with data as raw bytes, for planting an archive signature untranslated."""
+    def mutate(d):
+        (d / rel).parent.mkdir(parents=True, exist_ok=True)
+        (d / rel).write_bytes(data)
     return mutate
 
 
@@ -553,6 +569,106 @@ CASES = [
      redirects("/old https://example.net/secureconfig-1.0.5.zip 302\n" + LATEST,
                allow="/old https://example.net/secureconfig-1.0.5.zip 302\ta mirror\n"),
      "neither a root-relative path", 1),
+    # A gated field is one exact literal path: splat, placeholder, query, fragment and
+    # trailing-slash source spellings are each refused, since a host can match each of them
+    # more widely than the one path the rules read.
+    ("an allowlisted splat source under /downloads/",
+     redirects("/downloads/* /index.html 302\n" + LATEST,
+               allow="/downloads/* /index.html 302\tcatch old download URLs\n"),
+     "one exact literal path", 1),
+    ("an allowlisted catch-all splat source",
+     redirects("/* /index.html 302\n" + LATEST,
+               allow="/* /index.html 302\tcatch every path\n"),
+     "one exact literal path", 1),
+    ("an allowlisted splat source under a page's folder",
+     redirects("/checklist/* /index.html 302\n" + LATEST,
+               allow="/checklist/* /index.html 302\tcatch old checklist URLs\n"),
+     "one exact literal path", 1),
+    ("an allowlisted splat source under /assets/",
+     redirects("/assets/* /index.html 302\n" + LATEST,
+               allow="/assets/* /index.html 302\tcatch old asset URLs\n"),
+     "one exact literal path", 1),
+    ("an allowlisted splat source ending a partial name",
+     redirects("/check* /index.html 302\n" + LATEST,
+               allow="/check* /index.html 302\tcatch checklist spellings\n"),
+     "one exact literal path", 1),
+    ("an allowlisted placeholder source",
+     redirects("/:page /index.html 302\n" + LATEST,
+               allow="/:page /index.html 302\tcatch every page\n"),
+     "one exact literal path", 1),
+    ("an allowlisted placeholder source before an index path",
+     redirects("/:dir/index.html /index.html 302\n" + LATEST,
+               allow="/:dir/index.html /index.html 302\tcatch every index\n"),
+     "one exact literal path", 1),
+    ("an allowlisted placeholder source under /downloads/",
+     redirects("/downloads/:file /index.html 302\n" + LATEST,
+               allow="/downloads/:file /index.html 302\tcatch every download\n"),
+     "one exact literal path", 1),
+    ("an allowlisted /draft source with a query",
+     redirects("/draft?x /index.html 302\n" + LATEST,
+               allow="/draft?x /index.html 302\tan old draft link\n"),
+     "one exact literal path", 1),
+    ("an allowlisted /draft source with a fragment",
+     redirects("/draft#x /index.html 302\n" + LATEST,
+               allow="/draft#x /index.html 302\tan old draft link\n"),
+     "one exact literal path", 1),
+    ("an allowlisted page source with a query",
+     redirects("/checklist?x /index.html 302\n" + LATEST,
+               allow="/checklist?x /index.html 302\tmoved\n"),
+     "one exact literal path", 1),
+    ("an allowlisted folder source with a query",
+     redirects("/checklist/?x /index.html 302\n" + LATEST,
+               allow="/checklist/?x /index.html 302\tmoved\n"),
+     "one exact literal path", 1),
+    ("an allowlisted folder source with a fragment",
+     redirects("/checklist/#x /index.html 302\n" + LATEST,
+               allow="/checklist/#x /index.html 302\tmoved\n"),
+     "one exact literal path", 1),
+    ("an allowlisted stylesheet source with a query",
+     redirects("/assets/site.css?x /index.html 302\n" + LATEST,
+               allow="/assets/site.css?x /index.html 302\tmoved\n"),
+     "one exact literal path", 1),
+    ("an allowlisted stylesheet source with a fragment",
+     redirects("/assets/site.css#x /index.html 302\n" + LATEST,
+               allow="/assets/site.css#x /index.html 302\tmoved\n"),
+     "one exact literal path", 1),
+    ("an allowlisted stylesheet source with a trailing slash",
+     redirects("/assets/site.css/ /index.html 302\n" + LATEST,
+               allow="/assets/site.css/ /index.html 302\tmoved\n"),
+     "has a source with a trailing slash", 1),
+    ("an allowlisted staged-archive source with a query",
+     redirects(f"/downloads/{SKILL_ZIP}?x /index.html 302\n" + LATEST,
+               allow=f"/downloads/{SKILL_ZIP}?x /index.html 302\tmoved\n"),
+     "one exact literal path", 1),
+    ("an allowlisted staged-archive source with a trailing slash",
+     redirects(f"/downloads/{SKILL_ZIP}/ /index.html 302\n" + LATEST,
+               allow=f"/downloads/{SKILL_ZIP}/ /index.html 302\tmoved\n"),
+     "has a source with a trailing slash", 1),
+    ("an allowlisted latest-name source with a trailing slash",
+     redirects("/downloads/secureconfig-latest.zip/ /index.html 302\n" + LATEST,
+               allow="/downloads/secureconfig-latest.zip/ /index.html 302\tmoved\n"),
+     "has a source with a trailing slash", 1),
+    ("an allowlisted latest-name source with a query",
+     redirects("/downloads/secureconfig-plugin-latest.zip?x /index.html 302\n" + LATEST,
+               allow="/downloads/secureconfig-plugin-latest.zip?x /index.html 302\tmoved\n"),
+     "one exact literal path", 1),
+    # The archive target rule reads bytes as well as names: a known signature under another
+    # name is still an archive target.
+    ("an allowlisted redirect whose target is a zip's bytes under a .bin name",
+     lambda d: (write_bytes("site/assets/extra.bin", b"PK\x03\x04" + b"\0" * 28)(d),
+                redirects("/get /assets/extra.bin 302\n" + LATEST,
+                          allow="/get /assets/extra.bin 302\tserve the extra file\n")(d)),
+     "bytes carrying a known archive signature", 1),
+    ("an allowlisted redirect whose target is a gzip under a .tar.gz name",
+     lambda d: (write_bytes("site/assets/extra.tar.gz", b"\x1f\x8b\x08\0" + b"\0" * 28)(d),
+                redirects("/get /assets/extra.tar.gz 302\n" + LATEST,
+                          allow="/get /assets/extra.tar.gz 302\tserve the extra file\n")(d)),
+     "bytes carrying a known archive signature", 1),
+    ("an allowlisted redirect whose target is a zip's bytes under a .zip.txt name",
+     lambda d: (write_bytes("site/assets/extra.zip.txt", b"PK\x03\x04" + b"\0" * 28)(d),
+                redirects("/get /assets/extra.zip.txt 302\n" + LATEST,
+                          allow="/get /assets/extra.zip.txt 302\tserve the extra file\n")(d)),
+     "bytes carrying a known archive signature", 1),
     ("the record-less shape: the header and an allowlisted rule, no latest line",
      redirects("/old / 302\n", allow="/old / 302\tthe old URL of the landing page\n", zips=()),
      OK_LINE, 0),

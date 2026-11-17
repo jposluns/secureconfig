@@ -14,7 +14,8 @@ cover each half of the gate. The drift half: a generated file with no recorded r
 latest link), a missing generated file with a record behind it, an edited catalog digest, a
 latest link edited to 301, and an extra redirect appended. The record half: a staged zip whose
 bytes differ from its record, a missing staged archive for the newest release, a newest release
-not staged at all even though redirected, and an aged-out zip with no redirect. The record's own
+not staged at all even though redirected, an aged-out zip with no redirect, and a staged file in
+site/downloads/ that no record names, beside recorded zips and with no record. The record's own
 shape: a record naming a -latest file, a record missing a zip line, a corrupted record line, a
 record without a trailing newline, a line whose name carries no version, a release's lines
 repeated after another release's (a duplicate version), an out-of-order record with the older
@@ -203,6 +204,12 @@ CASES = (
     ("a record without a trailing newline",
      lambda d: (fixture(d), write(d, "releases/SHA256SUMS", "\n".join(record_lines(d)))),
      "does not end with a newline", 1),
+    ("an unrecorded file staged in site/downloads/ beside recorded zips",
+     lambda d: (fixture(d), write(d, "site/downloads/extra.zip", "x\n")),
+     "no record names it", 1),
+    ("a staged zip with no record at all",
+     lambda d: (fixture(d, versions=()), write(d, "site/downloads/extra.zip", "x\n")),
+     "no record names it", 1),
 )
 
 
