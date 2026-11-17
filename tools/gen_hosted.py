@@ -104,7 +104,9 @@ def read_records(root):
     if not folder.is_dir():
         return {}
     # A file name and a record line's name are untrusted text, so each is printed escaped
-    # (ascii()): no character in one can end the FAIL line, forge another or fail to encode.
+    # (ascii()) unless a pattern has already limited it to safe characters, and a name that has
+    # matched NAME_VERSIONS is printed raw: no character in a printed name can end the FAIL
+    # line, forge another or fail to encode.
     for entry in sorted(folder.iterdir()):
         if entry.name != RECORD_NAME or not entry.is_file():
             raise HostedError(f"{str(RECORDS / entry.name)!a} is not the cumulative release "
