@@ -39,7 +39,7 @@ gate and the generator cannot drift apart on the file's first line. In-process c
 gen_hosted.json_object to its depth limit, MAX_JSON_DEPTH: an object nested exactly that deep is
 read, one a level deeper and one whose deep nesting sits inside one value are nested too deeply to
 parse, and a string holding 300000 brackets, an escaped quote and an escaped backslash is read.
-101 unmatched closing brackets followed by 150 opening ones are refused by json.loads at the first
+One unmatched closing bracket followed by 150 opening ones is refused by json.loads at the first
 character, where the depth count stops, and an object holding a 5000-digit integer is a ValueError
 (the interpreter's 4300-digit integer limit), never a HostedError.
 
@@ -445,9 +445,9 @@ def check_depth(failures):
          '{"s": "' + deep + '\\"' + "{" * 100000 + '\\\\", "t": "' + "[" * (limit + 1) + '"}',
          None),
         # The count stops at the first closing bracket with no open bracket to close, where
-        # json.loads fails, so 150 brackets opened after it are never counted.
-        ("101 unmatched closing brackets followed by 150 opening ones",
-         "]" * 101 + "[" * 150, "Expecting value: line 1 column 1 (char 0)"),
+        # json.loads fails, so 150 brackets opened after it, past the limit, are never counted.
+        ("an unmatched closing bracket followed by 150 opening ones",
+         "]" + "[" * 150, "Expecting value: line 1 column 1 (char 0)"),
         ("an object holding a 5000-digit integer",
          '{"n": ' + "1" * 5000 + "}", "for integer string conversion"),
     )
