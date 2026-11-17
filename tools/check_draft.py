@@ -35,9 +35,50 @@ PART 1, INDEXABILITY AND NO DRAFT TREE:
   - site/ holds no entry named `draft` in any case (a folder, with any file in it, or a file): the
     live site carries no /draft/ tree (SPECIFICATION section 4.1 items 0 and 3). Any case is
     refused, as a case-insensitive file system or server could serve `Draft/` at /draft/;
-  - site/_redirects does not exist: a missing path returns the 404 page with status 404, never a
-    redirect (the owner's rule). tools/check_csp_hashes.py holds site/_headers, X-Robots-Tag
-    included.
+  - site/_redirects, when present, holds only the fixed generator header (its first line), the
+    entries of tools/redirects_allowlist.txt and, written only once a release record exists, the
+    two latest links as the last 2 lines. Those are /downloads/secureconfig-latest.zip then
+    /downloads/secureconfig-plugin-latest.zip, each `SOURCE TARGET 302` with single spaces and
+    both targets one version's zips staged in site/downloads/. Every other line is refused, so a
+    missing path still returns the 404 page with status 404. An allowlist entry is
+    `SOURCE TARGET 302<TAB>REASON` with a non-empty reason, and its raw source and target hold
+    only printable ASCII (`!` to `~`). Every root-relative source and target is read in a normal
+    form first: it is percent-decoded until it stops changing (at most DECODE_ROUNDS rounds). A
+    field is refused when the decoding does not settle, when its decoded form carries any
+    character outside printable ASCII (a space, control, invisible or non-ASCII character) or a
+    backslash, when it carries a `.`, `..` or empty segment, when it carries a `*`, `:`, `?` or
+    `#` (FIELD_MARKS), or when it starts `//` (scheme-relative). A host can read `*` as a splat
+    and `:` as a placeholder, each matching more than one path, and `?` and `#` as a query or
+    fragment the rules below would not read; a browser reads a backslash as a slash, and how a
+    browser or a host reads any other refused character is not verified here, so a gated field
+    is one exact literal path, spelled in printable ASCII. A source with a trailing slash is
+    refused too: whether a host folds `/x/` and `/x` onto one request is not verified here, so a
+    gated source has no second spelling. A source that an earlier entry already names, in any
+    case once decoded, is refused as well: a host applies the first rule whose source matches,
+    so a repeated source would make one entry shadow the other. A target is such a normal
+    root-relative path naming a page, or a published file in PUBLISHED_TARGETS
+    (scripts/build-site.py's PUBLISHED without _headers), under site/ that lies outside
+    /downloads/, has no `.zip` name in any case, and whose bytes carry none of the archive
+    signatures this gate reads (ARCHIVE_MAGICS at the start, or a tar magic at
+    TAR_MAGIC_OFFSET), or an aged-out versioned zip's own GitHub release asset URL reached from
+    /downloads/<zip>; any other absolute URL is refused. A target naming any other file under
+    site/, the host's own _headers or _redirects and the advisory's plain-text copy among them,
+    is refused, because a gated redirect leads only to a page or a file in PUBLISHED_TARGETS.
+    An entry's source never names a file under site/ by its exact path, an `.html`, `.htm`,
+    `/index.html` or `/index.htm` completion, or another case, staged archives included: whether
+    the server would answer with the redirect or the file is not verified here, so a source that
+    reads as a staged file in any of those spellings is refused. A target under /downloads/ is
+    refused because a staged archive is reached by its own URL or the generated latest links,
+    never through a gated redirect. A `.zip`-named or archive-signed target elsewhere under site/
+    is refused because the release record vouches for no archive outside /downloads/.
+    tools/check_hosted.py also holds each release-asset entry to the release record (a recorded
+    zip that is no longer staged) and refuses any file under site/downloads/ that no record
+    names. The literal 302 is required everywhere: a latest link answers 302, never 301, and so
+    does every gated redirect. No source or target in the file or the allowlist names /draft/ in
+    any case, percent-encoding or dot-segment spelling, and no file under site/ has a
+    `-latest.zip` name, since a latest link is a 302 redirect with no bytes of its own.
+    tools/check_hosted.py holds the file to the generator's output; tools/check_csp_hashes.py
+    holds site/_headers, X-Robots-Tag included.
 
 PART 2, SELF-CONTAINED:
   - every URL a page carries, in any attribute whose name ends in `href` or `src` (so `xlink:href`
@@ -140,6 +181,36 @@ BASE = "/"
 DRAFT = Path("site") / "draft"
 DRAFT_NAME = "draft"
 SITE_HOST = "secureconfig.ai"
+# site/_redirects (PART 1): the generator's header, the gated allowlist and the two latest links.
+# tools/gen_hosted.py writes the file whole; tools/test_hosted.py holds REDIRECTS_HEADER to the
+# generator's own copy of the line, so the two spellings cannot drift apart.
+REDIRECTS = Path("site") / "_redirects"
+REDIRECTS_ALLOWLIST = Path("tools") / "redirects_allowlist.txt"
+REDIRECTS_HEADER = ("# Generated by tools/gen_hosted.py from releases/ and "
+                    "tools/redirects_allowlist.txt; do not edit by hand.")
+LATEST_SUFFIX = "-latest.zip"
+# Each latest link's source and the target shape of its kind, with the version captured.
+LATEST_RULES = (
+    ("/downloads/secureconfig-latest.zip",
+     re.compile(r"/downloads/secureconfig-(1\.0\.[1-9][0-9]*)\.zip")),
+    ("/downloads/secureconfig-plugin-latest.zip",
+     re.compile(r"/downloads/secureconfig-plugin-(1\.0\.[1-9][0-9]*)\.zip")),
+)
+LATEST_SOURCES = tuple(source for source, _ in LATEST_RULES)
+DOWNLOADS_NAME = "downloads"
+# The files beside the pages a gated redirect may target: scripts/build-site.py's PUBLISHED
+# without _headers, which, like _redirects, is the host's own configuration, not a page or a
+# published file. tools/test_draft.py holds this list to PUBLISHED.
+PUBLISHED_TARGETS = (".well-known/security.txt", "apple-touch-icon.png", "favicon.ico",
+                     "favicon.svg", "images/secureconfig-card.png", "llms-full.txt", "llms.txt",
+                     "robots.txt", "sitemap.xml")
+# The rule shape: each raw field is printable ASCII (`!` to `~`), so no control or invisible
+# character, a raw U+FEFF included, can hide in a field or act as a second separator for a
+# parser that splits a rule on more than a plain space.
+ALLOW_ENTRY = re.compile(r"(/[!-~]+) ([!-~]+) 302")
+# An aged-out zip's redirect target: that release's own GitHub asset, same version and name.
+ASSET_TARGET = re.compile(r"https://github\.com/jposluns/secureconfig/releases/download/"
+                          r"v(1\.0\.[1-9][0-9]*)/(secureconfig(?:-plugin)?-\1\.zip)")
 NEWTAB = "(opens in a new tab)"
 URL_FN = re.compile(r"url\(\s*(['\"]?)([^'\")]*)\1\s*\)", re.I)
 # The pages that may link /disclosure/ and /license/ (the owner's template note of 2026-11-03).
@@ -176,6 +247,17 @@ DRAFT_REFS = (
     re.compile(r"""\b(?:href|src|action|formaction|content|url)\s*=\s*["']?\s*(?:\./)*draft(?![a-z0-9_-])"""),
 )
 DECODE_ROUNDS = 8
+# A redirect field is one exact literal path, so each of these marks is refused in a decoded
+# root-relative field: a host can read `*` as a splat and `:` as a placeholder, each matching
+# more than one path, and `?` and `#` as a query or fragment the redirect rules would not read.
+FIELD_MARKS = "*:?#"
+# The archive signatures the target rule reads by content: the zip local-file, empty and
+# spanned headers, gzip, bzip2, xz, zstd, 7z and rar at offset 0, and the two ustar magics of a
+# tar header at offset TAR_MAGIC_OFFSET.
+ARCHIVE_MAGICS = (b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08", b"\x1f\x8b", b"BZh",
+                  b"\xfd7zXZ\x00", b"\x28\xb5\x2f\xfd", b"7z\xbc\xaf\x27\x1c", b"Rar!\x1a\x07")
+TAR_MAGIC_OFFSET = 257
+TAR_MAGICS = (b"ustar\x00", b"ustar ")
 # The pages that carry a robots meta, each exactly 'noindex, nofollow', and what every other page
 # must not carry at all. The 404 page is the not-found page; ADVISORY is the one unlisted
 # advisory the maintainer keeps out of search (reachable only by its URL, linked from no page, and
@@ -404,13 +486,269 @@ def css_unescape(text):
     return CSS_ESCAPE.sub(lambda m: chr(int(m.group(1), 16)) if m.group(1) else m.group(2), text)
 
 
+def clean_field(value):
+    """(the normal form of a root-relative redirect field, None), or (None, why it is refused).
+    The field is percent-decoded until it stops changing (at most DECODE_ROUNDS rounds). It is
+    refused when the decoding does not settle, when its decoded form carries any character
+    outside printable ASCII (`!` to `~`) or a backslash, when it carries a `.`, `..` or empty
+    segment, when it carries one of FIELD_MARKS (`*`, `:`, `?` or `#`), or when it is
+    scheme-relative. A browser or a host reads each of those as more, or as other, than one
+    exact literal path, or reads it in a way this gate does not verify. Every rule then reads
+    the normal form, the one path the entry is about."""
+    if value.startswith("//"):
+        return None, "is scheme-relative, which a browser reads as a URL on another host"
+    for _ in range(DECODE_ROUNDS + 1):
+        decoded = unquote(value)
+        if decoded == value:
+            break
+        value = decoded
+    else:
+        return None, f"still changes after {DECODE_ROUNDS} rounds of percent-decoding"
+    if not value.isascii() or not value.isprintable() or " " in value or "\\" in value:
+        return None, ("decodes to a character outside printable ASCII `!` to `~` (a space, "
+                      "control, invisible or non-ASCII character), or to a backslash; how a "
+                      "browser or a host reads such a character in a rule is not verified "
+                      "here, so a gated field carries none of them")
+    segments = value.split("/")[1:]
+    if "." in segments or ".." in segments:
+        return None, ("carries a `.` or `..` segment, which a browser folds onto another path "
+                      "before requesting it")
+    if "" in segments[:-1]:
+        return None, "carries an empty segment, which can be read as another path"
+    for mark in FIELD_MARKS:
+        if mark in value:
+            return None, (f"carries `{mark}`; a gated field is one exact literal path, and a "
+                          f"host can read `*` as a splat, `:` as a placeholder, and `?` or `#` "
+                          f"as a query or fragment, each matching or meaning more than that "
+                          f"one path")
+    return value, None
+
+
+def source_forms(value):
+    """The staged files a redirect source could be served as, relative to site/ and case folded:
+    the path itself and its .html, .htm, /index.html and /index.htm completions, and, for the
+    empty or trailing-slash folder form, that folder's index.html and index.htm."""
+    rel = value.lstrip("/").casefold()
+    if rel == "" or rel.endswith("/"):
+        return (rel + "index.html", rel + "index.htm")
+    return (rel, rel + ".html", rel + ".htm", rel + "/index.html", rel + "/index.htm")
+
+
+def looks_like_archive(path):
+    """True when the file's bytes open with one of ARCHIVE_MAGICS or carry a ustar magic at
+    TAR_MAGIC_OFFSET: the archive forms this gate identifies by content, not by name."""
+    with path.open("rb") as handle:
+        head = handle.read(TAR_MAGIC_OFFSET + 6)
+    return (head.startswith(ARCHIVE_MAGICS)
+            or head[TAR_MAGIC_OFFSET:TAR_MAGIC_OFFSET + 6] in TAR_MAGICS)
+
+
+def draft_path(value):
+    """True when a redirect field names /draft/: a root-relative path whose first segment, in any
+    case and percent-decoded, is DRAFT_NAME."""
+    if not value.startswith("/"):
+        return False
+    return in_draft(Path(unquote(value.lstrip("/"))))
+
+
+def downloads_path(value):
+    """True when a redirect field lies under /downloads/: a root-relative path whose first
+    segment, in any case and percent-decoded, is DOWNLOADS_NAME."""
+    if not value.startswith("/"):
+        return False
+    parts = Path(unquote(value.lstrip("/"))).parts
+    return bool(parts) and parts[0].casefold() == DOWNLOADS_NAME
+
+
+def allowlist_entries(root):
+    """(the valid rules of tools/redirects_allowlist.txt, the findings for the others). A missing
+    file is an empty list, so site/_redirects then admits only the header and the latest links."""
+    path = root / REDIRECTS_ALLOWLIST
+    rules, findings = [], []
+    if not path.is_file():
+        return rules, findings
+    # Every file under site/, case folded, for the source shadow rule below; the original
+    # spelling is kept for the finding.
+    staged = {}
+    if (root / SITE).is_dir():
+        for entry in sorted(p for p in (root / SITE).rglob("*") if p.is_file()):
+            rel = entry.relative_to(root / SITE).as_posix()
+            staged.setdefault(rel.casefold(), rel)
+    # Each decoded source, case folded, and the line that first named it: a later entry naming
+    # the same source is refused, since a host applies the first rule whose source matches.
+    seen = {}
+    for n, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
+        if not line or line.startswith("#"):
+            continue
+        where = f"{REDIRECTS_ALLOWLIST}:{n}"
+        rule, sep, reason = line.partition("\t")
+        if not sep or not reason or reason != reason.strip():
+            findings.append(f"{where}: an entry is `SOURCE TARGET 302<TAB>REASON` with a "
+                            f"non-empty reason")
+            continue
+        matched = ALLOW_ENTRY.fullmatch(rule)
+        if not matched:
+            findings.append(f"{where}: the rule before the tab is `SOURCE TARGET 302` with "
+                            f"single spaces, a root-relative source, printable ASCII fields "
+                            f"(`!` to `~`) and the literal 302 (every redirect here answers "
+                            f"302, never 301)")
+            continue
+        source, target = matched.group(1), matched.group(2)
+        problems = []
+        # Each root-relative field is read in its normal form, so no rule below reads a path a
+        # browser would fold onto another one.
+        normal = {}
+        for name, field in (("source", source), ("target", target)):
+            if not field.startswith("/"):
+                continue
+            value, why = clean_field(field)
+            if why is None:
+                normal[name] = value
+            else:
+                problems.append(f"has a {name} that {why}; every root-relative source and "
+                                f"target is read in the normal form a browser would request, "
+                                f"so a field that does not normalize cleanly is refused")
+        src, tgt = normal.get("source"), normal.get("target")
+        if src is not None and src.endswith("/"):
+            problems.append("has a source with a trailing slash; a gated source is one exact "
+                            "literal path, and whether a host folds `/x/` and `/x` onto one "
+                            "request is not verified here, so a second spelling of a path is "
+                            "refused")
+        if src is not None:
+            first = seen.setdefault(src.casefold(), n)
+            if first != n:
+                problems.append(f"has a source that line {first} already names, in some case "
+                                f"or percent-encoding; a host applies the first rule whose "
+                                f"source matches, so a repeated source would make one entry "
+                                f"shadow the other")
+        if (src is not None and draft_path(src)) or (tgt is not None and draft_path(tgt)):
+            problems.append("names /draft/; the live site carries no /draft/ tree and no "
+                            "redirect, gated or generated, names it")
+        if ((src is not None and src.lower().endswith(LATEST_SUFFIX))
+                or (tgt is not None and tgt.lower().endswith(LATEST_SUFFIX))):
+            problems.append("names a -latest file; the two latest links are generated, never "
+                            "listed here")
+        shadow = None
+        if src is not None:
+            shadow = next((staged[form] for form in source_forms(src) if form in staged), None)
+        if shadow is not None:
+            problems.append(f"has a source naming a file under site/ ({str(SITE / shadow)!a}) by its "
+                            f"exact path, an index, .html or .htm form, or another case; "
+                            f"whether the server would answer with the redirect or the file is "
+                            f"not verified, so no entry names a staged file's path in a "
+                            f"spelling this gate reads")
+        asset = ASSET_TARGET.fullmatch(target)
+        if target.startswith("/"):
+            if tgt is None:
+                pass
+            elif downloads_path(tgt):
+                problems.append("has a target under /downloads/; a staged archive is reached by "
+                                "its own URL or the generated latest links, never through a "
+                                "gated redirect")
+            else:
+                file = resolved(root, tgt)
+                if file is None or not file.is_file():
+                    problems.append("has a target naming no file under site/")
+                elif file.name.casefold().endswith(".zip") or looks_like_archive(file):
+                    problems.append("has a target naming an archive under site/ (a `.zip` "
+                                    "name, or bytes carrying a known archive signature); the "
+                                    "release record vouches for no archive outside "
+                                    "/downloads/")
+                elif (name_suffix(file.name) not in (".html", ".htm")
+                      and file.relative_to((root / SITE).resolve()).as_posix()
+                      not in PUBLISHED_TARGETS):
+                    problems.append("has a target naming a file that is neither a page nor a "
+                                    "published file in PUBLISHED_TARGETS, such as the host's "
+                                    "own _headers or _redirects or the advisory's plain-text "
+                                    "copy; a gated redirect leads only to a page or a file in "
+                                    "PUBLISHED_TARGETS")
+        elif asset:
+            if source != f"/downloads/{asset.group(2)}":
+                problems.append("redirects a release asset from a source other than its own "
+                                "/downloads/<zip> path")
+        else:
+            problems.append("has a target that is neither a root-relative path naming a file "
+                            "under site/ nor an aged-out versioned zip's GitHub release asset "
+                            "URL")
+        for problem in problems:
+            findings.append(f"{where}: {rule!r} {problem}")
+        if not problems:
+            rules.append(rule)
+    return rules, findings
+
+
+def redirect_findings(root):
+    """The findings for site/_redirects (PART 1): the generator's header first, then only
+    allowlisted rules, then, when present, exactly the two latest links as the last 2 lines, in
+    the generator's order, each 302 and each naming a staged archive of one version."""
+    rules, findings = allowlist_entries(root)
+    path = root / REDIRECTS
+    if not path.exists():
+        return findings
+    if not path.is_file():
+        findings.append(f"{REDIRECTS} is not a regular file; tools/gen_hosted.py writes a plain "
+                        f"text file")
+        return findings
+    text = path.read_text(encoding="utf-8")
+    if not text.endswith("\n"):
+        findings.append(f"{REDIRECTS} does not end with a newline")
+        text += "\n"
+    lines = text.split("\n")[:-1]
+    if not lines or lines[0] != REDIRECTS_HEADER:
+        findings.append(f"{REDIRECTS}:1: the first line is the generator's header; the file is "
+                        f"written whole by tools/gen_hosted.py and never edited by hand")
+    numbered = list(enumerate(lines[1:], 2))
+    rest = numbered
+    if any(line.split(" ", 1)[0] in LATEST_SOURCES for _, line in numbered):
+        last = numbered[-2:]
+        rest = numbered[:-2]
+        if [line.split(" ", 1)[0] for _, line in last] != list(LATEST_SOURCES):
+            findings.append(f"{REDIRECTS}: the latest links are exactly 2 lines, the last of "
+                            f"the file, {LATEST_SOURCES[0]} then {LATEST_SOURCES[1]}; a lone, "
+                            f"repeated, reordered or displaced latest link is refused")
+            rest = [(n, line) for n, line in numbered
+                    if line.split(" ", 1)[0] not in LATEST_SOURCES]
+            last = []
+        versions = []
+        for (n, line), (source, target_re) in zip(last, LATEST_RULES):
+            parts = line.split(" ")
+            matched = target_re.fullmatch(parts[1]) if len(parts) == 3 else None
+            if len(parts) != 3 or parts[2] != "302" or not matched:
+                findings.append(f"{REDIRECTS}:{n}: {line!r} is not `{source} "
+                                f"/downloads/<its versioned zip> 302`; the target is that "
+                                f"link's own kind of zip and the status answers 302, never 301")
+                continue
+            versions.append(matched.group(1))
+            if not (root / SITE / "downloads" / Path(parts[1]).name).is_file():
+                findings.append(f"{REDIRECTS}:{n}: {line!r} names no staged archive; the "
+                                f"records pull request copies the released zip into "
+                                f"site/downloads/ byte for byte before a link points at it")
+        if len(versions) == 2 and versions[0] != versions[1]:
+            findings.append(f"{REDIRECTS}: the 2 latest links name 2 versions ({versions[0]} "
+                            f"and {versions[1]}); both point at the current versioned archive")
+    for n, line in rest:
+        if line in rules:
+            continue
+        if any(draft_path(field) for field in line.split(" ")):
+            findings.append(f"{REDIRECTS}:{n}: {line!r} names /draft/; the live site carries no "
+                            f"/draft/ tree and no redirect names it")
+            continue
+        findings.append(f"{REDIRECTS}:{n}: {line!r} is not an allowlisted redirect; the file "
+                        f"holds only the generator's header, the entries of "
+                        f"{REDIRECTS_ALLOWLIST} and the 2 latest links")
+    return findings
+
+
 def check(root):
     findings = []
     pages = page_files(root / SITE)
     if not pages:
         findings.append(f"{SITE} holds no pages")
     for page in pages:
-        rel = page.relative_to(root)
+        # A file name, like a page's attribute name or URL, is untrusted text, so each is printed
+        # escaped, with ascii() or repr(): no character in one can end the FAIL line or forge
+        # another.
+        rel = ascii(str(page.relative_to(root)))
         page_rel = page.relative_to(root / SITE).as_posix()
         parsed = parse(page.read_text(encoding="utf-8"))
         robots = [" ".join(c.lower().replace(",", " , ").split()) for _, c in parsed.robots]
@@ -429,7 +767,7 @@ def check(root):
         for line, name, value in parsed.urls:
             why = check_url(root, value)
             if why:
-                findings.append(f"{rel}:{line}: {name}={value!r} {why}")
+                findings.append(f"{rel}:{line}: {name!a}={value!r} {why}")
         # A canonical is this page's own absolute URL, byte for byte: exactly 1 on each indexable
         # page, none on the 404 or the unlisted advisory (NO_CANONICAL_PAGES), and at most its own
         # on any other page.
@@ -458,10 +796,10 @@ def check(root):
                 continue
             target = resolved(root, value)
             if page_rel not in ABOUT_PAGES and target in about:
-                findings.append(f"{rel}:{line}: links {value}; only the landing page, the "
+                findings.append(f"{rel}:{line}: links {value!a}; only the landing page, the "
                                 f"Disclosure page and the Licence page link those 2 pages")
             if target is not None and in_draft(target.relative_to(site)):
-                findings.append(f"{rel}:{line}: links {value}; no live page links /draft/, which "
+                findings.append(f"{rel}:{line}: links {value!a}; no live page links /draft/, which "
                                 f"the live site does not carry")
         for line, label in parsed.newtab:
             if NEWTAB not in label:
@@ -472,13 +810,17 @@ def check(root):
         for entry in sorted((root / SITE).iterdir()):
             if in_draft(Path(entry.name)):
                 kind = "folder" if entry.is_dir() else "file"
-                findings.append(f"{SITE}/{entry.name} exists ({kind}); the live site carries no "
+                findings.append(f"{str(SITE / entry.name)!a} exists ({kind}); the live site carries no "
                                 f"/draft/ tree: a draft is built and reviewed on the `draft` branch "
                                 f"at https://draft.secureconfig.pages.dev/draft/ (baseline "
                                 f"SPECIFICATION section 4.1 items 0 and 3)")
-    if (root / "site" / "_redirects").exists():
-        findings.append("site/_redirects exists; a missing path gets the 404 page with status 404, "
-                        "never a redirect (the owner's rule)")
+    findings.extend(redirect_findings(root))
+    if (root / SITE).is_dir():
+        for entry in sorted(p for p in (root / SITE).rglob("*")
+                            if p.is_file() and p.name.lower().endswith(LATEST_SUFFIX)):
+            findings.append(f"{str(entry.relative_to(root))!a} has a latest name; a latest link is a "
+                            f"302 redirect with no bytes of its own, so no file under site/ "
+                            f"carries one")
     # PART 3: the published indexes do not refer to /draft/ (fail-closed).
     for name in (*STRICT_INDEXES, CORPUS_INDEX):
         path = root / SITE / name
@@ -487,7 +829,7 @@ def check(root):
     assets = (root / SITE / "assets").resolve()
     css_files = sorted(p for p in (root / SITE).rglob("*") if p.is_file() and name_suffix(p.name) == ".css")
     for css in css_files:
-        rel = css.relative_to(root)
+        rel = ascii(str(css.relative_to(root)))  # printed escaped, like a page's name above
         text = CSS_COMMENT.sub(" ", css.read_text(encoding="utf-8"))
         for m in AT_KEYWORD.finditer(text):
             if css_unescape(m.group(1)).lower() == "import":
@@ -498,12 +840,12 @@ def check(root):
             parts = urlsplit(ref)
             target = (css.parent / unquote(parts.path)).resolve()
             if parts.scheme or ref.startswith("/") or "\\" in ref or not target.is_file():
-                findings.append(f"{rel}: url({ref}) is not a relative path to a file in the site")
+                findings.append(f"{rel}: url({ref!a}) is not a relative path to a file in the site")
                 continue
             try:
                 target.relative_to(assets)
             except ValueError:
-                findings.append(f"{rel}: url({ref}) resolves outside {SITE}/assets/")
+                findings.append(f"{rel}: url({ref!a}) resolves outside {SITE}/assets/")
     site_css = root / SITE / "assets" / "site.css"
     if site_css.is_file():
         body = CSS_COMMENT.sub(" ", site_css.read_text(encoding="utf-8"))
@@ -530,8 +872,10 @@ def main(argv=None):
     print(f"  ok    {n} pages are self-contained (every root-relative link names a file under "
           f"site/, external links leave by http(s) on another host with the new-tab hint), only "
           f"the 404 page and the unlisted {ADVISORY} carry a robots noindex and no "
-          f"canonical, each other canonical is its page's own URL, site/ holds no draft tree, no "
-          f"page or published index names /draft/, and there is no _redirects")
+          f"canonical, each other canonical is its page's own URL, site/ holds no draft tree or "
+          f"-latest file, no page or published index names /draft/, and site/_redirects, when "
+          f"present, holds only the generator's header, allowlisted redirects and the 2 latest "
+          f"links")
     return 0
 
 

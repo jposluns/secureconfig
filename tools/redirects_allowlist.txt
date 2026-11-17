@@ -1,0 +1,24 @@
+# The gated redirect list: every site/_redirects line beyond the two generated latest links.
+#
+# A line that is empty or starts with `#` is a comment. An entry is `SOURCE TARGET 302<TAB>REASON`
+# with single spaces, printable ASCII fields (`!` to `~`) and a non-empty reason, and no two
+# entries share a source. tools/gen_hosted.py copies each entry's rule (the part before the
+# tab), in file order, into site/_redirects between its header and the latest links.
+# tools/check_draft.py checks each entry: the status is the literal 302, and every
+# root-relative source and target is percent-decoded to a normal form first. A field that does
+# not normalize cleanly is refused: an unsettled decoding, any character outside `!` to `~` (a
+# space, control, invisible or non-ASCII character), a backslash, a `.`, `..` or empty segment,
+# a `*`, `:`, `?` or `#`, or a scheme-relative `//` form. So a gated field is one exact literal
+# path, never a splat, placeholder, query or fragment form, and a repeated source cannot shadow
+# another entry. The source is such a path with no trailing slash that is not a latest name and
+# names no file under site/ by its exact path, an index, `.html` or `.htm` completion, or
+# another case (an entry never names a staged file's path in a spelling that gate reads), and
+# no source or target names /draft/. The target is a root-relative path naming a page, or a
+# published file beside the pages other than _headers (PUBLISHED_TARGETS in that gate), under
+# site/ outside /downloads/ whose name does not end `.zip` and whose bytes carry no archive
+# signature that gate reads, or an aged-out versioned zip's own GitHub release asset URL
+# (https://github.com/jposluns/secureconfig/releases/download/v1.0.<N>/<zip> from
+# /downloads/<zip>); a target naming the host's own _headers or _redirects, or any other file,
+# is refused. tools/check_hosted.py holds each release-asset entry to the release record: it
+# names a recorded zip that is no longer staged. Entries are added one at a time, each reviewed
+# with its reason; the file ships empty until the first one is needed.

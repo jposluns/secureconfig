@@ -17,6 +17,42 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-11-15 on `site/_redirects`: the no-redirect rule is lifted for the two `-latest`
+  links plus a gated allowlist, and aged-out zips redirect to their release assets (#1346).**
+  Three rulings, each in an attended session. At about 16:54Z, in a direct console message, the maintainer wrote:
+  "if -latest needs a redirect, then we'll life the no redirect rule" ("life" read as "lift"). This lifts the
+  owner's rule that `site/_redirects` never exists, which `tools/check_draft.py` enforced by refusing the file
+  outright. At about 17:31Z, through AskUserQuestion in free form, the maintainer set the scope: "two -latest plus
+  a gated list, and inform the other orchestrators that this is what you're doing, and inform posluns in case the
+  template needs something fro this." The option offered read: "Go-wild: admit the two -latest rules now, and add
+  a reviewed allowlist file so future redirects (renamed pages, old guide URLs) can be added one at a time with a
+  gate checking each target exists." At about 17:37Z, on release question 1d (keep superseded zips published?),
+  the maintainer chose "Keep all, move old to releases", whose description read: "Go-wild: keep every versioned
+  URL working forever by redirecting old site zips to their GitHub release assets once they age out, through the
+  gated redirect list you just approved." Posluns was informed and replied on 2026-11-16 that the site template
+  needs no change for the `-latest` redirects, that the refusal was this project's own rule, and that the
+  template's own checks require that no live `/draft` redirect is in `_redirects`, so the gate keeps refusing any
+  `/draft` entry.
+  - Effect, in the same change as this entry. `tools/check_draft.py` admits `site/_redirects` only when it holds
+    the generator's header, entries of the new gated `tools/redirects_allowlist.txt` and, written only once a
+    release record exists, the two `-latest` 302 lines, naming one version's archives staged in
+    `site/downloads/`. An entry is `SOURCE TARGET 302` with a reason; each root-relative source and target is
+    percent-decoded to a normal form and refused when it keeps a `.`, `..` or empty segment, carries a `*`,
+    `:`, `?` or `#`, or is scheme-relative, so a gated field is one exact literal path, never a splat,
+    placeholder, query or fragment form. The source has no trailing slash and names no file under `site/` by
+    its exact path, an index, `.html` or `.htm` completion, or another case, and the target is a file under
+    `site/` outside `/downloads/` whose name does not end `.zip` and whose bytes carry no archive signature
+    the gate reads, or an aged-out versioned zip's own GitHub release asset. It still refuses every other
+    redirect and any `/draft` entry, in the file or the allowlist, so a missing path still gets the 404 page
+    with status 404. `tools/gen_hosted.py` writes the file whole from the allowlist and the cumulative
+    release record `releases/SHA256SUMS` (the 1c ruling of 2026-11-15: one file gaining each release's lines,
+    newest first). `tools/check_hosted.py` holds the committed file to that output, every release-asset
+    entry to the record (a recorded zip that is no longer staged), and `site/downloads/` itself to the
+    record: a staged file no record names is refused.
+  - Revert. Restore the `site/_redirects exists` refusal in `tools/check_draft.py` and its test case, remove
+    `tools/gen_hosted.py`, `tools/check_hosted.py`, `tools/test_hosted.py`,
+    `tools/redirects_allowlist.txt` and the `plugin-distribution` section, and record the withdrawing ruling
+    here.
 - **The relicence pull request: the whole project moves to the Apache License 2.0, carrying out the maintainer's
   ruling of 2026-11-15 (#1341).**
   This pull request is the second of the two that the ruling's entry below (#1336) describes; it carries the ruling

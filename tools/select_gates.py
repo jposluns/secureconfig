@@ -36,7 +36,8 @@ except a name ending after a `*` in its last segment, which matches in any case,
 path: a project record feeds the Markdown gates, and site/ and site-src/ feed the site gates.
 CHANGELOG.md also feeds version-basis, llms-full, plugin and generated-committed:
 tools/version_basis.py reads its newest dated heading, and both bundle builds run that check and
-list it as an input.
+list it as an input. site/marketplace.json, the generated hosted catalog, is allowed content
+that also takes plugin-distribution, the section whose gate holds it to the release record.
 
 DEPENDS: a section that relies on others has a `# depends: NAME: NEED...` line in the suite, the
 one place the table is written; the suite's --sections reads the same lines and adds the needs
@@ -86,6 +87,9 @@ MAP = (
     # The CSP and the other served headers, and the redirects, at any depth.
     ("**/_headers", ALL),
     ("**/_redirects", ALL),
+    # The generated hosted catalog: allowed site content whose own gate, tools/check_hosted.py,
+    # holds it to the release record, so it also takes the plugin-distribution section.
+    ("site/marketplace.json", SITE + ("plugin-distribution",)),
     # Site content, an allowlist: the pages, their sources, the served stylesheets, fonts and
     # images, and the palettes. Any other file under site/ or site-src/ (a script, a source map,
     # Markdown, YAML, an unknown type or a name with no suffix) matches nothing here and runs every

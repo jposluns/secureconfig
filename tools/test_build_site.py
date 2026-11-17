@@ -57,9 +57,19 @@ name), a symbolic link to a file and to a folder under a valid name, a FIFO unde
 once. The total counts every regular file with a valid name, an oversized one included, and no
 refused entry. downloads/ itself as a symbolic link is refused, a downloads/ that cannot be listed
 raises OSError (skipped as root), and the caps are exactly 20 MiB and 200 MiB.
+At the root, --check also admits the 2 generated hosted files, `_redirects` and
+`marketplace.json`, only when each equals, byte for byte, what tools/gen_hosted.py writes from
+the release record and the redirect allowlist read beside the output folder. Those cases cover
+both files admitted as generated, an edited catalog digest, an appended redirect, a missing
+`_redirects` with a record behind it, a `marketplace.json` left behind with no record, and an
+unparsable plugin/plugin.json and one nested too deeply to parse, each with a record behind it
+(a read error, exit 2, no traceback). A site-src/content.json nested too deeply to parse and one
+that is a JSON array each raise the build's read error, SourceError (exit 2), in process.
 """
+import hashlib
 import html
 import importlib.util
+import json
 import os
 import shutil
 import subprocess
@@ -70,6 +80,9 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 SCRIPT = ROOT / "scripts" / "build-site.py"
+sys.path.insert(0, str(TOOLS))
+import gen_hosted  # noqa: E402  (writes the byte-exact generated hosted files in fixtures)
+
 spec = importlib.util.spec_from_file_location("build_site", SCRIPT)
 build_site = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build_site)
@@ -144,6 +157,37 @@ def build_from_readme(text, readme):
             return None, str(exc)
     finally:
         shutil.rmtree(root, ignore_errors=True)
+
+
+def content_cases():
+    """The failures for a site-src/content.json the build cannot use: valid JSON nested past
+    gen_hosted.MAX_JSON_DEPTH and a JSON array each raise SourceError, the build's read error
+    (exit 2), never another exception."""
+    failures = []
+    for desc, text, expected in (
+            ("nested too deeply to parse", "[" * 100000 + "]" * 100000 + "\n",
+             "nested too deeply to parse as JSON"),
+            ("a JSON array", "[]\n", "is not a JSON object")):
+        root = Path(tempfile.mkdtemp())
+        try:
+            for rel in (build_site.VERSIONED, build_site.README):
+                (root / rel).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT / rel, root / rel)
+            (root / build_site.CONTENT).parent.mkdir(parents=True)
+            (root / build_site.CONTENT).write_text(text, encoding="utf-8")
+            try:
+                build_site.Builder("/", root=root)
+                why = None
+            except build_site.SourceError as exc:
+                why = str(exc)
+            except Exception as exc:  # noqa: BLE001  an escaping exception is the failure
+                why = f"{type(exc).__name__} escaped"
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+        if why is None or expected not in why:
+            failures.append(f"a site-src/content.json {desc} is not a read error naming "
+                            f"{expected!r}: {why!r}")
+    return failures
 
 
 def sized(path, size):
@@ -681,6 +725,73 @@ def main():
                 failures.append(f"--check at the root did not exit 2 on a downloads/ it cannot "
                                 f"list: {rc} {text!r}")
         shutil.rmtree(out / "downloads")
+        # The 2 generated hosted files are admitted at the root only when each equals, byte for
+        # byte, what tools/gen_hosted.py writes from the release record and the allowlist read
+        # beside the output folder; an edited copy, a missing one and one with nothing behind
+        # it are refused, so the records pull request's committed files pass and nothing else.
+        digest = hashlib.sha256(b"zip bytes\n").hexdigest()
+        (d / "plugin").mkdir()
+        (d / "plugin" / "plugin.json").write_text(json.dumps(
+            {"name": "secureconfig", "description": "guides",
+             "author": {"name": "Jeff Posluns", "url": "https://secureconfig.ai"}}),
+            encoding="utf-8")
+        (d / "releases").mkdir()
+        record = (f"{digest}  secureconfig-1.0.1234.zip\n"
+                  f"{digest}  secureconfig-plugin-1.0.1234.zip\n")
+        (d / "releases" / "SHA256SUMS").write_text(record, encoding="utf-8")
+        (d / "tools").mkdir()
+        (d / "tools" / "redirects_allowlist.txt").write_text(
+            "/old / 302\tthe old URL of the landing page\n", encoding="utf-8")
+        (out / "downloads").mkdir()
+        for name in ("secureconfig-1.0.1234.zip", "secureconfig-plugin-1.0.1234.zip"):
+            (out / "downloads" / name).write_bytes(b"zip bytes\n")
+        records = gen_hosted.read_records(d)
+        (out / "_redirects").write_text(gen_hosted.redirects_text(d, records), encoding="utf-8")
+        (out / "marketplace.json").write_text(gen_hosted.marketplace_text(d, records),
+                                              encoding="utf-8")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 0:
+            failures.append(f"--check at the root refused the generated hosted files: {text!r}")
+        # An unparsable plugin/plugin.json with a record behind it is a read error (exit 2) in 1
+        # FAIL line, never a traceback.
+        manifest = (d / "plugin" / "plugin.json").read_bytes()
+        (d / "plugin" / "plugin.json").write_text("{\n", encoding="utf-8")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 2 or "the plugin manifest" not in text or "Traceback" in text:
+            failures.append(f"--check at the root did not exit 2 with 1 FAIL line on an "
+                            f"unparsable plugin/plugin.json: {rc} {text!r}")
+        # So is valid JSON nested past gen_hosted.MAX_JSON_DEPTH, which the JSON object reader
+        # refuses before parsing.
+        (d / "plugin" / "plugin.json").write_text("[" * 100000 + "]" * 100000 + "\n",
+                                                  encoding="utf-8")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 2 or "nested too deeply to parse" not in text or "Traceback" in text:
+            failures.append(f"--check at the root did not exit 2 with 1 FAIL line on a "
+                            f"plugin/plugin.json nested too deeply to parse: {rc} {text!r}")
+        (d / "plugin" / "plugin.json").write_bytes(manifest)
+        data = (out / "marketplace.json").read_bytes()
+        (out / "marketplace.json").write_bytes(data.replace(b'"sha256": "', b'"sha256": "0'))
+        rc, text = run("--check", "--out", str(out))
+        if rc != 1 or "marketplace.json does not equal what tools/gen_hosted.py writes" not in text:
+            failures.append(f"--check at the root accepted an edited marketplace.json: {text!r}")
+        (out / "marketplace.json").write_bytes(data)
+        (out / "_redirects").write_bytes((out / "_redirects").read_bytes() + b"/x / 302\n")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 1 or "_redirects does not equal what tools/gen_hosted.py writes" not in text:
+            failures.append(f"--check at the root accepted an edited _redirects: {text!r}")
+        (out / "_redirects").unlink()
+        rc, text = run("--check", "--out", str(out))
+        if rc != 1 or "_redirects is missing" not in text:
+            failures.append(f"--check at the root missed a missing _redirects: {text!r}")
+        shutil.rmtree(d / "releases")
+        rc, text = run("--check", "--out", str(out))
+        if rc != 1 or "marketplace.json exists, but" not in text:
+            failures.append(f"--check at the root accepted a marketplace.json with no record "
+                            f"behind it: {text!r}")
+        (out / "marketplace.json").unlink()
+        shutil.rmtree(out / "downloads")
+        shutil.rmtree(d / "plugin")
+        shutil.rmtree(d / "tools")
         # SPECIFICATION 4.1 items 0 and 3: the staged build written under draft/ beside the root
         # pages, as on the `draft` branch, is refused at the root, page and copied file alike.
         rc, text = run("--base", "/draft/", "--out", str(out / "draft"))
@@ -735,6 +846,7 @@ def main():
         failures.append(f"a base path without slashes was accepted: {text!r}")
     more, downloads = download_cases()
     failures += more
+    failures += content_cases()
 
     if failures:
         for f in failures:
@@ -760,6 +872,11 @@ def main():
           f"symbolic links{', a FIFO' if hasattr(os, 'mkfifo') else ''}"
           f"{', an unlistable folder' if os.geteuid() != 0 else ''}, an oversized file counted in "
           f"the total, the total cap and the 20 MiB and 200 MiB values)")
+    print("  ok    the 2 generated hosted files at the root: admitted when byte-equal to the "
+          "generator's output, refused when edited, missing or with no record behind them, and "
+          "an unparsable plugin/plugin.json and one nested too deeply to parse each a read error "
+          "(exit 2); a site-src/content.json nested too deeply to parse and one that is a JSON "
+          "array each a read error")
     if os.geteuid() == 0:
         print("  note  run as root, so the 2 unlistable downloads/ cases were skipped")
     return 0

@@ -603,7 +603,21 @@ list of pull requests and a link to `CHANGELOG.md` at the tag.
    bullet naming the tag, its target commit and the UTC dates it covers, saying that the
    target's date is covered only up to the target commit, and also saying whether the
    release covers the previous release's date after that previous target. The next release
-   passes this tag as `--previous`.
+   passes this tag as `--previous`. The same pull request publishes the release on the site.
+   Download the published assets again with `gh release download v1.0.<N>` into a new
+   directory and run `sha256sum -c SHA256SUMS` there. Copy the two zips byte for byte into
+   `site/downloads/`, and prepend the lines of the release's `SHA256SUMS` asset, byte for
+   byte, to the one cumulative release record `releases/SHA256SUMS`, so the newest release's
+   lines come first and each release's lines sit together. Then run
+   `python3 -I -B tools/gen_hosted.py`, which writes `site/marketplace.json` and
+   `site/_redirects` from the record and `tools/redirects_allowlist.txt`, and commit both
+   generated files; never edit either by hand. Add one exact `copy` line, marked `required`,
+   to `export/public-allowlist.txt` for each zip now staged in `site/downloads/`, and remove
+   the line of any zip that has aged out of `site/downloads/`; the record itself is covered by
+   that file's optional `releases/SHA256SUMS` line, and `tools/export_lists.py --check` fails
+   a staged zip no line names. `tools/check_hosted.py` holds the committed
+   files to the record, so a typed digest, a stale latest link or a missing staged zip fails
+   the suite.
 10. Ask the posluns orchestrator, which owns https://posluns.dev/hashes.txt, to add the release:
     send the project, the version, the release date (UTC), the tag, its target commit, the
     artefact location and the SHA-256 of the release's `SHA256SUMS` asset, which
