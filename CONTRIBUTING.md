@@ -627,8 +627,8 @@ list of pull requests and a link to `CHANGELOG.md` at the tag.
    a staged zip no line names. `tools/check_hosted.py` holds the committed
    files to the record, so a typed zip digest, a stale latest link or a missing staged zip fails
    the suite. The digests on a release's `llms-full.txt` and notes lines are checked against
-   nothing offline, since the tree keeps neither file at the release's bytes, so a wrong one,
-   all zeros included, passes the gates; only the `sha256sum -c` run above checks them, in the
+   nothing offline, since no gate compares those lines with any file, so a wrong one, all
+   zeros included, passes the gates; only the `sha256sum -c` run above checks them, in the
    downloaded asset before its lines are copied.
 10. Ask the posluns orchestrator, which owns https://posluns.dev/hashes.txt, to add the release:
     send the project, the version, the release date (UTC), the tag, its target commit, the

@@ -17,8 +17,8 @@ sha256sum writes it, and one release's lines are that asset's four, in the asset
 plugin zip secureconfig-plugin-1.0.<N>.zip, then `RELEASE-NOTES-v1.0.<N>.md`, all of one
 version, so a block's release is the version its zip and notes names carry. Only the zip lines
 feed the hosted files: an `llms-full.txt` or notes line is recorded but never staged or served
-from here. The digest on such a line is checked against nothing: the tree keeps neither file at
-the release's bytes, so a wrong digest there, all zeros included, passes. The file is read as
+from here. The digest on such a line is checked against nothing: no gate compares those lines
+with any file, so a wrong digest there, all zeros included, passes. The file is read as
 bytes, so a CRLF or lone-CR rewrite is refused, never read as LF. No line names a `-latest`
 file: a latest link is a 302 redirect with no bytes of its own.
 Any other name, order or line count in a block, a repeated release block, an older release

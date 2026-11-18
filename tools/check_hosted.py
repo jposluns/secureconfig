@@ -6,8 +6,8 @@ Code refuses an archive whose digest does not match, so a wrong committed digest
 hosted install and a right one must come from the release record, never from a hand. This gate
 holds what is committed to what tools/gen_hosted.py writes from the record, so a hand edit, a
 typed zip digest, a stale latest link or a missing staged archive fails the suite offline. The
-digests on a release's llms-full.txt and notes lines are checked against nothing, since the
-tree keeps neither file at the release's bytes, so a wrong one, all zeros included, passes.
+digests on a release's llms-full.txt and notes lines are checked against nothing, since no gate
+compares those lines with any file, so a wrong one, all zeros included, passes.
 
 WHAT IT CHECKS:
   - the cumulative record releases/SHA256SUMS parses (gen_hosted.read_records: a byte copy of

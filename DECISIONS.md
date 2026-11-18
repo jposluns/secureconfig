@@ -49,13 +49,25 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     newest first). `tools/check_hosted.py` holds the committed file to that output, every release-asset
     entry to the record (a recorded zip that is no longer staged), and `site/downloads/` itself to the
     record: a staged file no record names is refused.
-  - Revert. Restore the `site/_redirects exists` refusal in `tools/check_draft.py` and its test case, and
-    remove `tools/check_hosted.py`, `tools/test_hosted.py`, `tools/redirects_allowlist.txt`, the
-    `plugin-distribution` section and the `tools/check_hosted.py` line of `scripts/pages-build.sh`. Remove
-    the gate tooling's other references to that section too: in `tools/select_gates.py`, the
-    `site/marketplace.json` entry of `MAP`, its comment and the docstring sentence on that file, and in
-    `tools/test_select_gates.py`, the `site/marketplace.json` case and the docstring's parenthesis on it,
-    after which that file selects the site sections alone. Then record the withdrawing ruling here.
+  - Revert. Restore the `site/_redirects exists` refusal in `tools/check_draft.py`, in place of its gated
+    admission (`redirect_findings()` and `allowlist_entries()`), and its test case. Remove
+    `tools/check_hosted.py`, `tools/test_hosted.py`, `tools/redirects_allowlist.txt`, the
+    `plugin-distribution` section, and the `tools/check_hosted.py` line of `scripts/pages-build.sh` with
+    the item of that script's header comment that names it. Remove the gate tooling's other references to
+    that section too: in `tools/select_gates.py`, the `site/marketplace.json` entry of `MAP`, its comment
+    and the docstring sentence on that file, and in `tools/test_select_gates.py`, the
+    `site/marketplace.json` case and its whole item, parenthesis included, in the docstring's list of
+    cases, after which that file selects the site sections alone. In `tools/test_draft.py`, remove every
+    other case that plants a `site/_redirects`, `ASCII_CASES` included: the restored refusal fails each
+    case that expects such a tree to pass, and the rest test the removed admission. Once a release
+    record exists, `tools/gen_hosted.py` writes `site/_redirects` and `scripts/build-site.py --check`
+    requires it, so a revert then also needs that module to write no `site/_redirects`,
+    `tools/test_build_site.py`'s `_redirects` cases changed to match, and any committed copy removed
+    with its `export/public-allowlist.txt` line. Then rewrite every docstring, comment and printed line,
+    and CONTRIBUTING.md's Releasing step 9, that still names a removed file or describes an admitted or
+    generated `site/_redirects`, among them those in `tools/check_draft.py`, `tools/test_draft.py`,
+    `tools/gen_hosted.py`, `tools/test_build_site.py` and `scripts/build-site.py`. Then record the
+    withdrawing ruling here.
     `scripts/build-site.py` imports `tools/gen_hosted.py`:
     `hosted_problems()` holds the generated files to its output, and the build also reads
     `site-src/content.json` through its `json_object` reader. So removing `tools/gen_hosted.py` needs
