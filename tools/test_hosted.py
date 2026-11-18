@@ -42,10 +42,13 @@ deflated data is damaged or names a compression method zipfile does not support.
 zip one byte over scripts/build-site.py's DOWNLOAD_MAX, a zip bomb whose root plugin.json
 declares 32 MiB uncompressed and a bzip2 zip bomb whose root plugin.json declares 16 bytes are
 each exit 1 in 1 FAIL line, and a staged plugin zip whose root plugin.json is exactly
-MANIFEST_MAX bytes long passes. The newest staged plugin zip's root plugin.json version is
-printed escaped, so one that is a lone surrogate and one that carries a newline and a forged ok
-line are each exit 1 in exactly 1 FAIL line, with no traceback and no forged line. One
-in-process case holds check_draft.REDIRECTS_HEADER to gen_hosted.HEADER, so the
+MANIFEST_MAX bytes long passes. A staged plugin zip of DOWNLOAD_MAX bytes whose central
+directory fills it and a valid plugin zip whose central directory is one byte over CENTRAL_MAX
+are each exit 1 in 1 FAIL line saying that the zip is not opened, and a valid plugin zip whose
+central directory is exactly CENTRAL_MAX bytes passes. The newest staged plugin zip's root
+plugin.json version is printed escaped, so one that is a lone surrogate and one that carries a
+newline and a forged ok line are each exit 1 in exactly 1 FAIL line, with no traceback and no
+forged line. One in-process case holds check_draft.REDIRECTS_HEADER to gen_hosted.HEADER, so the
 gate and the generator cannot drift apart on the file's first line. In-process cases hold
 gen_hosted.json_object to its depth limit, MAX_JSON_DEPTH: an object nested exactly that deep is
 read, one a level deeper and one whose deep nesting sits inside one value are nested too deeply to
@@ -60,6 +63,7 @@ import hashlib
 import io
 import json
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -69,7 +73,7 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
 import check_draft  # noqa: E402
-import check_hosted  # noqa: E402  (its caps, DOWNLOAD_MAX and MANIFEST_MAX)
+import check_hosted  # noqa: E402  (its caps, DOWNLOAD_MAX, MANIFEST_MAX and CENTRAL_MAX)
 import gen_hosted  # noqa: E402
 
 MANIFEST = {"name": "secureconfig", "version": "1.0.7", "description": "guides",
@@ -124,6 +128,42 @@ def lying_bzip2_zip(size, declared):
     # The uncompressed size is at offset 22 of the local header and 24 of the central one.
     data[22:26] = data[central + 24:central + 28] = declared.to_bytes(4, "little")
     return bytes(data)
+
+
+def full_directory_zip(size):
+    """A file of size bytes that is all central directory, as zipfile reads it: the zero bytes
+    left over, then as many 46-byte central directory records as fit, each with an empty name,
+    no data and no local header, then a 22-byte end record declaring their total size."""
+    count, pad = divmod(size - 22, 46)
+    record = struct.pack("<4s4B4HL2L5H2L", b"PK\x01\x02", 20, 0, 20, 0, 0, 0, 0, 33,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    end = struct.pack("<4s4H2LH", b"PK\x05\x06", 0, 0, min(count, 0xFFFF), min(count, 0xFFFF),
+                      46 * count, pad, 0)
+    return b"\0" * pad + record * count + end
+
+
+def wide_directory_zip(size):
+    """A plugin zip carrying version 1.0.7 whose central directory is exactly size bytes: its
+    root plugin.json, then empty members named pad/<n> whose central directory comments, of at
+    most 65535 bytes each, fill the rest."""
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w") as archive:
+        archive.writestr("plugin.json", json.dumps({"version": "1.0.7"}))
+        left = size - 46 - len("plugin.json")
+        number = 0
+        while left:
+            info = zipfile.ZipInfo(f"pad/{number:04d}")
+            room = left - 46 - len(info.filename)
+            # Leave nothing, or room for at least one more record with an empty comment.
+            info.comment = b"c" * (room if room <= 65535 else min(65535, room - 54))
+            archive.writestr(info, b"")
+            left -= 46 + len(info.filename) + len(info.comment)
+            number += 1
+    data = out.getvalue()
+    # The end record, with no archive comment, is the last 22 bytes, its directory size at 12.
+    if int.from_bytes(data[-10:-6], "little") != size:
+        raise AssertionError(f"wide_directory_zip({size}) built another directory size")
+    return data
 
 
 def padded_manifest(size):
@@ -415,9 +455,15 @@ def check_caps(failures):
     whose root plugin.json declares 32 MiB uncompressed in under 32 KiB of deflated data, and
     a zip bomb whose bzip2 root plugin.json declares 16 bytes but decompresses to 8 MiB, are
     each exit 1 in exactly 1 FAIL line, never a traceback or a MemoryError. A root plugin.json
-    of exactly MANIFEST_MAX bytes is read and passes."""
+    of exactly MANIFEST_MAX bytes is read and passes. A staged plugin zip of DOWNLOAD_MAX bytes
+    whose central directory fills it, 455902 records, and a valid plugin zip whose central
+    directory is one byte over CENTRAL_MAX are each exit 1 in exactly 1 FAIL line saying that
+    the zip is not opened, and a valid plugin zip whose central directory is exactly CENTRAL_MAX
+    bytes is opened and passes."""
     over = check_hosted.DOWNLOAD_MAX + 1
     cap = check_hosted.MANIFEST_MAX
+    central = check_hosted.CENTRAL_MAX
+    filled = (check_hosted.DOWNLOAD_MAX - 22) // 46 * 46
     cases = (
         ("a staged plugin zip one byte over DOWNLOAD_MAX", b"\0" * over,
          f"secureconfig-plugin-1.0.7.zip is {over} bytes, over the "
@@ -432,6 +478,16 @@ def check_caps(failures):
         ("a root plugin.json of exactly MANIFEST_MAX bytes",
          plugin_zip("1.0.7", padded_manifest(cap), compression=zipfile.ZIP_DEFLATED),
          "1 recorded release", 0),
+        ("a staged plugin zip of DOWNLOAD_MAX bytes whose central directory fills it",
+         full_directory_zip(check_hosted.DOWNLOAD_MAX),
+         f"its end record declares a central directory of {filled} bytes, over the "
+         f"{central}-byte cap on it, so the zip is not opened", 1),
+        ("a plugin zip whose central directory is one byte over CENTRAL_MAX",
+         wide_directory_zip(central + 1),
+         f"its end record declares a central directory of {central + 1} bytes, over the "
+         f"{central}-byte cap on it, so the zip is not opened", 1),
+        ("a plugin zip whose central directory is exactly CENTRAL_MAX bytes",
+         wide_directory_zip(central), "1 recorded release", 0),
     )
     for desc, data, expected, want in cases:
         d = Path(tempfile.mkdtemp())

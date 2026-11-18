@@ -46,8 +46,10 @@ WHAT IT CHECKS:
     each a finding in 1 FAIL line, never a traceback. So is a root plugin.json whose zip entry
     declares more than MANIFEST_MAX bytes (64 KiB) uncompressed or that is compressed with a
     method other than stored or deflated, and it is not read, so a decompression bomb is a
-    finding, never a MemoryError. When the zip gains .claude-plugin/plugin.json, this check will
-    be extended to it.
+    finding, never a MemoryError. So is a zip whose end record declares a central directory of
+    more than CENTRAL_MAX bytes (1 MiB), and it is not opened, since zipfile reads and parses
+    the whole central directory when it opens a zip. When the zip gains
+    .claude-plugin/plugin.json, this check will be extended to it.
 
 Offline, standard library only, and it writes nothing. Exit 0 ok; 1 on a finding, which
 includes a record, an allowlist or a plugin/plugin.json that cannot be used; 2 on a read error,
@@ -86,6 +88,12 @@ MANIFEST_MAX = 64 * 1024
 # bzip2 and LZMA among them, it decompresses each chunk of compressed data it reads whole,
 # however large the output, so a member compressed with one is not read.
 BOUNDED_METHODS = (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)
+# The cap on a staged plugin zip's central directory, on the size its end record declares. When
+# zipfile opens a zip, it reads up to that many bytes and builds an entry for each record in
+# them, every record 46 bytes at least, so DOWNLOAD_MAX alone admits a zip of 455902 entries. A
+# zip over this cap is refused before it is opened, and one within it holds at most 22795
+# entries. The plugin zip of v1.0.1351 has 117 entries in a central directory of 10487 bytes.
+CENTRAL_MAX = 1024 * 1024
 
 SITE = Path("site")
 DOWNLOADS = SITE / "downloads"
@@ -121,13 +129,30 @@ def staged_digest(root, name):
     return digest.hexdigest()
 
 
+def central_directory_size(path):
+    """The size in bytes of the central directory that the end record of the zip at path
+    declares, or None when no end record is found, a zip that zipfile.ZipFile then refuses. The
+    record is found by zipfile's _EndRecData(), the function ZipFile calls to find it, so this
+    is the size ZipFile would read, a zip64 end record's size included. That function is not
+    part of zipfile's documented interface, so a Python without it raises AttributeError here,
+    which zip_manifest_version() reports as a finding."""
+    with open(path, "rb") as staged:
+        record = zipfile._EndRecData(staged)
+    return None if record is None else record[zipfile._ECD_SIZE]
+
+
 def zip_manifest_version(path):
     """The version in the plugin.json at the root of the plugin zip at path, or the reason it
     cannot be used: any archive or manifest it cannot read or use is a reason, never an
-    exception. The member is read only when the size its entry declares is at most
+    exception. The zip is opened only when its end record declares a central directory of at
+    most CENTRAL_MAX bytes. The member is read only when the size its entry declares is at most
     MANIFEST_MAX and its compression method is one in BOUNDED_METHODS, and then by a read of at
     most MANIFEST_MAX + 1 bytes, so a decompression bomb is a reason, never a MemoryError."""
     try:
+        size = central_directory_size(path)
+        if size is not None and size > CENTRAL_MAX:
+            return None, (f"its end record declares a central directory of {size} bytes, over "
+                          f"the {CENTRAL_MAX}-byte cap on it, so the zip is not opened")
         with zipfile.ZipFile(path) as archive:
             info = archive.getinfo("plugin.json")
             if info.file_size > MANIFEST_MAX:
@@ -151,8 +176,8 @@ def zip_manifest_version(path):
         # The file is an untrusted archive of at most DOWNLOAD_MAX bytes, and zipfile and its
         # decompressors raise many unrelated types on damaged ones (BadZipFile, KeyError,
         # ValueError, OSError, NotImplementedError, RuntimeError and zlib.error among them), so
-        # any failure to read the one member is a finding; nothing but that read is guarded
-        # here.
+        # any failure to read the end record or the one member is a finding; nothing but those
+        # reads is guarded here.
         return None, f"its root plugin.json cannot be read ({exc})"
     try:
         # Read as UTF-8 only, as plugin/plugin.json is, so a UTF-16 or UTF-32 manifest, or one
