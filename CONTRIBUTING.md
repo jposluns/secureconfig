@@ -387,7 +387,8 @@ the review dates, claims or summary, and does not claim a new demonstration. Ord
 continues to refuse an unbound body edit.
 
 Then run `python3 tools/version_basis.py --write`, `python3 tools/version_basis.py --check`,
-`bash scripts/build-llms-full.sh`, `bash scripts/build-plugin.sh` and `bash tools/run_all_checks.sh`.
+`bash scripts/build-llms-full.sh`, `bash scripts/build-plugin.sh`,
+`bash scripts/build-instructions.sh` and `bash tools/run_all_checks.sh`.
 `SECURECONFIG_SUITE_JOBS=8 bash tools/run_all_checks.sh` runs up to 8 sections at once, opt in:
 unset or `1` is the serial run, which stays the reference. The output holds the same lines in the
 same order and the status is the same, because each section's output is buffered and printed in
@@ -422,8 +423,16 @@ A pull request that changes `VERSION` or a guide also runs `bash scripts/build-l
 `bash scripts/build-plugin.sh` and commits every file they change. One that changes the root
 `LICENSE` or `NOTICE` runs `bash scripts/build-plugin.sh`, which copies both, byte for byte, to
 `plugin/LICENSE` and `plugin/NOTICE` and to `plugin/skills/secureconfig/LICENSE` and
-`plugin/skills/secureconfig/NOTICE`, and commits all 4 copies. The suite's two staleness gates
-rebuild the working tree, so they pass when a rebuilt file was left unstaged.
+`plugin/skills/secureconfig/NOTICE`, and commits all 4 copies. One that changes any of the 4
+sections of the plugin's `SKILL.md` that the chat fallback build reads (the rules, Verify steps,
+Choosing guides and What this skill does not do sections), `plugin/always-on.md`'s closing
+paragraph or README.md's guide index also runs
+`bash scripts/build-instructions.sh` and commits `site/secureconfig-instructions.md`. That is the
+generated chat fallback file the site serves beside `site/llms.txt`. The suite's instructions
+section runs that script's `--check` form, which compares in memory and rewrites nothing, and
+`.aiqt/gensrc.json` records the file's sources. The suite's 3 staleness gates, its llms-full,
+plugin and instructions sections, check the working tree, so they pass when a rebuilt file was
+left unstaged.
 `tools/check_generated_committed.py` exports `HEAD` with `git archive` and fails unless the
 committed `plugin/plugin.json` and the plugin's `SKILL.md` name the committed `VERSION` and
 `SKILL.md` states the committed guide count; when the working tree differs from

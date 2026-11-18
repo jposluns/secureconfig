@@ -87,7 +87,9 @@ PART 2, SELF-CONTAINED:
     too) and in `srcset`, `imagesrcset`, `formaction`, `action`, `ping`, `poster` and `background`,
     is an in-page `#` anchor, a root-relative path that names a file under site/ (a folder path
     names its index.html), or an absolute http(s) URL with a non-empty authority written as
-    `scheme://host`, on a host other than this site's;
+    `scheme://host`, on a host other than this site's. A root-relative path that decodes to a
+    NUL or another character no file path can hold (unpathable() below) names no file, and is
+    reported as a finding, never left to end the gate in a traceback;
   - refused, because a browser normalizes them onto a host or file the check above does not see:
     any whitespace, control character or backslash in a URL; `https:///host` and other spellings
     without a host right after `//`; this site's host in any case, with a trailing dot or
@@ -113,14 +115,16 @@ PART 2, SELF-CONTAINED:
     link to /draft/. With no draft tree such a link names no file, which the rule above refuses;
     with a tree present, this rule names the link beside PART 1's draft-tree finding;
   - no stylesheet under site/ carries `@import` in any spelling (CSS escapes decoded), every
-    `url(` in one is relative and resolves to a file inside site/assets/, and a site/assets/site.css,
-    where one exists (scripts/build-site.py --check allows that 1 file beside the pages and the
-    copied files), matches the whole permitted grammar: rules (at the top level or inside
-    `@media (prefers-color-scheme: dark|light)`) whose only declarations set `--sw` or
-    `--logo-inset` to a number (baseline README, "Per-site constants").
+    `url(` in one is relative, decodes to no NUL or other character a file path cannot hold
+    (each such `url(` is a finding too), and resolves to a file inside site/assets/, and a
+    site/assets/site.css, where one exists (scripts/build-site.py --check allows that 1 file
+    beside the pages and the copied files), matches the whole permitted grammar: rules (at the
+    top level or inside `@media (prefers-color-scheme: dark|light)`) whose only declarations set
+    `--sw` or `--logo-inset` to a number (baseline README, "Per-site constants").
 
-PART 3, THE PUBLISHED INDEXES (site/llms.txt, site/llms-full.txt, site/robots.txt and
-site/.well-known/security.txt): none of them refers to /draft/. The rule is
+PART 3, THE PUBLISHED INDEXES (site/llms.txt, site/llms-full.txt,
+site/secureconfig-instructions.md, site/robots.txt and site/.well-known/security.txt): none of
+them refers to /draft/. The rule is
 fail-closed and parses no URL, since 2 rounds of URL parsing each missed spellings:
   - the whole file text is normalized: the round { percent-decode; `html.unescape` } repeats until
     the text stops changing, at most 8 rounds (text still changing in a 9th round is refused);
@@ -133,7 +137,9 @@ fail-closed and parses no URL, since 2 rounds of URL parsing each missed spellin
     never need the word, so any literal `draft` anywhere in their deleted text is refused (deleting
     only joins characters, so the deleted text holds every `draft` the kept text holds);
   - site/llms-full.txt, the generated guide corpus, uses "draft" in prose and in `draft-ietf-...`
-    names, so there each match of any of these, on the kept text and on the deleted text, is
+    names, and site/secureconfig-instructions.md, the generated chat fallback file, is built from
+    sources that may, so in each of them a match of any of these, on the kept text and on the
+    deleted text, is
     refused, and a line matched in either is reported once (each read across a line end too, as a
     Markdown link may break there). The kept text keeps a tab or CR that alone separates a word
     from the path, which deleting would join to it; the deleted text joins a path a tab or CR
@@ -164,6 +170,7 @@ Usage: python3 -I -B tools/check_draft.py [--root <repository root>]
 """
 import argparse
 import html
+import os
 import re
 import sys
 import unicodedata
@@ -205,7 +212,7 @@ DOWNLOADS_NAME = "downloads"
 # published file. tools/test_draft.py holds this list to PUBLISHED.
 PUBLISHED_TARGETS = (".well-known/security.txt", "apple-touch-icon.png", "favicon.ico",
                      "favicon.svg", "images/secureconfig-card.png", "llms-full.txt", "llms.txt",
-                     "robots.txt", "sitemap.xml")
+                     "robots.txt", "secureconfig-instructions.md", "sitemap.xml")
 # The rule shape: each raw field is printable ASCII (`!` to `~`), so no control or invisible
 # character, a raw U+FEFF included, can hide in a field or act as a second separator for a
 # parser that splits a rule on more than a plain space.
@@ -235,10 +242,11 @@ QUALITY = "quality/index.html"
 NO_CANONICAL_PAGES = {NOTFOUND: "the 404 page",
                       ADVISORY: "the unlisted advisory page",
                       QUALITY: "the quality matrix page"}
-# The published indexes (PART 3): the hand-written ones refuse the word, the guide corpus refuses
-# each form of the draft path, both read after normalized().
+# The published indexes (PART 3): the hand-written ones refuse the word, and the generated guide
+# corpus and the generated chat fallback file refuse each form of the draft path, all read after
+# normalized().
 STRICT_INDEXES = ("llms.txt", "robots.txt", ".well-known/security.txt")
-CORPUS_INDEX = "llms-full.txt"
+CORPUS_INDEXES = ("llms-full.txt", "secureconfig-instructions.md")
 DRAFT_WORD = re.compile(r"draft")
 # The corpus forms a to e of the docstring, each matched on its own.
 DRAFT_REFS = (
@@ -367,11 +375,33 @@ def parse(text):
     return p
 
 
+def unpathable(text):
+    """None when every character of text can be part of a file path, else what cannot: a NUL,
+    at which the operating system would end the name (Path.resolve() raises ValueError on
+    one), or a character the file system encoding cannot encode, which no file name holds. A
+    link or a stylesheet url() that decodes to one names no file, and is reported as a
+    finding."""
+    if "\x00" in text:
+        return "a NUL character"
+    try:
+        os.fsencode(text)
+    except UnicodeError:
+        return "a character the file system encoding cannot encode"
+    return None
+
+
+def link_path(path):
+    """A root-relative path's part under site/: its query and fragment cut, percent-decoded."""
+    return unquote(path.lstrip("/").split("#", 1)[0].split("?", 1)[0])
+
+
 def resolved(root, path):
     """The resolved file a root-relative path names under site/ (query and fragment cut,
     percent-decoded, dot segments resolved, a folder naming its index.html), or None when it
-    leaves site/."""
-    rel = unquote(path.lstrip("/").split("#", 1)[0].split("?", 1)[0])
+    leaves site/ or decodes to a character no file path can hold (unpathable())."""
+    rel = link_path(path)
+    if unpathable(rel):
+        return None
     target = (root / SITE / rel)
     if rel == "" or rel.endswith("/"):
         target = target / "index.html"
@@ -479,6 +509,9 @@ def check_url(root, value):
         return "is a scheme-relative URL"
     if not value.startswith("/"):
         return "is a relative path; the pages use root-relative paths"
+    unusable = unpathable(link_path(value))
+    if unusable:
+        return f"decodes to {unusable}, which no file path can hold, so it names no file"
     if not resolves(root, value):
         return "names no file under site/"
     return None
@@ -839,7 +872,7 @@ def check(root):
                             f"302 redirect with no bytes of its own, so no file under site/ "
                             f"carries one")
     # PART 3: the published indexes do not refer to /draft/ (fail-closed).
-    for name in (*STRICT_INDEXES, CORPUS_INDEX):
+    for name in (*STRICT_INDEXES, *CORPUS_INDEXES):
         path = root / SITE / name
         if path.is_file():
             findings.extend(index_findings(name, path.read_bytes().decode("utf-8")))
@@ -855,7 +888,13 @@ def check(root):
         for m in URL_FN.finditer(text):
             ref = m.group(2).strip()
             parts = urlsplit(ref)
-            target = (css.parent / unquote(parts.path)).resolve()
+            path = unquote(parts.path)
+            unusable = unpathable(path)
+            if unusable:
+                findings.append(f"{rel}: url({ref!a}) decodes to {unusable}, which no file path "
+                                f"can hold, so it names no file")
+                continue
+            target = (css.parent / path).resolve()
             if parts.scheme or ref.startswith("/") or "\\" in ref or not target.is_file():
                 findings.append(f"{rel}: url({ref!a}) is not a relative path to a file in the site")
                 continue
