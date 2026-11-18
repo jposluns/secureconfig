@@ -167,6 +167,7 @@ render	site/quality/index.html	required
 render	site/advisories/*.html	required
 render	site/advisories/*.txt	required
 render	site/llms-full.txt	required
+render	site/secureconfig-instructions.md	required
 
 # The files the site publishes beside its pages.
 copy	site/llms.txt	required

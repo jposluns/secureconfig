@@ -20,7 +20,8 @@
 # file. A section that relies on others has a `# depends: NAME: NEED...` line below, which
 # tools/select_gates.py reads too: when the list names it, --sections adds each NEED the list
 # lacks, in this file's order, and says so, so a selection that holds generated-committed always
-# runs llms-full and plugin, whose rebuilds it relies on. A section is everything from its
+# runs llms-full and plugin, whose rebuilds it relies on, and instructions, whose in-place
+# comparison it relies on the same way. A section is everything from its
 # `# section: NAME` line to the next such line or to `# end of sections`. What comes before the
 # first section (the helpers, run_gate and the parser preflight) and the summary after the last
 # one run either way. A name holding anything but letters, digits and hyphens (a newline
@@ -31,7 +32,8 @@
 # a block out of this file still find it.
 #
 # generated-committed skips its own rebuild on a clean tree because the llms-full and plugin
-# sections before it already rebuilt HEAD.
+# sections before it already rebuilt HEAD and the instructions section compared its chat
+# fallback file in place.
 #
 # Parallel mode (opt-in). SECURECONFIG_SUITE_JOBS=N, a whole number from 1 to 64, runs up to N
 # sections at once. Unset or 1 is the serial run below, which stays the reference. Any other
@@ -65,7 +67,7 @@
 # another file or line: this file's name and line in a whole serial run and "/dev/fd/3" with
 # the line in the serial run's cut copy, not this file's line, under --sections, but the section's temporary script in a whole parallel run
 # and "/dev/fd/3" with another line under --sections; that line is not left out.
-# depends: generated-committed: llms-full plugin
+# depends: generated-committed: llms-full plugin instructions
 # exclusive: llms-full plugin
 set -uo pipefail
 
@@ -685,17 +687,45 @@ rm -rf plugin
 cp -a "$plugin_tmp" plugin || { bad "could not restore plugin/ from $plugin_tmp"; exit 1; }
 rm -rf "$plugin_tmp"
 
+# section: instructions
+echo "== the chat fallback file is current =="
+# site/secureconfig-instructions.md is generated from the 4 SKILL.md sections the build reads
+# (the rules among them), plugin/always-on.md's closing paragraph and README.md's guide index
+# by scripts/build-instructions.sh, for the same reason the two
+# bundles above are gated: a fallback file that has drifted from those sources hands a chat
+# reader stale rules while the repository looks correct. The fixture tests run first, so what
+# runs is the shipped build; then --check builds the file in memory and compares it with the
+# committed one, so this section rewrites nothing in the working tree.
+if instructions_tests=$(python3 -I -B tools/test_build_instructions.py 2>&1); then
+  printf '%s\n' "$instructions_tests"
+  if grep -q '^  FAIL  ' <<< "$instructions_tests" || ! grep -q '^  ok    ' <<< "$instructions_tests"; then
+    bad "test_build_instructions.py exited 0 without a clean ok result"
+  fi
+else
+  printf '%s\n' "$instructions_tests"
+  bad "test_build_instructions.py failed"
+fi
+if instructions_check=$(bash scripts/build-instructions.sh --check 2>&1); then
+  printf '%s\n' "$instructions_check"
+  if grep -q '^  FAIL  ' <<< "$instructions_check" || ! grep -q '^  ok    ' <<< "$instructions_check"; then
+    bad "build-instructions.sh --check exited 0 without a clean ok result"
+  fi
+else
+  printf '%s\n' "$instructions_check"
+  bad "site/secureconfig-instructions.md failed its freshness check; run bash scripts/build-instructions.sh and commit the result"
+fi
+
 # section: generated-committed
 echo "== the committed generated files match a fresh build of the commit =="
-# The two gates above rebuild in the working tree, so they pass when the working tree is right and
-# the commit is not: a bundle rebuilt but only partly staged (F-PLUGIN-MANIFEST-PARTIAL-STAGE), or
-# a VERSION bump committed without its plugin/plugin.json (F-VERSION-BUMP-NO-REGEN). This gate
-# exports HEAD with git archive on every run and checks the committed plugin.json version against
-# the committed VERSION. Unless git status shows the working tree is HEAD with no change, in which
-# case the gates above already rebuilt HEAD, it also runs the same two builds in the export and
-# compares; that skip relies on the llms-full and plugin sections, which --sections adds whenever
-# it names this one (the `# depends:` line at the top). The self-test runs first, so what runs is
-# the shipped gate.
+# The llms-full, plugin and instructions sections above check the working tree, so they pass when
+# the working tree is right and the commit is not: a bundle rebuilt but only partly staged
+# (F-PLUGIN-MANIFEST-PARTIAL-STAGE), or a VERSION bump committed without its plugin/plugin.json
+# (F-VERSION-BUMP-NO-REGEN). This gate exports HEAD with git archive on every run and checks the
+# committed plugin.json version against the committed VERSION. Unless git status shows the working
+# tree is HEAD with no change, in which case those 3 sections already checked HEAD, it also runs
+# their 3 builds in the export and compares; that skip relies on those 3 sections, which
+# --sections adds whenever it names this one (the `# depends:` line at the top). The self-test
+# runs first, so what runs is the shipped gate.
 for generated_check in test_generated_committed.py check_generated_committed.py; do
   if generated_committed=$(python3 -I -B "tools/$generated_check" 2>&1); then
     printf '%s\n' "$generated_committed"

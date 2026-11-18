@@ -652,8 +652,9 @@ def t13_select_gates():
         sys.path.pop(0)
     depends = select_gates.suite_depends(SUITE.read_text(encoding="utf-8"))
     check(failures, "T13 select_gates reads the `# depends:` line and not `# exclusive:`",
-          depends == {"generated-committed": ["llms-full", "plugin"]}
-          or depends == {"generated-committed": ("llms-full", "plugin")}, repr(depends))
+          depends == {"generated-committed": ["llms-full", "plugin", "instructions"]}
+          or depends == {"generated-committed": ("llms-full", "plugin", "instructions")},
+          repr(depends))
     return failures
 
 

@@ -3,7 +3,8 @@
 
 Each repository carries a guide, VERSION, plugin/plugin.json, a tracked site/index.html and
 stub build scripts that do what the gate depends on the real ones doing: build-llms-full.sh
-writes site/llms-full.txt from the guide, and build-plugin.sh refuses a malformed VERSION,
+writes site/llms-full.txt from the guide, build-instructions.sh writes
+site/secureconfig-instructions.md from it, and build-plugin.sh refuses a malformed VERSION,
 replaces the references directory, writes VERSION into plugin.json with the real script's sed,
 writes VERSION and the guide count from the gate's own tools/_verify_sections.py into SKILL.md
 with the real script's seds, and writes a MANIFEST.sha256. The repository is built and committed
@@ -118,12 +119,18 @@ UNLOADABLE = (
 
 SKIPPED = []
 OK = "  ok    commit "
-REBUILT = "site/llms-full.txt and 4 files under plugin/ match a fresh build of the commit"
+REBUILT = ("site/llms-full.txt, site/secureconfig-instructions.md and 4 files under plugin/ "
+           "match a fresh build of the commit")
 DEFERRED = "the working tree is this commit with no change"
 
 LLMS_BUILD = r"""#!/usr/bin/env bash
 set -euo pipefail
 cat guide.md > site/llms-full.txt
+"""
+
+INSTRUCTIONS_BUILD = r"""#!/usr/bin/env bash
+set -euo pipefail
+cat guide.md > site/secureconfig-instructions.md
 """
 
 PLUGIN_BUILD = r"""#!/usr/bin/env bash
@@ -362,6 +369,7 @@ def write(root, relative, text):
 def build(root):
     run(root, "bash", "scripts/build-llms-full.sh")
     run(root, "bash", "scripts/build-plugin.sh")
+    run(root, "bash", "scripts/build-instructions.sh")
 
 
 def commit(root, *paths):
@@ -375,7 +383,8 @@ def commit(root, *paths):
 def generated(root):
     """Bytes of every generated file in the working tree."""
     files = {}
-    for path in [root / "site" / "llms-full.txt", *sorted((root / "plugin").rglob("*"))]:
+    for path in [root / "site" / "llms-full.txt", root / "site" / "secureconfig-instructions.md",
+                 *sorted((root / "plugin").rglob("*"))]:
         if path.is_file():
             files[path.relative_to(root).as_posix()] = path.read_bytes()
     return files
@@ -403,6 +412,7 @@ def case(change, expected=0, needle=OK, *, also=(), absent=(), worktree_current=
                 write(gate.parent, name, text)
         write(root, "scripts/build-llms-full.sh", LLMS_BUILD)
         write(root, "scripts/build-plugin.sh", PLUGIN_BUILD)
+        write(root, "scripts/build-instructions.sh", INSTRUCTIONS_BUILD)
         write(root, "guide.md", "first text\n")
         write(root, "VERSION", "1.0.5\n")
         write(root, "plugin/plugin.json", PLUGIN_JSON)
@@ -445,7 +455,8 @@ def partial_stage(stage_manifest):
     def change(root):
         write(root, "guide.md", "second text\n")
         build(root)
-        paths = ["guide.md", "site/llms-full.txt", "plugin/references/guide.md"]
+        paths = ["guide.md", "site/llms-full.txt", "site/secureconfig-instructions.md",
+                 "plugin/references/guide.md"]
         if stage_manifest:
             paths.append("plugin/references/MANIFEST.sha256")
         commit(root, *paths)

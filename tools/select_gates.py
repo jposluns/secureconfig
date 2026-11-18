@@ -42,8 +42,9 @@ that also takes plugin-distribution, the section whose gate holds it to the rele
 DEPENDS: a section that relies on others has a `# depends: NAME: NEED...` line in the suite, the
 one place the table is written; the suite's --sections reads the same lines and adds the needs
 itself. generated-committed skips its own rebuild on a clean tree because the llms-full and
-plugin sections before it already rebuilt HEAD, so a selection that holds generated-committed
-also holds llms-full and plugin. A `# depends:` line in any other shape stops the selection
+plugin sections before it already rebuilt HEAD and the instructions section compared the chat
+fallback file in place, so a selection that holds generated-committed also holds llms-full,
+plugin and instructions. A `# depends:` line in any other shape stops the selection
 with exit 2, like an unreadable suite.
 
 FAIL SAFE: every section runs when the list is empty, when a path matches no pattern (a file under
