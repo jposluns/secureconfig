@@ -185,6 +185,8 @@ copy	site/_redirects	optional
 # one exact required copy line per zip it stages and removes the line of a zip that ages out
 # of site/downloads/ (CONTRIBUTING.md "Releasing" step 9).
 copy	releases/SHA256SUMS	optional
+copy	site/downloads/secureconfig-1.0.1351.zip	required
+copy	site/downloads/secureconfig-plugin-1.0.1351.zip	required
 copy	site/.well-known/security.txt	required
 copy	site/favicon.svg	required
 copy	site/favicon.ico	required
