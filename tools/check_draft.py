@@ -75,7 +75,9 @@ PART 1, INDEXABILITY AND NO DRAFT TREE:
     zip that is no longer staged) and refuses any file under site/downloads/ that no record
     names. The literal 302 is required everywhere: a latest link answers 302, never 301, and so
     does every gated redirect. No source or target in the file or the allowlist names /draft/ in
-    any case, percent-encoding or dot-segment spelling, and no file under site/ has a
+    any case, percent-encoding or dot-segment spelling. An allowlist source whose first segment
+    merely starts with `draft`, case folded and percent-decoded, such as /draft.html or /drafts,
+    is refused too, so no gated source even resembles the draft tree. No file under site/ has a
     `-latest.zip` name, since a latest link is a 302 redirect with no bytes of its own.
     tools/check_hosted.py holds the file to the generator's output; tools/check_csp_hashes.py
     holds site/_headers, X-Robots-Tag included.
@@ -584,6 +586,16 @@ def draft_path(value):
     return in_draft(Path(unquote(value.lstrip("/"))))
 
 
+def draft_source(value):
+    """True when a redirect source's first segment, in any case and percent-decoded, starts with
+    DRAFT_NAME: /draft itself, and a name that merely opens with it, such as /draft.html or
+    /drafts."""
+    if not value.startswith("/"):
+        return False
+    parts = Path(unquote(value.lstrip("/"))).parts
+    return bool(parts) and parts[0].casefold().startswith(DRAFT_NAME)
+
+
 def downloads_path(value):
     """True when a redirect field lies under /downloads/: a root-relative path whose first
     segment, in any case and percent-decoded, is DOWNLOADS_NAME."""
@@ -654,7 +666,12 @@ def allowlist_entries(root):
                                 f"or percent-encoding; a host applies the first rule whose "
                                 f"source matches, so a repeated source would make one entry "
                                 f"shadow the other")
-        if (src is not None and draft_path(src)) or (tgt is not None and draft_path(tgt)):
+        if src is not None and draft_source(src):
+            problems.append("has a source whose first segment starts with draft, case folded "
+                            "and percent-decoded; the live site carries no /draft/ tree, so no "
+                            "gated source opens with that name, and /draft.html and /drafts "
+                            "are refused like /draft")
+        if tgt is not None and draft_path(tgt):
             problems.append("names /draft/; the live site carries no /draft/ tree and no "
                             "redirect, gated or generated, names it")
         if ((src is not None and src.lower().endswith(LATEST_SUFFIX))
@@ -747,13 +764,13 @@ def redirect_findings(root):
             parts = line.split(" ")
             matched = target_re.fullmatch(parts[1]) if len(parts) == 3 else None
             if len(parts) != 3 or parts[2] != "302" or not matched:
-                findings.append(f"{REDIRECTS}:{n}: {line!r} is not `{source} "
+                findings.append(f"{REDIRECTS}:{n}: {line!a} is not `{source} "
                                 f"/downloads/<its versioned zip> 302`; the target is that "
                                 f"link's own kind of zip and the status answers 302, never 301")
                 continue
             versions.append(matched.group(1))
             if not (root / SITE / "downloads" / Path(parts[1]).name).is_file():
-                findings.append(f"{REDIRECTS}:{n}: {line!r} names no staged archive; the "
+                findings.append(f"{REDIRECTS}:{n}: {line!a} names no staged archive; the "
                                 f"records pull request copies the released zip into "
                                 f"site/downloads/ byte for byte before a link points at it")
         if len(versions) == 2 and versions[0] != versions[1]:
@@ -763,10 +780,10 @@ def redirect_findings(root):
         if line in rules:
             continue
         if any(draft_path(field) for field in line.split(" ")):
-            findings.append(f"{REDIRECTS}:{n}: {line!r} names /draft/; the live site carries no "
+            findings.append(f"{REDIRECTS}:{n}: {line!a} names /draft/; the live site carries no "
                             f"/draft/ tree and no redirect names it")
             continue
-        findings.append(f"{REDIRECTS}:{n}: {line!r} is not an allowlisted redirect; the file "
+        findings.append(f"{REDIRECTS}:{n}: {line!a} is not an allowlisted redirect; the file "
                         f"holds only the generator's header, the entries of "
                         f"{REDIRECTS_ALLOWLIST} and the 2 latest links")
     return findings

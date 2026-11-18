@@ -5,12 +5,15 @@ WHY: the hosted catalog and the latest links point an installer at bytes by dige
 Code refuses an archive whose digest does not match, so a wrong committed digest breaks every
 hosted install and a right one must come from the release record, never from a hand. This gate
 holds what is committed to what tools/gen_hosted.py writes from the record, so a hand edit, a
-typed digest, a stale latest link or a missing staged archive fails the suite offline.
+typed zip digest, a stale latest link or a missing staged archive fails the suite offline. The
+digests on a release's llms-full.txt and notes lines are checked against nothing, since no gate
+compares those lines with any file, so a wrong one, all zeros included, passes.
 
 WHAT IT CHECKS:
-  - the cumulative record releases/SHA256SUMS parses (gen_hosted.read_records: sha256sum lines
-    whose names carry each release's version, one block per release, newest release first, both
-    zips named per release, nothing named twice, no `-latest` name);
+  - the cumulative record releases/SHA256SUMS parses (gen_hosted.read_records: a byte copy of
+    each release's SHA256SUMS asset, four sha256sum lines per release in the asset's order,
+    llms-full.txt, the two zips, then the notes, LF line ends only, newest release first, no
+    release repeated, no `-latest` name, and only the zip lines feed the checks below);
   - with no record: site/marketplace.json does not exist, site/_redirects, when present,
     equals the generator's output, which then holds no latest line, and nothing sits in
     site/downloads/; a tree with no record, no zip and no generated file passes, so this half

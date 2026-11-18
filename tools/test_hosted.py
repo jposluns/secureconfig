@@ -2,7 +2,8 @@
 """Cases for tools/gen_hosted.py and tools/check_hosted.py, the hosted install surface.
 
 Each case builds a throwaway root under TMPDIR, with a plugin/plugin.json, the cumulative
-release record releases/SHA256SUMS (each release's lines together, newest release first), staged
+release record releases/SHA256SUMS (the four asset lines of each release together, newest
+release first, as the release's SHA256SUMS asset lists them), staged
 archives under site/downloads/ and, in most cases, the generated site/marketplace.json and
 site/_redirects, then runs the generator or the gate on it by path, so nothing touches this
 checkout. The accepted roots are a root with no record, no zip and no generated file (what
@@ -19,10 +20,16 @@ bytes differ from its record, a missing staged archive for the newest release, a
 not staged at all even though redirected, an aged-out zip with no redirect, a recorded zip
 staged as a symbolic link to identical bytes outside site/, and a staged file in
 site/downloads/ that no record names, beside recorded zips and with no record. The record's own
-shape: a record naming a -latest file, a record missing a zip line, a corrupted record line, a
-record without a trailing newline, a line whose name carries no version, a release's lines
-repeated after another release's (a duplicate version), an out-of-order record with the older
-release first, and a stray entry under releases/. The allowlist half: an asset redirect naming a
+shape: a record naming a -latest file, a block whose plugin zip line names the skill zip again,
+a block opening with the skill zip rather than llms-full.txt, a record holding only a block's
+first two lines, a corrupted record line, a record without a trailing newline, a CRLF rewrite
+of the record and a lone CR in it (the record is read as bytes), a skill zip line carrying no
+release archive's name, a release's block repeated after another release's (a duplicate
+version), an out-of-order record with the older release first, and a stray entry under
+releases/. One case (check_step9) copies a release's SHA256SUMS asset byte for byte, written as
+tools/check_release.py writes it with llms-full.txt, the two zips and the notes, and runs
+gen_hosted.py, check_hosted.py and scripts/build-site.py --check on that root, each passing:
+the documented records procedure of CONTRIBUTING.md Releasing step 9. The allowlist half: an asset redirect naming a
 zip no record names, an asset redirect for a recorded zip that is still staged, an allowlist
 entry without a reason, an entry whose source a second entry repeats, and an entry with a raw
 U+FEFF in its source. The rest: a plugin zip whose root plugin.json version differs from its
@@ -117,11 +124,13 @@ def run(tool, d):
 
 def fixture(d, versions=("1.0.7",), stage=None, generate=True, allow=None, zip_version=None,
             zip_data=None):
-    """A root with plugin/plugin.json, the cumulative record releases/SHA256SUMS holding the two
-    zip lines of each version, newest release first, the zips of the stage versions (every
-    version when stage is None) staged in site/downloads/, an optional allowlist, and the
-    generated files; the plugin zips carry zip_version (their own version when None) in their
-    root plugin.json, or are the bytes zip_data, recorded as they are, when it is given."""
+    """A root with plugin/plugin.json, the cumulative record releases/SHA256SUMS holding the
+    four asset lines of each version (llms-full.txt, the two zips, then the notes, as the
+    release's SHA256SUMS asset lists them), newest release first, the zips of the stage
+    versions (every version when stage is None) staged in site/downloads/, an optional
+    allowlist, and the generated files; the plugin zips carry zip_version (their own version
+    when None) in their root plugin.json, or are the bytes zip_data, recorded as they are, when
+    it is given."""
     write(d, "plugin/plugin.json", json.dumps(MANIFEST))
     if allow is not None:
         write(d, "tools/redirects_allowlist.txt", allow)
@@ -132,8 +141,11 @@ def fixture(d, versions=("1.0.7",), stage=None, generate=True, allow=None, zip_v
                                  zip_data or plugin_zip(zip_version or version)}
     lines = []
     for version in sorted(versions, key=lambda v: int(v.rsplit(".", 1)[1]), reverse=True):
+        assets = {"llms-full.txt": b"corpus " + version.encode(),
+                  **archives[version],
+                  f"RELEASE-NOTES-v{version}.md": b"notes " + version.encode()}
         lines += [f"{hashlib.sha256(data).hexdigest()}  {name}"
-                  for name, data in archives[version].items()]
+                  for name, data in assets.items()]
     if lines:
         write_record(d, lines)
     for version in (versions if stage is None else stage):
@@ -212,10 +224,13 @@ CASES = (
      lambda d: (fixture(d), edit(d, "releases/SHA256SUMS",
                                  "  secureconfig-1.0.7.zip", "  secureconfig-latest.zip")),
      "no record lists one", 1),
-    ("a record missing its plugin zip line",
-     lambda d: (fixture(d),
-                write_record(d, ["0" * 64 + "  secureconfig-1.0.7.zip"])),
-     "does not name secureconfig-plugin-1.0.7.zip", 1),
+    ("a record whose plugin zip line names the skill zip again",
+     lambda d: (fixture(d), edit(d, "releases/SHA256SUMS", "  secureconfig-plugin-1.0.7.zip",
+                                 "  secureconfig-1.0.7.zip")),
+     "not secureconfig-plugin-1.0.7.zip", 1),
+    ("a record holding only a release's first two asset lines",
+     lambda d: (fixture(d), write_record(d, record_lines(d)[:2])),
+     "not a multiple of four", 1),
     ("a stray entry under releases/",
      lambda d: (fixture(d), (d / "releases" / "v1.0.9").mkdir()),
      "is not the cumulative release record", 1),
@@ -223,18 +238,32 @@ CASES = (
      lambda d: (fixture(d), edit(d, "releases/SHA256SUMS", "  secureconfig-1.0.7.zip",
                                  " secureconfig-1.0.7.zip")),
      "is not `<64 hex>  <name>`", 1),
-    ("a record line whose name carries no version",
+    ("a record whose skill zip line carries no release archive's name",
      lambda d: (fixture(d), edit(d, "releases/SHA256SUMS", "  secureconfig-1.0.7.zip",
                                  "  notes.txt")),
      "no release archive's name", 1),
-    ("a release's lines repeated after another release's (a duplicate version)",
+    ("a record whose block opens with the skill zip, not llms-full.txt",
+     lambda d: (fixture(d), write_record(d, record_lines(d)[1:] + record_lines(d)[:1])),
+     "not llms-full.txt", 1),
+    ("a release's block repeated after another release's (a duplicate version)",
      lambda d: (fixture(d, versions=("1.0.5", "1.0.7")),
-                write_record(d, record_lines(d) + record_lines(d)[:2])),
+                write_record(d, record_lines(d) + record_lines(d)[:4])),
      "once, together", 1),
     ("an out-of-order record, the older release first",
      lambda d: (fixture(d, versions=("1.0.5", "1.0.7")),
-                write_record(d, record_lines(d)[2:] + record_lines(d)[:2])),
+                write_record(d, record_lines(d)[4:] + record_lines(d)[:4])),
      "newest release first", 1),
+    # The record is read as bytes, so a CRLF or lone-CR rewrite is refused, never read as LF.
+    ("the record rewritten with CRLF line endings",
+     lambda d: (fixture(d), write(d, "releases/SHA256SUMS",
+                                  (d / "releases/SHA256SUMS").read_bytes()
+                                  .replace(b"\n", b"\r\n"))),
+     "holds a carriage return", 1),
+    ("the record with a lone CR in place of its first LF",
+     lambda d: (fixture(d), write(d, "releases/SHA256SUMS",
+                                  (d / "releases/SHA256SUMS").read_bytes()
+                                  .replace(b"\n", b"\r", 1))),
+     "holds a carriage return", 1),
     ("an allowlist entry without a reason",
      lambda d: fixture(d, versions=(), allow="/old / 302\n", generate=False),
      "non-empty reason", 1),
@@ -426,6 +455,59 @@ def check_generator(failures):
     return count
 
 
+def check_step9(failures):
+    """The records procedure of CONTRIBUTING.md Releasing step 9 on a real asset's bytes: the
+    release's SHA256SUMS asset lists llms-full.txt, the two zips and the notes, in that order,
+    exactly as tools/check_release.py sums() writes it; a byte copy of it is the whole record,
+    the zips are staged, and gen_hosted.py, check_hosted.py and scripts/build-site.py --check
+    each pass. The site build writes its pages into the fixture's site/ first, so its --check
+    reads the record, the staged zips and the generated files beside them."""
+    count = 0
+    d = Path(tempfile.mkdtemp())
+    try:
+        write(d, "plugin/plugin.json", json.dumps(MANIFEST))
+        version = "1.0.7"
+        staged = {f"secureconfig-{version}.zip": b"skill " + version.encode(),
+                  f"secureconfig-plugin-{version}.zip": plugin_zip(version)}
+        files = [("llms-full.txt", b"corpus\n"), *staged.items(),
+                 (f"RELEASE-NOTES-v{version}.md", b"# notes\n")]
+        # The asset's bytes as tools/check_release.py sums() writes them for names() minus the
+        # asset itself, which lists the other four.
+        asset = "".join(f"{hashlib.sha256(data).hexdigest()}  {name}\n"
+                        for name, data in files).encode("ascii")
+        write(d, "releases/SHA256SUMS", asset)
+        for name, data in staged.items():
+            write(d, f"site/downloads/{name}", data)
+        count += 1
+        if (d / "releases/SHA256SUMS").read_bytes() != asset:
+            failures.append("the record is not the asset's bytes, so no byte copy was tested")
+        rc, out = run("gen_hosted.py", d)
+        count += 1
+        if rc != 0:
+            failures.append(f"gen_hosted.py refused a record that is a byte copy of a release's "
+                            f"SHA256SUMS asset: {rc}, {out!r}")
+        rc, out = run("check_hosted.py", d)
+        count += 1
+        if rc != 0 or "1 recorded release" not in out:
+            failures.append(f"check_hosted.py refused the step 9 root: {rc}, {out!r}")
+        build = TOOLS.parent / "scripts" / "build-site.py"
+        built = subprocess.run([sys.executable, "-I", "-B", str(build), "--out",
+                                str(d / "site")], capture_output=True, text=True, timeout=300)
+        count += 1
+        if built.returncode != 0:
+            failures.append(f"the site build into the step 9 root failed: "
+                            f"{(built.stdout + built.stderr).strip()!r}")
+        checked = subprocess.run([sys.executable, "-I", "-B", str(build), "--check", "--out",
+                                  str(d / "site")], capture_output=True, text=True, timeout=300)
+        count += 1
+        if checked.returncode != 0:
+            failures.append(f"build-site.py --check refused the step 9 root: "
+                            f"{(checked.stdout + checked.stderr).strip()!r}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    return count
+
+
 def check_depth(failures):
     """gen_hosted.json_object at its depth limit, in process: the depth counts brackets open at
     once outside strings, up to the first closing bracket with no open bracket to close, so the
@@ -488,6 +570,7 @@ def main():
             failures.append(f"{desc}: the gate crashed: {out!r}")
     count += check_escaped(failures)
     count += check_generator(failures)
+    count += check_step9(failures)
     count += check_depth(failures)
     if failures:
         for failure in failures:

@@ -810,8 +810,12 @@ def main():
              "author": {"name": "Jeff Posluns", "url": "https://secureconfig.ai"}}),
             encoding="utf-8")
         (d / "releases").mkdir()
-        record = (f"{digest}  secureconfig-1.0.1234.zip\n"
-                  f"{digest}  secureconfig-plugin-1.0.1234.zip\n")
+        # The record is a byte copy of the release's SHA256SUMS asset: four lines, llms-full.txt
+        # and the notes among them (only the zip lines are staged and checked here).
+        record = (f"{hashlib.sha256(b'corpus').hexdigest()}  llms-full.txt\n"
+                  f"{digest}  secureconfig-1.0.1234.zip\n"
+                  f"{digest}  secureconfig-plugin-1.0.1234.zip\n"
+                  f"{hashlib.sha256(b'notes').hexdigest()}  RELEASE-NOTES-v1.0.1234.md\n")
         (d / "releases" / "SHA256SUMS").write_text(record, encoding="utf-8")
         (d / "tools").mkdir()
         (d / "tools" / "redirects_allowlist.txt").write_text(
