@@ -94,9 +94,10 @@ what the output holds and lacks, and the stand-in's calls:
     line, never "All gates passed.";
   - two names given out of order run in the file's order;
   - a selected gate that fails exits 1 with "One or more gates failed.";
-  - generated-committed alone also runs llms-full and plugin, which its `# depends:` line names,
-    says it added them, and runs both bundle builds (stand-ins that record their call) before
-    its own calls; with plugin named, only llms-full is added; llms-full alone adds nothing;
+  - generated-committed alone also runs llms-full, plugin and instructions, which its
+    `# depends:` line names, says it added them, and runs both bundle builds and the chat
+    fallback check (stand-ins that record their call) before its own calls; with plugin named,
+    llms-full and instructions are added; llms-full alone adds nothing;
   - an unknown name, alone, beside a known one or in another letter case, an empty name (a
     trailing comma or an empty list), a missing list, a misspelled option and an extra argument
     are each refused with status 2 before any heading prints or the stand-in is called;
@@ -362,9 +363,12 @@ fi
 printf '  ok    gate parser preflight: stand-in\\n'
 """
 # The stand-in bundle builds, which record their call in the same log and change nothing, so the
-# llms-full and plugin sections pass on the stand-in tree's files.
+# llms-full and plugin sections pass on the stand-in tree's files; the instructions stand-in also
+# prints the ok line its section requires of the real `--check`.
 BUILD_STANDINS = {"build-llms-full.sh": "printf 'build-llms-full.sh\\n' >> \"$STANDIN_LOG\"\n",
-                  "build-plugin.sh": "printf 'build-plugin.sh\\n' >> \"$STANDIN_LOG\"\n"}
+                  "build-plugin.sh": "printf 'build-plugin.sh\\n' >> \"$STANDIN_LOG\"\n",
+                  "build-instructions.sh": "printf 'build-instructions.sh\\n' >> \"$STANDIN_LOG\"\n"
+                                           "printf '  ok    stand-in\\n'\n"}
 WALKER = "== shared walker scans tracked files only =="
 SECRETS_TESTS = "== secrets scan fails closed on read errors =="
 LLMS_FULL = "== llms-full.txt is current =="
@@ -374,8 +378,10 @@ LLMS_LINKS = "== llms-full.txt links are absolute"
 PREFLIGHT_CALL = "-I -B tools/check_parser_pin.py"
 WALKER_CALL = "-B tools/test_walk.py"
 SECRETS_CALL = "-I -B tools/test_secrets_scan.py"
-# generated-committed's self-test and gate, after the two builds its clean-tree skip relies on.
+# generated-committed's self-test and gate, after the llms-full and plugin builds and the chat
+# fallback check its clean-tree skip relies on.
 GENERATED_CALLS = ["build-llms-full.sh", "build-plugin.sh",
+                   "-I -B tools/test_build_instructions.py", "build-instructions.sh",
                    "-I -B tools/test_generated_committed.py",
                    "-I -B tools/check_generated_committed.py"]
 ADDED = "Sections added: "
@@ -393,15 +399,17 @@ SECTIONS_CASES = (
      ["All gates passed.", "  FAIL  "], [PREFLIGHT_CALL, WALKER_CALL, SECRETS_CALL], ""),
     (["--sections", "walker"], 1, [WALKER, "  FAIL  test_walk.py failed", "One or more gates failed."],
      ["All selected gates passed"], [PREFLIGHT_CALL, WALKER_CALL], WALKER_CALL),
-    # generated-committed's `# depends:` line adds llms-full and plugin, in the file's order.
+    # generated-committed's `# depends:` line adds llms-full, plugin and instructions, in the
+    # file's order.
     (["--sections", "generated-committed"], 0,
-     [f"{ADDED}llms-full,plugin, which a named section depends on", LLMS_FULL, PLUGIN, GENERATED,
-      "All selected gates passed (generated-committed,llms-full,plugin); the other sections "
-      "did not run."],
+     [f"{ADDED}llms-full,plugin,instructions, which a named section depends on", LLMS_FULL,
+      PLUGIN, GENERATED,
+      "All selected gates passed (generated-committed,llms-full,plugin,instructions); the other "
+      "sections did not run."],
      ["All gates passed.", "  FAIL  ", LLMS_LINKS], [PREFLIGHT_CALL, *GENERATED_CALLS], ""),
     (["--sections", "plugin,generated-committed"], 0,
-     [f"{ADDED}llms-full, which", LLMS_FULL, PLUGIN, GENERATED,
-      "All selected gates passed (plugin,generated-committed,llms-full)"],
+     [f"{ADDED}llms-full,instructions, which", LLMS_FULL, PLUGIN, GENERATED,
+      "All selected gates passed (plugin,generated-committed,llms-full,instructions)"],
      ["All gates passed.", "  FAIL  ", LLMS_LINKS], [PREFLIGHT_CALL, *GENERATED_CALLS], ""),
     (["--sections", "llms-full"], 0, [LLMS_FULL, "All selected gates passed (llms-full)"],
      [ADDED, PLUGIN, GENERATED, "  FAIL  "], [PREFLIGHT_CALL, "build-llms-full.sh"], ""),

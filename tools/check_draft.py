@@ -120,8 +120,9 @@ PART 2, SELF-CONTAINED:
     top level or inside `@media (prefers-color-scheme: dark|light)`) whose only declarations set
     `--sw` or `--logo-inset` to a number (baseline README, "Per-site constants").
 
-PART 3, THE PUBLISHED INDEXES (site/llms.txt, site/llms-full.txt, site/robots.txt and
-site/.well-known/security.txt): none of them refers to /draft/. The rule is
+PART 3, THE PUBLISHED INDEXES (site/llms.txt, site/llms-full.txt,
+site/secureconfig-instructions.md, site/robots.txt and site/.well-known/security.txt): none of
+them refers to /draft/. The rule is
 fail-closed and parses no URL, since 2 rounds of URL parsing each missed spellings:
   - the whole file text is normalized: the round { percent-decode; `html.unescape` } repeats until
     the text stops changing, at most 8 rounds (text still changing in a 9th round is refused);
@@ -134,7 +135,9 @@ fail-closed and parses no URL, since 2 rounds of URL parsing each missed spellin
     never need the word, so any literal `draft` anywhere in their deleted text is refused (deleting
     only joins characters, so the deleted text holds every `draft` the kept text holds);
   - site/llms-full.txt, the generated guide corpus, uses "draft" in prose and in `draft-ietf-...`
-    names, so there each match of any of these, on the kept text and on the deleted text, is
+    names, and site/secureconfig-instructions.md, the generated chat fallback file, is built from
+    sources that may, so in each of them a match of any of these, on the kept text and on the
+    deleted text, is
     refused, and a line matched in either is reported once (each read across a line end too, as a
     Markdown link may break there). The kept text keeps a tab or CR that alone separates a word
     from the path, which deleting would join to it; the deleted text joins a path a tab or CR
@@ -207,7 +210,7 @@ DOWNLOADS_NAME = "downloads"
 # published file. tools/test_draft.py holds this list to PUBLISHED.
 PUBLISHED_TARGETS = (".well-known/security.txt", "apple-touch-icon.png", "favicon.ico",
                      "favicon.svg", "images/secureconfig-card.png", "llms-full.txt", "llms.txt",
-                     "robots.txt", "sitemap.xml")
+                     "robots.txt", "secureconfig-instructions.md", "sitemap.xml")
 # The rule shape: each raw field is printable ASCII (`!` to `~`), so no control or invisible
 # character, a raw U+FEFF included, can hide in a field or act as a second separator for a
 # parser that splits a rule on more than a plain space.
@@ -237,10 +240,11 @@ QUALITY = "quality/index.html"
 NO_CANONICAL_PAGES = {NOTFOUND: "the 404 page",
                       ADVISORY: "the unlisted advisory page",
                       QUALITY: "the quality matrix page"}
-# The published indexes (PART 3): the hand-written ones refuse the word, the guide corpus refuses
-# each form of the draft path, both read after normalized().
+# The published indexes (PART 3): the hand-written ones refuse the word, and the generated guide
+# corpus and the generated chat fallback file refuse each form of the draft path, all read after
+# normalized().
 STRICT_INDEXES = ("llms.txt", "robots.txt", ".well-known/security.txt")
-CORPUS_INDEX = "llms-full.txt"
+CORPUS_INDEXES = ("llms-full.txt", "secureconfig-instructions.md")
 DRAFT_WORD = re.compile(r"draft")
 # The corpus forms a to e of the docstring, each matched on its own.
 DRAFT_REFS = (
@@ -851,7 +855,7 @@ def check(root):
                             f"302 redirect with no bytes of its own, so no file under site/ "
                             f"carries one")
     # PART 3: the published indexes do not refer to /draft/ (fail-closed).
-    for name in (*STRICT_INDEXES, CORPUS_INDEX):
+    for name in (*STRICT_INDEXES, *CORPUS_INDEXES):
         path = root / SITE / name
         if path.is_file():
             findings.extend(index_findings(name, path.read_bytes().decode("utf-8")))

@@ -80,9 +80,11 @@ from _markdown import Fences  # noqa: E402  one shared definition of a fenced bl
 
 SKIP_DIRS = {".git", "node_modules", "__pycache__", "tools", "scripts", ".github", ".aiqt"}
 
-# Generated. Its content comes from the guides, so a finding here is a duplicate of one
-# there, and reporting both would send a reader to the file they must not hand-edit.
-GENERATED = {"llms-full.txt"}
+# Generated. Each one's content comes from scanned sources (the guides for the bundle;
+# SKILL.md, plugin/always-on.md and README.md for the chat fallback file), so a finding here
+# is a duplicate of one there, and reporting both would send a reader to the file they must
+# not hand-edit.
+GENERATED = {"llms-full.txt", "secureconfig-instructions.md"}
 
 # The changelog records what changed, which for a placeholder replacement means naming the
 # old value. Scanning it would make this very change undocumentable: an honest entry saying

@@ -10,11 +10,11 @@ case, site/marketplace.json (the site sections plus plugin-distribution, whose g
 hosted catalog to the release record), and each of the root project records CHANGELOG.md (with version-basis, llms-full, plugin and
 generated-committed), TODO.md, DONE.md, DECISIONS.md and PENDING-DECISIONS.md. A list of scoped
 paths, mixed, selects the union of their sections in the suite's order, and never every section.
-Every scoped selection that holds generated-committed holds llms-full and plugin, and so does a
-map entry that names generated-committed alone. The needs come from the suite's `# depends:`
-lines, which tools/run_all_checks.sh --sections reads too: they are exactly
-generated-committed's llms-full and plugin, each a section of the suite, and a line in another
-shape, or a second line for one section, is refused.
+Every scoped selection that holds generated-committed holds llms-full, plugin and instructions,
+and so does a map entry that names generated-committed alone. The needs come from the suite's
+`# depends:` lines, which tools/run_all_checks.sh --sections reads too: they are exactly
+generated-committed's llms-full, plugin and instructions, each a section of the suite, and a
+line in another shape, or a second line for one section, is refused.
 
 EVERY SECTION: each kind of path that is not scoped content selects every section, through the
 pattern the case names or through no pattern: under site/ or site-src/, every file outside the
@@ -63,14 +63,15 @@ RECORDS = ("CHANGELOG.md", "TODO.md", "DONE.md", "DECISIONS.md", "PENDING-DECISI
 ANY = ("secrets", "local-links", "llms-full-links", "export-lists")
 SITE = ("copy-buttons", "baseline-pin", "palette", "overflow", "site-build", "install-blocks",
         "site-draft", "pages-build", "site-csp", "security-txt", "sitemap", "guide-wiring", "guide-categories",
-        "llms-full", "plugin", "generated-committed", "prose-conventions", "aiqt-baseline") + ANY
+        "llms-full", "plugin", "instructions", "generated-committed", "prose-conventions",
+        "aiqt-baseline") + ANY
 MARKDOWN = ("bare-urls", "verify-tls", "guard-conventions", "unfiltered-ss", "prose-conventions",
             "shell-blocks", "bracket-ranges", "pinned-citations", "placeholders",
             "aiqt-baseline") + ANY
 # CHANGELOG.md also feeds version-basis, which reads its newest dated heading, the two bundle
 # builds that run it, and generated-committed.
 CHANGELOG = MARKDOWN + ("changelog-prs", "changelog-format", "version-basis", "llms-full",
-                        "plugin", "generated-committed")
+                        "plugin", "instructions", "generated-committed")
 # The directories whose every file is code, checks or a bundle, and so selects every section.
 EVERY_DIRS = ("plugin", "tools", "scripts", ".baseline", ".aiqt", ".github")
 # The only endings, in any case, that make a file under site/ or site-src/ content.
@@ -221,9 +222,10 @@ def check_cases(failures):
     for paths in [[path] for _, path, _ in SCOPED] + list(SCOPED_LISTS):
         chosen, _ = sg.select(paths, NAMES, DEPENDS)
         count += 1
-        if "generated-committed" in chosen and not {"llms-full", "plugin"} <= set(chosen):
-            failures.append(f"{paths!r} selects generated-committed without llms-full and "
-                            f"plugin: {chosen!r}")
+        if "generated-committed" in chosen and not {"llms-full", "plugin",
+                                                    "instructions"} <= set(chosen):
+            failures.append(f"{paths!r} selects generated-committed without llms-full, plugin "
+                            f"and instructions: {chosen!r}")
     saved = sg.COMPILED
     alone = ("generated-committed",)
     sg.COMPILED = (("x.md", sg.pattern_re("x.md", alone), alone),)
@@ -232,9 +234,10 @@ def check_cases(failures):
     finally:
         sg.COMPILED = saved
     count += 1
-    if not {"generated-committed", "llms-full", "plugin"} <= set(chosen) or chosen == NAMES:
+    if (not {"generated-committed", "llms-full", "plugin", "instructions"} <= set(chosen)
+            or chosen == NAMES):
         failures.append(f"a map entry naming generated-committed alone should also select "
-                        f"llms-full and plugin: {chosen!r}")
+                        f"llms-full, plugin and instructions: {chosen!r}")
     for kind, paths, pattern in EVERY:
         chosen, notes = sg.select(paths, NAMES, DEPENDS)
         count += 1
@@ -276,9 +279,9 @@ def check_map(failures):
         failures.append(f"a `# section:` line is not `# section: NAME`: "
                         f"{[m for m in markers if not sg.SECTION.fullmatch(m)]!r}")
     count += 1
-    if DEPENDS != {"generated-committed": ("llms-full", "plugin")}:
+    if DEPENDS != {"generated-committed": ("llms-full", "plugin", "instructions")}:
         failures.append(f"the suite's `# depends:` lines should give generated-committed exactly "
-                        f"llms-full and plugin: {DEPENDS!r}")
+                        f"llms-full, plugin and instructions: {DEPENDS!r}")
     needs = {n for section, wanted in DEPENDS.items() for n in (section, *wanted)}
     count += 1
     if needs - set(NAMES):

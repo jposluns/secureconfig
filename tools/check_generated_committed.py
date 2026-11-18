@@ -4,8 +4,9 @@
 WHAT THIS CATCHES: two findings closed on 2026-09-28. F-PLUGIN-MANIFEST-PARTIAL-STAGE is a
 plugin bundle rebuilt in the working tree and only partly staged, so the commit carried
 generated files that no build of that commit produces. F-VERSION-BUMP-NO-REGEN is a VERSION
-bump committed without the plugin/plugin.json it regenerates. The two staleness gates in
-tools/run_all_checks.sh rebuild site/llms-full.txt and plugin/ in the WORKING TREE and
+bump committed without the plugin/plugin.json it regenerates. The 3 staleness gates in
+tools/run_all_checks.sh, its llms-full, plugin and instructions sections, build
+site/llms-full.txt, plugin/ and site/secureconfig-instructions.md from the WORKING TREE and
 compare, so they pass whenever the working tree is right, including when the rebuilt files
 were never committed. CI checks out the commit, so there those gates already decide the
 commit; this gate gives a local run after committing the same answer before a push.
@@ -39,17 +40,18 @@ WHAT IT CHECKS, for one commit (HEAD unless --rev names another):
   copy, not the commit's. Without the pinned parser the commit could not be checked, and nor
   could it when that parser cannot be loaded at all, from a lock beside this gate that cannot
   be read or parsed or from an install without its version metadata; each is one line;
-- unless the rebuild is skipped as below, scripts/build-llms-full.sh and then
-  scripts/build-plugin.sh run in the export, the scripts and order the staleness gates use,
-  and each must exit 0;
-- site/llms-full.txt and every file under plugin/ are then compared, byte for byte, with what
-  the commit carried. A file the build changes, creates or removes is a finding, and a
-  symbolic link is compared by its target.
+- unless the rebuild is skipped as below, scripts/build-llms-full.sh, then
+  scripts/build-plugin.sh and then scripts/build-instructions.sh run in the export, the scripts
+  and order the staleness gates use, and each must exit 0;
+- site/llms-full.txt, site/secureconfig-instructions.md and every file under plugin/ are then
+  compared, byte for byte, with what the commit carried. A file the build changes, creates or
+  removes is a finding, and a symbolic link is compared by its target.
 
 WHEN IT DOES NOT REBUILD: when the commit is HEAD and `git status` reports nothing, no staged,
-modified or untracked file, the working tree is the commit, and the two staleness gates, which
-run earlier in tools/run_all_checks.sh, have already rebuilt exactly this commit. The gate then
-checks the version and stops, which saves the minutes the two builds take; that is the CI case.
+modified or untracked file, the working tree is the commit, and the llms-full and plugin
+staleness gates, which run earlier in tools/run_all_checks.sh, have already rebuilt exactly this
+commit, whose chat fallback file the instructions section has compared in place. The gate then
+checks the version and stops, which saves the minutes the 3 builds take; that is the CI case.
 Run on its own with a clean tree, it relies on those staleness gates and says so in its ok
 line. Any staged, modified or untracked file, a --rev other than HEAD, a `git status` that
 cannot run, or --rebuild makes it rebuild the export. The skip trusts `git status`, which does
@@ -62,7 +64,7 @@ WHAT IT DOES NOT CHECK: the index. A run before committing checks the previous c
 is why CONTRIBUTING.md says to run the suite again after committing; uncommitted edits stay
 with the working-tree staleness gates. It does not check file modes, whether VERSION names the
 right pull request, which no offline gate can know, or any generated file other than
-site/llms-full.txt and plugin/. `git archive` applies the export-ignore and export-subst
+site/llms-full.txt, site/secureconfig-instructions.md and plugin/. `git archive` applies the export-ignore and export-subst
 attributes; .gitattributes sets neither today, and one set on a build input would make the
 export differ from the commit.
 
@@ -86,6 +88,7 @@ from _verify_sections import SkillHtml, counted_guides, skill_counts  # noqa: E4
 from check_verify_marking import ParserUnavailable, gate_parser  # noqa: E402  as skill_counts()
 
 LLMS_FULL = "site/llms-full.txt"
+INSTRUCTIONS = "site/secureconfig-instructions.md"
 PLUGIN = "plugin"
 MANIFEST = "plugin/plugin.json"
 SKILL = "plugin/skills/secureconfig/SKILL.md"
@@ -99,9 +102,10 @@ SKILL_VERSION = re.compile(r'  version: "([^"]*)"')
 # included, wrapped or not, and again only where it stands on one line as written; it
 # raises SkillHtml, a finding here, for any "<!--" in the front matter and any other HTML in the
 # body, inline HTML included, which it does not read.
-BUILDS = ("scripts/build-llms-full.sh", "scripts/build-plugin.sh")
-REMEDY = ("run bash scripts/build-llms-full.sh and bash scripts/build-plugin.sh, then commit "
-          "every file they change")
+BUILDS = ("scripts/build-llms-full.sh", "scripts/build-plugin.sh",
+          "scripts/build-instructions.sh")
+REMEDY = ("run bash scripts/build-llms-full.sh, bash scripts/build-plugin.sh and bash "
+          "scripts/build-instructions.sh, then commit every file they change")
 
 
 class CannotCheck(Exception):
@@ -162,9 +166,10 @@ def entry(path):
 def snapshot(root):
     """Each generated file under root, by its slash-separated relative path."""
     found = {}
-    item = entry(root / LLMS_FULL)
-    if item is not None:
-        found[LLMS_FULL] = item
+    for name in (LLMS_FULL, INSTRUCTIONS):
+        item = entry(root / name)
+        if item is not None:
+            found[name] = item
     base = root / PLUGIN
     if base.is_dir() and not base.is_symlink():
         for path in sorted(base.rglob("*")):
@@ -290,7 +295,7 @@ def parser_failure():
 
 
 def build_findings(tree):
-    """Run both builds in the export; a finding for the first one that does not exit 0."""
+    """Run the 3 builds in the export; a finding for the first one that does not exit 0."""
     for script in BUILDS:
         try:
             done = subprocess.run(["bash", script], cwd=tree, capture_output=True, text=True,
@@ -365,7 +370,7 @@ def main(argv=None):
         if rebuild:
             files = sum(1 for path in committed if path.startswith(PLUGIN + "/"))
             print(f"  ok    {label}: {MANIFEST} names VERSION {version}, SKILL.md names it and "
-                  f"states {count} guides, and {LLMS_FULL} and "
+                  f"states {count} guides, and {LLMS_FULL}, {INSTRUCTIONS} and "
                   f"{files} files under {PLUGIN}/ match a fresh build of the commit")
         else:
             print(f"  ok    {label}: {MANIFEST} names VERSION {version}, SKILL.md names it and "
