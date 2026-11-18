@@ -78,8 +78,10 @@ The schema cases (schema_cases()) remove, one at a time, each key CONTENT_SCHEMA
 first list item where it occurs, and give each a value of another JSON type; each must raise
 SourceError naming the key. Removing each key the file holds, at the first list item where it
 occurs, must raise SourceError or build every page and the plain-text copy. An evidence pair
-of 3 items, a boolean rule number and a numeric next line are read errors too, and the script on
-a tree whose content.json has no "home" exits 2 in 1 FAIL line naming it.
+of 3 items, a boolean rule number, a numeric next line and a null rule_edits are read errors
+too. A null guides.next.line must build every page and the plain-text copy as with that key
+removed, and the script on a tree whose content.json has no "home" exits 2 in 1 FAIL line
+naming it.
 """
 import hashlib
 import html
@@ -273,9 +275,10 @@ def schema_cases():
     every key the file holds, the ones the pages do not read included, and each removal must
     either raise SourceError or build every page and the plain-text copy, so a key the pages
     read that CONTENT_SCHEMA leaves out ends in a KeyError here. A few more cases hold an
-    evidence pair of 3 items, a boolean rule number and an optional key of the wrong type to
-    the check, and one runs the script on a tree whose file has no "home", for exit 2 and 1
-    FAIL line naming it, with no traceback."""
+    evidence pair of 3 items, a boolean rule number, an optional key of the wrong type and a
+    null optional list to the check, one holds a null guides.next.line to a build equal to
+    one with that key removed, and one runs the script on a tree whose file has no "home",
+    for exit 2 and 1 FAIL line naming it, with no traceback."""
     failures, count = [], 0
     original = json.loads((ROOT / build_site.CONTENT).read_text(encoding="utf-8"))
     root = Path(tempfile.mkdtemp())
@@ -340,12 +343,31 @@ def schema_cases():
                  "for_ai.rule_edits[0].rule is a boolean, where the build reads an integer"),
                 ("a next line that is a number", ("guides", "next"),
                  lambda p: p.__setitem__("line", 1),
-                 "guides.next.line is an integer, where the build reads a string")):
+                 "guides.next.line is an integer, where the build reads a string or null"),
+                ("a null rule edits list", ("for_ai",),
+                 lambda p: p.__setitem__("rule_edits", None),
+                 "for_ai.rule_edits is null, where the build reads a list")):
             count += 1
             why = attempt(edited(where, change))
             if why != f"SourceError: {build_site.CONTENT}: {expected}":
                 failures.append(f"site-src/content.json with {desc}: expected the read error "
                                 f"{expected!r}, got {why!r}")
+        # next_block() renders no line for a null next line, as for a missing one, so the schema
+        # admits null there, and every page and the plain-text copy are built as with it removed.
+        count += 1
+        built = []
+        for change in (lambda p: p.__setitem__("line", None), lambda p: p.pop("line")):
+            (root / build_site.CONTENT).write_text(
+                json.dumps(edited(("guides", "next"), change)), encoding="utf-8")
+            try:
+                b = build_site.Builder("/", root=root)
+                built.append((b.build(), b.texts()))
+            except Exception as exc:  # noqa: BLE001  any exception is the failure
+                built.append(f"{type(exc).__name__}: {exc}")
+        if isinstance(built[0], str) or built[0] != built[1]:
+            failures.append(f"site-src/content.json with a null guides.next.line: expected every "
+                            f"page built as with the key removed, got "
+                            f"{built[0] if isinstance(built[0], str) else 'other pages'!r}")
         # The whole script on a tree whose content.json has no "home": exit 2 and 1 FAIL line.
         count += 1
         for rel in ("scripts/build-site.py", "tools/check_csp_hashes.py", "tools/gen_hosted.py",

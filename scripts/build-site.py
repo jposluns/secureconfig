@@ -191,15 +191,26 @@ class Either:
         self.key, self.present, self.absent = key, present, absent
 
 
+class Nullable:
+    """A content.json value read as the scalar shape `scalar` (str or int), or JSON null, which
+    the build reads as if the key were absent."""
+
+    def __init__(self, scalar):
+        self.scalar = scalar
+
+
 # Every key of site-src/content.json that the pages read, with the JSON type the build reads it
 # as, checked once when read_sources() loads the file (content_problem()), so a missing or
 # wrongly typed key is a read error that names it (exit 2), never a traceback. An object is a
 # dict of key to shape; a key ending in "?" may be absent. A list of 1 shape is a list whose every
 # item has that shape, and a tuple is a list of exactly that many items, each of its shape. str
-# and int are a JSON string and a JSON integer (true and false are not integers). Keys the pages
-# do not read, such as each entry's "source", are not checked.
+# and int are a JSON string and a JSON integer (true and false are not integers). Nullable(str)
+# is a JSON string or null, for the one key the build reads as absent when it is null: next_block()
+# renders no line for a null "line", as for a missing one. A null "rule_edits" is refused, because
+# read_sources() iterates it. Keys the pages do not read, such as each entry's "source", are not
+# checked.
 TEXT = {"text": str}
-NEXT = {"text": str, "href": str, "line?": str}
+NEXT = {"text": str, "href": str, "line?": Nullable(str)}
 CONTENT_SCHEMA = {
     "home": {"description": TEXT, "kicker": TEXT, "statement": TEXT, "intro": TEXT, "value": TEXT,
              "start": {"text": str, "href": str},
@@ -254,6 +265,8 @@ def shape_name(shape):
         return "a list"
     if isinstance(shape, tuple):
         return f"a list of {len(shape)} items"
+    if isinstance(shape, Nullable):
+        return f"{shape_name(shape.scalar)} or null"
     return "a string" if shape is str else "an integer"
 
 
@@ -265,6 +278,10 @@ def content_problem(value, shape, where=""):
     if isinstance(shape, Either):
         shape = shape.present if isinstance(value, dict) and shape.key in value else shape.absent
     found = json_kind(value)
+    if isinstance(shape, Nullable):
+        if found in ("null", shape_name(shape.scalar)):
+            return None
+        return f"{CONTENT}: {where} is {found}, where the build reads {shape_name(shape)}"
     if isinstance(shape, dict):
         if found != "an object":
             return f"{CONTENT}: {where} is {found}, where the build reads an object"
