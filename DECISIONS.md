@@ -68,20 +68,22 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     check uses. In `tools/check_draft.py`, remove every constant and helper that only the removed
     admission uses, `PUBLISHED_TARGETS` among them, with its comments. Once a release record exists,
     `tools/gen_hosted.py` writes `site/_redirects` and `scripts/build-site.py --check` requires it, so a
-    revert changes both. In `tools/gen_hosted.py`, remove `redirects_text()`, the `redirects` value in `main()` and
-    the write that uses it, and every constant and helper that only the removed code uses, with its comments:
-    `REDIRECTS`, `ALLOWLIST`, `ENTRY`, `HEADER`, `read_allowlist()` and `latest_lines()`. In
-    `scripts/build-site.py`, remove `_redirects` from `HOSTED` and from the files that `hosted_problems()` expects,
-    so the root `--check` refuses a `site/_redirects` as a file outside `PUBLISHED`, and make the finding that
-    function returns when the record or `plugin/plugin.json` cannot be used name `marketplace.json` alone. In
-    `tools/test_build_site.py`, remove from the hosted cases the `_redirects` they write into the output folder, the
-    `tools/redirects_allowlist.txt` they write beside it and the cases for an edited and a missing `_redirects`.
-    Remove any committed copy of `site/_redirects`. Whether or not a copy is
-    committed, remove the optional `site/_redirects` copy line of `export/public-allowlist.txt`. Then
-    rewrite every docstring, comment and printed line, and CONTRIBUTING.md's Releasing step 9, that still
-    names a removed file or describes an admitted or generated `site/_redirects`, among them those in
-    `tools/check_draft.py`, `tools/test_draft.py`, `tools/gen_hosted.py`, `tools/test_build_site.py`,
-    `scripts/build-site.py` and `export/public-allowlist.txt`. Then record the withdrawing ruling here.
+    revert changes both. In `tools/gen_hosted.py`, remove `redirects_text()`, the `redirects` value in
+    `main()` and the write that uses it, and every constant and helper that only the removed code uses,
+    with its comments: `REDIRECTS`, `ALLOWLIST`, `ENTRY`, `HEADER`, `read_allowlist()` and
+    `latest_lines()`. In `scripts/build-site.py`, remove `_redirects` from `HOSTED` and from the files
+    that `hosted_problems()` expects, so the root `--check` refuses a `site/_redirects` as a file outside
+    `PUBLISHED`, and make the finding that function returns when the record or `plugin/plugin.json` cannot
+    be used name `marketplace.json` alone. In `tools/test_build_site.py`, remove from the hosted cases the
+    `_redirects` they write into the output folder, the `tools/redirects_allowlist.txt` they write beside
+    it, the `(d / "tools").mkdir()` line that creates its folder and the `shutil.rmtree(d / "tools")` line
+    that deletes that folder, and the cases for an edited and a missing `_redirects`. Remove any committed
+    copy of `site/_redirects`. Whether or not a copy is committed, remove the optional `site/_redirects`
+    copy line of `export/public-allowlist.txt`. Then rewrite every docstring, comment and printed line,
+    and CONTRIBUTING.md's Releasing step 9, that still names a removed file or describes an admitted or
+    generated `site/_redirects`, among them those in `tools/check_draft.py`, `tools/test_draft.py`,
+    `tools/gen_hosted.py`, `tools/test_build_site.py`, `scripts/build-site.py` and
+    `export/public-allowlist.txt`. Then record the withdrawing ruling here.
     `scripts/build-site.py` imports `tools/gen_hosted.py`:
     `hosted_problems()` holds the generated files to its output, and the build also reads
     `site-src/content.json` through its `json_object` reader. So removing `tools/gen_hosted.py` needs
