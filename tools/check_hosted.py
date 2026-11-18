@@ -46,8 +46,10 @@ WHAT IT CHECKS:
     each a finding in 1 FAIL line, never a traceback. So is a root plugin.json whose zip entry
     declares more than MANIFEST_MAX bytes (64 KiB) uncompressed or that is compressed with a
     method other than stored or deflated, and it is not read, so a decompression bomb is a
-    finding, never a MemoryError. When the zip gains .claude-plugin/plugin.json, this check will
-    be extended to it.
+    finding, never a MemoryError. So is a zip whose end record declares a central directory of
+    more than CENTRAL_MAX bytes (1 MiB), and it is not opened, since zipfile reads and parses
+    the whole central directory when it opens a zip. When the zip gains
+    .claude-plugin/plugin.json, this check will be extended to it.
 
 Offline, standard library only, and it writes nothing. Exit 0 ok; 1 on a finding, which
 includes a record, an allowlist or a plugin/plugin.json that cannot be used; 2 on a read error,
@@ -86,6 +88,18 @@ MANIFEST_MAX = 64 * 1024
 # bzip2 and LZMA among them, it decompresses each chunk of compressed data it reads whole,
 # however large the output, so a member compressed with one is not read.
 BOUNDED_METHODS = (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)
+# The cap on a staged plugin zip's central directory, on the size its end record declares, or
+# its zip64 end record when it has one. When zipfile opens a zip, it reads exactly that many
+# bytes, the ones that end where that record starts, and builds an entry for each record in
+# them, every record 46 bytes at least, so DOWNLOAD_MAX alone admits a zip of 455902 entries. A
+# zip over this cap is refused before zipfile.ZipFile is given it. So the cap bounds the bytes
+# zipfile reads and parses as the central directory, and with them the number of entries, at
+# most 22795, and the total length of their names, extra fields and comments. It does not make
+# the parse cost linear in those bytes: zipfile copies the rest of a record's extra field after
+# each field in it, so its time on that record grows with the square of the
+# extra field's length, which the format caps at 65535 bytes. The plugin zip of v1.0.1351 has
+# 117 entries in a central directory of 10487 bytes.
+CENTRAL_MAX = 1024 * 1024
 
 SITE = Path("site")
 DOWNLOADS = SITE / "downloads"
@@ -121,27 +135,50 @@ def staged_digest(root, name):
     return digest.hexdigest()
 
 
+def central_directory_size(staged):
+    """The size in bytes of the central directory that the end record of the zip open for
+    binary reading as staged declares, or None when no end record is found, a zip that
+    zipfile.ZipFile then refuses. The record is found by zipfile's _EndRecData(), the function
+    ZipFile calls to find it, so this is the size ZipFile would read: when a zip64 end record is
+    found, the size it declares, which _EndRecData() puts in place of the end record's. That
+    function is not part of zipfile's documented interface, so a Python without it raises
+    AttributeError here, which zip_manifest_version() reports as a finding."""
+    record = zipfile._EndRecData(staged)
+    return None if record is None else record[zipfile._ECD_SIZE]
+
+
 def zip_manifest_version(path):
     """The version in the plugin.json at the root of the plugin zip at path, or the reason it
     cannot be used: any archive or manifest it cannot read or use is a reason, never an
-    exception. The member is read only when the size its entry declares is at most
-    MANIFEST_MAX and its compression method is one in BOUNDED_METHODS, and then by a read of at
-    most MANIFEST_MAX + 1 bytes, so a decompression bomb is a reason, never a MemoryError."""
+    exception. The file is opened once, and its end record is read from that open file, which
+    is then the one given to zipfile.ZipFile, so the two read the same file even if the path is
+    replaced in between. ZipFile is given it only when no end record is found, a zip ZipFile
+    then refuses, or when the end record declares a central directory of at most CENTRAL_MAX
+    bytes. The member is read only when the size its entry declares is at most MANIFEST_MAX and
+    its compression method is one in BOUNDED_METHODS, and then by a read of at most
+    MANIFEST_MAX + 1 bytes, so a decompression bomb is a reason, never a MemoryError."""
     try:
-        with zipfile.ZipFile(path) as archive:
-            info = archive.getinfo("plugin.json")
-            if info.file_size > MANIFEST_MAX:
-                return None, (f"its root plugin.json declares {info.file_size} bytes "
-                              f"uncompressed, over the {MANIFEST_MAX}-byte cap on that member, "
-                              f"so it is not read")
-            # An unsupported method or an encrypted member is refused here, before any data is
-            # read, with the exception zipfile raises for it.
-            with archive.open(info) as member:
-                if info.compress_type not in BOUNDED_METHODS:
-                    return None, (f"its root plugin.json uses compression method "
-                                  f"{info.compress_type}, which this gate does not read: only a "
-                                  f"stored or deflated member is decompressed in bounded steps")
-                raw = member.read(MANIFEST_MAX + 1)
+        with open(path, "rb") as staged:
+            size = central_directory_size(staged)
+            if size is not None and size > CENTRAL_MAX:
+                return None, (f"its end record, or its zip64 end record when it has one, "
+                              f"declares a central directory of {size} bytes, over the "
+                              f"{CENTRAL_MAX}-byte cap on it, so the zip is not opened")
+            with zipfile.ZipFile(staged) as archive:
+                info = archive.getinfo("plugin.json")
+                if info.file_size > MANIFEST_MAX:
+                    return None, (f"its root plugin.json declares {info.file_size} bytes "
+                                  f"uncompressed, over the {MANIFEST_MAX}-byte cap on that "
+                                  f"member, so it is not read")
+                # An unsupported method or an encrypted member is refused here, before any data
+                # is read, with the exception zipfile raises for it.
+                with archive.open(info) as member:
+                    if info.compress_type not in BOUNDED_METHODS:
+                        return None, (f"its root plugin.json uses compression method "
+                                      f"{info.compress_type}, which this gate does not read: "
+                                      f"only a stored or deflated member is decompressed in "
+                                      f"bounded steps")
+                    raw = member.read(MANIFEST_MAX + 1)
             # zipfile stops a member's output at its declared size, so this holds already; the
             # bounded read keeps it true without relying on that.
             if len(raw) > MANIFEST_MAX:
@@ -151,8 +188,8 @@ def zip_manifest_version(path):
         # The file is an untrusted archive of at most DOWNLOAD_MAX bytes, and zipfile and its
         # decompressors raise many unrelated types on damaged ones (BadZipFile, KeyError,
         # ValueError, OSError, NotImplementedError, RuntimeError and zlib.error among them), so
-        # any failure to read the one member is a finding; nothing but that read is guarded
-        # here.
+        # any failure to read the end record or the one member is a finding; nothing but those
+        # reads is guarded here.
         return None, f"its root plugin.json cannot be read ({exc})"
     try:
         # Read as UTF-8 only, as plugin/plugin.json is, so a UTF-16 or UTF-32 manifest, or one
