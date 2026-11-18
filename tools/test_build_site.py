@@ -71,6 +71,12 @@ both files admitted as generated, an edited catalog digest, an appended redirect
 unparsable plugin/plugin.json and one nested too deeply to parse, each with a record behind it
 (a read error, exit 2, no traceback). A site-src/content.json nested too deeply to parse and one
 that is a JSON array each raise the build's read error, SourceError (exit 2), in process.
+The schema cases (schema_cases()) remove, one at a time, each key CONTENT_SCHEMA requires, at the
+first list item where it occurs, and give each a value of another JSON type; each must raise
+SourceError naming the key. Removing each key the file holds, at the first list item where it
+occurs, must raise SourceError or build every page and the plain-text copy. An evidence pair
+of 3 items, a boolean rule number and a numeric next line are read errors too, and the script on
+a tree whose content.json has no "home" exits 2 in 1 FAIL line naming it.
 """
 import hashlib
 import html
@@ -194,6 +200,161 @@ def content_cases():
             failures.append(f"a site-src/content.json {desc} is not a read error naming "
                             f"{expected!r}: {why!r}")
     return failures
+
+
+def schema_keys(value, shape, where=(), seen=None):
+    """[(where, key, inner shape)] for each key CONTENT_SCHEMA requires, at the first place in
+    the repository's site-src/content.json where it occurs (one list item stands for the rest),
+    with where the keys and list positions that lead to the object holding it. The key an
+    Either branches on is left out, since without it the object takes the other shape."""
+    seen = set() if seen is None else seen
+    found = []
+    branch = None
+    if isinstance(shape, build_site.Either):
+        branch = shape.key
+        shape = shape.present if shape.key in value else shape.absent
+    if isinstance(shape, dict):
+        for key, inner in shape.items():
+            name = key.removesuffix("?")
+            if name not in value:
+                continue
+            general = tuple("[]" if isinstance(k, int) else k for k in where) + (name,)
+            if not key.endswith("?") and name != branch and general not in seen:
+                seen.add(general)
+                found.append((where, name, inner))
+            found += schema_keys(value[name], inner, where + (name,), seen)
+    elif isinstance(shape, list):
+        for i, item in enumerate(value):
+            found += schema_keys(item, shape[0], where + (i,), seen)
+    return found
+
+
+def every_key(value, where=(), seen=None):
+    """[(where, key)] for every key in value at any depth, at the first place each occurs (one
+    list item stands for the rest), whether or not the pages read it."""
+    seen = set() if seen is None else seen
+    found = []
+    if isinstance(value, dict):
+        for key, inner in value.items():
+            general = tuple("[]" if isinstance(k, int) else k for k in where) + (key,)
+            if general not in seen:
+                seen.add(general)
+                found.append((where, key))
+            found += every_key(inner, where + (key,), seen)
+    elif isinstance(value, list):
+        for i, item in enumerate(value):
+            found += every_key(item, where + (i,), seen)
+    return found
+
+
+def dotted(where, key=None):
+    """The path content_problem() names: keys joined by dots, list positions in brackets."""
+    text = ""
+    for k in where + (() if key is None else (key,)):
+        text += f"[{k}]" if isinstance(k, int) else (f".{k}" if text else k)
+    return text
+
+
+def schema_cases():
+    """(failures, count) for site-src/content.json's schema check (CONTENT_SCHEMA): the
+    repository's file with 1 key the pages read removed, for every key CONTENT_SCHEMA requires,
+    and with each such key's value replaced by one of another JSON type, must each raise
+    SourceError naming the key, from the Builder, before any page is built. A sweep then removes
+    every key the file holds, the ones the pages do not read included, and each removal must
+    either raise SourceError or build every page and the plain-text copy, so a key the pages
+    read that CONTENT_SCHEMA leaves out ends in a KeyError here. A few more cases hold an
+    evidence pair of 3 items, a boolean rule number and an optional key of the wrong type to
+    the check, and one runs the script on a tree whose file has no "home", for exit 2 and 1
+    FAIL line naming it, with no traceback."""
+    failures, count = [], 0
+    original = json.loads((ROOT / build_site.CONTENT).read_text(encoding="utf-8"))
+    root = Path(tempfile.mkdtemp())
+    try:
+        for rel in (build_site.VERSIONED, build_site.README, build_site.QUALITY_TSV):
+            (root / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / rel, root / rel)
+        (root / build_site.CONTENT).parent.mkdir(parents=True)
+
+        def attempt(content, pages=False):
+            """None when the build reads content (and, with pages, builds every page and the
+            plain-text copy), the SourceError's text, or the name of any other exception."""
+            (root / build_site.CONTENT).write_text(json.dumps(content), encoding="utf-8")
+            try:
+                b = build_site.Builder("/", root=root)
+                if pages:
+                    b.build()
+                    b.texts()
+                return None
+            except build_site.SourceError as exc:
+                return f"SourceError: {exc}"
+            except Exception as exc:  # noqa: BLE001  an escaping exception is the failure
+                return f"{type(exc).__name__} escaped: {exc}"
+
+        def edited(where, change):
+            content = json.loads(json.dumps(original))
+            parent = content
+            for k in where:
+                parent = parent[k]
+            change(parent)
+            return content
+
+        for where, key, inner in schema_keys(original, build_site.CONTENT_SCHEMA):
+            path = dotted(where, key)
+            wrong, kind = (("x", "a string") if build_site.shape_name(inner) == "an integer"
+                           else (0, "an integer"))
+            for desc, change, expected in (
+                    ("removed", lambda p: p.pop(key), f"{build_site.CONTENT}: {path} is missing; "
+                                                      f"the build reads it as "
+                                                      f"{build_site.shape_name(inner)}"),
+                    (f"made {kind}", lambda p: p.__setitem__(key, wrong),
+                     f"{build_site.CONTENT}: {path} is {kind}, where the build reads "
+                     f"{build_site.shape_name(inner)}")):
+                count += 1
+                why = attempt(edited(where, change))
+                if why != f"SourceError: {expected}":
+                    failures.append(f"site-src/content.json with {path} {desc}: expected the "
+                                    f"read error {expected!r}, got {why!r}")
+        for where, key in every_key(original):
+            count += 1
+            why = attempt(edited(where, lambda p: p.pop(key)), pages=True)
+            if why is not None and not why.startswith("SourceError: "):
+                failures.append(f"site-src/content.json with {dotted(where, key)} removed: "
+                                f"{why}")
+        for desc, where, change, expected in (
+                ("an evidence pair of 3 items", ("disclosure", "entries", 0, "evidence"),
+                 lambda p: p[0].append("x"),
+                 "disclosure.entries[0].evidence[0] is a list of 3 items, where the build reads "
+                 "a list of 2 items"),
+                ("a boolean rule number", ("for_ai", "rule_edits", 0),
+                 lambda p: p.__setitem__("rule", True),
+                 "for_ai.rule_edits[0].rule is a boolean, where the build reads an integer"),
+                ("a next line that is a number", ("guides", "next"),
+                 lambda p: p.__setitem__("line", 1),
+                 "guides.next.line is an integer, where the build reads a string")):
+            count += 1
+            why = attempt(edited(where, change))
+            if why != f"SourceError: {build_site.CONTENT}: {expected}":
+                failures.append(f"site-src/content.json with {desc}: expected the read error "
+                                f"{expected!r}, got {why!r}")
+        # The whole script on a tree whose content.json has no "home": exit 2 and 1 FAIL line.
+        count += 1
+        for rel in ("scripts/build-site.py", "tools/check_csp_hashes.py", "tools/gen_hosted.py",
+                    "tools/_archives.py"):
+            (root / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / rel, root / rel)
+        content = json.loads(json.dumps(original))
+        del content["home"]
+        (root / build_site.CONTENT).write_text(json.dumps(content), encoding="utf-8")
+        r = subprocess.run([sys.executable, "-I", "-B", str(root / "scripts" / "build-site.py"),
+                            "--check"], capture_output=True, text=True, timeout=120)
+        out = (r.stdout + r.stderr).strip()
+        want = f"FAIL  {build_site.CONTENT}: home is missing; the build reads it as an object"
+        if r.returncode != 2 or out != want:
+            failures.append(f"build-site.py --check on a content.json with no home: expected "
+                            f"exit 2 and {want!r} alone, got {r.returncode}: {out!r}")
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+    return failures, count
 
 
 def sized(path, size):
@@ -925,6 +1086,8 @@ def main():
     more, downloads = download_cases()
     failures += more
     failures += content_cases()
+    more, schema = schema_cases()
+    failures += more
     failures += name_cases()
 
     if failures:
@@ -956,6 +1119,9 @@ def main():
           "an unparsable plugin/plugin.json and one nested too deeply to parse each a read error "
           "(exit 2); a site-src/content.json nested too deeply to parse and one that is a JSON "
           "array each a read error")
+    print(f"  ok    {schema} site-src/content.json schema cases: every key the pages read, "
+          f"removed or of another JSON type, a read error naming it (exit 2 from the script), "
+          f"and every key the file holds removed, a read error or a full build")
     print(f"  ok    {len(NAME_CASES)} planted file names that --check prints escaped with ascii(): "
           f"a newline forging an ok line, an ESC and a byte that is not UTF-8, at the root, in a "
           f"staged build and in downloads/")

@@ -75,6 +75,10 @@ the file on disk equals that output byte for byte. That is the rule tools/check_
 the committed copies to, so the records pull request of CONTRIBUTING.md's Releasing step 9
 passes this check, while a hand-written, hand-edited or stale copy fails it.
 
+site-src/content.json is checked once, when it is read, against CONTENT_SCHEMA, which lists every
+key the pages read and its JSON type, so a missing or wrongly typed key is a read error (exit 2)
+that names the key, never a traceback.
+
 Exit status: 0 on success (or no difference), 1 on a refusal or a difference, 2 on a read error
 or a source the build cannot read as it needs.
 Standard library only, because scripts/pages-build.sh runs `--check` on Cloudflare Pages, needs
@@ -177,6 +181,117 @@ class Refused(Exception):
 
 class SourceError(Exception):
     """A source file is missing or not in the shape the build reads."""
+
+
+class Either:
+    """A content.json object read in one of 2 shapes, chosen as the build chooses: by whether
+    the object holds the key `key` (the shape `present`) or not (the shape `absent`)."""
+
+    def __init__(self, key, present, absent):
+        self.key, self.present, self.absent = key, present, absent
+
+
+# Every key of site-src/content.json that the pages read, with the JSON type the build reads it
+# as, checked once when read_sources() loads the file (content_problem()), so a missing or
+# wrongly typed key is a read error that names it (exit 2), never a traceback. An object is a
+# dict of key to shape; a key ending in "?" may be absent. A list of 1 shape is a list whose every
+# item has that shape, and a tuple is a list of exactly that many items, each of its shape. str
+# and int are a JSON string and a JSON integer (true and false are not integers). Keys the pages
+# do not read, such as each entry's "source", are not checked.
+TEXT = {"text": str}
+NEXT = {"text": str, "href": str, "line?": str}
+CONTENT_SCHEMA = {
+    "home": {"description": TEXT, "kicker": TEXT, "statement": TEXT, "intro": TEXT, "value": TEXT,
+             "start": {"text": str, "href": str},
+             "tiles": [{"href": str, "title": str, "meta": str, "desc": str}],
+             "about": {"links": [str]}},
+    "guides": {"description": TEXT, "meta": TEXT, "scope": TEXT,
+               "reference": [{"text": str, "n": str}], "next": NEXT},
+    "for_ai": {"description": TEXT, "h1": TEXT, "meta": TEXT, "note": TEXT,
+               "rule_edits?": [{"rule": int, "old": str, "new": str}], "fetch": TEXT,
+               "pattern": str, "files": TEXT,
+               "install": {key: TEXT for key in ("h2", "lead", "session", "shell", "copy",
+                                                 "always")},
+               "next": NEXT},
+    "for_humans": {"description": TEXT, "meta": TEXT,
+                   "tasks": [{"id": str, "title": str, "prompt": str}], "next": NEXT},
+    "checklist": {"description": TEXT, "meta": TEXT, "scope": TEXT, "rule": TEXT,
+                  "rows": [Either("code", {"quote": str, "check": str, "code": str},
+                                  {"quote": str, "check": str, "method": str})],
+                  "sources": TEXT, "next": NEXT},
+    "disclosure": {"description": TEXT, "meta": TEXT,
+                   "entries": [{"id": str, "title": str, "claim": str, "limitation": str,
+                                "evidence": [(str, str)]}],
+                   "browser": TEXT, "security": TEXT, "next": NEXT},
+    "license": {"description": TEXT, "meta": TEXT, "scope": TEXT, "parts": [TEXT],
+                "apache": [Either("list", {"list": [str]}, TEXT)], "cc0": [TEXT], "ofl": [TEXT],
+                "governs": TEXT, "note": TEXT, "next": NEXT},
+    "notfound": {"lead": TEXT, "next": NEXT},
+    "advisory_n8n": {**{key: TEXT for key in ("label", "h1", "status", "intro", "report_summary",
+                                              "report_title", "poc", "impact", "reporter_note",
+                                              "cvss_vector", "cvss_derivation")},
+                     **{key: [TEXT] for key in ("affected", "locations", "observed", "inferred",
+                                                "steps", "reporter", "mitigations")}},
+    "quality": {"meta": TEXT, "scope": TEXT, "note": TEXT},
+}
+
+
+def json_kind(value):
+    """The JSON type of a parsed value, as a message names it."""
+    for kind, name in ((bool, "a boolean"), (str, "a string"), (int, "an integer"),
+                       (float, "a number with a fraction or exponent"), (list, "a list"),
+                       (dict, "an object")):
+        if isinstance(value, kind):
+            return name
+    return "null"
+
+
+def shape_name(shape):
+    """What a CONTENT_SCHEMA shape reads, as a message names it."""
+    if isinstance(shape, (dict, Either)):
+        return "an object"
+    if isinstance(shape, list):
+        return "a list"
+    if isinstance(shape, tuple):
+        return f"a list of {len(shape)} items"
+    return "a string" if shape is str else "an integer"
+
+
+def content_problem(value, shape, where=""):
+    """The first key, read in CONTENT_SCHEMA's order, at which value, parsed from
+    site-src/content.json, departs from shape, as a message naming that key by its path (such
+    as home.tiles[0].href), or None when value has the shape. The path is built from
+    CONTENT_SCHEMA's keys and list positions only, never from the file's text."""
+    if isinstance(shape, Either):
+        shape = shape.present if isinstance(value, dict) and shape.key in value else shape.absent
+    found = json_kind(value)
+    if isinstance(shape, dict):
+        if found != "an object":
+            return f"{CONTENT}: {where} is {found}, where the build reads an object"
+        for key, inner in shape.items():
+            name = key.removesuffix("?")
+            path = f"{where}.{name}" if where else name
+            if name not in value:
+                if key.endswith("?"):
+                    continue
+                return f"{CONTENT}: {path} is missing; the build reads it as {shape_name(inner)}"
+            problem = content_problem(value[name], inner, path)
+            if problem:
+                return problem
+        return None
+    if isinstance(shape, (list, tuple)):
+        if found != "a list" or (isinstance(shape, tuple) and len(value) != len(shape)):
+            size = f" of {len(value)} items" if found == "a list" else ""
+            return f"{CONTENT}: {where} is {found}{size}, where the build reads {shape_name(shape)}"
+        for i, item in enumerate(value):
+            problem = content_problem(item, shape[i] if isinstance(shape, tuple) else shape[0],
+                                      f"{where}[{i}]")
+            if problem:
+                return problem
+        return None
+    if found != shape_name(shape):
+        return f"{CONTENT}: {where} is {found}, where the build reads {shape_name(shape)}"
+    return None
 
 
 # A fence line as install_blocks() reads one: 3 or more backticks or tildes at the start of the
@@ -287,6 +402,11 @@ class Builder:
             raise SourceError(f"{CONTENT} is not valid JSON: {exc}") from exc
         except ValueError as exc:  # nested too deeply to parse, or not a JSON object
             raise SourceError(f"{CONTENT} cannot be used: {exc}") from exc
+        # Every key the pages read is checked here, once, so no page meets a missing or wrongly
+        # typed one later as a KeyError or TypeError.
+        problem = content_problem(self.c, CONTENT_SCHEMA)
+        if problem:
+            raise SourceError(problem)
         readme = self.read(README)
         lines = readme.splitlines()
         self.categories = []

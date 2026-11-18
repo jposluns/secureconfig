@@ -31,6 +31,9 @@ WHAT IT CHECKS:
     reads only the committed record, never GitHub: what a published release really carries is
     checked at release time, not here (tools/check_draft.py refuses every other source and
     target shape);
+  - each recorded zip staged as a regular file is at most DOWNLOAD_MAX bytes, the per-file cap
+    that scripts/build-site.py --check holds site/downloads/ to, read from that script; one
+    over it is a finding and is never read, and one within it is hashed in chunks;
   - the newest record's zips must be staged, since the latest links and the catalog point at
     hosted copies;
   - every entry under site/downloads/ is one of the record's zips: a file no record names, and
@@ -40,8 +43,11 @@ WHAT IT CHECKS:
     the record's version, so the catalog cannot name bytes of another version. A zip that
     cannot be read or has no root plugin.json, and a root plugin.json that is not UTF-8, cannot
     be parsed as JSON (one nested too deeply to parse included) or is not a JSON object, are
-    each a finding in 1 FAIL line, never a traceback. When the zip gains
-    .claude-plugin/plugin.json, this check will be extended to it.
+    each a finding in 1 FAIL line, never a traceback. So is a root plugin.json whose zip entry
+    declares more than MANIFEST_MAX bytes (64 KiB) uncompressed or that is compressed with a
+    method other than stored or deflated, and it is not read, so a decompression bomb is a
+    finding, never a MemoryError. When the zip gains .claude-plugin/plugin.json, this check will
+    be extended to it.
 
 Offline, standard library only, and it writes nothing. Exit 0 ok; 1 on a finding, which
 includes a record, an allowlist or a plugin/plugin.json that cannot be used; 2 on a read error,
@@ -51,7 +57,7 @@ Usage: python3 -I -B tools/check_hosted.py [--root <repository root>]
 """
 import argparse
 import hashlib
-import io
+import importlib.util
 import re
 import sys
 import zipfile
@@ -60,6 +66,26 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import gen_hosted  # noqa: E402  (the one place the generated content is defined)
 from _archives import ARCHIVES, archive_name  # noqa: E402
+
+# The per-file cap on a staged release archive is scripts/build-site.py's DOWNLOAD_MAX, the cap
+# its --check holds each file in site/downloads/ to, read from that script so the two cannot
+# differ. A staged file over it is a finding and is never read.
+_spec = importlib.util.spec_from_file_location(
+    "build_site", Path(__file__).resolve().parents[1] / "scripts" / "build-site.py")
+_build_site = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_build_site)
+DOWNLOAD_MAX = _build_site.DOWNLOAD_MAX
+# A staged file is hashed in chunks of this many bytes, so no read holds a whole zip.
+CHUNK = 1024 * 1024
+# The cap on a staged plugin zip's root plugin.json, on the size its zip entry declares and on
+# the bytes a read decompresses. plugin/plugin.json is under 1 KiB, so 64 KiB leaves room to
+# grow while a decompression bomb is refused before it is read.
+MANIFEST_MAX = 64 * 1024
+# The compression methods whose decompression zipfile bounds on each read: stored data needs
+# none, and for deflate it passes the read's size to zlib. For each other method it supports,
+# bzip2 and LZMA among them, it decompresses each chunk of compressed data it reads whole,
+# however large the output, so a member compressed with one is not read.
+BOUNDED_METHODS = (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)
 
 SITE = Path("site")
 DOWNLOADS = SITE / "downloads"
@@ -75,27 +101,58 @@ def asset_redirects(rules):
     return {match.group(1) for rule in rules for match in [ASSET_RULE.fullmatch(rule)] if match}
 
 
-def staged_digest(root, name):
-    """The staged archive's SHA-256, or None when site/downloads/<name> is not a regular file
-    (a symbolic link, which is not one, is never followed here)."""
+def staged_size(root, name):
+    """The size in bytes of site/downloads/<name>, or None when it is not a regular file (a
+    symbolic link, which is not one, is never followed here)."""
     path = root / DOWNLOADS / name
     if path.is_symlink() or not path.is_file():
         return None
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return path.stat().st_size
 
 
-def zip_manifest_version(data):
-    """The version in the plugin.json at a plugin zip's root, or the reason it cannot be used:
-    any archive or manifest it cannot read or use is a reason, never an exception."""
+def staged_digest(root, name):
+    """The staged archive's SHA-256, read in chunks of CHUNK bytes, so no read holds the whole
+    file. The caller has already checked, with staged_size(), that it is a regular file of at
+    most DOWNLOAD_MAX bytes."""
+    digest = hashlib.sha256()
+    with open(root / DOWNLOADS / name, "rb") as staged:
+        while chunk := staged.read(CHUNK):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def zip_manifest_version(path):
+    """The version in the plugin.json at the root of the plugin zip at path, or the reason it
+    cannot be used: any archive or manifest it cannot read or use is a reason, never an
+    exception. The member is read only when the size its entry declares is at most
+    MANIFEST_MAX and its compression method is one in BOUNDED_METHODS, and then by a read of at
+    most MANIFEST_MAX + 1 bytes, so a decompression bomb is a reason, never a MemoryError."""
     try:
-        with zipfile.ZipFile(io.BytesIO(data)) as archive:
-            raw = archive.read("plugin.json")
+        with zipfile.ZipFile(path) as archive:
+            info = archive.getinfo("plugin.json")
+            if info.file_size > MANIFEST_MAX:
+                return None, (f"its root plugin.json declares {info.file_size} bytes "
+                              f"uncompressed, over the {MANIFEST_MAX}-byte cap on that member, "
+                              f"so it is not read")
+            # An unsupported method or an encrypted member is refused here, before any data is
+            # read, with the exception zipfile raises for it.
+            with archive.open(info) as member:
+                if info.compress_type not in BOUNDED_METHODS:
+                    return None, (f"its root plugin.json uses compression method "
+                                  f"{info.compress_type}, which this gate does not read: only a "
+                                  f"stored or deflated member is decompressed in bounded steps")
+                raw = member.read(MANIFEST_MAX + 1)
+            # zipfile stops a member's output at its declared size, so this holds already; the
+            # bounded read keeps it true without relying on that.
+            if len(raw) > MANIFEST_MAX:
+                return None, (f"its root plugin.json decompresses to more than {MANIFEST_MAX} "
+                              f"bytes, over the cap on that member, so it is not read further")
     except Exception as exc:  # noqa: BLE001  a zip this cannot read is a finding
-        # The bytes are an untrusted archive, already in memory, and zipfile and its
+        # The file is an untrusted archive of at most DOWNLOAD_MAX bytes, and zipfile and its
         # decompressors raise many unrelated types on damaged ones (BadZipFile, KeyError,
-        # ValueError, OSError, NotImplementedError, RuntimeError, zlib.error and lzma.LZMAError
-        # among them), so any failure to read the one member is a finding; nothing but that
-        # read is guarded here.
+        # ValueError, OSError, NotImplementedError, RuntimeError and zlib.error among them), so
+        # any failure to read the one member is a finding; nothing but that read is guarded
+        # here.
         return None, f"its root plugin.json cannot be read ({exc})"
     try:
         # Read as UTF-8 only, as plugin/plugin.json is, so a UTF-16 or UTF-32 manifest, or one
@@ -172,7 +229,13 @@ def record_findings(root, records, rules):
     for version in sorted(records, key=lambda v: int(v.rsplit(".", 1)[1])):
         for kind in ARCHIVES:
             name = archive_name(kind, version)
-            digest = staged_digest(root, name)
+            size = staged_size(root, name)
+            if size is not None and size > DOWNLOAD_MAX:
+                findings.append(f"{DOWNLOADS}/{name} is {size} bytes, over the {DOWNLOAD_MAX}-"
+                                f"byte cap on 1 release archive (DOWNLOAD_MAX in "
+                                f"scripts/build-site.py), so it is not read")
+                continue
+            digest = staged_digest(root, name) if size is not None else None
             if digest is None:
                 if version == current:
                     findings.append(f"{DOWNLOADS}/{name} is missing; the newest record's zips "
@@ -188,9 +251,11 @@ def record_findings(root, records, rules):
                                 f"released zip's bytes, copied")
     if current:
         name = archive_name(gen_hosted.PLUGIN_KIND, current)
-        path = root / DOWNLOADS / name
-        if path.is_file():
-            version, why = zip_manifest_version(path.read_bytes())
+        size = staged_size(root, name)
+        # Only a staged regular file within the cap is opened; one over it is a finding above,
+        # and a symbolic link is one in staged_findings().
+        if size is not None and size <= DOWNLOAD_MAX:
+            version, why = zip_manifest_version(root / DOWNLOADS / name)
             if why:
                 findings.append(f"{DOWNLOADS}/{name}: {why}")
             elif version != current:
