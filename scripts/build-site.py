@@ -943,7 +943,10 @@ def refuse_text(name, text):
 # request is planned to check each hosted archive against its release record.
 def download_problems(out, max_file=DOWNLOAD_MAX, max_total=DOWNLOADS_TOTAL_MAX):
     """The root --check problems for out/downloads/, each starting with its path relative to out.
-    Only the top level is read, with os.scandir: every entry there must be a regular file whose
+    A name read from the folder is untrusted text, so each path printed before DOWNLOAD_NAME has
+    matched its name in full is printed escaped, with ascii(): no character in one can end the
+    FAIL line, forge another, or reach the terminal as a raw control character or byte. Only the
+    top level is read, with os.scandir: every entry there must be a regular file whose
     name DOWNLOAD_NAME matches in full, at most max_file bytes, so any folder, empty or not, is
     refused and never read. Every regular file with a valid name, an oversized one included,
     counts towards the total, which must be at most max_total bytes. Each entry is read with
@@ -967,14 +970,15 @@ def download_problems(out, max_file=DOWNLOAD_MAX, max_total=DOWNLOADS_TOTAL_MAX)
         info = (folder / name).lstat()
         mode = info.st_mode
         if stat.S_ISDIR(mode):
-            problems.append(f"{rel} is a folder; download_problems() reads only the top level of "
-                            f"{DOWNLOADS}, so only top-level regular files can be admitted there")
+            problems.append(f"{rel!a} is a folder; download_problems() reads only the top level "
+                            f"of {DOWNLOADS}, so only top-level regular files can be admitted "
+                            f"there")
         elif name.endswith("-latest.zip"):
-            problems.append(f"{rel} is a latest name; /downloads/secureconfig-latest.zip and "
+            problems.append(f"{rel!a} is a latest name; /downloads/secureconfig-latest.zip and "
                             f"/downloads/secureconfig-plugin-latest.zip are planned as 302 "
                             f"redirects with no bytes of their own, so no file carries one")
         elif not DOWNLOAD_NAME.fullmatch(name):
-            problems.append(f"{rel} is not a release archive name; {DOWNLOADS} holds only "
+            problems.append(f"{rel!a} is not a release archive name; {DOWNLOADS} holds only "
                             f"secureconfig-1.0.<N>.zip and secureconfig-plugin-1.0.<N>.zip, "
                             f"<N> as in VERSION")
         elif not stat.S_ISREG(mode):
@@ -1073,24 +1077,27 @@ def main(argv=None):
         # also holds the published files, named one by one in PUBLISHED. At the root it may also
         # hold the release archives that download_problems() admits in downloads/, and the 2
         # generated hosted files (HOSTED) that hosted_problems() holds to tools/gen_hosted.py's
-        # output.
+        # output. A stray file's name is untrusted text, so its path is printed escaped, with
+        # ascii(), as download_problems() prints one: no character in it can end the FAIL line,
+        # forge another, or reach the terminal as a raw control character or byte.
         if out.is_dir():
             for path in sorted(p for p in out.rglob("*") if not p.is_dir()):
                 rel = path.relative_to(out).as_posix()
                 if rel in written or rel.startswith(COPIED) or rel == SITE_CSS:
                     continue
                 if name_suffix(path.name) in (".html", ".htm"):
-                    problems.append(f"{rel} is not a page this build writes")
+                    problems.append(f"{rel!a} is not a page this build writes")
                 elif args.base != "/":
-                    problems.append(f"{rel} is neither a page this build writes nor a copied "
+                    problems.append(f"{rel!a} is neither a page this build writes nor a copied "
                                     f"template file under {COPIED}")
                 elif rel.startswith(DOWNLOADS):
                     continue  # held by download_problems() below
                 elif rel in HOSTED:
                     continue  # held by hosted_problems() below
                 elif rel not in PUBLISHED:
-                    problems.append(f"{rel} is neither a page this build writes, a copied template "
-                                    f"file under {COPIED}, nor a published file in PUBLISHED")
+                    problems.append(f"{rel!a} is neither a page this build writes, a copied "
+                                    f"template file under {COPIED}, nor a published file in "
+                                    f"PUBLISHED")
             if args.base == "/":
                 try:
                     problems += download_problems(out)

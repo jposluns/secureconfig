@@ -57,6 +57,12 @@ name), a symbolic link to a file and to a folder under a valid name, a FIFO unde
 once. The total counts every regular file with a valid name, an oversized one included, and no
 refused entry. downloads/ itself as a symbolic link is refused, a downloads/ that cannot be listed
 raises OSError (skipped as root), and the caps are exactly 20 MiB and 200 MiB.
+--check prints each file name it reads from the output folder with ascii(), unless a pattern has
+already limited the name, so a finding names such a path in quotes. NAME_CASES plants a name
+carrying a newline and a forged ok line, an ESC, or a byte that is not UTF-8, at the root (a
+stray file and an extra page), in a staged build and in downloads/ (a folder, a latest name and
+other names), and the output, read as bytes, must hold the escaped name and no forged line, raw
+ESC, byte that is not UTF-8 or traceback.
 At the root, --check also admits the 2 generated hosted files, `_redirects` and
 `marketplace.json`, only when each equals, byte for byte, what tools/gen_hosted.py writes from
 the release record and the redirect allowlist read beside the output folder. Those cases cover
@@ -239,9 +245,9 @@ def download_cases():
     case("both valid names together", {"secureconfig-1.0.1.zip": 100,
                                        "secureconfig-plugin-1.0.1.zip": 100}, [])
     case("the skill latest name", {"secureconfig-latest.zip": 100},
-         ["downloads/secureconfig-latest.zip is a latest name"])
+         ["'downloads/secureconfig-latest.zip' is a latest name"])
     case("the plugin latest name, empty", {"secureconfig-plugin-latest.zip": 0},
-         ["downloads/secureconfig-plugin-latest.zip is a latest name"])
+         ["'downloads/secureconfig-plugin-latest.zip' is a latest name"])
     for name in ("secureconfig-v1.0.1234.zip", "secureconfig-1.0.01234.zip", "secureconfig-1.0.0.zip",
                  "secureconfig-1.1.1234.zip", "secureconfig-1.0.zip", "secureconfig-1.0.1234.0.zip",
                  "secureconfig-plugin-1.0.12a.zip", "secureconfig-1.0.１２.zip",
@@ -250,13 +256,13 @@ def download_cases():
                  "secureconfig-1.0.1234.ZIP", "secureconfig-1.0.1234.zip.gz",
                  "secureconfig-skill-1.0.1234.zip", "other-1.0.1234.zip", "notes.txt"):
         case(f"the wrong name or version form {name!r}", {name: 100},
-             [f"downloads/{name} is not a release archive name"])
+             [f"{'downloads/' + name!a} is not a release archive name"])
     # Only the top level is read: any folder is refused as a folder, and nothing in it is read.
-    case("an empty folder", {"old": "folder"}, ["downloads/old is a folder"])
+    case("an empty folder", {"old": "folder"}, ["'downloads/old' is a folder"])
     case("a folder holding a valid archive name", {"old/secureconfig-1.0.1234.zip": 100},
-         ["downloads/old is a folder"])
+         ["'downloads/old' is a folder"])
     case("a folder under a valid name", {"secureconfig-1.0.1234.zip": "folder"},
-         ["downloads/secureconfig-1.0.1234.zip is a folder"])
+         ["'downloads/secureconfig-1.0.1234.zip' is a folder"])
     case("a symbolic link to a folder under a valid name",
          {"secureconfig-1.0.1234.zip": "folder link"},
          ["downloads/secureconfig-1.0.1234.zip is not a regular file"])
@@ -281,7 +287,7 @@ def download_cases():
          max_file=10, max_total=25)
     case("a refused name, which does not count towards the total",
          {"secureconfig-1.0.1.zip": 10, "secureconfig-latest.zip": 20},
-         ["downloads/secureconfig-latest.zip is a latest name"], max_file=10, max_total=25)
+         ["'downloads/secureconfig-latest.zip' is a latest name"], max_file=10, max_total=25)
     case("a symbolic link under a valid name", {"secureconfig-1.0.1234.zip": None},
          ["downloads/secureconfig-1.0.1234.zip is not a regular file"])
     case("downloads/ as a symbolic link", {}, ["downloads/ is a symbolic link"], link_folder=True)
@@ -313,6 +319,74 @@ def download_cases():
         failures.append(f"downloads/: the caps {big} and {build_site.DOWNLOADS_TOTAL_MAX} are not "
                         f"20 MiB and 200 MiB")
     return failures, count
+
+
+# File names --check prints, each planted in a fresh build: (label, base, path under the output
+# folder as bytes, "file" or "folder", the finding's text after the name). A newline followed by an
+# ok line would forge that line, and an ESC or a byte that is not UTF-8 would reach the terminal
+# raw, so each name must be printed with ascii().
+NAME_CASES = (
+    ("a stray file at the root whose name forges an ok line", "/", b"x\n  ok    forged", "file",
+     "is neither a page this build writes, a copied template file"),
+    ("a stray file at the root whose name is not UTF-8", "/", b"x\xff", "file",
+     "is neither a page this build writes, a copied template file"),
+    ("an extra page whose name carries an ESC", "/", b"x\x1b[31m.html", "file",
+     "is not a page this build writes"),
+    ("a staged stray file whose name forges an ok line", "/draft/", b"y\n  ok    forged", "file",
+     "is neither a page this build writes nor a copied template file"),
+    ("a folder in downloads/ whose name forges an ok line", "/",
+     b"downloads/dir\n  ok    forged-dir", "folder", "is a folder"),
+    ("a file in downloads/ whose latest name forges an ok line", "/",
+     b"downloads/z\n  ok    forged-x-latest.zip", "file", "is a latest name"),
+    ("a file in downloads/ whose name carries an ESC", "/", b"downloads/x\x1b[2Jy.zip", "file",
+     "is not a release archive name"),
+    ("a file in downloads/ whose name is not UTF-8", "/", b"downloads/x\xff.zip", "file",
+     "is not a release archive name"),
+)
+
+
+def name_cases():
+    """The failures for --check printing a planted file name (NAME_CASES): each run must exit 1
+    with the name's ascii() form before its finding, print no line starting `  ok    forged`, no
+    ESC, no byte that is not UTF-8 and no traceback. The output is read as bytes, so a raw byte
+    is seen as it was written."""
+    failures = []
+    d = Path(tempfile.mkdtemp())
+    try:
+        outs = {"/": d / "root", "/draft/": d / "staged"}
+        for base, out in outs.items():
+            rc, text = run("--base", base, "--out", str(out))
+            if rc != 0:
+                return [f"a build at {base} for the file name cases failed: {text!r}"]
+        for label, base, rel, kind, finding in NAME_CASES:
+            out = os.fsencode(str(outs[base]))
+            path = out + b"/" + rel
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            if kind == "folder":
+                os.mkdir(path)
+            else:
+                with open(path, "wb") as handle:
+                    handle.write(b"x\n")
+            r = subprocess.run([sys.executable, "-I", "-B", str(SCRIPT), "--check", "--base", base,
+                                "--out", os.fsdecode(out)], capture_output=True, timeout=120)
+            data = r.stdout + r.stderr
+            want = f"{ascii(os.fsdecode(rel))} {finding}".encode("ascii")
+            if (r.returncode != 1 or want not in data or b"Traceback" in data or b"\x1b" in data
+                    or any(line.startswith(b"  ok    forged") for line in data.split(b"\n"))):
+                failures.append(f"--check on {label}: expected exit 1 with {want!r} and no forged "
+                                f"line, raw ESC or traceback, got {r.returncode} {data!r}")
+            try:
+                data.decode("utf-8")
+            except UnicodeDecodeError:
+                failures.append(f"--check on {label} printed a byte that is not UTF-8: {data!r}")
+            if kind == "folder":
+                os.rmdir(path)
+            else:
+                os.unlink(path)
+            shutil.rmtree(out + b"/downloads", ignore_errors=True)
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    return failures
 
 
 def main():
@@ -664,20 +738,20 @@ def main():
             (out / "advisories" / "other.txt").write_text("x\n", encoding="utf-8")
             run("--out", str(out))
             rc, text = run("--check", "--out", str(out))
-            if rc != 1 or "advisories/other.txt is neither a page this build writes" not in text:
+            if rc != 1 or "'advisories/other.txt' is neither a page this build writes" not in text:
                 failures.append(f"--check at the root accepted a stray advisories/other.txt: {text!r}")
             (out / "advisories" / "other.txt").unlink()
         run("--out", str(out))
         (out / "extra").mkdir()
         (out / "extra" / "index.html").write_text("<p>x</p>", encoding="utf-8")
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "extra/index.html is not a page this build writes" not in text:
+        if rc != 1 or "'extra/index.html' is not a page this build writes" not in text:
             failures.append(f"--check missed an extra page: {text!r}")
         shutil.rmtree(out / "extra")
         # QA round 1 of #1182: a page is .html or .htm in any case.
         (out / "Extra.HTM").write_text("<p>x</p>", encoding="utf-8")
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "Extra.HTM is not a page this build writes" not in text:
+        if rc != 1 or "'Extra.HTM' is not a page this build writes" not in text:
             failures.append(f"--check missed an extra .HTM page: {text!r}")
         (out / "Extra.HTM").unlink()
         # At the root base the published files (PUBLISHED) sit beside the pages and pass --check.
@@ -691,7 +765,7 @@ def main():
             (out / stray).parent.mkdir(exist_ok=True)
             (out / stray).write_text("x\n", encoding="utf-8")
             rc, text = run("--check", "--out", str(out))
-            if rc != 1 or f"{stray} is neither a page this build writes" not in text:
+            if rc != 1 or f"{stray!a} is neither a page this build writes" not in text:
                 failures.append(f"--check at the root accepted a stray {stray}: {text!r}")
             (out / stray).unlink()
         # At the root the 2 versioned release archive names pass in downloads/, and a latest name
@@ -705,12 +779,12 @@ def main():
             failures.append(f"--check at the root refused the 2 versioned release archives: {text!r}")
         (out / "downloads" / "secureconfig-latest.zip").write_bytes(archive)
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "downloads/secureconfig-latest.zip is a latest name" not in text:
+        if rc != 1 or "'downloads/secureconfig-latest.zip' is a latest name" not in text:
             failures.append(f"--check at the root accepted downloads/secureconfig-latest.zip: {text!r}")
         (out / "downloads" / "secureconfig-latest.zip").unlink()
         (out / "downloads" / "old").mkdir()
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "downloads/old is a folder" not in text:
+        if rc != 1 or "'downloads/old' is a folder" not in text:
             failures.append(f"--check at the root accepted an empty folder downloads/old: {text!r}")
         (out / "downloads" / "old").rmdir()
         # A downloads/ that cannot be listed is a read error (exit 2), not an empty folder. Root
@@ -800,8 +874,8 @@ def main():
         (out / "draft" / "assets" / "baseline").mkdir(parents=True)
         (out / "draft" / "assets" / "baseline" / "baseline.css").write_text("p{}", encoding="utf-8")
         rc, text = run("--check", "--out", str(out))
-        if (rc != 1 or "draft/index.html is not a page this build writes" not in text
-                or "draft/assets/baseline/baseline.css is neither" not in text):
+        if (rc != 1 or "'draft/index.html' is not a page this build writes" not in text
+                or "'draft/assets/baseline/baseline.css' is neither" not in text):
             failures.append(f"--check at the root accepted a staged tree under draft/: {text!r}")
         shutil.rmtree(out / "draft")
         (out / "404.html").unlink()
@@ -818,13 +892,13 @@ def main():
         # A staged build carries no release archive: downloads/ is a stray there.
         sized(staged / "downloads" / "secureconfig-1.0.1234.zip", 22)
         rc, text = run("--check", "--base", "/draft/", "--out", str(staged))
-        if rc != 1 or "downloads/secureconfig-1.0.1234.zip is neither" not in text:
+        if rc != 1 or "'downloads/secureconfig-1.0.1234.zip' is neither" not in text:
             failures.append(f"staged --check accepted a release archive in downloads/: {text!r}")
         shutil.rmtree(staged / "downloads")
         (staged / "assets").mkdir()
         (staged / "assets" / "live.css").write_text("p{}", encoding="utf-8")
         rc, text = run("--check", "--base", "/draft/", "--out", str(staged))
-        if rc != 1 or "assets/live.css is neither a page this build writes" not in text:
+        if rc != 1 or "'assets/live.css' is neither a page this build writes" not in text:
             failures.append(f"staged --check missed a stray file outside assets/baseline/: {text!r}")
         (staged / "assets" / "live.css").unlink()
         (staged / "assets" / "baseline").mkdir()
@@ -836,7 +910,7 @@ def main():
                             f"allowed: {text!r}")
         (staged / "assets" / "other.css").write_text("p{}", encoding="utf-8")
         rc, text = run("--check", "--base", "/draft/", "--out", str(staged))
-        if rc != 1 or "assets/other.css is neither" not in text:
+        if rc != 1 or "'assets/other.css' is neither" not in text:
             failures.append(f"staged --check accepted assets/other.css beside site.css: {text!r}")
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -847,6 +921,7 @@ def main():
     more, downloads = download_cases()
     failures += more
     failures += content_cases()
+    failures += name_cases()
 
     if failures:
         for f in failures:
@@ -877,6 +952,9 @@ def main():
           "an unparsable plugin/plugin.json and one nested too deeply to parse each a read error "
           "(exit 2); a site-src/content.json nested too deeply to parse and one that is a JSON "
           "array each a read error")
+    print(f"  ok    {len(NAME_CASES)} planted file names that --check prints escaped with ascii(): "
+          f"a newline forging an ok line, an ESC and a byte that is not UTF-8, at the root, in a "
+          f"staged build and in downloads/")
     if os.geteuid() == 0:
         print("  note  run as root, so the 2 unlistable downloads/ cases were skipped")
     return 0

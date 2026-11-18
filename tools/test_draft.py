@@ -15,8 +15,11 @@ browser-normalized host, a trailing-dot, upper-case, percent-encoded or non-ASCI
 alias, https:/// and scheme-relative spellings, a backslash, whitespace, javascript:), the URL
 attributes beyond href and src, http-equiv, the new-tab hint, site/_redirects, CSS @import and
 url() containment and the site.css grammar. New at the root: a root-relative link must name a file
-under site/; each canonical is its page's own URL (exactly 1 on the 7 indexable pages, none on
-the 404 or the unlisted advisory, not even its own); the noindex admission is the exact path
+under site/, and a link or a stylesheet url() that percent-decodes to a NUL is refused with a
+finding, never a traceback, as unpathable() also refuses a character the file system encoding
+cannot encode, checked in process; each canonical is its page's own URL (exactly 1 on the 7
+indexable pages, none on the 404 or the unlisted advisory, not even its own); the noindex
+admission is the exact path
 advisories/n8n-2026-11-07-jposluns.html, so a noindex site/advisories/other.html, and a noindex
 page at the advisory's old path advisories/n8n.html, are still refused, while the advisory's
 build-written plain-text copy beside it, which is not a page, is in the pristine copy the gate
@@ -438,6 +441,11 @@ CASES = [
      "11 pages are self-contained", 0),
     ("a link to a page that does not exist", link("/nowhere/"), "names no file", 1),
     ("a ../ path out of site/", link("/../SECURITY.md"), "names no file", 1),
+    # A link that percent-decodes to a NUL names no file: a finding, never the ValueError that
+    # Path.resolve() raises on a NUL, which ended the gate in a traceback with no FAIL line.
+    ("a link that percent-decodes to a NUL", link("/x%00"), "decodes to a NUL character", 1),
+    ("a link to a page's path with a NUL after it", link("/guides/index.html%00"),
+     "decodes to a NUL character", 1),
     ("a relative link", link("guides/"), "relative path", 1),
     ("an absolute link to this site's own host", link("https://secureconfig.ai/guides/"),
      "own host", 1),
@@ -859,6 +867,13 @@ CASES = [
     ("a stylesheet url() outside site/assets/",
      write("site/assets/site.css", ".statement { --sw: 14; }\n.x { background: url(/logo.svg); }\n"),
      "is not a relative path", 1),
+    # So is a url() that percent-decodes to a NUL, in a stylesheet anywhere under site/.
+    ("a stylesheet url() that percent-decodes to a NUL",
+     write("site/assets/site.css", ".statement { --sw: 14; }\n.x { background: url(%00); }\n"),
+     "url('%00') decodes to a NUL character", 1),
+    ("a quoted url() to a real file with a NUL after it, in another stylesheet",
+     write("site/assets/extra.css", '.x { background: url("site.css%00"); }\n'),
+     "url('site.css%00') decodes to a NUL character", 1),
     ("a stylesheet @import", write("site/assets/site.css", '@import "/live.css";\n.statement { --sw: 14; }\n'),
      "carries @import", 1),
     ("a stylesheet @import written with a CSS escape",
@@ -958,7 +973,13 @@ def main():
             failures.append(f"{desc}: the gate crashed: {out!r}")
     # Each SINGLE_FORM line is caught by its own corpus form and by no other.
     sys.path.insert(0, str(TOOLS))
-    from check_draft import DRAFT_REFS, normalized
+    from check_draft import DRAFT_REFS, normalized, unpathable
+    # unpathable() also names a character the file system encoding cannot encode, which no page
+    # or stylesheet read as UTF-8 can carry, so it is checked here in process.
+    for text, want in (("guides/index.html", None), ("x\x00", "a NUL character"),
+                       ("x\ud800", "a character the file system encoding cannot encode")):
+        if unpathable(text) != want:
+            failures.append(f"unpathable({text!a}) is {unpathable(text)!r}, not {want!r}")
     for line, form, _ in SINGLE_FORM:
         forms = "".join(f for f, p in zip("abcde", DRAFT_REFS) if p.search(normalized(line)))
         if forms != form:
@@ -994,7 +1015,7 @@ def main():
     if s or "match a fresh build (base /draft/)" not in sout:
         failures.append(f"the staging form --base /draft/ --out site/draft did not pass its own "
                         f"--check: {sout!r}")
-    if c != 1 or "draft/index.html is not a page this build writes" not in cout:
+    if c != 1 or "'draft/index.html' is not a page this build writes" not in cout:
         failures.append(f"the root --check accepted a staged draft tree under site/draft/: {cout!r}")
     if g != 1 or f"'site/draft' exists (folder); {NO_TREE}" not in gout:
         failures.append(f"the gate accepted a staged draft tree under site/draft/: {gout!r}")
