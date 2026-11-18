@@ -92,6 +92,11 @@ builds the `draft` branch's staging form (`--base /draft/ --out site/draft`) bes
 build: the staged --check passes, so the staging form keeps working, and on this tree, as on
 `main`, the root --check and this gate each refuse the draft tree (baseline SPECIFICATION
 section 4.1 items 0 and 3).
+
+The ASCII_CASES run the gate with its stdout encoded as strict ASCII, as on a host whose locale
+is ASCII: a site/_redirects line naming /draft/ and a latest link whose target is not a staged
+zip, each carrying a printable non-ASCII character, must each exit 1 with the line printed
+escaped, never end in a traceback.
 """
 import importlib.util
 import shutil
@@ -104,14 +109,21 @@ TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 
 
-def run(mutate=None):
+# Runs the script named first after it as __main__ with sys.stdout re-encoded as strict ASCII, so
+# a print the stream cannot encode ends the run in a UnicodeEncodeError traceback.
+ASCII_STDOUT = ("import runpy, sys; sys.stdout.reconfigure(encoding='ascii', errors='strict'); "
+                "sys.argv = sys.argv[1:]; runpy.run_path(sys.argv[0], run_name='__main__')")
+
+
+def run(mutate=None, ascii_stdout=False):
     d = Path(tempfile.mkdtemp())
     try:
         shutil.copytree(ROOT / "site", d / "site")
         if mutate is not None:
             mutate(d)
-        r = subprocess.run([sys.executable, "-I", "-B", str(TOOLS / "check_draft.py"), "--root",
-                            str(d)], capture_output=True, text=True, timeout=60)
+        start = ["-c", ASCII_STDOUT] if ascii_stdout else []
+        r = subprocess.run([sys.executable, "-I", "-B", *start, str(TOOLS / "check_draft.py"),
+                            "--root", str(d)], capture_output=True, text=True, timeout=60)
         return r.returncode, (r.stdout + r.stderr).strip()
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -898,6 +910,18 @@ CASES = [
     ("the pristine site", None, OK_LINE, 0),
 ]
 
+# (description, mutation, the escaped finding the gate must print on a strict ASCII stdout, with
+# exit 1 and no traceback)
+ASCII_CASES = [
+    ("a site/_redirects line naming /draft/ with a euro sign in its path",
+     redirects("/draft/€ /index.html 302\n" + LATEST),
+     "'/draft/\\u20ac /index.html 302' names /draft/"),
+    ("a latest link whose target carries a euro sign",
+     redirects("/downloads/secureconfig-latest.zip /€ 302\n"
+               f"/downloads/secureconfig-plugin-latest.zip /downloads/{PLUGIN_ZIP} 302\n"),
+     "'/downloads/secureconfig-latest.zip /\\u20ac 302' is not `"),
+]
+
 
 def generated(edit_content, extra=None):
     """Build the pages from a scratch copy of their sources with 1 content edit, then run
@@ -976,6 +1000,11 @@ def main():
             failures.append(f"{desc}: expected the output to contain {expected!r}: {out!r}")
         if "Traceback (most recent call last):" in out:
             failures.append(f"{desc}: the gate crashed: {out!r}")
+    for desc, mutate, expected in ASCII_CASES:
+        rc, out = run(mutate, ascii_stdout=True)
+        if rc != 1 or expected not in out or "Traceback (most recent call last):" in out:
+            failures.append(f"{desc}, on an ASCII stdout: expected exit 1, {expected!r} and no "
+                            f"traceback, got exit {rc}: {out!r}")
     # Each SINGLE_FORM line is caught by its own corpus form and by no other.
     sys.path.insert(0, str(TOOLS))
     from check_draft import DRAFT_REFS, normalized
@@ -1025,7 +1054,7 @@ def main():
     refusals = sum(1 for case in CASES if case[3])
     print(f"  ok    {len(CASES)} self-containment, indexability and published-index cases at the "
           f"root ({refusals} refusals and {len(CASES) - refusals} accepted changes, the pristine "
-          f"site among them), "
+          f"site among them), {len(ASCII_CASES)} refusals printed escaped on an ASCII stdout, "
           f"2 generated-page cases (a Unicode host refused, a site.css accepted by the build "
           f"and the gate), and the staging form built beside the root pages (its own --check "
           f"passes; the root --check and the gate refuse the draft tree)")

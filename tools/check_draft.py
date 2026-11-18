@@ -731,13 +731,13 @@ def redirect_findings(root):
             parts = line.split(" ")
             matched = target_re.fullmatch(parts[1]) if len(parts) == 3 else None
             if len(parts) != 3 or parts[2] != "302" or not matched:
-                findings.append(f"{REDIRECTS}:{n}: {line!r} is not `{source} "
+                findings.append(f"{REDIRECTS}:{n}: {line!a} is not `{source} "
                                 f"/downloads/<its versioned zip> 302`; the target is that "
                                 f"link's own kind of zip and the status answers 302, never 301")
                 continue
             versions.append(matched.group(1))
             if not (root / SITE / "downloads" / Path(parts[1]).name).is_file():
-                findings.append(f"{REDIRECTS}:{n}: {line!r} names no staged archive; the "
+                findings.append(f"{REDIRECTS}:{n}: {line!a} names no staged archive; the "
                                 f"records pull request copies the released zip into "
                                 f"site/downloads/ byte for byte before a link points at it")
         if len(versions) == 2 and versions[0] != versions[1]:
@@ -747,7 +747,7 @@ def redirect_findings(root):
         if line in rules:
             continue
         if any(draft_path(field) for field in line.split(" ")):
-            findings.append(f"{REDIRECTS}:{n}: {line!r} names /draft/; the live site carries no "
+            findings.append(f"{REDIRECTS}:{n}: {line!a} names /draft/; the live site carries no "
                             f"/draft/ tree and no redirect names it")
             continue
         findings.append(f"{REDIRECTS}:{n}: {line!a} is not an allowlisted redirect; the file "

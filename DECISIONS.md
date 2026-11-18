@@ -49,10 +49,14 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     newest first). `tools/check_hosted.py` holds the committed file to that output, every release-asset
     entry to the record (a recorded zip that is no longer staged), and `site/downloads/` itself to the
     record: a staged file no record names is refused.
-  - Revert. Restore the `site/_redirects exists` refusal in `tools/check_draft.py` and its test case, remove
-    `tools/check_hosted.py`, `tools/test_hosted.py`, `tools/redirects_allowlist.txt`, the
-    `plugin-distribution` section and the `tools/check_hosted.py` line of `scripts/pages-build.sh`, and
-    record the withdrawing ruling here. `scripts/build-site.py` imports `tools/gen_hosted.py`:
+  - Revert. Restore the `site/_redirects exists` refusal in `tools/check_draft.py` and its test case, and
+    remove `tools/check_hosted.py`, `tools/test_hosted.py`, `tools/redirects_allowlist.txt`, the
+    `plugin-distribution` section and the `tools/check_hosted.py` line of `scripts/pages-build.sh`. Remove
+    the gate tooling's other references to that section too: in `tools/select_gates.py`, the
+    `site/marketplace.json` entry of `MAP`, its comment and the docstring sentence on that file, and in
+    `tools/test_select_gates.py`, the `site/marketplace.json` case and the docstring's parenthesis on it,
+    after which that file selects the site sections alone. Then record the withdrawing ruling here.
+    `scripts/build-site.py` imports `tools/gen_hosted.py`:
     `hosted_problems()` holds the generated files to its output, and the build also reads
     `site-src/content.json` through its `json_object` reader. So removing `tools/gen_hosted.py` needs
     `hosted_problems()` and its call removed and the build given its own JSON object reader first; until
