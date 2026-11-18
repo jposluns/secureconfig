@@ -85,9 +85,9 @@ class Fixture:
             shutil.copytree(template, self.root, dirs_exist_ok=True)
         self.base = self.git("rev-parse", "HEAD").strip().decode()
 
-    def git(self, *args, data=None):
+    def git(self, *args, data=None, timeout=30):
         p = subprocess.run(["git", *args], cwd=self.root, env=self.env,
-                           input=data, capture_output=True, timeout=30)
+                           input=data, capture_output=True, timeout=timeout)
         assert p.returncode == 0, (args, p.returncode, p.stderr)
         return p.stdout
 
@@ -1462,8 +1462,15 @@ def unfetched(f):
     f.git("branch", "private", h)
     f.git("reset", "--hard", f.base)
     clone = f.root / "single"
+    # The file:// transport copies only the objects main reaches: one commit,
+    # its tree and the clean blob. A clone from a plain path would copy the
+    # whole object store, the private commit included, and test unreachable
+    # objects instead. This case timed out once, at this clone as the
+    # orchestrator reports (DONE 3.93), so the clone gets 300 seconds, the
+    # longest limit in this file, which only a hung clone should reach; every
+    # other step here keeps 30 seconds.
     f.git("clone", "-q", "--single-branch", "--branch", "main",
-          "file://" + str(f.root), str(clone))
+          "file://" + str(f.root), str(clone), timeout=300)
     root = f.root
     f.root = clone
     try:
