@@ -45,7 +45,9 @@ each exit 1 in 1 FAIL line, and a staged plugin zip whose root plugin.json is ex
 MANIFEST_MAX bytes long passes. A staged plugin zip of DOWNLOAD_MAX bytes whose central
 directory fills it and a valid plugin zip whose central directory is one byte over CENTRAL_MAX
 are each exit 1 in 1 FAIL line saying that the zip is not opened, and a valid plugin zip whose
-central directory is exactly CENTRAL_MAX bytes passes. The newest staged plugin zip's root
+central directory is exactly CENTRAL_MAX bytes passes. A valid plugin zip whose zip64 end record
+declares a central directory one byte over CENTRAL_MAX while its end record declares 46 bytes is
+exit 1 in 1 FAIL line saying that the zip is not opened too. The newest staged plugin zip's root
 plugin.json version is printed escaped, so one that is a lone surrogate and one that carries a
 newline and a forged ok line are each exit 1 in exactly 1 FAIL line, with no traceback and no
 forged line. One in-process case holds check_draft.REDIRECTS_HEADER to gen_hosted.HEADER, so the
@@ -164,6 +166,21 @@ def wide_directory_zip(size):
     if int.from_bytes(data[-10:-6], "little") != size:
         raise AssertionError(f"wide_directory_zip({size}) built another directory size")
     return data
+
+
+def zip64_directory_zip(size, declared):
+    """wide_directory_zip(size) with a zip64 end record, declaring its central directory of
+    exactly size bytes, and that record's locator put before its end record, which then
+    declares a central directory of only declared bytes. zipfile reads the zip64 record's size,
+    so a gate that read only the end record's would let ZipFile parse the whole directory."""
+    data = wide_directory_zip(size)
+    end = len(data) - 22
+    count = int.from_bytes(data[end + 10:end + 12], "little")
+    zip64 = struct.pack("<4sQ2H2L4Q", b"PK\x06\x06", 44, 45, 45, 0, 0, count, count, size,
+                        end - size)
+    locator = struct.pack("<4sLQL", b"PK\x06\x07", 0, end, 1)
+    record = data[end:end + 12] + declared.to_bytes(4, "little") + data[end + 16:]
+    return data[:end] + zip64 + locator + record
 
 
 def padded_manifest(size):
@@ -459,7 +476,10 @@ def check_caps(failures):
     whose central directory fills it, 455902 records, and a valid plugin zip whose central
     directory is one byte over CENTRAL_MAX are each exit 1 in exactly 1 FAIL line saying that
     the zip is not opened, and a valid plugin zip whose central directory is exactly CENTRAL_MAX
-    bytes is opened and passes."""
+    bytes is opened and passes. A valid plugin zip whose zip64 end record declares a central
+    directory one byte over CENTRAL_MAX while its end record declares 46 bytes, a directory
+    zipfile would read whole, is exit 1 in exactly 1 FAIL line too, which gives the zip64
+    record's size."""
     over = check_hosted.DOWNLOAD_MAX + 1
     cap = check_hosted.MANIFEST_MAX
     central = check_hosted.CENTRAL_MAX
@@ -488,6 +508,11 @@ def check_caps(failures):
          f"{central}-byte cap on it, so the zip is not opened", 1),
         ("a plugin zip whose central directory is exactly CENTRAL_MAX bytes",
          wide_directory_zip(central), "1 recorded release", 0),
+        ("a plugin zip whose zip64 end record declares a central directory one byte over "
+         "CENTRAL_MAX while its end record declares 46 bytes",
+         zip64_directory_zip(central + 1, 46),
+         f"its end record declares a central directory of {central + 1} bytes, over the "
+         f"{central}-byte cap on it, so the zip is not opened", 1),
     )
     for desc, data, expected, want in cases:
         d = Path(tempfile.mkdtemp())
