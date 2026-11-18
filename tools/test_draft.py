@@ -55,7 +55,10 @@ The cases cover an accepted full file, the accepted record-less shape (the heade
 allowlisted rule, no latest line), an allowlisted entry, an aged-out zip redirected to its own
 release asset, a headerless file, a 301, a wrong-kind target, a missing staged archive, a lone
 latest link and the reversed order. They also cover 2 versions, a third rule, a /draft rule
-(allowlisted or not), an entry without a reason, an aged-out redirect from a foreign source, an
+(allowlisted or not), sources whose first segment starts with draft, case folded and
+percent-decoded (/draft, /draft.html, /drafts, /DraftS.html and /%64rafts, each refused, while
+/old-draft, whose first segment does not start with draft, is accepted), an entry without a
+reason, an aged-out redirect from a foreign source, an
 entry whose source names a staged archive or an existing page (it would shadow served bytes, and
 the folder, index and other-case forms of a page's path are read too), and a -latest file under
 site/, in downloads/ and elsewhere. Further refusals cover an entry whose target lies under
@@ -514,6 +517,31 @@ CASES = [
     ("an allowlisted /draft rule, still refused",
      redirects("/x /draft/ 302\n" + LATEST, allow="/x /draft/ 302\tan old draft link\n"),
      "names /draft/", 1),
+    # A source's first segment must not even start with draft, case folded and percent-decoded.
+    ("an allowlisted /draft source",
+     redirects("/draft /index.html 302\n" + LATEST,
+               allow="/draft /index.html 302\tan old draft link\n"),
+     "starts with draft", 1),
+    ("an allowlisted /draft.html source",
+     redirects("/draft.html /index.html 302\n" + LATEST,
+               allow="/draft.html /index.html 302\tan old draft page\n"),
+     "starts with draft", 1),
+    ("an allowlisted /drafts source",
+     redirects("/drafts /index.html 302\n" + LATEST,
+               allow="/drafts /index.html 302\tan old drafts folder\n"),
+     "starts with draft", 1),
+    ("an allowlisted /DraftS.html source in another case",
+     redirects("/DraftS.html /index.html 302\n" + LATEST,
+               allow="/DraftS.html /index.html 302\tan old draft page\n"),
+     "starts with draft", 1),
+    ("an allowlisted /%64rafts source, percent-encoded",
+     redirects("/%64rafts /index.html 302\n" + LATEST,
+               allow="/%64rafts /index.html 302\tan old drafts folder\n"),
+     "starts with draft", 1),
+    ("an allowlisted /old-draft source, whose first segment does not start with draft",
+     redirects("/old-draft /index.html 302\n" + LATEST,
+               allow="/old-draft /index.html 302\tan old page\n"),
+     OK_LINE, 0),
     ("an allowlist entry without a reason", redirects(LATEST, allow="/old / 302\n"),
      "non-empty reason", 1),
     ("an aged-out zip redirected to its own release asset",

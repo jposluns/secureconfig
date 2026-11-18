@@ -8,9 +8,10 @@ holds what is committed to what tools/gen_hosted.py writes from the record, so a
 typed digest, a stale latest link or a missing staged archive fails the suite offline.
 
 WHAT IT CHECKS:
-  - the cumulative record releases/SHA256SUMS parses (gen_hosted.read_records: sha256sum lines
-    whose names carry each release's version, one block per release, newest release first, both
-    zips named per release, nothing named twice, no `-latest` name);
+  - the cumulative record releases/SHA256SUMS parses (gen_hosted.read_records: a byte copy of
+    each release's SHA256SUMS asset, four sha256sum lines per release in the asset's order,
+    llms-full.txt, the two zips, then the notes, LF line ends only, newest release first, no
+    release repeated, no `-latest` name, and only the zip lines feed the checks below);
   - with no record: site/marketplace.json does not exist, site/_redirects, when present,
     equals the generator's output, which then holds no latest line, and nothing sits in
     site/downloads/; a tree with no record, no zip and no generated file passes, so this half

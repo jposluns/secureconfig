@@ -10,6 +10,8 @@
 #   - the pages under site/ match a fresh build of their sources at the root, and no file lies
 #     under site/draft/ (drafts are built on the `draft` branch; main never carries /draft/);
 #   - the site is self-contained, only the 404 is noindex, and site/ has no draft entry in any case;
+#   - the hosted catalog, site/_redirects and the archives staged in site/downloads/ match the
+#     release record (tools/check_hosted.py), read from the committed files only, offline;
 #   - every page fits the template page model and site/_headers carries exactly the shared policy;
 #   - site/.well-known/security.txt carries the owner's fields.
 # It needs bash and Python 3.11 or later (tomllib), and no network.
@@ -25,6 +27,7 @@ python3 -I -B tools/check_baseline_pin.py
 python3 -I -B .baseline/check_palette.py --site secureconfig --palettes site/assets/baseline/palettes.css
 python3 -I -B scripts/build-site.py --check
 python3 -I -B tools/check_draft.py
+python3 -I -B tools/check_hosted.py
 python3 -I -B tools/check_csp_hashes.py
 python3 -I -B tools/check_security_txt.py
 echo "Pages build check passed."

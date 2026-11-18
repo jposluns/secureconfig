@@ -12,13 +12,16 @@ output, and tools/check_draft.py holds site/_redirects to the shapes this module
 THE RELEASE RECORD is releases/SHA256SUMS, one cumulative file that gains each release's lines,
 newest release first: the records pull request (CONTRIBUTING.md "Releasing" step 9) prepends a
 byte copy of the lines of that release's `SHA256SUMS` asset. Each line is `<64 hex>  <name>` as
-sha256sum writes it, and each name is a release archive name, secureconfig-1.0.<N>.zip or
-secureconfig-plugin-1.0.<N>.zip, so a line's release is the version its name carries. One
-release's lines sit together, each release appears once with both of its zips named, and no
-name appears twice. No line names a `-latest` file: a latest link is a 302 redirect with no
-bytes of its own. A name carrying no version, a repeated or split release block, an older
-release above a newer one, and anything else under releases/ are refused (HostedError), so a
-merged or reordered line cannot pass as a record.
+sha256sum writes it, and one release's lines are that asset's four, in the asset's order
+(tools/check_release.py names()): `llms-full.txt`, the skill zip secureconfig-1.0.<N>.zip, the
+plugin zip secureconfig-plugin-1.0.<N>.zip, then `RELEASE-NOTES-v1.0.<N>.md`, all of one
+version, so a block's release is the version its zip and notes names carry. Only the zip lines
+feed the hosted files: an `llms-full.txt` or notes line is recorded but never staged or served
+from here. The file is read as bytes, so a CRLF or lone-CR rewrite is refused, never read as
+LF. No line names a `-latest` file: a latest link is a 302 redirect with no bytes of its own.
+Any other name, order or line count in a block, a repeated release block, an older release
+above a newer one, and anything else under releases/ are refused (HostedError), so a merged,
+trimmed or reordered record cannot pass as a byte copy of the assets.
 
 site/marketplace.json names the catalog `secureconfig`, this project's own catalog under its own
 name, and lists one plugin whose source is the archive form
@@ -66,6 +69,10 @@ RECORD_LINE = re.compile(r"([0-9a-f]{64})  (\S+)")
 NAME_VERSIONS = tuple(re.compile(re.escape(kind.template)
                                  .replace(re.escape("{version}"), r"(1\.0\.[1-9][0-9]*)"))
                       for kind in ARCHIVES)
+# The other two names a release's SHA256SUMS asset lists: the committed corpus and the notes.
+# With the zips they are the asset's four lines, in this order (tools/check_release.py names()).
+LLMS_NAME = "llms-full.txt"
+NOTES_TEMPLATE = "RELEASE-NOTES-v{version}.md"
 LATEST_SUFFIX = "-latest.zip"
 MARKETPLACE = Path("site") / "marketplace.json"
 REDIRECTS = Path("site") / "_redirects"
@@ -107,17 +114,28 @@ def name_version(name):
     return None
 
 
+def asset_names(version):
+    """The four names of one release's SHA256SUMS asset, in the asset's order: llms-full.txt,
+    each zip ARCHIVES lists, then the notes (tools/check_release.py names(), without the asset
+    itself, which lists the other four and so never lists its own name)."""
+    return (LLMS_NAME, *(archive_name(kind, version) for kind in ARCHIVES),
+            NOTES_TEMPLATE.format(version=version))
+
+
 def read_records(root):
-    """{version: {asset name: sha256}} for each release in the cumulative record
-    releases/SHA256SUMS, newest release first, or {} when the folder or the file is absent;
-    HostedError when the record cannot be used or anything else sits under releases/."""
+    """{version: {zip name: sha256}} for each release in the cumulative record
+    releases/SHA256SUMS, newest release first, or {} when the folder or the file is absent.
+    The record is a byte copy of each release's `SHA256SUMS` asset: four lines per release, in
+    the asset's order (asset_names()), each ending in LF alone. Only the zip lines are
+    returned, since only a zip is hosted. HostedError when the record cannot be used or
+    anything else sits under releases/."""
     folder = root / RECORDS
     if not folder.is_dir():
         return {}
     # A file name and a record line's name are untrusted text, so each is printed escaped
-    # (ascii()) unless a pattern has already limited it to safe characters, and a name that has
-    # matched NAME_VERSIONS is printed raw: no character in a printed name can end the FAIL
-    # line, forge another or fail to encode.
+    # (ascii()) unless a pattern has already limited it to safe characters, and an expected
+    # name built by asset_names() is printed raw: no character in a printed name can end the
+    # FAIL line, forge another or fail to encode.
     for entry in sorted(folder.iterdir()):
         if entry.name != RECORD_NAME or not entry.is_file():
             raise HostedError(f"{str(RECORDS / entry.name)!a} is not the cumulative release "
@@ -125,11 +143,18 @@ def read_records(root):
     path = folder / RECORD_NAME
     if not path.is_file():
         return {}
-    text = path.read_text(encoding="utf-8")
+    # Read as bytes: the asset's lines end in LF alone, so a CRLF or lone-CR rewrite is a
+    # refusal here, not something a text-mode read would fold back onto LF.
+    raw = path.read_bytes()
+    if b"\r" in raw:
+        n = raw[:raw.index(b"\r")].count(b"\n") + 1
+        raise HostedError(f"{RECORDS}/{RECORD_NAME}:{n} holds a carriage return; the record is "
+                          f"a byte copy of each release's SHA256SUMS asset, whose lines end in "
+                          f"LF alone, so a CRLF or lone-CR rewrite is refused")
+    text = raw.decode("utf-8")
     if not text.endswith("\n"):
         raise HostedError(f"{RECORDS}/{RECORD_NAME} does not end with a newline")
-    records = {}
-    last = None
+    entries = []
     for n, line in enumerate(text.split("\n")[:-1], 1):
         matched = RECORD_LINE.fullmatch(line)
         where = f"{RECORDS}/{RECORD_NAME}:{n}"
@@ -139,28 +164,34 @@ def read_records(root):
         if name.lower().endswith(LATEST_SUFFIX):
             raise HostedError(f"{where} names {name!a}; a latest link is a 302 redirect with "
                               f"no bytes of its own, so no record lists one")
+        entries.append((where, digest, name))
+    if len(entries) % 4:
+        raise HostedError(f"{RECORDS}/{RECORD_NAME} holds {len(entries)} lines, which is not a "
+                          f"multiple of four; each release's SHA256SUMS asset holds four lines, "
+                          f"prepended whole")
+    records = {}
+    last = None
+    for start in range(0, len(entries), 4):
+        block = entries[start:start + 4]
+        where, _, name = block[1]
         version = name_version(name)
         if version is None:
-            raise HostedError(f"{where} names {name!a}, which is no release archive's name, so "
-                              f"the line belongs to no release")
-        if version != last:
-            if version in records:
-                raise HostedError(f"{where} opens a second v{version} block; the cumulative "
-                                  f"record holds each release's lines once, together")
-            if last is not None and int(version.rsplit(".", 1)[1]) > int(last.rsplit(".", 1)[1]):
-                raise HostedError(f"{where} puts v{version} after v{last}; the cumulative "
-                                  f"record holds the newest release first")
-        names = records.setdefault(version, {})
-        if name in names:
-            raise HostedError(f"{where} names {name} twice")
-        names[name] = digest
+            raise HostedError(f"{where} names {name!a}, which is no release archive's name; the "
+                              f"second line of a release's block is its skill zip, whose "
+                              f"1.0.<N> says which release the block records")
+        if version in records:
+            raise HostedError(f"{block[0][0]} opens a second v{version} block; the cumulative "
+                              f"record holds each release's lines once, together")
+        if last is not None and int(version.rsplit(".", 1)[1]) > int(last.rsplit(".", 1)[1]):
+            raise HostedError(f"{block[0][0]} puts v{version} after v{last}; the cumulative "
+                              f"record holds the newest release first")
+        for (where, _, name), want in zip(block, asset_names(version)):
+            if name != want:
+                raise HostedError(f"{where} names {name!a}, not {want}; a release's block is a "
+                                  f"byte copy of the four lines of its SHA256SUMS asset, in the "
+                                  f"asset's order")
+        records[version] = {name: digest for _, digest, name in block[1:3]}
         last = version
-    for version, names in records.items():
-        for kind in ARCHIVES:
-            if archive_name(kind, version) not in names:
-                raise HostedError(f"{RECORDS}/{RECORD_NAME} does not name "
-                                  f"{archive_name(kind, version)}, which the v{version} release "
-                                  f"carries")
     return records
 
 

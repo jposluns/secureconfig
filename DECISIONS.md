@@ -50,9 +50,13 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     entry to the record (a recorded zip that is no longer staged), and `site/downloads/` itself to the
     record: a staged file no record names is refused.
   - Revert. Restore the `site/_redirects exists` refusal in `tools/check_draft.py` and its test case, remove
-    `tools/gen_hosted.py`, `tools/check_hosted.py`, `tools/test_hosted.py`,
-    `tools/redirects_allowlist.txt` and the `plugin-distribution` section, and record the withdrawing ruling
-    here.
+    `tools/check_hosted.py`, `tools/test_hosted.py`, `tools/redirects_allowlist.txt`, the
+    `plugin-distribution` section and the `tools/check_hosted.py` line of `scripts/pages-build.sh`, and
+    record the withdrawing ruling here. `scripts/build-site.py` imports `tools/gen_hosted.py`:
+    `hosted_problems()` holds the generated files to its output, and the build also reads
+    `site-src/content.json` through its `json_object` reader. So removing `tools/gen_hosted.py` needs
+    `hosted_problems()` and its call removed and the build given its own JSON object reader first; until
+    then `tools/gen_hosted.py` stays.
 - **The relicence pull request: the whole project moves to the Apache License 2.0, carrying out the maintainer's
   ruling of 2026-11-15 (#1341).**
   This pull request is the second of the two that the ruling's entry below (#1336) describes; it carries the ruling
