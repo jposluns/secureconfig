@@ -59,15 +59,22 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     `site/marketplace.json` case and its whole item, parenthesis included, in the docstring's list of
     cases, after which that file selects the site sections alone. In `tools/test_draft.py`, remove every
     other case that plants a `site/_redirects`, `ASCII_CASES` included: the restored refusal fails each
-    case that expects such a tree to pass, and the rest test the removed admission. Once a release
-    record exists, `tools/gen_hosted.py` writes `site/_redirects` and `scripts/build-site.py --check`
-    requires it, so a revert then also needs that module to write no `site/_redirects`,
-    `tools/test_build_site.py`'s `_redirects` cases changed to match, and any committed copy removed
-    with its `export/public-allowlist.txt` line. Then rewrite every docstring, comment and printed line,
-    and CONTRIBUTING.md's Releasing step 9, that still names a removed file or describes an admitted or
-    generated `site/_redirects`, among them those in `tools/check_draft.py`, `tools/test_draft.py`,
-    `tools/gen_hosted.py`, `tools/test_build_site.py` and `scripts/build-site.py`. Then record the
-    withdrawing ruling here.
+    case that expects such a tree to pass, and the rest test the removed admission. Then remove from that
+    file everything that only the removed cases use, with its comments: the emptied `ASCII_CASES` list,
+    its loop in `main()`, the ok line's clause counting it and the docstring paragraph on it,
+    `ASCII_STDOUT` and the `ascii_stdout` parameter of `run()`, and every helper and constant that only
+    those cases read. Also remove the in-process check in `main()` that holds `PUBLISHED_TARGETS` to
+    `scripts/build-site.py`'s `PUBLISHED`, with its comment and the `importlib.util` import that only that
+    check uses. In `tools/check_draft.py`, remove every constant and helper that only the removed
+    admission uses, `PUBLISHED_TARGETS` among them, with its comments. Once a release record exists,
+    `tools/gen_hosted.py` writes `site/_redirects` and `scripts/build-site.py --check` requires it, so a
+    revert then also needs that module to write no `site/_redirects`, `tools/test_build_site.py`'s
+    `_redirects` cases changed to match, and any committed copy removed. Whether or not a copy is
+    committed, remove the optional `site/_redirects` copy line of `export/public-allowlist.txt`. Then
+    rewrite every docstring, comment and printed line, and CONTRIBUTING.md's Releasing step 9, that still
+    names a removed file or describes an admitted or generated `site/_redirects`, among them those in
+    `tools/check_draft.py`, `tools/test_draft.py`, `tools/gen_hosted.py`, `tools/test_build_site.py`,
+    `scripts/build-site.py` and `export/public-allowlist.txt`. Then record the withdrawing ruling here.
     `scripts/build-site.py` imports `tools/gen_hosted.py`:
     `hosted_problems()` holds the generated files to its output, and the build also reads
     `site-src/content.json` through its `json_object` reader. So removing `tools/gen_hosted.py` needs

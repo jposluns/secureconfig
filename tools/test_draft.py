@@ -10,16 +10,15 @@ case into a pristine run.
 The staged-era /draft/* header rule retired with the staging it policed. What carried over is
 retargeted to the generated pages at the root: the robots-meta reading (on the 404, with every
 other page carrying none; the cases once read on the /draft/ review page, which baseline 1.11.0
-moved to the `draft` branch, now read the 404's), every URL-shape refusal (a
-browser-normalized host, a trailing-dot, upper-case, percent-encoded or non-ASCII host, a Pages
-alias, https:/// and scheme-relative spellings, a backslash, whitespace, javascript:), the URL
-attributes beyond href and src, http-equiv, the new-tab hint, site/_redirects, CSS @import and
-url() containment and the site.css grammar. New at the root: a root-relative link must name a file
-under site/, and a link or a stylesheet url() that percent-decodes to a NUL is refused with a
-finding, never a traceback, as unpathable() also refuses a character the file system encoding
-cannot encode, checked in process; each canonical is its page's own URL (exactly 1 on the 7
-indexable pages, none on the 404 or the unlisted advisory, not even its own); the noindex
-admission is the exact path
+moved to the `draft` branch, now read the 404's), every URL-shape refusal (a browser-normalized
+host, a trailing-dot, upper-case, percent-encoded or non-ASCII host, a Pages alias, https:/// and
+scheme-relative spellings, a backslash, whitespace, javascript:), the URL attributes beyond href
+and src, http-equiv, the new-tab hint, site/_redirects, CSS @import and url() containment and the
+site.css grammar. New at the root: a root-relative link must name a file under site/, and a link
+or a stylesheet url() that percent-decodes to a NUL is refused with a finding, never a traceback,
+as unpathable() also refuses a character the file system encoding cannot encode, checked in
+process; each canonical is its page's own URL (exactly 1 on the 7 indexable pages, none on the 404
+or the unlisted advisory, not even its own); the noindex admission is the exact path
 advisories/n8n-2026-11-07-jposluns.html, so a noindex site/advisories/other.html, and a noindex
 page at the advisory's old path advisories/n8n.html, are still refused, while the advisory's
 build-written plain-text copy beside it, which is not a page, is in the pristine copy the gate
@@ -29,29 +28,28 @@ folder is not the draft tree; the "no page links /draft/" and Disclosure and Lic
 the resolved target file, so a query, an extra slash, a dot segment (plain or percent-encoded), a
 percent-encoded letter or a fragment does not get past them (the /draft/ link cases plant a draft
 tree, so the link rule itself is read; without one a /draft/ link names no file); and the
-published indexes are read
-by a fail-closed rule after percent-decoding and character-reference decoding (at most 8 rounds),
-NFKC, case folding and `\\` read as `/`: site/llms.txt, site/robots.txt and
-site/.well-known/security.txt are refused for any literal `draft` once tabs and CRs are deleted
-(relative, Disallow, bold, host-only, www, href=, backslash, 1-slash, .html, character-reference,
-tab and CR spellings and a raw CR inside the path among the cases) and accept "Raft consensus and
-Raft logs", and site/llms-full.txt for each form of the draft path, matched with tabs and CRs kept
-and with them deleted (character references, a tab or CR character reference or a raw CR inside
-the path, a tab as the only separator between a word and the reference for forms a, b and e, bare
-Markdown link destinations, reference definitions, HTML attribute values, a link broken across a
-line end, a link broken inside a blockquote, a reference definition whose destination is on the
-next line, whose label spans 2 lines, or that sits in a blockquote or a list item, and 1 case each
-for forms b, d and e that only that form catches), while its prose ("drafting", "drafted",
-"a draft.", "the draft's", "draft / final", "and Raft", "Choose draft" wrapped before
-"/ final wording." in the text and in a link title, "draft-ietf-oauth-v2-1", a datatracker draft
-URL and a description meta saying "draft") is accepted. site/secureconfig-instructions.md, the
-generated chat fallback file, is read with the same corpus forms, and one case plants a /draft/
-path in it. A 9-times percent-encoded path exceeds
-the round limit and is refused. Each refusal names the file and line, counted by `\\n` only (a
-U+2028 or a `\\r` ends no line, and llms-full.txt written with `\\r\\n` line endings reports a
-reference on line 2 as line 2). The edit, append, prepend and crlf mutations read and write
-bytes, so they translate no newline. A second robots meta whose first name attribute is robots is
-read by that first name, as a browser reads it.
+published indexes are read by a fail-closed rule after percent-decoding and character-reference
+decoding (at most 8 rounds), NFKC, case folding and `\\` read as `/`: site/llms.txt,
+site/robots.txt and site/.well-known/security.txt are refused for any literal `draft` once tabs
+and CRs are deleted (relative, Disallow, bold, host-only, www, href=, backslash, 1-slash, .html,
+character-reference, tab and CR spellings and a raw CR inside the path among the cases) and accept
+"Raft consensus and Raft logs", and site/llms-full.txt for each form of the draft path, matched
+with tabs and CRs kept and with them deleted (character references, a tab or CR character
+reference or a raw CR inside the path, a tab as the only separator between a word and the
+reference for forms a, b and e, bare Markdown link destinations, reference definitions, HTML
+attribute values, a link broken across a line end, a link broken inside a blockquote, a reference
+definition whose destination is on the next line, whose label spans 2 lines, or that sits in a
+blockquote or a list item, and 1 case each for forms b, d and e that only that form catches),
+while its prose ("drafting", "drafted", "a draft.", "the draft's", "draft / final", "and Raft",
+"Choose draft" wrapped before "/ final wording." in the text and in a link title,
+"draft-ietf-oauth-v2-1", a datatracker draft URL and a description meta saying "draft") is
+accepted. site/secureconfig-instructions.md, the generated chat fallback file, is read with the
+same corpus forms, and one case plants a /draft/ path in it. A 9-times percent-encoded path
+exceeds the round limit and is refused. Each refusal names the file and line, counted by `\\n`
+only (a U+2028 or a `\\r` ends no line, and llms-full.txt written with `\\r\\n` line endings
+reports a reference on line 2 as line 2). The edit, append, prepend and crlf mutations read and
+write bytes, so they translate no newline. A second robots meta whose first name attribute is
+robots is read by that first name, as a browser reads it.
 
 site/_redirects is no longer refused outright: the gate admits only the generator's header, the
 entries of tools/redirects_allowlist.txt and, written only once a release record exists, the two
@@ -1072,7 +1070,7 @@ def main():
     if s or "match a fresh build (base /draft/)" not in sout:
         failures.append(f"the staging form --base /draft/ --out site/draft did not pass its own "
                         f"--check: {sout!r}")
-    if c != 1 or "'draft/index.html' is not a page this build writes" not in cout:
+    if c != 1 or "'site/draft/index.html' is not a page this build writes" not in cout:
         failures.append(f"the root --check accepted a staged draft tree under site/draft/: {cout!r}")
     if g != 1 or f"'site/draft' exists (folder); {NO_TREE}" not in gout:
         failures.append(f"the gate accepted a staged draft tree under site/draft/: {gout!r}")

@@ -1062,10 +1062,10 @@ def refuse_text(name, text):
 # The archive bytes are not checked here, only each entry's name, type and size. A later pull
 # request is planned to check each hosted archive against its release record.
 def download_problems(out, max_file=DOWNLOAD_MAX, max_total=DOWNLOADS_TOTAL_MAX):
-    """The root --check problems for out/downloads/, each starting with its path relative to out.
-    A name read from the folder is untrusted text, so each path printed before DOWNLOAD_NAME has
-    matched its name in full is printed escaped, with ascii(): no character in one can end the
-    FAIL line, forge another, or reach the terminal as a raw control character or byte. Only the
+    """The root --check problems for out/downloads/, each a pair: its path relative to out, and
+    the text that follows that path. A name read from the folder is untrusted text, so main()
+    prints each path whole, the output folder included, with ascii(): no character in one can end
+    the FAIL line, forge another, or reach the terminal as a raw control character or byte. Only the
     top level is read, with os.scandir: every entry there must be a regular file whose
     name DOWNLOAD_NAME matches in full, at most max_file bytes, so any folder, empty or not, is
     refused and never read. Every regular file with a valid name, an oversized one included,
@@ -1079,7 +1079,7 @@ def download_problems(out, max_file=DOWNLOAD_MAX, max_total=DOWNLOADS_TOTAL_MAX)
     except FileNotFoundError:
         return []
     if stat.S_ISLNK(mode):
-        return [f"{DOWNLOADS} is a symbolic link; release archives are regular files in a folder"]
+        return [(DOWNLOADS, " is a symbolic link; release archives are regular files in a folder")]
     if not stat.S_ISDIR(mode):
         return []
     with os.scandir(folder) as entries:  # OSError when the folder cannot be listed
@@ -1090,29 +1090,29 @@ def download_problems(out, max_file=DOWNLOAD_MAX, max_total=DOWNLOADS_TOTAL_MAX)
         info = (folder / name).lstat()
         mode = info.st_mode
         if stat.S_ISDIR(mode):
-            problems.append(f"{rel!a} is a folder; download_problems() reads only the top level "
-                            f"of {DOWNLOADS}, so only top-level regular files can be admitted "
-                            f"there")
+            problems.append((rel, f" is a folder; download_problems() reads only the top level "
+                                  f"of {DOWNLOADS}, so only top-level regular files can be "
+                                  f"admitted there"))
         elif name.endswith("-latest.zip"):
-            problems.append(f"{rel!a} is a latest name; /downloads/secureconfig-latest.zip and "
-                            f"/downloads/secureconfig-plugin-latest.zip are planned as 302 "
-                            f"redirects with no bytes of their own, so no file carries one")
+            problems.append((rel, " is a latest name; /downloads/secureconfig-latest.zip and "
+                                  "/downloads/secureconfig-plugin-latest.zip are planned as 302 "
+                                  "redirects with no bytes of their own, so no file carries one"))
         elif not DOWNLOAD_NAME.fullmatch(name):
-            problems.append(f"{rel!a} is not a release archive name; {DOWNLOADS} holds only "
-                            f"secureconfig-1.0.<N>.zip and secureconfig-plugin-1.0.<N>.zip, "
-                            f"<N> as in VERSION")
+            problems.append((rel, f" is not a release archive name; {DOWNLOADS} holds only "
+                                  f"secureconfig-1.0.<N>.zip and secureconfig-plugin-1.0.<N>.zip, "
+                                  f"<N> as in VERSION"))
         elif not stat.S_ISREG(mode):
-            problems.append(f"{rel} is not a regular file; a release archive is the released "
-                            f"zip's bytes, copied")
+            problems.append((rel, " is not a regular file; a release archive is the released "
+                                  "zip's bytes, copied"))
         else:
             size = info.st_size
             total += size  # an oversized file counts too: its bytes are in the folder
             if size > max_file:
-                problems.append(f"{rel} is {size} bytes, over the {max_file}-byte cap on 1 "
-                                f"release archive")
+                problems.append((rel, f" is {size} bytes, over the {max_file}-byte cap on 1 "
+                                      f"release archive"))
     if total > max_total:
-        problems.append(f"{DOWNLOADS} holds {total} bytes of release archives, over the "
-                        f"{max_total}-byte cap on all of them together")
+        problems.append((DOWNLOADS, f" holds {total} bytes of release archives, over the "
+                                    f"{max_total}-byte cap on all of them together"))
     return problems
 
 
@@ -1122,8 +1122,9 @@ def hosted_problems(out):
     both read beside out (out's parent folder holds releases/ and tools/), and then only equal to
     that output byte for byte, the rule tools/check_hosted.py holds the committed copies to. A
     record, allowlist or plugin/plugin.json that cannot be used refuses the check whole, so
-    nothing unchecked ships. This build writes neither file. OSError or UnicodeError on a read
-    error, and ValueError on a plugin/plugin.json that cannot be parsed as JSON."""
+    nothing unchecked ships. This build writes neither file. Each problem is a pair, as
+    download_problems() gives one. OSError or UnicodeError on a read error, and ValueError on a
+    plugin/plugin.json that cannot be parsed as JSON."""
     root = out.parent
     try:
         records = gen_hosted.read_records(root)
@@ -1131,25 +1132,25 @@ def hosted_problems(out):
                     "marketplace.json": (gen_hosted.marketplace_text(root, records)
                                          if records else None)}
     except gen_hosted.HostedError as exc:
-        return [f"_redirects and marketplace.json cannot be checked, because the release record, "
-                f"the allowlist or plugin/plugin.json beside the output folder cannot be used: "
-                f"{exc}"]
+        return [("_redirects", f" and marketplace.json cannot be checked, because the release "
+                               f"record, the allowlist or plugin/plugin.json beside the output "
+                               f"folder cannot be used: {exc}")]
     problems = []
     for name in HOSTED:
         path = out / name
         found = path.read_bytes() if path.is_file() else None
         want = expected[name].encode("utf-8") if expected[name] is not None else None
         if want is None and found is not None:
-            problems.append(f"{name} exists, but the release record and the allowlist beside "
-                            f"the output folder give tools/gen_hosted.py nothing to write; the "
-                            f"file is generated, never written by hand")
+            problems.append((name, " exists, but the release record and the allowlist beside "
+                                   "the output folder give tools/gen_hosted.py nothing to write; "
+                                   "the file is generated, never written by hand"))
         elif want is not None and found is None:
-            problems.append(f"{name} is missing; run python3 -I -B tools/gen_hosted.py and "
-                            f"commit what it writes")
+            problems.append((name, " is missing; run python3 -I -B tools/gen_hosted.py and "
+                                   "commit what it writes"))
         elif want is not None and want != found:
-            problems.append(f"{name} does not equal what tools/gen_hosted.py writes from the "
-                            f"release record and the allowlist; the file is generated and "
-                            f"never hand-edited, so rerun that generator")
+            problems.append((name, " does not equal what tools/gen_hosted.py writes from the "
+                                   "release record and the allowlist; the file is generated and "
+                                   "never hand-edited, so rerun that generator"))
     return problems
 
 
@@ -1182,11 +1183,11 @@ def main(argv=None):
             path = out / name
             try:
                 if path.read_bytes() != text.encode("utf-8"):
-                    problems.append(f"{name} differs from a fresh build")
+                    problems.append((name, " differs from a fresh build"))
             except FileNotFoundError:
-                problems.append(f"{name} is missing")
+                problems.append((name, " is missing"))
             except OSError as exc:
-                print(f"  FAIL  cannot read {path}: {exc}")
+                print(f"  FAIL  cannot read {str(path)!a}: {exc}")
                 return 2
         # Every file under the output folder is a page or plain-text copy this build writes, a
         # copied template file under assets/baseline/ (scripts/copy-baseline.py, pinned by
@@ -1197,32 +1198,34 @@ def main(argv=None):
         # also holds the published files, named one by one in PUBLISHED. At the root it may also
         # hold the release archives that download_problems() admits in downloads/, and the 2
         # generated hosted files (HOSTED) that hosted_problems() holds to tools/gen_hosted.py's
-        # output. A stray file's name is untrusted text, so its path is printed escaped, with
-        # ascii(), as download_problems() prints one: no character in it can end the FAIL line,
-        # forge another, or reach the terminal as a raw control character or byte.
+        # output. A stray file's name is untrusted text, so each finding is a pair of a path
+        # relative to the output folder and the text after it, as download_problems() gives one,
+        # and the path is printed below whole, the output folder included, with ascii(): no
+        # character in it can end the FAIL line, forge another, or reach the terminal as a raw
+        # control character or byte, and no quote opens partway through it.
         if out.is_dir():
             for path in sorted(p for p in out.rglob("*") if not p.is_dir()):
                 rel = path.relative_to(out).as_posix()
                 if rel in written or rel.startswith(COPIED) or rel == SITE_CSS:
                     continue
                 if name_suffix(path.name) in (".html", ".htm"):
-                    problems.append(f"{rel!a} is not a page this build writes")
+                    problems.append((rel, " is not a page this build writes"))
                 elif args.base != "/":
-                    problems.append(f"{rel!a} is neither a page this build writes nor a copied "
-                                    f"template file under {COPIED}")
+                    problems.append((rel, f" is neither a page this build writes nor a copied "
+                                          f"template file under {COPIED}"))
                 elif rel.startswith(DOWNLOADS):
                     continue  # held by download_problems() below
                 elif rel in HOSTED:
                     continue  # held by hosted_problems() below
                 elif rel not in PUBLISHED:
-                    problems.append(f"{rel!a} is neither a page this build writes, a copied "
-                                    f"template file under {COPIED}, nor a published file in "
-                                    f"PUBLISHED")
+                    problems.append((rel, f" is neither a page this build writes, a copied "
+                                          f"template file under {COPIED}, nor a published file "
+                                          f"in PUBLISHED"))
             if args.base == "/":
                 try:
                     problems += download_problems(out)
                 except OSError as exc:
-                    print(f"  FAIL  cannot read {out / DOWNLOADS}: {exc}")
+                    print(f"  FAIL  cannot read {str(out / DOWNLOADS)!a}: {exc}")
                     return 2
                 try:
                     problems += hosted_problems(out)
@@ -1230,14 +1233,14 @@ def main(argv=None):
                     print(f"  FAIL  cannot read the release record, the allowlist, the plugin "
                           f"manifest or the generated hosted files: {exc}")
                     return 2
+        shown = out.relative_to(ROOT) if out.is_relative_to(ROOT) else out
         if problems:
-            for p in problems:
-                print(f"  FAIL  {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}/{p}; "
+            for rel, p in problems:
+                print(f"  FAIL  {ascii(f'{shown}/{rel}')}{p}; "
                       f"rerun python3 -I -B scripts/build-site.py")
             return 1
         print(f"  ok    the {len(pages)} pages and {len(texts)} plain-text copy under "
-              f"{out.relative_to(ROOT) if out.is_relative_to(ROOT) else out} "
-              f"match a fresh build (base {args.base})")
+              f"{str(shown)!a} match a fresh build (base {args.base})")
         return 0
     for name, text in written.items():
         path = out / name
