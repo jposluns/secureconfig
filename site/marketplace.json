@@ -1,0 +1,18 @@
+{
+  "name": "secureconfig",
+  "owner": {
+    "name": "Jeff Posluns",
+    "url": "https://secureconfig.ai"
+  },
+  "plugins": [
+    {
+      "name": "secureconfig",
+      "description": "Vendor-sourced guides for setting the services, tools and platforms AI-assisted projects run to the most appropriate secure settings, including but not limited to network exposure, TLS, logins and MFA, secrets, limits, audit logging and outbound controls, each line traced to a vendor page.",
+      "source": {
+        "source": "archive",
+        "url": "https://secureconfig.ai/downloads/secureconfig-plugin-1.0.1351.zip",
+        "sha256": "677b3836d8fc69100424b352520d3f53c04667705a4c65e440cc942431d52c1a"
+      }
+    }
+  ]
+}
