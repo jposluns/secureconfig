@@ -57,12 +57,15 @@ name), a symbolic link to a file and to a folder under a valid name, a FIFO unde
 once. The total counts every regular file with a valid name, an oversized one included, and no
 refused entry. downloads/ itself as a symbolic link is refused, a downloads/ that cannot be listed
 raises OSError (skipped as root), and the caps are exactly 20 MiB and 200 MiB.
---check prints each file name it reads from the output folder with ascii(), unless a pattern has
-already limited the name, so a finding names such a path in quotes. NAME_CASES plants a name
-carrying a newline and a forged ok line, an ESC, or a byte that is not UTF-8, at the root (a
-stray file and an extra page), in a staged build and in downloads/ (a folder, a latest name and
-other names), and the output, read as bytes, must hold the escaped name and no forged line, raw
-ESC, byte that is not UTF-8 or traceback.
+The --check mode prints with ascii(), whole and with the output folder in front, the path that
+starts each finding and the path after "cannot read" in a read error, and the folder in its ok
+line, so the quote opens at the start of the path. NAME_CASES plants a name carrying a newline and
+a forged ok line, an ESC, or a byte that is not UTF-8, at the root (a stray file and an extra
+page), in a staged build and in downloads/ (a folder, a latest name and other names), and the
+output, read as bytes, must hold the escaped path and no forged line, raw ESC, byte that is not
+UTF-8 or traceback. The same holds for an output folder whose name carries all three (OUT_NAME):
+on a fresh build, a stray file, a page it cannot read and a downloads/ it cannot list (skipped as
+root), --check must print those paths escaped.
 At the root, --check also admits the 2 generated hosted files, `_redirects` and
 `marketplace.json`, only when each equals, byte for byte, what tools/gen_hosted.py writes from
 the release record and the redirect allowlist read beside the output folder. Those cases cover
@@ -150,6 +153,13 @@ def run(*args):
     r = subprocess.run([sys.executable, "-I", "-B", str(SCRIPT), *args], capture_output=True,
                        text=True, timeout=120)
     return r.returncode, (r.stdout + r.stderr).strip()
+
+
+def named(out, rel):
+    """The path --check prints for rel under the output folder out: the whole path, the folder
+    included and named as the script names it, with ascii()."""
+    shown = out.relative_to(ROOT) if out.is_relative_to(ROOT) else out
+    return ascii(f"{shown}/{rel}")
 
 
 def build_from_readme(text, readme):
@@ -368,8 +378,9 @@ def download_cases():
     """(failures, count) for the release archive rule: download_problems() on fixture downloads/
     folders, and the exact cap values. Each case maps a name under downloads/ to a size, or to None
     for a symbolic link to a valid archive outside it, "folder" for an empty folder, "folder link"
-    for a symbolic link to a folder outside it, or "fifo" for a FIFO, and expects the problems
-    whose text starts with each given prefix, in order."""
+    for a symbolic link to a folder outside it, or "fifo" for a FIFO, and expects the problems,
+    each read as its path with ascii() and then its text, to start with each given prefix, in
+    order."""
     failures, count = [], 0
 
     def case(label, files, want, link_folder=False, **caps):
@@ -396,7 +407,7 @@ def download_cases():
                     os.mkfifo(entry)
                 else:
                     sized(entry, size)
-            got = build_site.download_problems(out, **caps)
+            got = [ascii(rel) + text for rel, text in build_site.download_problems(out, **caps)]
         if len(got) != len(want) or not all(g.startswith(w) for w, g in zip(want, got)):
             failures.append(f"downloads/, {label}: expected problems starting {want!r}, got {got!r}")
 
@@ -426,17 +437,18 @@ def download_cases():
          ["'downloads/secureconfig-1.0.1234.zip' is a folder"])
     case("a symbolic link to a folder under a valid name",
          {"secureconfig-1.0.1234.zip": "folder link"},
-         ["downloads/secureconfig-1.0.1234.zip is not a regular file"])
+         ["'downloads/secureconfig-1.0.1234.zip' is not a regular file"])
     if hasattr(os, "mkfifo"):
         case("a FIFO under a valid name", {"secureconfig-plugin-1.0.1234.zip": "fifo"},
-             ["downloads/secureconfig-plugin-1.0.1234.zip is not a regular file"])
+             ["'downloads/secureconfig-plugin-1.0.1234.zip' is not a regular file"])
     case("a file of exactly the per-file cap", {"secureconfig-1.0.1234.zip": big}, [])
     case("an oversized file", {"secureconfig-plugin-1.0.1234.zip": big + 1},
-         [f"downloads/secureconfig-plugin-1.0.1234.zip is {big + 1} bytes, over the {big}-byte cap"])
+         [f"'downloads/secureconfig-plugin-1.0.1234.zip' is {big + 1} bytes, over the {big}-byte "
+          f"cap"])
     case("an oversized file, which counts towards the total",
          {"secureconfig-1.0.1.zip": 11, "secureconfig-plugin-1.0.1.zip": 10},
-         ["downloads/secureconfig-1.0.1.zip is 11 bytes, over the 10-byte cap",
-          "downloads/ holds 21 bytes of release archives, over the 20-byte cap"],
+         ["'downloads/secureconfig-1.0.1.zip' is 11 bytes, over the 10-byte cap",
+          "'downloads/' holds 21 bytes of release archives, over the 20-byte cap"],
          max_file=10, max_total=20)
     case("files totalling exactly the total cap",
          {"secureconfig-1.0.1.zip": 10, "secureconfig-plugin-1.0.1.zip": 10,
@@ -444,14 +456,14 @@ def download_cases():
     case("files over the total cap",
          {"secureconfig-1.0.1.zip": 10, "secureconfig-plugin-1.0.1.zip": 10,
           "secureconfig-1.0.2.zip": 6},
-         ["downloads/ holds 26 bytes of release archives, over the 25-byte cap"],
+         ["'downloads/' holds 26 bytes of release archives, over the 25-byte cap"],
          max_file=10, max_total=25)
     case("a refused name, which does not count towards the total",
          {"secureconfig-1.0.1.zip": 10, "secureconfig-latest.zip": 20},
          ["'downloads/secureconfig-latest.zip' is a latest name"], max_file=10, max_total=25)
     case("a symbolic link under a valid name", {"secureconfig-1.0.1234.zip": None},
-         ["downloads/secureconfig-1.0.1234.zip is not a regular file"])
-    case("downloads/ as a symbolic link", {}, ["downloads/ is a symbolic link"], link_folder=True)
+         ["'downloads/secureconfig-1.0.1234.zip' is not a regular file"])
+    case("downloads/ as a symbolic link", {}, ["'downloads/' is a symbolic link"], link_folder=True)
     count += 1
     with tempfile.TemporaryDirectory() as d:
         if build_site.download_problems(Path(d)) != []:
@@ -508,9 +520,9 @@ NAME_CASES = (
 
 def name_cases():
     """The failures for --check printing a planted file name (NAME_CASES): each run must exit 1
-    with the name's ascii() form before its finding, print no line starting `  ok    forged`, no
-    ESC, no byte that is not UTF-8 and no traceback. The output is read as bytes, so a raw byte
-    is seen as it was written."""
+    with the ascii() form of the whole path, the output folder included, before its finding,
+    print no line starting `  ok    forged`, no ESC, no byte that is not UTF-8 and no traceback.
+    The output is read as bytes, so a raw byte is seen as it was written."""
     failures = []
     d = Path(tempfile.mkdtemp())
     try:
@@ -531,7 +543,7 @@ def name_cases():
             r = subprocess.run([sys.executable, "-I", "-B", str(SCRIPT), "--check", "--base", base,
                                 "--out", os.fsdecode(out)], capture_output=True, timeout=120)
             data = r.stdout + r.stderr
-            want = f"{ascii(os.fsdecode(rel))} {finding}".encode("ascii")
+            want = f"{named(outs[base], os.fsdecode(rel))} {finding}".encode("ascii")
             if (r.returncode != 1 or want not in data or b"Traceback" in data or b"\x1b" in data
                     or any(line.startswith(b"  ok    forged") for line in data.split(b"\n"))):
                 failures.append(f"--check on {label}: expected exit 1 with {want!r} and no forged "
@@ -548,6 +560,71 @@ def name_cases():
     finally:
         shutil.rmtree(d, ignore_errors=True)
     return failures
+
+
+# An output folder name carrying a newline and a forged ok line, an ESC and a byte that is not
+# UTF-8: --check must print each path of its own that holds it whole with ascii(), so no quote
+# opens partway through the path and nothing in the folder's name reaches the terminal raw.
+OUT_NAME = b"out\n  ok    forged\x1b[31m\xff"
+
+
+def out_cases():
+    """(failures, count) for --check on an output folder named OUT_NAME. A fresh build must exit
+    0 and name the folder in its ok line; a stray file x must exit 1 and be named by its whole
+    path; a folder in place of 404.html, a page it cannot read, must exit 2 and be named by its
+    whole path; and, when not run as root, so must a downloads/ it cannot list. Each path must be
+    printed with ascii(), and no run may print a line starting `  ok    forged`, an ESC, a byte
+    that is not UTF-8 or a traceback. The pages are built in a plain folder that is then renamed,
+    so only --check prints the folder's name."""
+    failures, count = [], 0
+    d = Path(tempfile.mkdtemp())
+    try:
+        rc, text = run("--out", str(d / "plain"))
+        if rc != 0:
+            return [f"a build for the --out folder cases failed: {text!r}"], 1
+        raw = os.fsencode(str(d)) + b"/" + OUT_NAME
+        os.rename(os.fsencode(str(d / "plain")), raw)
+        out = Path(os.fsdecode(raw))
+        shown = out.relative_to(ROOT) if out.is_relative_to(ROOT) else out
+
+        def check(label, status, want):
+            nonlocal count
+            count += 1
+            r = subprocess.run([sys.executable, "-I", "-B", str(SCRIPT), "--check", "--out",
+                                os.fsdecode(raw)], capture_output=True, timeout=120)
+            data = r.stdout + r.stderr
+            try:
+                data.decode("utf-8")
+                utf8 = True
+            except UnicodeDecodeError:
+                utf8 = False
+            if (r.returncode != status or want.encode("ascii") not in data or not utf8
+                    or b"Traceback" in data or b"\x1b" in data
+                    or any(line.startswith(b"  ok    forged") for line in data.split(b"\n"))):
+                failures.append(f"--check on an --out folder named {OUT_NAME!r}, {label}: "
+                                f"expected exit {status} with {want!r} and no forged line, raw "
+                                f"ESC, byte that is not UTF-8 or traceback, got {r.returncode} "
+                                f"{data!r}")
+
+        check("a fresh build", 0, f"under {str(shown)!a} match a fresh build")
+        (out / "x").write_text("x\n", encoding="utf-8")
+        check("a stray file x", 1, f"{named(out, 'x')} is neither a page this build writes")
+        (out / "x").unlink()
+        (out / "404.html").unlink()
+        (out / "404.html").mkdir()
+        check("a folder in place of 404.html", 2, f"cannot read {str(out / '404.html')!a}: ")
+        (out / "404.html").rmdir()
+        if os.geteuid() != 0:  # root lists a folder whatever its mode
+            (out / "downloads").mkdir()
+            (out / "downloads").chmod(0o300)
+            try:
+                check("a downloads/ it cannot list", 2,
+                      f"cannot read {str(out / 'downloads')!a}: ")
+            finally:
+                (out / "downloads").chmod(0o700)
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    return failures, count
 
 
 def main():
@@ -879,7 +956,7 @@ def main():
         data[100] ^= 1
         target.write_bytes(bytes(data))
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "guides/index.html differs" not in text:
+        if rc != 1 or f"{named(out, 'guides/index.html')} differs" not in text:
             failures.append(f"--check missed a one-byte change: {text!r}")
         run("--out", str(out))
         # The advisory's plain-text copy is written and verified like a page.
@@ -889,30 +966,31 @@ def main():
         else:
             copy.write_bytes(copy.read_bytes() + b"x")
             rc, text = run("--check", "--out", str(out))
-            if rc != 1 or f"{ADVISORY_TEXT} differs from a fresh build" not in text:
+            if rc != 1 or f"{named(out, ADVISORY_TEXT)} differs from a fresh build" not in text:
                 failures.append(f"--check missed a change to the plain-text copy: {text!r}")
             copy.unlink()
             rc, text = run("--check", "--out", str(out))
-            if rc != 1 or f"{ADVISORY_TEXT} is missing" not in text:
+            if rc != 1 or f"{named(out, ADVISORY_TEXT)} is missing" not in text:
                 failures.append(f"--check missed a missing plain-text copy: {text!r}")
             # Only that exact .txt is admitted: another file beside it is a stray.
             (out / "advisories" / "other.txt").write_text("x\n", encoding="utf-8")
             run("--out", str(out))
             rc, text = run("--check", "--out", str(out))
-            if rc != 1 or "'advisories/other.txt' is neither a page this build writes" not in text:
+            if (rc != 1 or f"{named(out, 'advisories/other.txt')} is neither a page this build "
+                    f"writes" not in text):
                 failures.append(f"--check at the root accepted a stray advisories/other.txt: {text!r}")
             (out / "advisories" / "other.txt").unlink()
         run("--out", str(out))
         (out / "extra").mkdir()
         (out / "extra" / "index.html").write_text("<p>x</p>", encoding="utf-8")
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "'extra/index.html' is not a page this build writes" not in text:
+        if rc != 1 or f"{named(out, 'extra/index.html')} is not a page this build" not in text:
             failures.append(f"--check missed an extra page: {text!r}")
         shutil.rmtree(out / "extra")
         # QA round 1 of #1182: a page is .html or .htm in any case.
         (out / "Extra.HTM").write_text("<p>x</p>", encoding="utf-8")
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "'Extra.HTM' is not a page this build writes" not in text:
+        if rc != 1 or f"{named(out, 'Extra.HTM')} is not a page this build writes" not in text:
             failures.append(f"--check missed an extra .HTM page: {text!r}")
         (out / "Extra.HTM").unlink()
         # At the root base the published files (PUBLISHED) sit beside the pages and pass --check.
@@ -926,7 +1004,7 @@ def main():
             (out / stray).parent.mkdir(exist_ok=True)
             (out / stray).write_text("x\n", encoding="utf-8")
             rc, text = run("--check", "--out", str(out))
-            if rc != 1 or f"{stray!a} is neither a page this build writes" not in text:
+            if rc != 1 or f"{named(out, stray)} is neither a page this build writes" not in text:
                 failures.append(f"--check at the root accepted a stray {stray}: {text!r}")
             (out / stray).unlink()
         # At the root the 2 versioned release archive names pass in downloads/, and a latest name
@@ -940,12 +1018,12 @@ def main():
             failures.append(f"--check at the root refused the 2 versioned release archives: {text!r}")
         (out / "downloads" / "secureconfig-latest.zip").write_bytes(archive)
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "'downloads/secureconfig-latest.zip' is a latest name" not in text:
+        if rc != 1 or f"{named(out, 'downloads/secureconfig-latest.zip')} is a latest" not in text:
             failures.append(f"--check at the root accepted downloads/secureconfig-latest.zip: {text!r}")
         (out / "downloads" / "secureconfig-latest.zip").unlink()
         (out / "downloads" / "old").mkdir()
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "'downloads/old' is a folder" not in text:
+        if rc != 1 or f"{named(out, 'downloads/old')} is a folder" not in text:
             failures.append(f"--check at the root accepted an empty folder downloads/old: {text!r}")
         (out / "downloads" / "old").rmdir()
         # A downloads/ that cannot be listed is a read error (exit 2), not an empty folder. Root
@@ -1011,20 +1089,22 @@ def main():
         data = (out / "marketplace.json").read_bytes()
         (out / "marketplace.json").write_bytes(data.replace(b'"sha256": "', b'"sha256": "0'))
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "marketplace.json does not equal what tools/gen_hosted.py writes" not in text:
+        if (rc != 1 or f"{named(out, 'marketplace.json')} does not equal what tools/gen_hosted.py "
+                f"writes" not in text):
             failures.append(f"--check at the root accepted an edited marketplace.json: {text!r}")
         (out / "marketplace.json").write_bytes(data)
         (out / "_redirects").write_bytes((out / "_redirects").read_bytes() + b"/x / 302\n")
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "_redirects does not equal what tools/gen_hosted.py writes" not in text:
+        if (rc != 1 or f"{named(out, '_redirects')} does not equal what tools/gen_hosted.py "
+                f"writes" not in text):
             failures.append(f"--check at the root accepted an edited _redirects: {text!r}")
         (out / "_redirects").unlink()
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "_redirects is missing" not in text:
+        if rc != 1 or f"{named(out, '_redirects')} is missing" not in text:
             failures.append(f"--check at the root missed a missing _redirects: {text!r}")
         shutil.rmtree(d / "releases")
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "marketplace.json exists, but" not in text:
+        if rc != 1 or f"{named(out, 'marketplace.json')} exists, but" not in text:
             failures.append(f"--check at the root accepted a marketplace.json with no record "
                             f"behind it: {text!r}")
         (out / "marketplace.json").unlink()
@@ -1039,13 +1119,13 @@ def main():
         (out / "draft" / "assets" / "baseline").mkdir(parents=True)
         (out / "draft" / "assets" / "baseline" / "baseline.css").write_text("p{}", encoding="utf-8")
         rc, text = run("--check", "--out", str(out))
-        if (rc != 1 or "'draft/index.html' is not a page this build writes" not in text
-                or "'draft/assets/baseline/baseline.css' is neither" not in text):
+        if (rc != 1 or f"{named(out, 'draft/index.html')} is not a page this build" not in text
+                or f"{named(out, 'draft/assets/baseline/baseline.css')} is neither" not in text):
             failures.append(f"--check at the root accepted a staged tree under draft/: {text!r}")
         shutil.rmtree(out / "draft")
         (out / "404.html").unlink()
         rc, text = run("--check", "--out", str(out))
-        if rc != 1 or "404.html is missing" not in text:
+        if rc != 1 or f"{named(out, '404.html')} is missing" not in text:
             failures.append(f"--check missed a missing page: {text!r}")
 
         # The staging form refuses a stray file outside assets/baseline/ and allows the optional
@@ -1057,13 +1137,14 @@ def main():
         # A staged build carries no release archive: downloads/ is a stray there.
         sized(staged / "downloads" / "secureconfig-1.0.1234.zip", 22)
         rc, text = run("--check", "--base", "/draft/", "--out", str(staged))
-        if rc != 1 or "'downloads/secureconfig-1.0.1234.zip' is neither" not in text:
+        if (rc != 1
+                or f"{named(staged, 'downloads/secureconfig-1.0.1234.zip')} is neither" not in text):
             failures.append(f"staged --check accepted a release archive in downloads/: {text!r}")
         shutil.rmtree(staged / "downloads")
         (staged / "assets").mkdir()
         (staged / "assets" / "live.css").write_text("p{}", encoding="utf-8")
         rc, text = run("--check", "--base", "/draft/", "--out", str(staged))
-        if rc != 1 or "'assets/live.css' is neither a page this build writes" not in text:
+        if rc != 1 or f"{named(staged, 'assets/live.css')} is neither a page this" not in text:
             failures.append(f"staged --check missed a stray file outside assets/baseline/: {text!r}")
         (staged / "assets" / "live.css").unlink()
         (staged / "assets" / "baseline").mkdir()
@@ -1075,7 +1156,7 @@ def main():
                             f"allowed: {text!r}")
         (staged / "assets" / "other.css").write_text("p{}", encoding="utf-8")
         rc, text = run("--check", "--base", "/draft/", "--out", str(staged))
-        if rc != 1 or "'assets/other.css' is neither" not in text:
+        if rc != 1 or f"{named(staged, 'assets/other.css')} is neither" not in text:
             failures.append(f"staged --check accepted assets/other.css beside site.css: {text!r}")
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -1089,6 +1170,8 @@ def main():
     more, schema = schema_cases()
     failures += more
     failures += name_cases()
+    more, out_count = out_cases()
+    failures += more
 
     if failures:
         for f in failures:
@@ -1125,8 +1208,11 @@ def main():
     print(f"  ok    {len(NAME_CASES)} planted file names that --check prints escaped with ascii(): "
           f"a newline forging an ok line, an ESC and a byte that is not UTF-8, at the root, in a "
           f"staged build and in downloads/")
+    print(f"  ok    {out_count} --check runs on an --out folder whose name carries a newline and a "
+          f"forged ok line, an ESC and a byte that is not UTF-8, each printing the paths that "
+          f"hold the folder escaped")
     if os.geteuid() == 0:
-        print("  note  run as root, so the 2 unlistable downloads/ cases were skipped")
+        print("  note  run as root, so the 3 unlistable downloads/ cases were skipped")
     return 0
 
 
