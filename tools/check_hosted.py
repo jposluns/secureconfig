@@ -96,7 +96,7 @@ BOUNDED_METHODS = (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)
 # zipfile reads and parses as the central directory, and with them the number of entries, at
 # most 22795, and the total length of their names, extra fields and comments. It does not make
 # the parse cost linear in those bytes: zipfile copies the rest of a record's extra field after
-# each field in it that it decodes, so its time on that record grows with the square of the
+# each field in it, so its time on that record grows with the square of the
 # extra field's length, which the format caps at 65535 bytes. The plugin zip of v1.0.1351 has
 # 117 entries in a central directory of 10487 bytes.
 CENTRAL_MAX = 1024 * 1024
@@ -161,8 +161,9 @@ def zip_manifest_version(path):
         with open(path, "rb") as staged:
             size = central_directory_size(staged)
             if size is not None and size > CENTRAL_MAX:
-                return None, (f"its end record declares a central directory of {size} bytes, "
-                              f"over the {CENTRAL_MAX}-byte cap on it, so the zip is not opened")
+                return None, (f"its end record, or its zip64 end record when it has one, "
+                              f"declares a central directory of {size} bytes, over the "
+                              f"{CENTRAL_MAX}-byte cap on it, so the zip is not opened")
             with zipfile.ZipFile(staged) as archive:
                 info = archive.getinfo("plugin.json")
                 if info.file_size > MANIFEST_MAX:

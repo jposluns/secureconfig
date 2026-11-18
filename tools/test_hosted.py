@@ -500,18 +500,21 @@ def check_caps(failures):
          "1 recorded release", 0),
         ("a staged plugin zip of DOWNLOAD_MAX bytes whose central directory fills it",
          full_directory_zip(check_hosted.DOWNLOAD_MAX),
-         f"its end record declares a central directory of {filled} bytes, over the "
+         f"its end record, or its zip64 end record when it has one, declares a central "
+         f"directory of {filled} bytes, over the "
          f"{central}-byte cap on it, so the zip is not opened", 1),
         ("a plugin zip whose central directory is one byte over CENTRAL_MAX",
          wide_directory_zip(central + 1),
-         f"its end record declares a central directory of {central + 1} bytes, over the "
+         f"its end record, or its zip64 end record when it has one, declares a central "
+         f"directory of {central + 1} bytes, over the "
          f"{central}-byte cap on it, so the zip is not opened", 1),
         ("a plugin zip whose central directory is exactly CENTRAL_MAX bytes",
          wide_directory_zip(central), "1 recorded release", 0),
         ("a plugin zip whose zip64 end record declares a central directory one byte over "
          "CENTRAL_MAX while its end record declares 46 bytes",
          zip64_directory_zip(central + 1, 46),
-         f"its end record declares a central directory of {central + 1} bytes, over the "
+         f"its end record, or its zip64 end record when it has one, declares a central "
+         f"directory of {central + 1} bytes, over the "
          f"{central}-byte cap on it, so the zip is not opened", 1),
     )
     for desc, data, expected, want in cases:
