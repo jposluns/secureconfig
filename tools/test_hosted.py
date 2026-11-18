@@ -38,10 +38,14 @@ one nested too deeply to parse (a read error, exit 2, for the gate and the gener
 one that is a JSON array. The newest record's staged plugin zip is a finding (exit 1) in 1 FAIL
 line, never a traceback, when its root plugin.json is nested too deeply to parse, is a JSON
 array, is UTF-16 rather than UTF-8 or opens with a UTF-8 byte order mark, and when the zip's
-deflated data is damaged or names a compression method zipfile does not support. Its root
-plugin.json version is printed escaped, so one that is a lone surrogate and one that carries a
-newline and a forged ok line are each exit 1 in exactly 1 FAIL line, with no traceback and no
-forged line. One in-process case holds check_draft.REDIRECTS_HEADER to gen_hosted.HEADER, so the
+deflated data is damaged or names a compression method zipfile does not support. A staged plugin
+zip one byte over scripts/build-site.py's DOWNLOAD_MAX, a zip bomb whose root plugin.json
+declares 32 MiB uncompressed and a bzip2 zip bomb whose root plugin.json declares 16 bytes are
+each exit 1 in 1 FAIL line, and a staged plugin zip whose root plugin.json is exactly
+MANIFEST_MAX bytes long passes. The newest staged plugin zip's root plugin.json version is
+printed escaped, so one that is a lone surrogate and one that carries a newline and a forged ok
+line are each exit 1 in exactly 1 FAIL line, with no traceback and no forged line. One
+in-process case holds check_draft.REDIRECTS_HEADER to gen_hosted.HEADER, so the
 gate and the generator cannot drift apart on the file's first line. In-process cases hold
 gen_hosted.json_object to its depth limit, MAX_JSON_DEPTH: an object nested exactly that deep is
 read, one a level deeper and one whose deep nesting sits inside one value are nested too deeply to
@@ -65,6 +69,7 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
 import check_draft  # noqa: E402
+import check_hosted  # noqa: E402  (its caps, DOWNLOAD_MAX and MANIFEST_MAX)
 import gen_hosted  # noqa: E402
 
 MANIFEST = {"name": "secureconfig", "version": "1.0.7", "description": "guides",
@@ -76,6 +81,9 @@ ASSET = ("/downloads/secureconfig-{0}.zip https://github.com/jposluns/secureconf
 # Valid JSON nested far past gen_hosted.MAX_JSON_DEPTH, which json_object refuses before parsing,
 # whether or not json.loads could parse it on this interpreter.
 NESTED = "[" * 100000 + "]" * 100000 + "\n"
+# Valid JSON nested 10 times deeper than gen_hosted.MAX_JSON_DEPTH that fits a staged plugin zip's
+# root plugin.json, which check_hosted.MANIFEST_MAX caps (NESTED, at 200001 bytes, does not).
+NESTED_MEMBER = ("[" * 1000 + "]" * 1000 + "\n").encode()
 
 
 def plugin_zip(version, manifest=None, compression=zipfile.ZIP_STORED):
@@ -105,6 +113,23 @@ def unsupported_zip():
     central = data.find(b"PK\x01\x02")
     data[8:10] = data[central + 10:central + 12] = (99).to_bytes(2, "little")
     return bytes(data)
+
+
+def lying_bzip2_zip(size, declared):
+    """A zip bomb: a plugin zip whose root plugin.json is size bytes of "[" compressed with
+    bzip2 (48 bytes of compressed data for 8 MiB), with both headers declaring only declared
+    bytes uncompressed, so the declared size alone cannot reveal it."""
+    data = bytearray(plugin_zip("1.0.7", b"[" * size, compression=zipfile.ZIP_BZIP2))
+    central = data.find(b"PK\x01\x02")
+    # The uncompressed size is at offset 22 of the local header and 24 of the central one.
+    data[22:26] = data[central + 24:central + 28] = declared.to_bytes(4, "little")
+    return bytes(data)
+
+
+def padded_manifest(size):
+    """A root plugin.json of exactly size bytes carrying version 1.0.7."""
+    stub = json.dumps({"version": "1.0.7", "pad": ""})
+    return json.dumps({"version": "1.0.7", "pad": "x" * (size - len(stub))}).encode()
 
 
 def write(d, rel, data):
@@ -333,7 +358,7 @@ CASES = (
     # The newest record's staged plugin zip is held to its record's version: a zip or a root
     # plugin.json the gate cannot read or use is a finding in 1 FAIL line, never a traceback.
     ("a staged plugin zip whose root plugin.json is nested too deeply to parse",
-     lambda d: fixture(d, zip_data=plugin_zip("1.0.7", NESTED.encode())),
+     lambda d: fixture(d, zip_data=plugin_zip("1.0.7", NESTED_MEMBER)),
      "its root plugin.json cannot be read (plugin.json is nested too deeply to parse as JSON)",
      1),
     ("a staged plugin zip whose root plugin.json is a JSON array",
@@ -382,6 +407,45 @@ def check_escaped(failures):
             failures.append(f"{desc}: expected exit 1 in 1 FAIL line containing {expected!r}, "
                             f"got {rc}: {out!r}")
     return len(ESCAPED_CASES)
+
+
+def check_caps(failures):
+    """The gate's size caps, each on a fixture whose staged files and record agree: a staged
+    plugin zip of DOWNLOAD_MAX + 1 bytes (scripts/build-site.py's per-file cap), a zip bomb
+    whose root plugin.json declares 32 MiB uncompressed in under 32 KiB of deflated data, and
+    a zip bomb whose bzip2 root plugin.json declares 16 bytes but decompresses to 8 MiB, are
+    each exit 1 in exactly 1 FAIL line, never a traceback or a MemoryError. A root plugin.json
+    of exactly MANIFEST_MAX bytes is read and passes."""
+    over = check_hosted.DOWNLOAD_MAX + 1
+    cap = check_hosted.MANIFEST_MAX
+    cases = (
+        ("a staged plugin zip one byte over DOWNLOAD_MAX", b"\0" * over,
+         f"secureconfig-plugin-1.0.7.zip is {over} bytes, over the "
+         f"{check_hosted.DOWNLOAD_MAX}-byte cap on 1 release archive", 1),
+        ("a zip bomb whose root plugin.json declares 32 MiB uncompressed",
+         plugin_zip("1.0.7", b"[" * (32 * 1024 * 1024), compression=zipfile.ZIP_DEFLATED),
+         f"its root plugin.json declares {32 * 1024 * 1024} bytes uncompressed, over the "
+         f"{cap}-byte cap on that member, so it is not read", 1),
+        ("a bzip2 zip bomb whose root plugin.json declares 16 bytes and decompresses to 8 MiB",
+         lying_bzip2_zip(8 * 1024 * 1024, 16),
+         "its root plugin.json uses compression method 12, which this gate does not read", 1),
+        ("a root plugin.json of exactly MANIFEST_MAX bytes",
+         plugin_zip("1.0.7", padded_manifest(cap), compression=zipfile.ZIP_DEFLATED),
+         "1 recorded release", 0),
+    )
+    for desc, data, expected, want in cases:
+        d = Path(tempfile.mkdtemp())
+        try:
+            fixture(d, zip_data=data)
+            rc, out = run("check_hosted.py", d)
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+        lines = out.splitlines()
+        if (rc != want or expected not in out or "Traceback" in out or "MemoryError" in out
+                or (want == 1 and (len(lines) != 1 or not lines[0].startswith("FAIL  ")))):
+            failures.append(f"{desc}: expected exit {want} in 1 line containing {expected!r}, "
+                            f"got {rc}: {out[:400]!r}")
+    return len(cases)
 
 
 def check_generator(failures):
@@ -569,6 +633,7 @@ def main():
         if "Traceback (most recent call last):" in out:
             failures.append(f"{desc}: the gate crashed: {out!r}")
     count += check_escaped(failures)
+    count += check_caps(failures)
     count += check_generator(failures)
     count += check_step9(failures)
     count += check_depth(failures)
