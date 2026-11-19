@@ -43,7 +43,7 @@
 # one before it have finished, so the output holds the same lines in the same order as the serial
 # run, with a section's text never split. The status equals the serial run's: 1 when any section
 # set fail=1, else 0, and the summary is this file's own. A section that exits without finishing
-# (llms-full and plugin exit 1 when a restore fails; an unbound variable ends a section with 1, or
+# (plugin exits 1 when a restore fails; an unbound variable ends a section with 1, or
 # with 127 under --sections, and a syntax error ends it with 2 in both modes and both run shapes)
 # or is killed by a signal ends the run the way it ends the serial one: its output is the last
 # printed, no later section's output and no summary follow, and the status is its exit status, or its signal: re-raised on this
@@ -68,7 +68,7 @@
 # the line in the serial run's cut copy, not this file's line, under --sections, but the section's temporary script in a whole parallel run
 # and "/dev/fd/3" with another line under --sections; that line is not left out.
 # depends: generated-committed: llms-full plugin instructions
-# exclusive: llms-full plugin
+# exclusive: plugin
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 2
@@ -635,20 +635,15 @@ fi
 
 # section: llms-full
 echo "== llms-full.txt is current =="
-orig=$(mktemp)
-cp site/llms-full.txt "$orig"
-trap 'cp "$orig" site/llms-full.txt 2>/dev/null; rm -f "$orig"' EXIT
-if bash scripts/build-llms-full.sh >/dev/null 2>&1; then
-  if diff -q "$orig" site/llms-full.txt >/dev/null 2>&1; then
-    ok "matches a fresh build"
-  else
-    bad "site/llms-full.txt is stale; run scripts/build-llms-full.sh and commit the result"
-  fi
+# --check builds the bundle into a temporary file that the build script removes on exit and
+# compares it with the committed site/llms-full.txt, so this section never writes that file and
+# sets no trap to restore it (TODO row 3.105).
+if llms_check=$(bash scripts/build-llms-full.sh --check 2>&1); then
+  ok "matches a fresh build"
 else
-  bad "scripts/build-llms-full.sh exited non-zero"
+  bad "site/llms-full.txt is stale or failed to build; run scripts/build-llms-full.sh and commit the result"
+  printf '%s\n' "$llms_check" | sed 's/^/          /'
 fi
-# An unchecked restore could leave a half-written bundle for every later gate to read.
-cp "$orig" site/llms-full.txt || { bad "could not restore site/llms-full.txt from $orig"; exit 1; }
 
 # section: llms-full-links
 echo "== llms-full.txt links are absolute and name repository paths =="

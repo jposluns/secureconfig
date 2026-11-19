@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Regenerates site/llms-full.txt (every guide concatenated into one file).
 # Run from the repository root after adding or editing guides.
+# With --check it builds the same text into a temporary file, compares it with the committed
+# site/llms-full.txt and never writes that file: it exits 0 when the two are equal, and 1 with a
+# one-line message when they differ or the committed file cannot be read. A failed build exits
+# non-zero in either mode. tools/run_all_checks.sh runs this mode, so its llms-full section never
+# writes site/llms-full.txt.
 set -euo pipefail
 
 out="site/llms-full.txt"
@@ -349,6 +354,11 @@ if [ "${1:-}" = "--check-links" ]; then
   exec python3 -c "$certify" "$out"
 fi
 
+check=""
+if [ "${1:-}" = "--check" ]; then
+  check=1
+fi
+
 python3 tools/version_basis.py --check
 
 # Because of the relative-link problem the link check describes, each relative link outside code
@@ -500,6 +510,16 @@ trap 'rm -f "$built"' EXIT
 if ! links=$(python3 -c "$certify" "$built"); then
   printf '%s\n' "$links" >&2
   echo "scripts/build-llms-full.sh: the link check refused the built text; $out is unchanged" >&2
+  exit 1
+fi
+
+# --check compares the built text with the committed file and stops here, so it never writes it.
+if [ -n "$check" ]; then
+  if cmp -s "$built" "$out"; then
+    echo "$out matches a fresh build ($(wc -c < "$built") bytes, ${#files[@]} files, $links links into this repository)"
+    exit 0
+  fi
+  echo "scripts/build-llms-full.sh --check: $out does not match a fresh build or cannot be read; run bash scripts/build-llms-full.sh and commit the result" >&2
   exit 1
 fi
 cat "$built" > "$out"
