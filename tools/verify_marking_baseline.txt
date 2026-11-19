@@ -1,5 +1,6 @@
 # Explicit one-time seed; remove exemptions as units are marked.
 # guide<TAB>kind<TAB>sha256<TAB>count; no automatic refresh.
+# An optional <TAB>reason after count marks an entry kept by design.
 ai-infra-services.md	prose	dc6060ba83fbc87a5e1ba1d361f350409668eabdef9552a32152562e29de9910	1
 ai-infra-services.md	prose	eda94770354f3e00f5cf0841843b723dd9d3d5047405d7b3ebcd68bc33d45e09	1
 exposure-index.md	prose	805afa21cb87e26313cb084e46c2c71e70cd6b9828921c1b52e63d06caa27235	1

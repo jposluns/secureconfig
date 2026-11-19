@@ -26,10 +26,12 @@ if [ "${#files[@]}" -eq 0 ]; then
 fi
 
 if [ "${1:-}" = "--list-inputs" ]; then
-  # The guide list, the script it came from, VERSION, and LICENSE and NOTICE: changing
+  # The guide list, the script it came from, VERSION, LICENSE and NOTICE, the 7 files under
+  # tools/ from tools/version_basis.py to tools/_verify_sections.py, and CHANGELOG.md are all
+  # inputs to this build, and the generated-file record has to say so. Changing
   # build-llms-full.sh changes what this bundle contains, VERSION sets plugin.json's version
-  # below, and LICENSE and NOTICE are copied into plugin/ and plugin/skills/secureconfig/ below,
-  # so all of them are inputs to this build and the generated-file record has to say so.
+  # below, LICENSE and NOTICE are copied into plugin/ and plugin/skills/secureconfig/ below, and
+  # the version-basis check below reads the 7 tools/ files and CHANGELOG.md.
   printf '%s\n' "${files[@]}" scripts/build-llms-full.sh VERSION "${notices[@]}" \
     tools/version_basis.py tools/version_basis_guides.txt tools/version_basis_sources_baseline.txt tools/_markdown.py tools/check_guide_shape.py tools/check_verify_marking.py tools/_verify_sections.py CHANGELOG.md
   exit 0

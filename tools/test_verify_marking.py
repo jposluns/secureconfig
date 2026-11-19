@@ -135,6 +135,29 @@ def main():
         guide.write_text(PLAIN, encoding="utf-8")
         baseline.write_text(saved + saved, encoding="utf-8")
         check("duplicate baseline key", invoke(root, "--strict")[0] == 1)
+
+        # Row 3.64: an optional fifth TAB field gives the reason an entry is kept by design.
+        # The ratchet accepts and ignores it; an empty or whitespace-only one is malformed.
+        def with_reason(reason):
+            return "\n".join(line + "\t" + reason if line and not line.startswith("#") else line
+                             for line in saved.split("\n"))
+        if HAS_PARSER:
+            check("seeded header documents the reason field",
+                  "# An optional <TAB>reason after count marks an entry kept by design.\n" in saved)
+        baseline.write_text(with_reason("evidence for a DEMONSTRATED claim"), encoding="utf-8")
+        rc, out = invoke(root, "--strict")
+        check("reasoned baseline entry retained", rc == 0 and "BASELINE" in out
+              and "1 grandfathered units retained" in out)
+        baseline.write_text(with_reason("by design\twith a TAB"), encoding="utf-8")
+        check("reason keeps the rest of the line", invoke(root, "--strict")[0] == 0)
+        for label, reason in (("empty", ""), ("whitespace-only", " \t ")):
+            baseline.write_text(with_reason(reason), encoding="utf-8")
+            rc, out = invoke(root, "--strict")
+            check(f"{label} baseline reason is malformed",
+                  rc == 1 and "malformed entry" in out)
+        baseline.write_text(with_reason("by design") + with_reason("again"), encoding="utf-8")
+        check("a reason does not change the duplicate key check",
+              invoke(root, "--strict")[0] == 1)
         baseline.write_text("bad entry\n", encoding="utf-8")
         check("malformed baseline", invoke(root, "--strict")[0] == 1)
         baseline.unlink()
