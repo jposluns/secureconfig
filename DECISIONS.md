@@ -1308,8 +1308,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   that the earlier pin predated the pack's move to Apache-2.0, so the maintainer ruled to re-pin to an Apache-era
   commit, rather than grant Apache-2.0 to the pinned versions or label them CC BY-SA 4.0. The maintainer first asked
   whether relicensing the repository to Apache-2.0 would be easier; the answer given was that it would put
-  redistribution conditions on configuration readers copy, and that earlier releases stay CC0 regardless. The
-  maintainer then chose to keep CC0 with the exception. No other reasoning was given.
+  redistribution conditions on configuration readers copy, and that earlier releases stay CC0 regardless. They then
+  chose to keep CC0 with the exception. No other reasoning was given.
   The 2026-11-15 ruling above, that the whole project moves to Apache-2.0, supersedes in part this ruling: from the
   later pull request that changes the licence onward, it supersedes the choice to keep the guides under CC0. The
   re-pin, the vendored `.aiqt/` LICENSE and NOTICE, and that earlier releases stay CC0 still stand.
@@ -1624,14 +1624,15 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Proxy decisions awaiting maintainer review
 
-These are not maintainer rulings, and the settled status of the rulings above does not apply to them. At
-2026-10-27T22:13:08Z the maintainer directed, live in session, that while the maintainer may be away, a decision
-that blocks progress is taken by majority of three predictions of what the maintainer would decide: one each from
-lab_infra and guardrails, given the context through inbox-send, and the orchestrator's own. Each such decision is
-recorded with its question, the three predictions and its outcome, for the maintainer's later review. In the
-predictions quoted below, words in square brackets replace a pronoun in the quoted reasoning. The two proxy
-decisions of 2026-11-11 at the end of this section were taken under a later rule, the unattended decision rule of
-2026-10-31, which the first of them states.
+These are not maintainer rulings until a ruling above confirms them, and until then the settled status of the
+rulings above does not apply to them. At 2026-10-27T22:13:08Z the maintainer directed, live in session, that while
+the maintainer may be away, a decision that blocks progress is taken by majority of three predictions of what the
+maintainer would decide: one each from lab_infra and guardrails, given the context through inbox-send, and the
+orchestrator's own. Each such decision is recorded with its question, the three predictions and its outcome, for the
+maintainer's later review. In the predictions quoted below, words in square brackets replace a pronoun in the quoted
+reasoning. The two proxy decisions of 2026-11-11 at the end of this section were taken under a later rule, the
+unattended decision rule of 2026-10-31, which the first of them states. An entry that a ruling above confirms stays
+listed here for the record, under its heading as entered, and that ruling's entry records the outcome.
 
 - **Proxy decision of 2026-10-27 on TODO 1.383 closure, for the maintainer's later review (#1002).** Decided at
   2026-10-27T23:11:19Z under that directive. The outcome, as the record reads:
@@ -1780,13 +1781,9 @@ decisions of 2026-11-11 at the end of this section were taken under a later rule
   and the check adds little cost to a sweep that runs anyway (20261111T231152Z.from-lab_infra.589eda3fe03e.msg).
   Since both voters agreed, grc's vote was not needed; it is recorded, for option 2
   (20261111T231116Z.from-grc.b867ceb2400c.msg). The vote request and the lab_infra and grc votes cited D-1096, and
-  guardrails disputed that citation, pointing to the unattended rule of 2026-10-31. The outcome is option 2. Its effect so far: none in this repository.
-  The definition is generated for the whole corpus, so the change is a later corpus-wide pull request,
-  with the consistency check at the O3 sweep. That change is tracked in the maintainer-side orchestrator's private
-  backlog, not in a `TODO.md` row of this repository. The maintainer's ruling of 2026-11-12 on the REASONED
-  definition (#1290), above, confirms this decision, which is now a maintainer ruling. The revert path is the
-  maintainer's review: a different ruling changes or drops the definition change and the consistency check before
-  they land, or replaces them after.
+  guardrails disputed that citation, pointing to the unattended rule of 2026-10-31. The outcome is option 2. The
+  maintainer's ruling of 2026-11-12 on the REASONED definition (#1290), above, confirms this decision, which is now
+  a maintainer ruling. That ruling's entry records the decision's effect and its revert path.
 
 ## Profile: predicting these rulings
 
