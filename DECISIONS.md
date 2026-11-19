@@ -17,65 +17,61 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
-- **Maintainer ruling of 2026-11-19 that the serial run of TODO row 3.49 may become a supervised child only if its output stays byte-identical (#1368).**
+- **Maintainer ruling of 2026-11-19 on the serial run of TODO row 3.49 (#1368).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:45Z. The
-  orchestrator's log records the question as whether the suite's serial run may become a supervised child under
-  the design of row 3.49 in `TODO.md`, one of the sub-decisions that the 3.49 scope ruling below left open. The
-  records hold no reasoning in the maintainer's own words beyond the choice. The label and description are quoted
+  full question text is held in the orchestrator's private session record. The label and description are quoted
   exactly. The maintainer chose "Yes, if output identical (Recommended)", whose description read:
   "Allowed only if every existing test's serial output stays byte-identical; any changed line is named in the PR for review before merge."
-  - Effect. Not yet carried out: row 3.49 is still open in `TODO.md`. The orchestrator's log, which is not the
-    maintainer's words, notes that the other open sub-decision, whether the llms-full section stays exclusive,
-    becomes moot under the 3.105 ruling below if that section no longer rewrites the committed file, and is to be
-    checked again when the change for row 3.105 lands.
+  - Effect. Not yet carried out: row 3.49 is still open in `TODO.md`. Since #1366, which carried out the 3.105
+    ruling below, row 3.49 says that the `llms-full` section runs `scripts/build-llms-full.sh --check`, which never
+    writes `site/llms-full.txt`, and sets no EXIT trap, and the `# exclusive:` line of `tools/run_all_checks.sh`
+    names `plugin` alone, so the `llms-full` section no longer runs alone.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
     own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-19 on the scope of TODO row 3.49: Linux, Bash 5.1 or later and `/proc` (#1368).**
-  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:44Z, on the
-  fix that row 3.49 in `TODO.md` asks for, for a TERM sent only to the suite's own PID that does not stop a running
-  gate.
-  The records hold no reasoning in the maintainer's own words beyond the choice. The label and description are
-  quoted exactly. The maintainer chose "Linux, bash 5.1+, /proc (Recommended)", whose description read:
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:44Z. The
+  full question text is held in the orchestrator's private session record. The label and description are quoted
+  exactly. The maintainer chose "Linux, bash 5.1+, /proc (Recommended)", whose description read:
   "Supervisor design; find the gate's process tree via /proc; best-effort with the race documented; macOS and older bash out of scope."
-  - Effect. Not yet carried out: row 3.49 is still open in `TODO.md`. The orchestrator's log, which is not the
-    maintainer's words, also records that the supervisor runs in the same process group, that the design does not
-    depend on `pgrep`, and that a pseudo-terminal test harness comes first.
+  - Effect. Not yet carried out: row 3.49 is still open in `TODO.md`, where it asks for a design of a fix for a
+    TERM sent only to the suite's own PID that does not stop a running gate.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
     own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-19 choosing option A, a `--check` mode, for TODO row 3.105 (#1368).**
-  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:43Z, on the
-  EXIT trap of the llms-full section of `tools/run_all_checks.sh` that row 3.105 in `TODO.md` records. The records
-  hold no reasoning in the maintainer's own words beyond the choice. The label and description are quoted exactly.
-  The maintainer chose "A: --check mode (Recommended)", whose description read:
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:43Z. The
+  full question text is held in the orchestrator's private session record. The label and description are quoted
+  exactly. The maintainer chose "A: --check mode (Recommended)", whose description read:
   "Add a --check mode to scripts/build-llms-full.sh that builds to a temp file and compares; the suite section stops rewriting the committed file and drops its restore trap."
-  - Effect. Not yet carried out: an open pull request implements it, row 3.105 is still open in `TODO.md`, and the
-    llms-full section still sets its restore trap. The orchestrator's log, which is not the maintainer's words,
-    names the option not chosen as option B, an owner-guarded trap.
+  - Effect. Carried out by #1366, and nothing that the description names is left. `scripts/build-llms-full.sh` has
+    a `--check` mode that builds the bundle into a temporary file and compares it with the committed
+    `site/llms-full.txt` without writing that file. The llms-full section of `tools/run_all_checks.sh` runs
+    `--check`, so it no longer rewrites or restores `site/llms-full.txt` and sets no EXIT trap, and row 3.105 is in
+    `DONE.md`. Row 3.109 in `TODO.md`, which #1366 added and which is still open, records that a SIGKILL leaves the
+    temporary file of `--check` behind; no committed file is affected.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
     own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-19 to amend one sentence of the #343 entry and close TODO row 3.86 (#1368).**
-  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:43Z, on row
-  3.86, which asked whether to amend the sentence of the retained entry on the vendored AIQT files' licence (#343)
-  that referred to the maintainer by a pronoun. The records hold no reasoning in the maintainer's own words beyond
-  the choice. The label and description are quoted exactly. The maintainer chose "Amend it (Recommended)", whose
-  description read:
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:43Z. The
+  full question text is held in the orchestrator's private session record. The label and description are quoted
+  exactly. The maintainer chose "Amend it (Recommended)", whose description read:
   "Change only that sentence to \"The maintainer then chose ...\" in a small records PR and close row 3.86."
-  - Effect. Carried out by #1365. That sentence of the #343 entry now reads "The maintainer then chose to keep CC0
-    with the exception.", no other word of that entry changed, and row 3.86 moved to `DONE.md`.
+  - Effect. Carried out by #1365. Row 3.86 in `DONE.md` records that a sentence of the retained entry on the
+    vendored AIQT files' licence (#343) referred to the maintainer by a pronoun. That sentence now reads "The
+    maintainer then chose to keep CC0 with the exception.", no other word of that entry changed, and row 3.86
+    moved to `DONE.md`.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that changes that sentence to match the new ruling. That pull request keeps every other part of the existing
     entries in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-18 closing TODO row 3.87 as not a defect (#1368).**
-  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 22:41Z, on
-  whether the bullets of `CHANGELOG.md` take one form before their `(#N)` reference. The records hold no reasoning
-  in the maintainer's own words beyond the choice. The label and description are quoted exactly. The maintainer
-  chose "Close as not a defect (Recommended)", whose description read:
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 22:41Z. The
+  full question text is held in the orchestrator's private session record. The label and description are quoted
+  exactly. The maintainer chose "Close as not a defect (Recommended)", whose description read:
   "Move 3.87 to DONE.md as not a defect, citing the 205-bullet convention; no CHANGELOG change."
-  - The question's premise was overstated. That premise was that a full stop before a bullet's `(#N)` reference is
-    the convention of `CHANGELOG.md`, and most bullets do not take that form. Row 3.87 in `DONE.md` records that in
+  - Row 3.87 in `DONE.md` asks to decide whether the bullets of `CHANGELOG.md` take one form, after noting that
+    some put a full stop before their pull request reference and some do not. It records that in
     `CHANGELOG.md` at #1360, with a wrapped bullet's lines read as one, 220 of its 1398 bullets end with a full stop,
     a space and their `(#N)` reference, 674 end with their `(#N)` reference and no full stop before it, and 504 end
     otherwise. It also records that every bullet that ends with the reference of #1341 or a later pull request, 20
@@ -87,14 +83,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-18 that the next release waits for a change to shipped content (#1368).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 22:39Z. The
-  orchestrator's log records it as standing and as applying in unattended sessions too. The records hold no
-  reasoning in the maintainer's own words beyond the choice. The label and description are quoted exactly. The
-  maintainer chose "Hold for content (Recommended)", whose description read:
+  full question text is held in the orchestrator's private session record. The label and description are quoted
+  exactly. The maintainer chose "Hold for content (Recommended)", whose description read:
   "Cut the next release only after a merge changes a guide, the skill or the plugin's shipped files; otherwise no release."
   - Effect. Not yet carried out: `CONTRIBUTING.md`'s Releasing section does not state this ruling, and
-    `CHANGELOG.md` records no release after `v1.0.1351`, whose target is the merge of #1351. The orchestrator's
-    log, which is not the maintainer's words, reads the ruling to mean that tooling, gate and records merges alone
-    get no release.
+    `CHANGELOG.md` records no release after `v1.0.1351`, whose target is the merge of #1351.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
     own `CHANGELOG.md` entry, and records the new ruling here.
