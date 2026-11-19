@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import shutil
 import socket
+import struct
 import subprocess
 import sys
 import tempfile
@@ -1130,6 +1131,65 @@ def group_signal_during_history(f):
 
 case("SIGINT to the process group after output match", "FOUND",
      group_signal_during_history)
+
+
+def signal_before_line(f, signame, held_line, args):
+    # Bash reads the scanner from a pipe here, so the case can hold it after
+    # the lines before held_line and signal it there. The trap is set before
+    # the --help branch, the --explain parse and the argument check, so it
+    # must already be set: INCONCLUSIVE/3, where a scanner without it dies by
+    # the signal with no output.
+    import fcntl
+    import signal
+    import termios
+    text = TOOL.read_bytes()
+    held = b"\n" + held_line + b"\n"
+    assert text.count(held) == 1, "held line changed; update this case"
+    cut = text.index(held) + 1
+    r, w = os.pipe()
+    try:
+        p = subprocess.Popen(["bash", f"/dev/fd/{r}", *args], pass_fds=(r,),
+                             cwd=f.root, env=f.env, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    finally:
+        os.close(r)
+    try:
+        os.write(w, text[:cut])
+        until = time.monotonic() + 30
+        while struct.unpack("i", fcntl.ioctl(w, termios.FIONREAD, b"\0" * 4))[0]:
+            assert p.poll() is None and time.monotonic() < until, "prefix not read"
+            time.sleep(0.01)
+        time.sleep(0.2)
+        assert p.poll() is None, (p.returncode, "scanner ended before the signal")
+        p.send_signal(getattr(signal, signame))
+        time.sleep(0.2)
+        try:
+            os.write(w, text[cut:])
+        except BrokenPipeError:
+            pass  # A scanner that has already exited reads no more.
+        os.close(w)
+        w = None
+        out, err = p.communicate(KEY + b"\n", timeout=30)
+        assert (p.returncode, out, err) == (3, I, b""), (p.returncode, out, err)
+        assert KEY not in out + err
+    finally:
+        if w is not None:
+            os.close(w)
+        if p.poll() is None:
+            p.kill()
+            p.communicate()
+
+
+ARGUMENT_CHECK = b"[[ $# == 1 ]] || scan_refuse arguments"
+HELP_BRANCH = b"if [[ ${1-} == --help && $# == 1 ]]; then"
+
+for signame in ("SIGHUP", "SIGINT", "SIGTERM"):
+    case(f"{signame} before the argument check", "INCONCLUSIVE",
+         lambda f, s=signame: signal_before_line(f, s, ARGUMENT_CHECK, ["dist"]))
+# A --help run held before its branch: the signal must give INCONCLUSIVE/3
+# and no help text, where a scanner without the trap dies by the signal.
+case("SIGTERM before the --help branch", "INCONCLUSIVE",
+     lambda f: signal_before_line(f, "SIGTERM", HELP_BRANCH, ["--help"]))
 
 
 def root_check(f, kind, explain=False):
