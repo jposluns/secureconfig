@@ -1126,21 +1126,22 @@ case("SIGINT to the process group after output match", "FOUND",
      group_signal_during_history)
 
 
-def signal_before_checks(f, signame):
+def signal_before_line(f, signame, held_line, args):
     # Bash reads the scanner from a pipe here, so the case can hold it after
-    # the lines before its first check, the argument count, and signal it
-    # there. The trap must already be set: INCONCLUSIVE/3, where a scanner
-    # without it dies by the signal with no output.
+    # the lines before held_line and signal it there. The trap is set before
+    # the --help branch, the --explain parse and the argument check, so it
+    # must already be set: INCONCLUSIVE/3, where a scanner without it dies by
+    # the signal with no output.
     import fcntl
     import signal
     import termios
     text = TOOL.read_bytes()
-    first = b"\n[[ $# == 1 ]] || scan_refuse arguments\n"
-    assert text.count(first) == 1, "first check changed; update this case"
-    cut = text.index(first) + 1
+    held = b"\n" + held_line + b"\n"
+    assert text.count(held) == 1, "held line changed; update this case"
+    cut = text.index(held) + 1
     r, w = os.pipe()
     try:
-        p = subprocess.Popen(["bash", f"/dev/fd/{r}", "dist"], pass_fds=(r,),
+        p = subprocess.Popen(["bash", f"/dev/fd/{r}", *args], pass_fds=(r,),
                              cwd=f.root, env=f.env, stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     finally:
@@ -1172,9 +1173,16 @@ def signal_before_checks(f, signame):
             p.communicate()
 
 
+ARGUMENT_CHECK = b"[[ $# == 1 ]] || scan_refuse arguments"
+HELP_BRANCH = b"if [[ ${1-} == --help && $# == 1 ]]; then"
+
 for signame in ("SIGHUP", "SIGINT", "SIGTERM"):
-    case(f"{signame} before the first check", "INCONCLUSIVE",
-         lambda f, s=signame: signal_before_checks(f, s))
+    case(f"{signame} before the argument check", "INCONCLUSIVE",
+         lambda f, s=signame: signal_before_line(f, s, ARGUMENT_CHECK, ["dist"]))
+# A --help run held before its branch: the signal must give INCONCLUSIVE/3
+# and no help text, where a scanner without the trap dies by the signal.
+case("SIGTERM before the --help branch", "INCONCLUSIVE",
+     lambda f: signal_before_line(f, "SIGTERM", HELP_BRANCH, ["--help"]))
 
 
 def root_check(f, kind, explain=False):
