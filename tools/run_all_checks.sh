@@ -168,6 +168,10 @@ par_launch() {
   # sourced the same way here: a fatal shell error (an unbound variable under set -u) then ends
   # it with the same status, 127, as it ends that copy. The whole run's sections run as scripts,
   # as the whole serial run does, and such an error ends them with 1 in both.
+  # A shell forked here that a stop's TERM ended before it started the section's bash ran this
+  # shell's EXIT trap and removed the folder under the sections still running (row 3.101), so no
+  # EXIT trap is set while it forks; a HUP, INT or TERM meanwhile is held as above.
+  trap - EXIT
   set -m
   if [ -n "$par_selected" ]; then
     bash -c '. /dev/fd/3' "$PWD/tools/run_all_checks.sh" 3< "$par_dir/$name.sh" > "$par_dir/$name.out" 2>&1 < /dev/null &
@@ -176,6 +180,7 @@ par_launch() {
   fi
   par_pid[i]=$!
   set +m
+  trap par_cleanup EXIT
   par_state[i]=run
   par_t0[i]=$EPOCHREALTIME
   par_started
