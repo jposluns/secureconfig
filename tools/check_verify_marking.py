@@ -1149,10 +1149,14 @@ def load_baseline(path):
     for number, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
         if not line or line.startswith("#"):
             continue
-        fields = line.split("\t")
-        if (len(fields) != 4 or not re.fullmatch(r"[^/\\\s]+\.md", fields[0])
+        # An optional fifth field, the rest of the line after the fourth TAB, is the reason an
+        # entry is kept by design; the ratchet ignores it, and QUALITY M1 does not count an
+        # entry that has one. When the field is present it must hold more than whitespace.
+        fields = line.split("\t", 4)
+        if (len(fields) < 4 or not re.fullmatch(r"[^/\\\s]+\.md", fields[0])
                 or fields[1] not in KINDS or not re.fullmatch(r"[0-9a-f]{64}", fields[2])
-                or not re.fullmatch(r"[1-9][0-9]*", fields[3])):
+                or not re.fullmatch(r"[1-9][0-9]*", fields[3])
+                or len(fields) == 5 and not fields[4].strip()):
             raise ValueError(f"baseline line {number}: malformed entry")
         key = tuple(fields[:3])
         if key in counts:
@@ -1201,6 +1205,7 @@ def main(argv=None):
                 return 1
             body = "# Explicit one-time seed; remove exemptions as units are marked.\n"
             body += "# guide<TAB>kind<TAB>sha256<TAB>count; no automatic refresh.\n"
+            body += "# An optional <TAB>reason after count marks an entry kept by design.\n"
             body += "".join("\t".join(key) + f"\t{count}\n"
                             for key, count in sorted(current.items()))
             (root / BASELINE).write_text(body, encoding="utf-8")

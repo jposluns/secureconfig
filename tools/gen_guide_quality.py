@@ -22,8 +22,9 @@ score produces no diff. `fix_round` runs this on every guide edit, so that prope
 The four mechanical leads (QUALITY.md 3.6):
   M (M1): the count of deferred-work entries and waivers without a reason in the five baseline and
           allow files whose guide field is exactly the guide (QUALITY.md M1, the maintainer's
-          rulings of 2026-11-14). Every entry in the three DEFERRED_WORK files counts; an entry in
-          the two WAIVERS files counts only when its reason is empty, so a reasoned waiver does not.
+          rulings of 2026-11-14). Every entry in the three DEFERRED_WORK files counts except a
+          Verify-marking baseline entry with a reason; an entry in the two WAIVERS files counts
+          only when its reason is empty, so a reasoned waiver does not.
           Comment lines and reason text do not count, and an allowlist line counts only as the
           exposure gate loads it, once per distinct guide and port; zero is P, else PARTIAL(M1).
   D (D3): the Sources heading month against each item month; an earlier item is GAP(D3), a later
@@ -66,16 +67,19 @@ MONTHS = {m: i for i, m in enumerate(
 # The four TAB files carry the guide in field 1; the exposure allowlist is `<guide> <port>  # reason`.
 EXPOSURE_ALLOWLIST = "tools/exposure_index_allowlist.txt"
 BRACKET_ALLOW = "tools/bracket_ranges_allow.txt"
-BASELINES = ["tools/verify_marking_baseline.txt", "tools/version_basis_sources_baseline.txt",
+VERIFY_BASELINE = "tools/verify_marking_baseline.txt"
+BASELINES = [VERIFY_BASELINE, "tools/version_basis_sources_baseline.txt",
              "tools/claim_length_baseline.txt", BRACKET_ALLOW, EXPOSURE_ALLOWLIST]
 
 # M1 sorts an entry by the file that holds it (QUALITY.md M1). The three baselines record work a
-# guide still owes, and their headers say to remove an entry when the work is done; none has a
-# reason field, so an entry kept there by design is a waiver without a reason and counts either
-# way. The two allow files record waivers with a reason field, and an entry there counts only
-# when that reason is empty.
-DEFERRED_WORK = {"tools/verify_marking_baseline.txt", "tools/version_basis_sources_baseline.txt",
+# guide still owes, and their headers say to remove an entry when the work is done. The
+# Verify-marking baseline has an optional reason field, TAB field 5, and an entry whose reason is
+# filled in is kept by design and does not count; every other entry in the three counts. The two
+# allow files record waivers with a reason field, and an entry there counts only when that reason
+# is empty.
+DEFERRED_WORK = {VERIFY_BASELINE, "tools/version_basis_sources_baseline.txt",
                  "tools/claim_length_baseline.txt"}
+REASONED_DEFERRED = {VERIFY_BASELINE}
 WAIVERS = {BRACKET_ALLOW, EXPOSURE_ALLOWLIST}
 
 # Provisional type assignment from the 2026-11-09 audit (gen_table.py), confirmed by the hardening
@@ -137,14 +141,17 @@ def entry_guide(path, line):
 
 
 def waiver_reasoned(path, line):
-    """Whether a waiver entry line carries a reason that is not empty or whitespace only.
+    """Whether a waiver or Verify-marking entry line carries a reason that is not whitespace only.
 
-    The bracket-range allow file holds the reason in TAB field 4 and the exposure allowlist holds
-    it after the first `#`, as each file's header comment says.
+    The bracket-range allow file holds the reason in TAB field 4, the Verify-marking baseline in
+    TAB field 5, and the exposure allowlist after the first `#`, as each file's header comment says.
     """
     if path == EXPOSURE_ALLOWLIST:
         parts = line.split("#", 1)
         return len(parts) == 2 and bool(parts[1].strip())
+    if path == VERIFY_BASELINE:
+        fields = line.split("\t", 4)
+        return len(fields) == 5 and bool(fields[4].strip())
     fields = line.split("\t", 3)
     return len(fields) == 4 and bool(fields[3].strip())
 
@@ -152,10 +159,10 @@ def waiver_reasoned(path, line):
 def m1_count(guide, files):
     """M1 entries for `guide` across {path: text}: deferred work, and waivers with no reason.
 
-    A line of a file in WAIVERS counts only when waiver_reasoned is false for it; a line of any
-    other file is deferred work and counts. Each occurrence line of a TAB-separated file counts
-    once. The allowlist counts distinct (guide, port) pairs, as the gate's dict of entries does,
-    and a pair counts when any of its lines has no reason.
+    A line of a file in WAIVERS or REASONED_DEFERRED counts only when waiver_reasoned is false for
+    it; a line of any other file is deferred work and counts. Each occurrence line of a
+    TAB-separated file counts once. The allowlist counts distinct (guide, port) pairs, as the
+    gate's dict of entries does, and a pair counts when any of its lines has no reason.
     """
     n = 0
     for path, text in files.items():
@@ -163,7 +170,7 @@ def m1_count(guide, files):
         if path == EXPOSURE_ALLOWLIST:
             n += len({e for e, line in zip(map(allow_entry, lines), lines)
                       if e and e[0] == guide and not waiver_reasoned(path, line)})
-        elif path in WAIVERS:
+        elif path in WAIVERS or path in REASONED_DEFERRED:
             n += sum(1 for line in lines
                      if entry_guide(path, line) == guide and not waiver_reasoned(path, line))
         else:
