@@ -392,8 +392,8 @@ Then run `python3 tools/version_basis.py --write`, `python3 tools/version_basis.
 `SECURECONFIG_SUITE_JOBS=8 bash tools/run_all_checks.sh` runs up to 8 sections at once, opt in:
 unset or `1` is the serial run, which stays the reference. The output holds the same lines in the
 same order and the status is the same, because each section's output is buffered and printed in
-the script's order once it and every section before it finish. A section run alone, `llms-full`
-and `plugin`, which rewrite the working tree in place, runs first. On a passing run, the only
+the script's order once it and every section before it finish. The one section run alone,
+`plugin`, which rewrites the working tree in place, runs first. On a passing run, the only
 lines that differ between 2 runs of either mode are the credential scanner's line, in its elapsed
 time and sampling counts, and unittest's elapsed times. On 2 failing paths the modes differ in
 more. Under `--sections`, a section killed by a signal other than INT or PIPE makes the serial run print bash's job notice

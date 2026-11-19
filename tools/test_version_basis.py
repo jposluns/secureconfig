@@ -579,6 +579,97 @@ class ParserLoadTests(unittest.TestCase):
                     self.one_line(result, start + self.LOAD + cause)
 
 
+class LlmsFullCheckTests(unittest.TestCase):
+    """scripts/build-llms-full.sh --check (TODO 3.105) exits 0 when the committed
+    site/llms-full.txt equals a fresh build, and 1 with one line on standard error when a guide
+    has changed or the committed file is missing, and in no case writes that file or leaves its
+    temporary file behind. The case runs a copy of the build script whose guide list is cut to 2
+    guides, beside a stub tools/version_basis.py that passes --check and prints a --bundle guide
+    as it is, and the build's own link rewrite and link check, which need the pinned parser that
+    the suite's preflight requires."""
+
+    TOOLS = ('check_verify_marking.py', '_markdown.py', '_verify_sections.py',
+             'requirements-gates.txt')
+    STUB = ("import sys\n"
+            "if sys.argv[1:] != ['--check']:\n"
+            "    with open(sys.argv[-1], encoding='utf-8') as handle:\n"
+            "        sys.stdout.write(handle.read())\n")
+    MESSAGE = ('scripts/build-llms-full.sh --check: site/llms-full.txt does not match a fresh '
+               'build or cannot be read; run bash scripts/build-llms-full.sh and commit the '
+               'result\n')
+
+    def fixture(self, root):
+        build = (vb.ROOT / 'scripts/build-llms-full.sh').read_text(encoding='utf-8')
+        cut, count = re.subn(r'(?ms)^files=\(\n.*?^\)\n', 'files=(\n  README.md guide.md\n)\n',
+                             build)
+        self.assertEqual(count, 1)
+        (root / 'scripts').mkdir()
+        (root / 'scripts/build-llms-full.sh').write_text(cut, encoding='utf-8')
+        (root / 'tools').mkdir()
+        for name in self.TOOLS:
+            (root / 'tools' / name).write_text((vb.ROOT / 'tools' / name).read_text(
+                encoding='utf-8'), encoding='utf-8')
+        (root / 'tools/version_basis.py').write_text(self.STUB, encoding='utf-8')
+        (root / 'README.md').write_text('# Read me\n\nSee [the guide](guide.md).\n',
+                                        encoding='utf-8')
+        (root / 'guide.md').write_text('# Guide\n\nText.\n', encoding='utf-8')
+        # The link check's self-test certifies links to mfa.md and tools/ in the checkout.
+        (root / 'mfa.md').write_text('# MFA\n', encoding='utf-8')
+        (root / 'site').mkdir()
+        (root / 'tmp').mkdir()
+        python = root / 'bin/python3'
+        python.parent.mkdir()
+        python.write_text(f'#!/bin/sh\nexec {shlex.quote(sys.executable)} "$@"\n',
+                          encoding='utf-8')
+        python.chmod(0o755)
+        env = {key: value for key, value in os.environ.items() if key != 'CI'}
+        env['PATH'] = f"{python.parent}{os.pathsep}{env.get('PATH', '')}"
+        env['TMPDIR'] = str(root / 'tmp')
+        return env
+
+    @staticmethod
+    def build(root, env, *args):
+        return subprocess.run(['bash', 'scripts/build-llms-full.sh', *args], cwd=root,
+                              capture_output=True, text=True, env=env, timeout=120)
+
+    @staticmethod
+    def state(path):
+        """The bytes, modification time and inode of a file, which any write would change."""
+        stat = path.stat()
+        return path.read_bytes(), stat.st_mtime_ns, stat.st_ino
+
+    def test_check_compares_and_never_writes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            env = self.fixture(root)
+            bundle = root / 'site/llms-full.txt'
+            # The default mode still writes the file.
+            built = self.build(root, env)
+            self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+            self.assertIn('https://github.com/jposluns/secureconfig/blob/main/guide.md',
+                          bundle.read_text(encoding='utf-8'))
+            before = self.state(bundle)
+
+            equal = self.build(root, env, '--check')
+            self.assertEqual(equal.returncode, 0, equal.stdout + equal.stderr)
+            self.assertTrue(equal.stdout.startswith('site/llms-full.txt matches a fresh build ('),
+                            equal.stdout)
+            self.assertEqual(self.state(bundle), before)
+
+            (root / 'guide.md').write_text('# Guide\n\nTexT.\n', encoding='utf-8')
+            changed = self.build(root, env, '--check')
+            self.assertEqual((changed.returncode, changed.stdout, changed.stderr),
+                             (1, '', self.MESSAGE))
+            self.assertEqual(self.state(bundle), before)
+
+            bundle.unlink()
+            missing = self.build(root, env, '--check')
+            self.assertEqual((missing.returncode, missing.stdout, missing.stderr),
+                             (1, '', self.MESSAGE))
+            self.assertFalse(bundle.exists())
+            self.assertEqual(list((root / 'tmp').iterdir()), [])
+
+
 class SourcesBasisTests(unittest.TestCase):
     url = 'https://example.com/control'
     other = 'https://example.com/other'
