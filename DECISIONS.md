@@ -136,9 +136,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   This overrode the recommended split, and no other reasoning was recorded. The record says the ruling supersedes
   question 1b. The record's note on question 1b, which is the orchestrator's summary and not the maintainer's
   words, says that the zips will carry `LICENSE` and `NOTICE` under the new licence. The orchestrator, who wrote
-  that note at 17:33Z, meant both the skill zip and the plugin zip. The release did not yet build both zips then:
-  pull request #1333, which made each release carry a skill zip and a plugin zip and dropped the plugin `.tar.gz`,
-  merged at 21:27Z the same day.
+  that note at 17:33Z, meant both zips that #1333 would add. The release built no zip then: pull request #1333,
+  which made each release carry a skill zip and a plugin zip and dropped the plugin `.tar.gz`, merged at 21:27Z the
+  same day.
   - Later facts, from the same day. In a free-form answer at about 22:33Z, the maintainer wrote:
     "only me, why is the copyright jeff posluns i thought we were doing apache 2.0 or is that how you do it with apache?, anything from other projects keep their licenses, so the template takes the license from that project (ask posluns)".
     The record of that answer says that the project has no other contributors, that material copied from other
@@ -156,11 +156,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     carries them. No licence wording changes here: the root files and their copies are still the current CC0-era
     `LICENSE` and `NOTICE`.
   - Not yet changed: the licence change itself lands in a later pull request, which replaces the root `LICENSE` and
-    `NOTICE` with the Apache License 2.0 text and an Apache NOTICE and also adds `LICENSE` and `NOTICE` to the
-    skill zip. From that change onward, this ruling supersedes in part the ruling below on the vendored AIQT files'
-    licence (#343): its choice to keep the guides under CC0. The skill zip does not yet carry `LICENSE` or `NOTICE`,
-    only the `license:` line in the front matter of `plugin/skills/secureconfig/SKILL.md`. This pull request makes
-    the plugin zip carry them, and the second pull request, which changes the licence, adds them to the skill zip.
+    `NOTICE` with the Apache License 2.0 text and an Apache NOTICE. From that change onward, this ruling supersedes
+    in part the ruling below on the vendored AIQT files' licence (#343): its choice to keep the guides under CC0.
+    The skill zip does not yet carry `LICENSE` or `NOTICE`, only the `license:` line in the front matter of
+    `plugin/skills/secureconfig/SKILL.md`. This pull request makes the plugin zip carry them, and the second pull
+    request, which changes the licence, adds them to the skill zip.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
     own `CHANGELOG.md` entry, and records the new ruling here.
@@ -286,9 +286,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     at `mlflow.md` line 59. The `surrealdb.md` and `mlflow.md` arms were a bare `|| exit 2` and now print a message.
     A `command -v pip` guard added before the `mlflow.md` arm refuses a missing `pip` with 2, as rule 6 requires of
     a missing required tool, where that arm would otherwise report it as 3.
-    Each changed block gains the per-guide note in its section, quoting rule 6's meanings and saying that the block
-    otherwise ends with the status of its last command. Rule 6 is the standard; it is unchanged. The other setup
-    arms the ruling covers change in later pull requests of the wave.
+    Each changed block gains the per-guide note in its section, paraphrasing rule 6's meanings and saying that the
+    block otherwise ends with the status of its last command. Rule 6 is the standard; it is unchanged. The other
+    setup arms the ruling covers change in later pull requests of the wave.
   - Not changed: the empty-password refusal at `surrealdb.md` line 95, which stays 2 because rule 6 refuses an empty
     value after a successful read with status 2, and the Verify blocks of the four guides.
   - Revert. The revert path is a later maintainer ruling that withdraws or narrows this one, then a pull request
@@ -433,8 +433,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
 - **Maintainer ruling of 2026-11-13 on the gate suite's speed: a parallel runner, planned as its own pull request (#1312).**
   The maintainer gave this ruling through AskUserQuestion in an attended session at about 19:25Z, on the topic
-  "suite speed"; the question's own wording was not recorded. No reasoning was recorded beyond the choice, and the notes
-  recorded only the chosen option, not the other options offered. The label and description are quoted exactly:
+  "suite speed"; the question's own wording was not recorded. No reasoning was recorded beyond the choice, and the
+  notes recorded only the chosen option, not the other options offered.
+  The label and description are quoted exactly:
   the maintainer chose "Plan it as its own PR (Recommended)", whose description read "A worker maps section dependencies (the # depends: lines) and proposes a parallel runner that keeps output order and exit status identical; full QA before merge. Predicted choice."
   - Effect, applied in the same change as this entry. `tools/run_all_checks.sh` gains an opt-in parallel mode,
     `SECURECONFIG_SUITE_JOBS=N` with N a whole number from 1 to 64. It is off by default: unset or `1` is the serial
@@ -623,7 +624,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 - **Maintainer ruling of 2026-11-12 on the REASONED definition (#1290).** The maintainer gave it through
   AskUserQuestion in an attended session at about 14:09Z. No reasoning was recorded beyond the terms below. It
   confirms the 2026-11-11 REASONED proxy decision that "Proxy decisions awaiting maintainer review" below records.
-  That decision took option 2 and is now a maintainer ruling; that entry keeps its wording, and this entry records
+  That decision took option 2 and is now a maintainer ruling; that entry cites this ruling, and this entry records
   the outcome. The definition that `tools/version_basis.py` renders reads "REASONED records source reasoning, and any
   earlier-form run it rests on, not a live demonstration of the shipped form." CONTRIBUTING.md rule 5 gets the
   matching clause: a reasoned step records that nobody has yet observed the behaviour in its shipped form, and any
@@ -1623,14 +1624,15 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Proxy decisions awaiting maintainer review
 
-These are not maintainer rulings, and the settled status of the rulings above does not apply to them. At
-2026-10-27T22:13:08Z the maintainer directed, live in session, that while the maintainer may be away, a decision
-that blocks progress is taken by majority of three predictions of what the maintainer would decide: one each from
-lab_infra and guardrails, given the context through inbox-send, and the orchestrator's own. Each such decision is
-recorded with its question, the three predictions and its outcome, for the maintainer's later review. In the
-predictions quoted below, words in square brackets replace a pronoun in the quoted reasoning. The two proxy
-decisions of 2026-11-11 at the end of this section were taken under a later rule, the unattended decision rule of
-2026-10-31, which the first of them states.
+These are not maintainer rulings until a ruling above confirms them, and until then the settled status of the
+rulings above does not apply to them. At 2026-10-27T22:13:08Z the maintainer directed, live in session, that while
+the maintainer may be away, a decision that blocks progress is taken by majority of three predictions of what the
+maintainer would decide: one each from lab_infra and guardrails, given the context through inbox-send, and the
+orchestrator's own. Each such decision is recorded with its question, the three predictions and its outcome, for the
+maintainer's later review. In the predictions quoted below, words in square brackets replace a pronoun in the quoted
+reasoning. The two proxy decisions of 2026-11-11 at the end of this section were taken under a later rule, the
+unattended decision rule of 2026-10-31, which the first of them states. An entry that a ruling above confirms stays
+listed here for the record, under its heading as entered, and that ruling's entry records the outcome.
 
 - **Proxy decision of 2026-10-27 on TODO 1.383 closure, for the maintainer's later review (#1002).** Decided at
   2026-10-27T23:11:19Z under that directive. The outcome, as the record reads:
@@ -1779,13 +1781,9 @@ decisions of 2026-11-11 at the end of this section were taken under a later rule
   and the check adds little cost to a sweep that runs anyway (20261111T231152Z.from-lab_infra.589eda3fe03e.msg).
   Since both voters agreed, grc's vote was not needed; it is recorded, for option 2
   (20261111T231116Z.from-grc.b867ceb2400c.msg). The vote request and the lab_infra and grc votes cited D-1096, and
-  guardrails disputed that citation, pointing to the unattended rule of 2026-10-31. The outcome is option 2. Its effect so far: none in this repository.
-  The definition is generated for the whole corpus, so the change is a later corpus-wide pull request,
-  with the consistency check at the O3 sweep. That change is tracked in the maintainer-side orchestrator's private
-  backlog, not in a `TODO.md` row of this repository. Like the entry above, this decision is not a maintainer
-  ruling and awaits the maintainer's ratification, and none is recorded yet. The revert path is the maintainer's
-  review: a different ruling changes or drops the definition change and the consistency check before they land, or
-  replaces them after.
+  guardrails disputed that citation, pointing to the unattended rule of 2026-10-31. The outcome is option 2. The
+  maintainer's ruling of 2026-11-12 on the REASONED definition (#1290), above, confirms this decision, which is now
+  a maintainer ruling. That ruling's entry records the decision's effect and its revert path.
 
 ## Profile: predicting these rulings
 
