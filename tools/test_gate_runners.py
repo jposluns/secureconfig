@@ -364,8 +364,22 @@ printf '  ok    gate parser preflight: stand-in\\n'
 """
 # The stand-in bundle builds, which record their call in the same log and change nothing, so the
 # llms-full and plugin sections pass on the stand-in tree's files; the instructions stand-in also
-# prints the ok line its section requires of the real `--check`.
-BUILD_STANDINS = {"build-llms-full.sh": "printf 'build-llms-full.sh\\n' >> \"$STANDIN_LOG\"\n",
+# prints the ok line its section requires of the real `--check`. The llms-full stand-in records its
+# arguments, fails its call named by STANDIN_FAIL with a line on standard error, and rewrites
+# site/llms-full.txt when called without --check, as the real build does, so a section that ran
+# that build would leave the file changed (TODO 3.105).
+LLMS_STANDIN = """printf 'build-llms-full.sh %s\\n' "$*" >> "$STANDIN_LOG"
+if [ "build-llms-full.sh $*" = "$STANDIN_FAIL" ]; then
+  printf 'stand-in: site/llms-full.txt does not match\\n' >&2
+  exit 1
+fi
+if [ "$*" != --check ]; then
+  printf 'rebuilt\\n' > site/llms-full.txt
+fi
+"""
+BUNDLE = "bundle\n"
+LLMS_CHECK_CALL = "build-llms-full.sh --check"
+BUILD_STANDINS = {"build-llms-full.sh": LLMS_STANDIN,
                   "build-plugin.sh": "printf 'build-plugin.sh\\n' >> \"$STANDIN_LOG\"\n",
                   "build-instructions.sh": "printf 'build-instructions.sh\\n' >> \"$STANDIN_LOG\"\n"
                                            "printf '  ok    stand-in\\n'\n"}
@@ -380,7 +394,7 @@ WALKER_CALL = "-B tools/test_walk.py"
 SECRETS_CALL = "-I -B tools/test_secrets_scan.py"
 # generated-committed's self-test and gate, after the llms-full and plugin builds and the chat
 # fallback check its clean-tree skip relies on.
-GENERATED_CALLS = ["build-llms-full.sh", "build-plugin.sh",
+GENERATED_CALLS = [LLMS_CHECK_CALL, "build-plugin.sh",
                    "-I -B tools/test_build_instructions.py", "build-instructions.sh",
                    "-I -B tools/test_generated_committed.py",
                    "-I -B tools/check_generated_committed.py"]
@@ -411,8 +425,17 @@ SECTIONS_CASES = (
      [f"{ADDED}llms-full,instructions, which", LLMS_FULL, PLUGIN, GENERATED,
       "All selected gates passed (plugin,generated-committed,llms-full,instructions)"],
      ["All gates passed.", "  FAIL  ", LLMS_LINKS], [PREFLIGHT_CALL, *GENERATED_CALLS], ""),
-    (["--sections", "llms-full"], 0, [LLMS_FULL, "All selected gates passed (llms-full)"],
-     [ADDED, PLUGIN, GENERATED, "  FAIL  "], [PREFLIGHT_CALL, "build-llms-full.sh"], ""),
+    # llms-full runs the build's --check, which never writes site/llms-full.txt, and reports its
+    # failure with the build's own line.
+    (["--sections", "llms-full"], 0,
+     [LLMS_FULL, "  ok    matches a fresh build", "All selected gates passed (llms-full)"],
+     [ADDED, PLUGIN, GENERATED, "  FAIL  "], [PREFLIGHT_CALL, LLMS_CHECK_CALL], ""),
+    (["--sections", "llms-full"], 1,
+     [LLMS_FULL, "  FAIL  site/llms-full.txt is stale or failed to build; run "
+      "scripts/build-llms-full.sh and commit the result",
+      "          stand-in: site/llms-full.txt does not match", "One or more gates failed."],
+     ["All selected gates passed", "  ok    matches a fresh build"],
+     [PREFLIGHT_CALL, LLMS_CHECK_CALL], LLMS_CHECK_CALL),
     (["--sections", "no-such-section"], 2, [f"  FAIL  --sections names 'no-such-section', {REFUSED}"],
      ["== "], [], ""),
     (["--sections", "walker,no-such-section"], 2, [f"names 'no-such-section', {REFUSED}"],
@@ -454,7 +477,7 @@ def sections_failures():
         (d / "tools" / "run_all_checks.sh").write_text(text, encoding="utf-8")
         for name, body in BUILD_STANDINS.items():
             (d / "scripts" / name).write_text(body, encoding="utf-8")
-        (d / "site" / "llms-full.txt").write_text("bundle\n", encoding="utf-8")
+        (d / "site" / "llms-full.txt").write_text(BUNDLE, encoding="utf-8")
         (d / "plugin" / "plugin.json").write_text("{}\n", encoding="utf-8")
         standin = d / "bin" / "python3"
         standin.write_text(SECTIONS_STANDIN, encoding="utf-8")
@@ -470,10 +493,15 @@ def sections_failures():
             calls = log.read_text(encoding="utf-8").splitlines()
             missing = [n for n in needs if n not in out]
             present = [n for n in refuses if n in out]
+            bundle = (d / "site" / "llms-full.txt").read_text(encoding="utf-8")
             if r.returncode != want_rc or missing or present or calls != want_calls:
                 failures.append(f"--sections {args!r}: expected exit {want_rc} and calls "
                                 f"{want_calls!r}; got exit {r.returncode}, calls {calls!r}, the "
                                 f"output lacking {missing!r} or holding {present!r}: {out!r}")
+            if bundle != BUNDLE:
+                failures.append(f"--sections {args!r} left site/llms-full.txt as {bundle!r}, not "
+                                f"{BUNDLE!r}")
+                (d / "site" / "llms-full.txt").write_text(BUNDLE, encoding="utf-8")
     finally:
         shutil.rmtree(d, ignore_errors=True)
     return failures
