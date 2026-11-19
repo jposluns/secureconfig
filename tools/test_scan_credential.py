@@ -811,6 +811,13 @@ def wrapper(f, body):
     return {"PATH": str(path.parent) + ":" + f.env["PATH"]}
 
 
+# A search's injected failure first reads the key the scanner writes to its
+# stdin, as real Git reads its -f - patterns, so the scanner's key write
+# cannot meet a Git that has already exited. Any other injected call leaves
+# stdin unread.
+READ_KEY = "[[ $3 != grep ]] || cat > /dev/null\n"
+
+
 def injected(f, stage, status, diagnostic):
     # Fault injection into an external Git executable, never a production stub.
     # All normal operations delegate to real Git; the labelled stage is replaced.
@@ -822,7 +829,7 @@ def injected(f, stage, status, diagnostic):
         "history": '[[ $3 == grep && $4 != --no-index ]]',
     }[stage]
     emit = "printf '" + diagnostic + "' >&2" if diagnostic else ":"
-    env = wrapper(f, "if " + condition + "; then\n" + emit +
+    env = wrapper(f, "if " + condition + "; then\n" + READ_KEY + emit +
                   "\nexit " + str(status) + "\nfi")
     if stage != "rev-list" and status == 0 and diagnostic:
         # A search that exits 0 has matched, even with a diagnostic. Every
@@ -855,7 +862,7 @@ case("failed pattern producer", "INCONCLUSIVE", failed_producer)
 def fail_search(f, condition):
     # Injected Git failure for the searches the condition selects; all other
     # calls, including the other searches, run real Git.
-    return wrapper(f, "if " + condition + "; then\n"
+    return wrapper(f, "if " + condition + "; then\n" + READ_KEY +
                    "printf 'fatal: injected\\n' >&2\nexit 128\nfi")
 
 
@@ -900,8 +907,8 @@ def failure_without_match(f):
                   "printf 'output\\n' >> searches\n"
                   "elif [[ $3 == grep ]]; then\n"
                   "printf '%s\\n' \"$9\" >> searches\nfi\n"
-                  "if " + HISTORY[:-3] + " && $9 == " + commits[0] + " ]]; then\n"
-                  "printf 'fatal: injected\\n' >&2\nexit 128\nfi")
+                  "if " + HISTORY[:-3] + " && $9 == " + commits[0] + " ]]; then\n" +
+                  READ_KEY + "printf 'fatal: injected\\n' >&2\nexit 128\nfi")
     f.scan(3, I, env=env, stderr=b"")
     searched = (f.root / "searches").read_bytes().decode().split()
     assert searched == ["output", *commits], searched
@@ -951,7 +958,7 @@ def unverified_output_line(f, body, expected):
     # A printed line counts only when it names a real path under the output
     # directory: a garbled, empty, partial or non-path line never reads as
     # FOUND and never reaches stdout, while a printed real path still counts.
-    env = wrapper(f, "if " + OUTPUT + "; then\n" + body + "\nexit 128\nfi")
+    env = wrapper(f, "if " + OUTPUT + "; then\n" + READ_KEY + body + "\nexit 128\nfi")
     if expected is None:
         f.scan(3, I, env=env, stderr=b"")
     else:
@@ -977,8 +984,8 @@ def unverified_history_line(f, alien):
     commits = f.git("rev-list", "--all", "--reflog").decode().split()
     assert len(commits) == 2, commits
     name = commits[1] + ":source" if alien else commits[0] + ":absent"
-    env = wrapper(f, "if " + HISTORY[:-3] + " && $9 == " + commits[0] + " ]]; then\n"
-                  "printf '%s\\n' " + name + "\nexit 128\nfi")
+    env = wrapper(f, "if " + HISTORY[:-3] + " && $9 == " + commits[0] + " ]]; then\n" +
+                  READ_KEY + "printf '%s\\n' " + name + "\nexit 128\nfi")
     f.scan(3, I, env=env, stderr=b"")
 
 
@@ -1519,6 +1526,7 @@ case("documented limit: Brotli-only", "LIMIT", brotli_limit)
 
 def unfetched(f):
     h = f.commit()
+    private = [h, f.git("rev-parse", h + ":source").strip().decode()]
     f.git("branch", "private", h)
     f.git("reset", "--hard", f.base)
     clone = f.root / "single"
@@ -1534,6 +1542,12 @@ def unfetched(f):
     root = f.root
     f.root = clone
     try:
+        # The private commit and the blob that holds the key must both be
+        # absent from the clone, so the scan below covers objects the clone
+        # never received, not unreachable objects that it holds.
+        query = "".join(o + "\n" for o in private).encode()
+        assert f.git("cat-file", "--batch-check", data=query) == b"".join(
+            o.encode() + b" missing\n" for o in private), "private objects cloned"
         f.write("dist/app.js", b"clean")
         f.scan(0, N)
     finally:
