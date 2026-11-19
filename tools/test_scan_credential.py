@@ -1526,6 +1526,7 @@ case("documented limit: Brotli-only", "LIMIT", brotli_limit)
 
 def unfetched(f):
     h = f.commit()
+    private = [h, f.git("rev-parse", h + ":source").strip().decode()]
     f.git("branch", "private", h)
     f.git("reset", "--hard", f.base)
     clone = f.root / "single"
@@ -1541,6 +1542,12 @@ def unfetched(f):
     root = f.root
     f.root = clone
     try:
+        # The private commit and the blob that holds the key must both be
+        # absent from the clone, so the scan below covers objects the clone
+        # never received, not unreachable objects that it holds.
+        query = "".join(o + "\n" for o in private).encode()
+        assert f.git("cat-file", "--batch-check", data=query) == b"".join(
+            o.encode() + b" missing\n" for o in private), "private objects cloned"
         f.write("dist/app.js", b"clean")
         f.scan(0, N)
     finally:
