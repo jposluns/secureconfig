@@ -34,6 +34,26 @@ scan_fail() {
     fi
     exit 3
 }
+# Set before the trap: inherited values must not reach the arithmetic below.
+# The trap is set before the first check, once its handler and the variables
+# that the handler reads are defined.
+# Before the content searches a HUP, INT or TERM ends the scan with status 3
+# once the running command returns; during them it only sets interrupted.
+hit=0
+failed=
+interrupted=0
+searching=0
+scan_scope=
+# Run only by the builtin trap below; a bare trap would admit an exported trap function.
+# shellcheck disable=SC2329
+scan_signal() {
+    if (( searching )); then
+        interrupted=1
+    else
+        scan_fail interrupted
+    fi
+}
+builtin trap scan_signal HUP INT TERM
 usage() {
     builtin printf '%s\n' \
         'Usage: bash tools/scan_credential.sh [--explain] OUTPUT_DIRECTORY' \
@@ -69,24 +89,6 @@ for variable in $variables; do
         builtin unset -v "$variable" 2>/dev/null || scan_refuse git-environment
     fi
 done
-# Set before the trap: inherited values must not reach the arithmetic below.
-# Before the content searches a HUP, INT or TERM ends the scan with status 3
-# once the running command returns; during them it only sets interrupted.
-hit=0
-failed=
-interrupted=0
-searching=0
-scan_scope=
-# Run only by the builtin trap below; a bare trap would admit an exported trap function.
-# shellcheck disable=SC2329
-scan_signal() {
-    if (( searching )); then
-        interrupted=1
-    else
-        scan_fail interrupted
-    fi
-}
-builtin trap scan_signal HUP INT TERM
 
 # Inspect ancestors too: trailing slashes must not hide symlinks or .git.
 out=$1

@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import shutil
 import socket
+import struct
 import subprocess
 import sys
 import tempfile
@@ -1123,6 +1124,57 @@ def group_signal_during_history(f):
 
 case("SIGINT to the process group after output match", "FOUND",
      group_signal_during_history)
+
+
+def signal_before_checks(f, signame):
+    # Bash reads the scanner from a pipe here, so the case can hold it after
+    # the lines before its first check, the argument count, and signal it
+    # there. The trap must already be set: INCONCLUSIVE/3, where a scanner
+    # without it dies by the signal with no output.
+    import fcntl
+    import signal
+    import termios
+    text = TOOL.read_bytes()
+    first = b"\n[[ $# == 1 ]] || scan_refuse arguments\n"
+    assert text.count(first) == 1, "first check changed; update this case"
+    cut = text.index(first) + 1
+    r, w = os.pipe()
+    try:
+        p = subprocess.Popen(["bash", f"/dev/fd/{r}", "dist"], pass_fds=(r,),
+                             cwd=f.root, env=f.env, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    finally:
+        os.close(r)
+    try:
+        os.write(w, text[:cut])
+        until = time.monotonic() + 30
+        while struct.unpack("i", fcntl.ioctl(w, termios.FIONREAD, b"\0" * 4))[0]:
+            assert p.poll() is None and time.monotonic() < until, "prefix not read"
+            time.sleep(0.01)
+        time.sleep(0.2)
+        assert p.poll() is None, (p.returncode, "scanner ended before the signal")
+        p.send_signal(getattr(signal, signame))
+        time.sleep(0.2)
+        try:
+            os.write(w, text[cut:])
+        except BrokenPipeError:
+            pass  # A scanner that has already exited reads no more.
+        os.close(w)
+        w = None
+        out, err = p.communicate(KEY + b"\n", timeout=30)
+        assert (p.returncode, out, err) == (3, I, b""), (p.returncode, out, err)
+        assert KEY not in out + err
+    finally:
+        if w is not None:
+            os.close(w)
+        if p.poll() is None:
+            p.kill()
+            p.communicate()
+
+
+for signame in ("SIGHUP", "SIGINT", "SIGTERM"):
+    case(f"{signame} before the first check", "INCONCLUSIVE",
+         lambda f, s=signame: signal_before_checks(f, s))
 
 
 def root_check(f, kind, explain=False):
