@@ -114,9 +114,10 @@ so it stays serial. At N above 1 each section runs in its own bash process and
 process group, with its standard output and standard error merged into one buffer, and the
 buffers print in the file's order as each section and every one before it finish, so the output
 holds the same lines in the same order and the status is the same. The summary is the same code.
-`llms-full` and `plugin`, which rewrite the working tree in place, run first, one at a time,
-each alone (the `# exclusive:` line of the script), and `generated-committed` runs after them
-and after `instructions` (its `# depends:` line). A section that exits early or dies by a signal ends the run as in the
+`plugin`, which rewrites the working tree in place, runs first and alone (the `# exclusive:`
+line of the script); `llms-full` builds into a temporary file through
+`scripts/build-llms-full.sh --check` and never writes `site/llms-full.txt`. `generated-committed` runs
+after `llms-full`, `plugin` and `instructions` (its `# depends:` line). A section that exits early or dies by a signal ends the run as in the
 serial one, and HUP, INT and TERM stop every section's process group and are re-raised. Any other
 value, an empty one included, is refused with status 2 before any gate runs. Output identity
 sets aside 3 fields that vary between any 2 runs: the credential scanner's elapsed time and
