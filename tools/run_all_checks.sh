@@ -170,7 +170,10 @@ par_launch() {
   # as the whole serial run does, and such an error ends them with 1 in both.
   # A shell forked here that a stop's TERM ended before it started the section's bash ran this
   # shell's EXIT trap and removed the folder under the sections still running (row 3.101), so no
-  # EXIT trap is set while it forks; a HUP, INT or TERM meanwhile is held as above.
+  # EXIT trap is set while it forks; a HUP, INT or TERM meanwhile is held as above. Until the trap
+  # is set again below, a failed fork, or a signal such as USR1 that this script does not trap and
+  # that ends this shell, ends it without par_cleanup and leaves the folder, which par_cleanup
+  # would remove with the trap set (row 3.103).
   trap - EXIT
   set -m
   if [ -n "$par_selected" ]; then
