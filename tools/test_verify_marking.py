@@ -138,6 +138,9 @@ def main():
 
         # Row 3.64: an optional fifth TAB field gives the reason an entry is kept by design.
         # The ratchet accepts and ignores it; an empty or whitespace-only one is malformed.
+        # Before row 3.64 every 5-field line was malformed, so the refusal cases below put a
+        # valid reasoned entry first and name the line and message they expect: the old code
+        # refuses that first line as malformed instead, so each case fails on it.
         def with_reason(reason):
             return "\n".join(line + "\t" + reason if line and not line.startswith("#") else line
                              for line in saved.split("\n"))
@@ -150,14 +153,18 @@ def main():
               and "1 grandfathered units retained" in out)
         baseline.write_text(with_reason("by design\twith a TAB"), encoding="utf-8")
         check("reason keeps the rest of the line", invoke(root, "--strict")[0] == 0)
+        reasoned = with_reason("by design")
+        later = reasoned.count("\n") + 1
         for label, reason in (("empty", ""), ("whitespace-only", " \t ")):
-            baseline.write_text(with_reason(reason), encoding="utf-8")
+            baseline.write_text(reasoned + f"guide.md\tfence\t{'0' * 64}\t1\t{reason}\n",
+                                encoding="utf-8")
             rc, out = invoke(root, "--strict")
-            check(f"{label} baseline reason is malformed",
-                  rc == 1 and "malformed entry" in out)
-        baseline.write_text(with_reason("by design") + with_reason("again"), encoding="utf-8")
+            check(f"{label} baseline reason is malformed after a reasoned entry",
+                  rc == 1 and f"baseline line {later}: malformed entry" in out)
+        baseline.write_text(reasoned + with_reason("again"), encoding="utf-8")
+        rc, out = invoke(root, "--strict")
         check("a reason does not change the duplicate key check",
-              invoke(root, "--strict")[0] == 1)
+              rc == 1 and "duplicate key" in out)
         baseline.write_text("bad entry\n", encoding="utf-8")
         check("malformed baseline", invoke(root, "--strict")[0] == 1)
         baseline.unlink()

@@ -291,17 +291,20 @@ def main():
     # Row 3.64 and the maintainer's ruling of about 2026-11-14T21:59Z: a Verify-marking baseline
     # entry with a reason in its optional fifth TAB field is kept by design and does not count,
     # and one without a reason is still deferred work. The reasoned cases FAIL on the #1318
-    # behaviour, which counted every entry in that file.
+    # behaviour, which counted every entry in that file. Each unreasoned case sits beside a
+    # reasoned entry and expects 1, so it fails on that behaviour (2) too. The file-name case
+    # cannot tell the two apart: it only pins the fixture's premise, which both share.
     unit = "docker.md\tprose\t" + "2" * 64 + "\t1"
     check("the Verify-marking baseline is the file with the optional fifth-field reason",
           verify == "tools/verify_marking_baseline.txt")
     check("a reasoned Verify-marking baseline entry is not an M1 entry",
           gen.m1_count("docker.md", {verify: unit + "\tevidence for a DEMONSTRATED claim\n"}) == 0)
+    beside = unit.replace("2", "4") + "\tby design\n"
     for label, text in [("no reason field", unit + "\n"), ("an empty reason field", unit + "\t\n"),
                         ("a whitespace-only reason", unit + "\t  \n"),
                         ("text in the count field only", "docker.md\tx\t1\tkept by design\n")]:
-        check(f"a Verify-marking baseline entry with {label} is an M1 entry",
-              gen.m1_count("docker.md", {verify: text}) == 1)
+        check(f"a Verify-marking baseline entry with {label} beside a reasoned one is an M1 entry",
+              gen.m1_count("docker.md", {verify: beside + text}) == 1)
     check("only the unreasoned Verify-marking line of the guide counts",
           gen.m1_count("docker.md", {verify: unit + "\tby design\n" + unit.replace("2", "3")
                                      + "\n" + unit.replace("docker", "ghost") + "\n"}) == 1)
@@ -332,7 +335,7 @@ def main():
         check("a deferred-work entry beside reasoned waivers is PARTIAL(M1) with count 1",
               gen.m1("docker.md") == ("PARTIAL(M1)", 1))
         gen.ROOT = _Root({**waived, verify: unit + "\tevidence for a DEMONSTRATED claim\n"})
-        check("a guide whose only deferred-work entry is a reasoned Verify-marking one is P on M1",
+        check("a reasoned Verify-marking entry beside reasoned waivers is P on M1",
               gen.m1("docker.md") == ("P", 0))
     finally:
         gen.ROOT = real_root

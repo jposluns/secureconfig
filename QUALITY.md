@@ -56,23 +56,27 @@ in any baseline or allow file, every waiver for the guide carries a reason, and 
 - PARTIAL: suite green, but a deferred-work entry remains or a waiver lacks a reason.
 - GAP (HIGH): the suite fails on this guide. Unmergeable, so this is only ever seen on a branch.
 
-A deferred-work entry records something the guide still owes (a Verify-marking baseline entry for a
-paragraph that would attach to a DEMONSTRATED fence or a step with no concrete command, or an
-over-length claim awaiting a split). A reasoned waiver is a deliberate, reviewed exception recorded
-with its reason: a bracket-range or exposure-index allow entry, or a Verify-marking baseline entry,
-whose reason is filled in. Only deferred-work entries and waivers without a reason count against
-M1, so a reasoned waiver passes M1. `tools/gen_guide_quality.py` sorts an entry by the file that
-holds it. Every entry in `tools/verify_marking_baseline.txt` with no reason, and every entry in
-`tools/claim_length_baseline.txt` and `tools/version_basis_sources_baseline.txt`, is deferred work
-and counts once, and the script ignores the count field in the first and last of these. Of the
-three, only the Verify-marking baseline has a reason field, an optional fifth TAB field, so an
-entry kept there by design, such as one for a DEMONSTRATED evidence text, stops counting against M1
-once its reason is filled in, while an entry kept by design in either of the other two still counts
-as deferred work. An entry in `tools/bracket_ranges_allow.txt` or
-`tools/exposure_index_allowlist.txt` is a waiver and counts only when its reason is empty: a
-bracket-range line once, and an allowlist entry once per distinct guide and port that has a line
-with no reason. The script does not read the `guard-conventions: allow` lines in the guides. It
-scores the lead PARTIAL(M1) when the count is not zero.
+A deferred-work entry is one that M1 counts as something the guide still owes: a Verify-marking
+baseline entry with no reason, such as one for a paragraph that would attach to a DEMONSTRATED fence
+or a step with no concrete command, or any entry in the claim-length or version-basis sources
+baseline, such as an over-length claim awaiting a split. A reasoned waiver is a deliberate, reviewed
+exception recorded with its reason: a bracket-range or exposure-index allow entry, or a
+Verify-marking baseline entry, whose reason is filled in. A reason is filled in when it holds more
+than whitespace, so an empty or whitespace-only reason is no reason. Only deferred-work entries and
+waivers without a reason count against M1, so a reasoned waiver passes M1.
+`tools/gen_guide_quality.py` sorts an entry by the file that holds it and, in the Verify-marking
+baseline, by whether its reason is filled in. Every entry in `tools/verify_marking_baseline.txt`
+with no reason, and every entry in `tools/claim_length_baseline.txt` and
+`tools/version_basis_sources_baseline.txt`, is deferred work and counts once, and the script
+ignores the count field in the first and last of these. Of the three, only the Verify-marking
+baseline has a reason field, an optional fifth TAB field, so an entry kept there by design, such as
+one for a DEMONSTRATED evidence text, is a reasoned waiver once its reason is filled in and stops
+counting against M1, while an entry kept by design in either of the other two still counts as
+deferred work. An entry in `tools/bracket_ranges_allow.txt` or `tools/exposure_index_allowlist.txt`
+is a waiver and counts only when it has no reason: a bracket-range line once, and an allowlist
+entry once per distinct guide and port that has a line with no reason. The script does not read
+the `guard-conventions: allow` lines in the guides. It scores the lead PARTIAL(M1) when the count
+is not zero.
 
 ### Group A: Coverage
 
