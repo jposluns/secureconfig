@@ -362,12 +362,13 @@ if [ "$*" = "$STANDIN_FAIL" ]; then
 fi
 printf '  ok    gate parser preflight: stand-in\\n'
 """
-# The stand-in bundle builds, which record their call in the same log and change nothing, so the
-# llms-full and plugin sections pass on the stand-in tree's files; the instructions stand-in also
-# prints the ok line its section requires of the real `--check`. The llms-full stand-in records its
-# arguments, fails its call named by STANDIN_FAIL with a line on standard error, and rewrites
-# site/llms-full.txt when called without --check, as the real build does, so a section that ran
-# that build would leave the file changed (TODO 3.105).
+# The stand-in bundle builds record their call in the same log. The plugin and instructions
+# stand-ins change nothing, and the llms-full stand-in changes nothing when called with --check,
+# so the llms-full and plugin sections pass on the stand-in tree's files; the instructions
+# stand-in also prints the ok line its section requires of the real `--check`. The llms-full
+# stand-in records its arguments, fails its call named by STANDIN_FAIL with a line on standard
+# error, and rewrites site/llms-full.txt when called without --check, as the real build does, so
+# a section that ran that build would leave the file changed (TODO 3.105).
 LLMS_STANDIN = """printf 'build-llms-full.sh %s\\n' "$*" >> "$STANDIN_LOG"
 if [ "build-llms-full.sh $*" = "$STANDIN_FAIL" ]; then
   printf 'stand-in: site/llms-full.txt does not match\\n' >&2
