@@ -773,10 +773,16 @@ class Terminal:
         self.out = b""
         self.reports = []
         self.tree = tree
-        self.master, slave = pty.openpty()
-        ctl_r, self.ctl = os.pipe()
-        self.rep, rep_w = os.pipe()
+        # Every fd is opened inside the try, so a failure at any step, from openpty() on, closes
+        # each fd already opened: no Terminal exists for the caller to close.
+        opened = []
         try:
+            self.master, slave = pty.openpty()
+            opened += [self.master, slave]
+            ctl_r, self.ctl = os.pipe()
+            opened += [ctl_r, self.ctl]
+            self.rep, rep_w = os.pipe()
+            opened += [self.rep, rep_w]
             attrs = termios.tcgetattr(slave)
             attrs[3] = (attrs[3] | termios.TOSTOP) if tostop else (attrs[3] & ~termios.TOSTOP)
             termios.tcsetattr(slave, termios.TCSANOW, attrs)
@@ -787,15 +793,12 @@ class Terminal:
                 stdin=slave, stdout=slave, stderr=slave, cwd=tree.d, env=tree.env(None),
                 start_new_session=True, pass_fds=(ctl_r, rep_w))
         except BaseException:
-            # No Terminal exists for the caller to close, so this end of each pipe and the
-            # terminal's master are closed here.
-            for fd in (self.master, self.ctl, self.rep):
+            for fd in opened:
                 os.close(fd)
             raise
-        finally:
-            os.close(slave)
-            os.close(ctl_r)
-            os.close(rep_w)
+        # JOBCTL holds its own copies of the slave, ctl_r and rep_w.
+        for fd in (slave, ctl_r, rep_w):
+            os.close(fd)
         self.open = [self.master, self.rep]
 
     def pump(self, predicate, seconds):
@@ -868,18 +871,27 @@ class Terminal:
         """SIGKILL the driver's process group once JOBCTL has reported its PID, the process group
         of every process in JOBCTL's session (which holds the driver before that report and a
         section that moved to a group of its own), and the group of each running process that a
-        pid file of the tree records; never JOBCTL's own group or this test's."""
+        pid file of the tree records when that process is in JOBCTL's session; never JOBCTL's own
+        group or this test's."""
         groups = {pgrp for _, pgrp, _, _ in session_processes(self.p.pid)}
         pid = self.report("pid")
         if pid:
             groups.add(int(pid))
+        # A recorded process that has ended could have its PID reused by an unrelated process, so
+        # its group is taken only when one read of its stat gives JOBCTL's session as its session.
+        # This test has not reaped JOBCTL yet, and Linux reuses no PID that a process, even a
+        # zombie, still has as its PID, group or session, so no other session can have that ID.
         for pid_file in sorted(self.tree.d.glob("*.pid")) + sorted(self.tree.d.glob("*.child")):
             recorded = alive(pid_file)
             if recorded:
                 try:
-                    groups.add(os.getpgid(recorded))
+                    stat = Path(f"/proc/{recorded}/stat").read_text(encoding="utf-8",
+                                                                    errors="replace")
                 except OSError:
-                    pass
+                    continue
+                fields = stat.rpartition(") ")[2].split()
+                if len(fields) > 3 and fields[3] == str(self.p.pid):
+                    groups.add(int(fields[2]))
         for group in groups - {self.p.pid, os.getpgrp()}:
             if group > 1:
                 try:
@@ -890,7 +902,10 @@ class Terminal:
     def close(self):
         """End the run and everything it started, whether or not JOBCTL reported the driver's PID,
         so that no process group is left for the kernel to clean up, then close the pipes and the
-        terminal. Its waits take at most 5 seconds."""
+        terminal. It takes about 5 seconds at most. Its timed waits end at a deadline 5 seconds
+        after it starts; past that deadline it finishes the step it is in, which may be a pause of
+        0.05 seconds or, once it has sent JOBCTL SIGKILL, a wait with no time limit for JOBCTL to
+        end, then makes at most one more pass over JOBCTL's session, killing what it finds."""
         deadline = time.monotonic() + 5
         self.kill_run()
         self.send("quit")
@@ -976,9 +991,11 @@ def t17_terminal(notes):
         return failures
     expected_failures = []
 
-    # Every wait below is bounded, and a case's waits add up to at most 27 seconds (Ctrl-Z then fg:
-    # 5 for the gate, 5 for the stop, 3 for the stopped states, 8 for the end, 1 for the output and
-    # 5 for Terminal.close), each but the last multiplied by SECURECONFIG_TEST_LOAD_SCALE.
+    # The time limits of a case's waits add up to 27 seconds (Ctrl-Z then fg: 5 for the gate, 5 for
+    # the stop, 3 for the stopped states, 8 for the end, 1 for the output and 5 for Terminal.close),
+    # each but the last multiplied by SECURECONFIG_TEST_LOAD_SCALE. A wait can run a little past its
+    # limit, which is checked between steps, and Terminal.close's wait for JOBCTL after a SIGKILL
+    # has no limit.
     def run(label, sleep, act, tostop=False):
         """Start the run, wait for its gate, then act(term, tree); every case ends its run."""
         tree = Tree(synthetic([section("g", extra=TERMINAL_GATE.format(sleep=sleep))]))
