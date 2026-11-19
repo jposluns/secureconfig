@@ -35,8 +35,8 @@ scan_fail() {
     exit 3
 }
 # Set before the trap: inherited values must not reach the arithmetic below.
-# The trap is set before the first check, once its handler and the variables
-# that the handler reads are defined.
+# The source check is the only check before the trap, which is set once its
+# handler and the variables that the handler reads are defined.
 # Before the content searches a HUP, INT or TERM ends the scan with status 3
 # once the running command returns; during them it only sets interrupted.
 hit=0
