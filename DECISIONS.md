@@ -1308,8 +1308,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   that the earlier pin predated the pack's move to Apache-2.0, so the maintainer ruled to re-pin to an Apache-era
   commit, rather than grant Apache-2.0 to the pinned versions or label them CC BY-SA 4.0. The maintainer first asked
   whether relicensing the repository to Apache-2.0 would be easier; the answer given was that it would put
-  redistribution conditions on configuration readers copy, and that earlier releases stay CC0 regardless. They then
-  chose to keep CC0 with the exception. No other reasoning was given.
+  redistribution conditions on configuration readers copy, and that earlier releases stay CC0 regardless. The
+  maintainer then chose to keep CC0 with the exception. No other reasoning was given.
   The 2026-11-15 ruling above, that the whole project moves to Apache-2.0, supersedes in part this ruling: from the
   later pull request that changes the licence onward, it supersedes the choice to keep the guides under CC0. The
   re-pin, the vendored `.aiqt/` LICENSE and NOTICE, and that earlier releases stay CC0 still stand.
