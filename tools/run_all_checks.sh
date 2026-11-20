@@ -683,20 +683,102 @@ echo "== the plugin bundle is current =="
 # site/llms-full.txt is, and for the same reason: a bundle that has drifted from the guides ships
 # a reader stale configuration while the repository looks correct. The build is byte-deterministic
 # (a copy per file), so rebuilding and comparing is the whole check.
-plugin_tmp=$(mktemp -d)
-cp -a plugin/. "$plugin_tmp/"
-if bash scripts/build-plugin.sh >/dev/null 2>&1; then
-  if diff -rq "$plugin_tmp" plugin >/dev/null 2>&1; then
-    ok "plugin/ matches a fresh build"
-  else
-    bad "plugin/ is stale; run scripts/build-plugin.sh and commit the result"
+# The build rewrites plugin/ in place, so plugin/ is saved to a private folder first and put back
+# from it afterwards (TODO row 3.108). The HUP, INT and TERM traps only record the first such
+# signal in plugin_sig, so a shell forked from this one that runs a trap changes nothing but its
+# own copy of that variable. Every removal and the restore are lines of this shell's own run, not
+# of a trap: after each step this shell reads plugin_sig, and once a signal is recorded it skips
+# the save, the build and the comparison that have not started, puts plugin/ back if the build has
+# started, removes the folder, resets the three traps and dies by that signal. A signal that
+# arrives after this shell last reads plugin_sig before the build, and before the build's shell
+# has reset HUP, INT and TERM to their defaults, does not stop the build part way: the build
+# either does not start or runs to its end, and plugin/ is put back either way (row 3.110). A
+# signal that reaches this shell and not the command it waits for takes effect when that command
+# ends. The folder is the one mktemp -d creates and names: besides plugin/, only a folder whose
+# name mktemp -d printed is ever removed, so no temporary path that another process created is.
+# mktemp -d runs in a subshell that ignores HUP, INT and TERM, so such a signal cannot end it
+# between making the folder and printing its name. This shell reads that name with read from a
+# process substitution, not from a command substitution, while it waits for which an INT can go
+# unrecorded (row 3.110). In bash's default mode a trapped HUP, INT or TERM does not interrupt
+# read. In POSIX mode it does, and the loop then runs read again, which assumes that mktemp -d
+# prints the name in one write, since a retry between two writes of it would keep only the rest.
+# plugin_build gives the build the write end of a pipe as its fd 3, which each process the build
+# starts inherits, and returns only when cat, which reads the other end, sees the end of the
+# pipe, that is once every process that held that fd has exited or closed it. cat and the
+# subshell that waits for it ignore HUP, INT and TERM, so a child of the build that is still
+# running when the build's own shell dies cannot write into plugin/ once the restore has started,
+# unless it closed its fd 3. plugin_shielded runs the restore and the removal in a subshell that
+# ignores the same 3 signals, which the commands it starts inherit, so a signal sent to the
+# process group then cannot stop them part way, and it runs that subshell again when such a
+# signal ends it before it ignores them. A KILL runs no trap: once mktemp -d has made the folder
+# it can leave the folder, and once the build has started it can also leave plugin/ deleted or
+# partly rebuilt, as can the KILL that par_stop_from sends to a section still running 5 seconds
+# after its TERM, such as one still waiting for a process of the build (row 3.110).
+plugin_sig=""
+plugin_tmp=""
+plugin_rc=""
+plugin_built=""
+plugin_lost=""
+plugin_shielded() {
+  local rc
+  while :; do
+    ( trap '' HUP INT TERM; "$@" )
+    rc=$?
+    case $rc in 129|130|143) ;; *) return "$rc" ;; esac
+  done
+}
+# shellcheck disable=SC2329  # only plugin_shielded calls it, by name, unseen by shellcheck
+plugin_put_back() {
+  rm -rf plugin || return
+  cp -a "$plugin_tmp" plugin
+}
+# The build's exit status, returned only once every process that held the write end of the pipe
+# on its fd 3, the build and each process it starts, has exited or closed it (see above).
+plugin_build() {
+  (
+    trap '' HUP INT TERM
+    { trap - HUP INT TERM; exec bash scripts/build-plugin.sh; } 3>&1 >/dev/null 2>&1 | exec cat >/dev/null
+    exit "${PIPESTATUS[0]}"
+  )
+}
+trap 'plugin_sig=${plugin_sig:-HUP}' HUP
+trap 'plugin_sig=${plugin_sig:-INT}' INT
+trap 'plugin_sig=${plugin_sig:-TERM}' TERM
+while :; do
+  IFS= read -r plugin_tmp
+  plugin_rc=$?
+  [ "$plugin_rc" -gt 128 ] || break
+done < <( (trap '' HUP INT TERM; exec mktemp -d) )
+if [ -z "$plugin_tmp" ]; then
+  [ -n "$plugin_sig" ] || bad "could not create a folder to save plugin/ in; plugin/ was not rebuilt"
+elif [ -z "$plugin_sig" ] && ! cp -a plugin/. "$plugin_tmp/"; then
+  [ -n "$plugin_sig" ] || bad "could not save plugin/ to $plugin_tmp; plugin/ was not rebuilt"
+elif [ -z "$plugin_sig" ]; then
+  plugin_built=1
+  if ! plugin_build; then
+    [ -n "$plugin_sig" ] || bad "scripts/build-plugin.sh exited non-zero"
+  elif [ -z "$plugin_sig" ]; then
+    if diff -rq "$plugin_tmp" plugin >/dev/null 2>&1; then
+      [ -n "$plugin_sig" ] || ok "plugin/ matches a fresh build"
+    else
+      [ -n "$plugin_sig" ] || bad "plugin/ is stale; run scripts/build-plugin.sh and commit the result"
+    fi
   fi
-else
-  bad "scripts/build-plugin.sh exited non-zero"
 fi
-rm -rf plugin
-cp -a "$plugin_tmp" plugin || { bad "could not restore plugin/ from $plugin_tmp"; exit 1; }
-rm -rf "$plugin_tmp"
+if [ -n "$plugin_built" ] && ! plugin_shielded plugin_put_back; then
+  bad "could not restore plugin/ from $plugin_tmp"
+  plugin_tmp=""
+  plugin_lost=1
+fi
+if [ -n "$plugin_tmp" ]; then
+  plugin_shielded rm -rf -- "$plugin_tmp"
+fi
+plugin_tmp=""
+trap - HUP INT TERM
+if [ -n "$plugin_sig" ]; then
+  kill -s "$plugin_sig" "$BASHPID"
+fi
+[ -z "$plugin_lost" ] || exit 1
 
 # section: instructions
 echo "== the chat fallback file is current =="
