@@ -202,7 +202,8 @@ par_launch() {
   # A shell forked here that a stop's TERM ends before it starts the section's bash runs no EXIT
   # trap, since none is set, and removes nothing (rows 3.101 and 3.103); a HUP, INT or TERM
   # meanwhile is held as above. A failed fork ends this shell, and the keeper then removes the
-  # folder (see par_cleanup).
+  # folder (see par_cleanup), unless the per-user process limit is still exhausted when the
+  # keeper forks rm (row 3.117).
   set -m
   if [ -n "$par_selected" ]; then
     bash -c '. /dev/fd/3' "$PWD/tools/run_all_checks.sh" 3< "$par_dir/$name.sh" > "$par_dir/$name.out" 2>&1 < /dev/null &
@@ -415,7 +416,10 @@ par_run() {
   fi
   eval "$preflight_text"
   # The keeper (see par_cleanup). A signal that ends this shell once the keeper is forked, before
-  # the traps below are set, ends it by that signal as before, and the keeper then removes the
+  # the traps below are set, ends it by that signal as before, and, unless it is a KILL or another
+  # signal the keeper does not ignore sent to the process group, which ends the keeper too, or the
+  # per-user process limit is still exhausted when the keeper forks rm (row 3.117), the keeper
+  # then removes the
   # folder, even one that mktemp makes after this shell has ended (row 3.113). mktemp's own
   # message, when it cannot make the folder, still comes before the FAIL line. The keeper prints
   # a line and reads its input to the end even when mktemp fails, since bash closes a coprocess's
