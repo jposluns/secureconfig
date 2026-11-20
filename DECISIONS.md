@@ -506,6 +506,24 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here. If the revert pull request uses
     `git revert -m 1`, that puts back this pull request's `CHANGELOG.md` entry under the date it merged and does not
     set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
+- **Maintainer rulings of 2026-11-13 on the exit-status rule and on how the exit-status sweep is announced, which wave 1 of the sweep, #1310, followed (#1373).**
+  The maintainer gave both rulings through AskUserQuestion, each in an attended session, answered at about 19:24Z and
+  at about 23:08Z. The record of each ruling gives only the chosen option, not the other options offered. The labels
+  and descriptions are quoted exactly.
+  At about 19:24Z, on the exit-status rule, the maintainer chose "Follow rule 6, sweep guides (Recommended)", whose description read "Local-environment failures exit 3, a missing required tool exits 2; one QA'd PR sweeps every guide's pre-probe arms to match. Predicted choice: the rule exists, the guides drifted."
+  At about 23:08Z, on how the exit-status sweep is announced, the maintainer chose "CHANGELOG + per-guide note (Best)", whose description read "The CHANGELOG bullet plus one short line in each changed Verify section stating the status meanings (0 fixed, 1 exposed, 2 refused, 3 could not check), so a reader of the guide sees the contract where they use it."
+  - The record of the 19:24Z ruling says that the ruling was to be recorded in `DECISIONS.md` in the sweep's own
+    pull request. No entry here recorded either ruling before this one, which closes TODO row 3.70.
+  - Effect. Wave 1 of the sweep was #1310. Its `CHANGELOG.md` bullet records that, under these rulings and
+    CONTRIBUTING.md rule 6, it changed 12 Verify arms in 5 guides: 11 arms in `nats.md`,
+    `headless-cms-instant-api.md`, `realtime-webhooks.md` and `search-engines.md` from status 2 to 3, and the arm
+    for a declined ACL confirmation in `kafka.md` from 3 to 2. Each changed Verify section gained one line
+    paraphrasing rule 6's meanings, and `kubernetes.md` and the setup blocks were unchanged. The first pull request
+    of wave 2 was #1322, merged as fd4a2a8e, under the ruling of 2026-11-14 above that wave 2 covers setup blocks,
+    with a CHANGELOG bullet and a per-guide note as for wave 1.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces these rulings, then a pull
+    request that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds
+    its own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-13 on the gate suite's speed: a parallel runner, planned as its own pull request (#1312).**
   The maintainer gave this ruling through AskUserQuestion in an attended session at about 19:25Z, on the topic
   "suite speed"; the question's own wording was not recorded. No reasoning was recorded beyond the choice, and the
