@@ -27,11 +27,17 @@ This module also holds reason_present() below, a rule for whether a waiver or ba
 reason is present. Three readers use it: load_baseline() in tools/check_verify_marking.py,
 Allowlist.load() in tools/check_bracket_ranges.py and waiver_reasoned() in
 tools/gen_guide_quality.py. It lives here because the first two of those gates already load
-this module, so every self-test fixture that runs either of them already has it. Four other
-readers do not use it (TODO row 3.111): tools/check_draft.py and tools/gen_hosted.py for
-tools/redirects_allowlist.txt and tools/export_lists.py for export/public-exceptions.tsv judge
-a reason with str.strip(), and WAIVER_RE in tools/check_guard_conventions.py takes any
-non-whitespace character as the start of an in-guide waiver's reason.
+this module, so every self-test fixture that runs either of them already has it. A search of
+the tree of #1369 found seven other places that judge a reason without it, and TODO row 3.111
+records them; the search may have missed some. Both readers of tools/redirects_allowlist.txt,
+tools/check_draft.py and tools/gen_hosted.py, judge the reason of an entry with str.strip(),
+and so does tools/export_lists.py for a row of an exceptions file, after its split_lines() has
+refused any line that holds a format character. In tools/check_guard_conventions.py,
+WAIVER_RE, whose reason is also tested with str.strip(), and C4_WAIVER_RE, which applies only
+to a reason that WAIVER_RE has matched, take a reason that starts with a character that is not
+whitespace, and INLINE_WAIVER_RE takes one that ends with such a character. WAIVER_RE in
+tools/check_unfiltered_ss.py needs one such character after the allow keyword and the
+whitespace that follows it.
 """
 import re
 import unicodedata
@@ -55,11 +61,13 @@ def reason_present(text):
     """Whether `text` holds a character that is neither whitespace nor in BLANK_CATEGORIES.
 
     A reason made only of such characters shows as nothing, so it is no reason. Before row
-    3.106 every reader judged a reason with str.strip(), which removes whitespace but not a
-    format character such as U+200B, so a reason of U+200B alone passed. The categories come
-    from the unicodedata module of the running Python. Other characters that may show as
-    nothing, such as a lone combining mark (Mn), a control character that is not whitespace
-    (Cc), U+3164 HANGUL FILLER (Lo) or U+2800 BRAILLE PATTERN BLANK (So), count as text.
+    3.106 the three readers that now call this function judged a reason with str.strip(),
+    which removes whitespace but not a format character such as U+200B, so a reason of U+200B
+    alone passed. The places named in the module docstring that do not call it use
+    str.strip(), a regular expression or both. The categories come from the unicodedata
+    module of the running Python. Other characters that may show as nothing, such as a lone
+    combining mark (Mn), a control character that is not whitespace (Cc), U+3164 HANGUL
+    FILLER (Lo) or U+2800 BRAILLE PATTERN BLANK (So), count as text.
     """
     return any(not ch.isspace() and unicodedata.category(ch) not in BLANK_CATEGORIES
                for ch in text)
