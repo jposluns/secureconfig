@@ -332,7 +332,7 @@ from urllib.parse import unquote
 # (isolated mode drops the script directory from sys.path). Stdlib imports sit
 # above this line on purpose: they must never resolve from tools/.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _markdown import Fences, FENCE_RE  # noqa: E402
+from _markdown import Fences, FENCE_RE, reason_present  # noqa: E402
 from check_verify_marking import code_spans, guide_context
 
 # Top-level guides only, matching check_verify_safety.py: a fenced block in the
@@ -547,7 +547,7 @@ _C4_SKIP_OPTS = {name: frozenset(opts.split())
 _C4_SKIP_OPTS["netcat"] = _C4_SKIP_OPTS["nc"]
 _C4_SKIP_OPTS["curl"] = (_VALUE_OPTS_NONURL | _SKIP_VALUE_OPTS
                          | frozenset(("--connect-to",)))
-C4_WAIVER_RE = re.compile(r"C4-EXAMPLE-HOST egress negative control: \S.*")
+C4_WAIVER_RE = re.compile(r"C4-EXAMPLE-HOST egress negative control: (\S.*)")
 
 MESSAGES = {
     "C1-MISSING-Q": "curl lacks -q/--disable: the reader's ~/.curlrc (proxy, "
@@ -1708,11 +1708,12 @@ def _analyze_fence(path, lang, start, body, findings, stats, opts,
     c4_waivers = set()  # lines an exact C4 egress waiver precedes
     for lineno, raw in lls:
         wm = WAIVER_RE.search(raw)
-        if wm and raw.lstrip().startswith("#") and wm.group(1).strip():
+        if wm and raw.lstrip().startswith("#") and reason_present(wm.group(1)):
             if wm.group(1).startswith("C4-"):
                 # C4 has its own exact egress waiver, which waives C4 alone;
                 # any other C4- reason grants nothing.
-                if C4_WAIVER_RE.fullmatch(wm.group(1).strip()):
+                c4m = C4_WAIVER_RE.fullmatch(wm.group(1).strip())
+                if c4m and reason_present(c4m.group(1)):
                     pending_c4_waiver = True
                     stats.waivers += 1
                 continue
@@ -2504,7 +2505,8 @@ def _scan_inline(path, text, findings, stats, opts):
         waiver = INLINE_WAIVER_RE.fullmatch(span)
         # A visible, standalone code span avoids HTML comments, which the
         # Verify-marking gate intentionally rejects. No list marker or prose.
-        if waiver and lines[line - 1].strip() == "`" + span + "`":
+        if (waiver and reason_present(waiver[2])
+                and lines[line - 1].strip() == "`" + span + "`"):
             waivers[line + 1] = waiver[1]
             stats.waivers += 1
             continue
@@ -2720,6 +2722,11 @@ SELF_TEST_CASES += [
      ["C1-MISSING-G"], ()),
     ("trailing-waiver-not-honored",
      "```bash\ncurl -q \"http://e.com/[1-3]\" # guard-conventions: allow x\n```\n",
+     ["C1-MISSING-G"], ()),
+    # Row 3.111: a reason of U+200B alone is no reason; waiver-honored above
+    # shows a real one is still honored.
+    ("zero-width-waiver-not-honored",
+     "```bash\n# guard-conventions: allow \u200b\ncurl -q \"http://e.com/[1-3]\"\n```\n",
      ["C1-MISSING-G"], ()),
     ("multiple-findings-per-block",
      "```bash\ncurl -g https://e.com/\ncurl -q \"https://e.com/[1-3]\"\n"
@@ -4440,6 +4447,11 @@ _C4_CASES = [
     ("waiver-is-c4-only", _C4_EGRESS + "curl https://example.com/\n",
      ["C1-MISSING-Q"]),
     ("egress-apex", _C4_EGRESS + "curl -q https://example.com/\n", []),
+    # Row 3.111: an egress waiver whose reason is U+200B alone grants nothing;
+    # egress-apex above shows a real reason still does.
+    ("egress-zero-width-reason",
+     "# guard-conventions: allow C4-EXAMPLE-HOST egress negative control: "
+     "\u200b\ncurl -q https://example.com/\n", ["C4-EXAMPLE-HOST"]),
     ("egress-subdomain", _C4_EGRESS + "curl -q https://app.example.com/\n",
      ["C4-EXAMPLE-HOST"]),
     ("malformed-c4-waiver",
@@ -4483,6 +4495,10 @@ _INLINE_CASES = [
      ["C3-TOOL-ARGV"], [2]),
     ("waived", "## Verify\n`guard-conventions: allow C3-TOOL-ARGV dummy refusal`\n"
      "- Run `mysql --password=SECRET`.\n", [], []),
+    # Row 3.111: a reason of U+200B alone grants no waiver; waived above shows
+    # a real reason still does.
+    ("zero-width-reason", "## Verify\n`guard-conventions: allow C3-TOOL-ARGV \u200b`\n"
+     "- Run `mysql --password=SECRET`.\n", ["C3-TOOL-ARGV"], [3]),
     ("outside", "## Setup\n`mysql --password=SECRET`\n## Verify\n`--password`\n",
      [], []),
     ("non-command", "## Verify\n`--password=SECRET` `/tmp/key` `Authorization: Bearer X`\n",

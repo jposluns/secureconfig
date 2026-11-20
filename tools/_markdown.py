@@ -23,24 +23,32 @@ other. A fence indented four or more spaces, which is what a fence nested two li
 deep looks like, is not recognized. A renderer shows it as code and a reader copies from it,
 and no guide in this corpus has one today, so this is disclosed rather than handled.
 
-This module also holds reason_present() below, a rule for whether a waiver or baseline
-reason is present. Three readers use it: load_baseline() in tools/check_verify_marking.py,
-Allowlist.load() in tools/check_bracket_ranges.py and waiver_reasoned() in
-tools/gen_guide_quality.py. It lives here because the first two of those gates already load
-this module, so every self-test fixture that runs either of them already has it. A search of
-the tree of #1369 found seven other places that judge a reason without it, and TODO row 3.111
-records them; the search may have missed some. Both parsers of tools/redirects_allowlist.txt,
-tools/check_draft.py and tools/gen_hosted.py, judge the reason of an entry with str.strip(),
-and so does tools/export_lists.py for a row of an exceptions file, after its split_lines() has
-refused any line that holds a format character. Two other modules use the parser in
-tools/gen_hosted.py rather than one of their own: tools/check_hosted.py calls its
-read_allowlist() directly and through its redirects_text(), and scripts/build-site.py calls it
-through redirects_text(). In tools/check_guard_conventions.py,
-WAIVER_RE, whose reason is also tested with str.strip(), and C4_WAIVER_RE, which applies only
-to a reason that WAIVER_RE has matched, take a reason that starts with a character that is not
-whitespace, and INLINE_WAIVER_RE takes one that ends with such a character. WAIVER_RE in
-tools/check_unfiltered_ss.py needs one such character after the allow keyword and the
-whitespace that follows it.
+This module also holds reason_present() below, a rule for whether a waiver, allowlist,
+exception or baseline reason is present. These readers use it: load_baseline() in
+tools/check_verify_marking.py, Allowlist.load() in tools/check_bracket_ranges.py,
+waiver_reasoned() in tools/gen_guide_quality.py, parse_exceptions() in tools/export_lists.py,
+_analyze_fence() and _scan_inline() in tools/check_guard_conventions.py and _waived_lines() in
+tools/check_unfiltered_ss.py. It lives here because the first two of those gates already load
+this module, so every self-test fixture that runs either of them already has it. The regular
+expressions of the last two gates find a waiver, and reason_present() then judges the reason
+each one captures: WAIVER_RE in both, C4_WAIVER_RE, which applies only to a reason that
+WAIVER_RE has matched, and INLINE_WAIVER_RE. tools/export_lists.py calls it after its
+split_lines() has refused any line that holds a control or format character.
+A search of the tree of #1369 found seven places that judged a reason without it, and TODO
+row 3.111 records them; the search may have missed some. Five of them now call it. The other
+two are both parsers of tools/redirects_allowlist.txt, tools/check_draft.py and
+tools/gen_hosted.py, which judge the reason of an entry with str.strip(). The Pages build,
+scripts/pages-build.sh, runs tools/check_draft.py directly and reaches tools/gen_hosted.py
+only through the imports of tools/check_hosted.py and scripts/build-site.py, which it runs.
+At run time either parser could import this module, because every import of markdown-it-py
+is inside a function, as is the import of tools/version_basis.py in body_lines(). The
+obstacle is tools/test_pages_build.py, which requires every module that build reaches, by an
+import at any depth, to import only the standard library and this repository's modules. It
+follows the import in body_lines() to tools/version_basis.py, which imports markdown-it-py,
+so it fails when either parser imports this module, and TODO row 3.111 keeps the two open.
+Two other modules use the parser in tools/gen_hosted.py rather than one of their own:
+tools/check_hosted.py calls its read_allowlist() directly and through its redirects_text(),
+and scripts/build-site.py calls it through redirects_text().
 """
 import re
 import unicodedata
@@ -64,10 +72,10 @@ def reason_present(text):
     """Whether `text` holds a character that is neither whitespace nor in BLANK_CATEGORIES.
 
     A reason made only of such characters shows as nothing, so it is no reason. Before row
-    3.106 the three readers that now call this function judged a reason with str.strip(),
+    3.106 the first three readers to call this function judged a reason with str.strip(),
     which removes whitespace but not a format character such as U+200B, so a reason of U+200B
-    alone passed. The places named in the module docstring that do not call it use
-    str.strip(), a regular expression or both. The categories come from the unicodedata
+    alone passed. The two places named in the module docstring that do not call it use
+    str.strip(). The categories come from the unicodedata
     module of the running Python. Other characters that may show as nothing, such as a lone
     combining mark (Mn), a control character that is not whitespace (Cc), U+3164 HANGUL
     FILLER (Lo) or U+2800 BRAILLE PATTERN BLANK (So), count as text.

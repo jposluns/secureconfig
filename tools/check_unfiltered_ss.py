@@ -76,7 +76,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _markdown import Fences, FENCE_RE  # noqa: E402
+from _markdown import Fences, FENCE_RE, reason_present  # noqa: E402
 
 GATE = "unfiltered-ss"
 NOT_A_GUIDE = frozenset((
@@ -99,7 +99,7 @@ MESSAGE = ("`ss ... | grep` filters the listener table; read the whole table "
            "port grep also matches an IPv6 address). See #138 / row 1.74. If this "
            "is a false positive on an exotic shell construct, waive it with a "
            "`# unfiltered-ss: allow <reason>` comment on or above the line.")
-WAIVER_RE = re.compile(r"#\s*unfiltered-ss:\s*allow\s+\S")
+WAIVER_RE = re.compile(r"#\s*unfiltered-ss:\s*allow\s+(\S.*)$")
 
 
 def _waived_lines(text):
@@ -109,7 +109,8 @@ def _waived_lines(text):
     mirroring the sibling guard gate's waiver."""
     waived = set()
     for i, line in enumerate(text.splitlines(), 1):
-        if WAIVER_RE.search(line):
+        m = WAIVER_RE.search(line)
+        if m and reason_present(m.group(1)):
             waived.add(i)
             waived.add(i + 1)
     return waived
@@ -670,6 +671,10 @@ SELF_TEST_CASES = [
      "ss -tlnp | grep 443\n```\n", 0),
     ("waiver-same-line-suppresses",
      "```bash\nss -tlnp | grep 443   # unfiltered-ss: allow counterexample\n```\n", 0),
+    # row 3.111: a reason of U+200B alone is no reason; the two cases above show
+    # a real one still suppresses
+    ("zero-width-waiver-not-honored",
+     "```bash\n# unfiltered-ss: allow \u200b\nss -tlnp | grep 443\n```\n", 1),
 ]
 
 

@@ -439,6 +439,23 @@ def parsers(cases):
     ):
         _, findings = el.parse_exceptions(b(text), "x", ids, terms_)
         cases.check(any(needle in f for f in findings), f"{label}: {findings!r}")
+    # Row 3.111: a reason of U+200B alone. split_lines() refuses its line first, so the reason
+    # check is reached here with split_lines() replaced by one that admits every line; a real
+    # reason still passes it.
+    zero_width = row.replace("a reason", "\u200b")
+    _, findings = el.parse_exceptions(b(zero_width), "x", ids)
+    cases.check(any("control or format" in f for f in findings),
+                f"a reason of U+200B alone should be refused by split_lines(): {findings!r}")
+    real_split_lines = el.split_lines
+    el.split_lines = lambda data, _name: ([(1, data.decode("utf-8")[:-1])], [])
+    try:
+        _, findings = el.parse_exceptions(b(zero_width), "x", ids)
+        cases.check(any("the reason is empty" in f for f in findings),
+                    f"the reason check should refuse a reason of U+200B alone: {findings!r}")
+        clean(cases, el.parse_exceptions(b(row), "x", ids),
+              "a real reason past the replaced split_lines()")
+    finally:
+        el.split_lines = real_split_lines
     _, findings = el.parse_exceptions(b(f"docs/{TERM_A}/../a.md\t3\t{sha}\tmarker:id-one\tr\n"),
                                       "x", ids, priv_terms, show=False)
     cases.check(findings and not any(TERM_A in f for f in findings),
