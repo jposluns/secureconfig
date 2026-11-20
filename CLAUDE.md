@@ -122,9 +122,10 @@ serial one, and HUP, INT and TERM stop every section's process group and are re-
 value, an empty one included, is refused with status 2 before any gate runs. Output identity
 sets aside 3 fields that vary between any 2 runs: the credential scanner's elapsed time and
 sampling counts, and unittest's elapsed times. On 2 failing paths the lines differ too. Under
-`--sections`, a section killed by a signal other than INT or PIPE makes the serial run print bash's job notice for its
-child shell, which the parallel run does not print. And a diagnostic that bash itself prints from
-inside a section, such as an unbound variable or a command not found, names another file or line.
+`--sections`, a section killed by a signal other than INT or PIPE (PIPE as bash 5.3.9 behaved in the #1312
+review) makes the serial run print bash's job notice for its child shell, which the parallel run does not
+print. And a diagnostic that bash itself prints from inside a section, such as an unbound variable or a
+command not found, names another file or line.
 Every gate in the suite, in either mode, is deterministic and offline: no gate reaches the
 network, so no outside service can change a gate's answer. The `gates` job that runs it is not
 offline. Before the suite starts, `.github/workflows/checks.yml` fetches its pinned actions, Python,
