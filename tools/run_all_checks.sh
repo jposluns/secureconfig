@@ -62,7 +62,8 @@
 # running, where the serial run's sections are in this shell's group; after a KILL the sections'
 # temporary folder is left too, since the KILL also ends the keeper that would remove it (see
 # par_cleanup). When this shell alone ends by any signal it does not trap, or by a failed fork,
-# the keeper removes the folder; row 3.117 records the cases that still leave it.
+# the keeper removes the folder, unless the per-user process limit is still exhausted when the
+# keeper forks rm; row 3.117 records the cases that still leave it.
 # Output identity between the two modes means the same lines in the same order and the same
 # status, with 3 fields rewritten to placeholders before the comparison: the elapsed time and the
 # sampling counts in the credential scanner's one "credential scan: ..." line, and the elapsed
