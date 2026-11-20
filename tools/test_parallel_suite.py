@@ -44,6 +44,17 @@ THE CASES (numbered as in the implementation plan, which is not in this reposito
   T13 tools/select_gates.py reads the `# depends:` lines only (the `# exclusive:` line is not one).
   T16 SECURECONFIG_SUITE_TIMES gets one row per section in parallel mode and none in serial mode,
       changes no output, and a caller's setting never reaches these stand-in runs.
+  T17 (serial mode, not the parallel one, with its own ok line, and alone with --terminal) the
+      serial --sections run of one stand-in section, whose foreground gate sleeps and then writes
+      to the terminal, on a pseudo-terminal. A job-control shell (JOBCTL) starts the driver in a
+      process group of its own and makes it the terminal's foreground group. It records today's
+      behaviour: Ctrl-C ends the run by INT with the section's shell and the gate gone; Ctrl-Z
+      stops the driver, the section's shell and the gate, and fg resumes them to a run that ends
+      with 0; under `stty tostop` the run ends with 0 and no stop. A TERM sent only to the
+      driver's PID ends the driver by TERM, and the check that the section's shell and its gate
+      are then gone, with nothing written late, is an expected failure for row 3.49 only while
+      both still run and nothing is written late; the group fails once that check passes, and on
+      any other state. Without a pseudo-terminal the group prints a SKIP line saying why.
 
 NOT HERE (run by hand, see main's --differential and --inject, because each runs the real suite
 and so doubles its cost, which no gate pays): T11, the output identity of the real suite in both
@@ -53,12 +64,15 @@ failure injected into a section of each class; T14 and T15 are evidence in the p
 Nothing here runs a real gate. Exit 0 ok, 1 on a finding.
 """
 import os
+import pty
 import re
+import select
 import shutil
 import signal
 import subprocess
 import sys
 import tempfile
+import termios
 import time
 from pathlib import Path
 
@@ -706,6 +720,379 @@ def t11_normaliser():
     return failures
 
 
+# T17's job-control shell. It runs in a session of its own with the pseudo-terminal as its
+# controlling terminal, starts the driver in a process group of its own, gives that group the
+# terminal, and reports on the pipe named by its second argument: "pid N", "stopped SIG",
+# "continued" and "exit N" (the negative signal number for a death by a signal). On a stop it takes
+# the terminal back and waits for a line on the pipe named by its first argument: "fg" gives the
+# group the terminal again and sends it SIGCONT, as an interactive shell's fg does. Once the driver
+# has ended it holds the session until that pipe gives it a line or closes, so that its exit cannot
+# hang up what the driver left in the foreground before the case has looked.
+JOBCTL = r"""
+import fcntl, os, signal, sys, termios
+ctl = os.fdopen(int(sys.argv[1]), "r")
+rep = int(sys.argv[2])
+argv = sys.argv[3:]
+def say(text):
+    os.write(rep, (text + "\n").encode())
+fcntl.ioctl(0, termios.TIOCSCTTY, 0)
+held = (signal.SIGINT, signal.SIGQUIT, signal.SIGTSTP, signal.SIGTTIN, signal.SIGTTOU)
+for sig in held:
+    signal.signal(sig, signal.SIG_IGN)
+pid = os.fork()
+if pid == 0:
+    os.setpgid(0, 0)
+    os.tcsetpgrp(0, os.getpgrp())
+    for sig in held:
+        signal.signal(sig, signal.SIG_DFL)
+    os.close(rep)
+    ctl.close()
+    os.execvp(argv[0], argv)
+try:
+    os.setpgid(pid, pid)
+except OSError:
+    pass
+os.tcsetpgrp(0, pid)
+say(f"pid {pid}")
+while True:
+    _, status = os.waitpid(pid, os.WUNTRACED)
+    if os.WIFSTOPPED(status):
+        os.tcsetpgrp(0, os.getpgrp())
+        say(f"stopped {os.WSTOPSIG(status)}")
+        if ctl.readline().strip() != "fg":
+            sys.exit(0)
+        os.tcsetpgrp(0, pid)
+        os.killpg(pid, signal.SIGCONT)
+        say("continued")
+        continue
+    say(f"exit {os.waitstatus_to_exitcode(status)}")
+    break
+ctl.readline()
+"""
+
+
+class Terminal:
+    """One run of a tree's driver under a pseudo-terminal, started by JOBCTL. out is every byte the
+    terminal printed so far, and reports the lines JOBCTL wrote."""
+
+    def __init__(self, tree, args, tostop=False):
+        self.out = b""
+        self.reports = []
+        self.tree = tree
+        # Every fd is opened inside the try, so a failure at any step, from openpty() on, closes
+        # each fd already opened: no Terminal exists for the caller to close.
+        opened = []
+        try:
+            self.master, slave = pty.openpty()
+            opened += [self.master, slave]
+            ctl_r, self.ctl = os.pipe()
+            opened += [ctl_r, self.ctl]
+            self.rep, rep_w = os.pipe()
+            opened += [self.rep, rep_w]
+            attrs = termios.tcgetattr(slave)
+            attrs[3] = (attrs[3] | termios.TOSTOP) if tostop else (attrs[3] & ~termios.TOSTOP)
+            termios.tcsetattr(slave, termios.TCSANOW, attrs)
+            self.tostop = bool(termios.tcgetattr(self.master)[3] & termios.TOSTOP)
+            self.p = subprocess.Popen(
+                [sys.executable, "-I", "-B", "-c", JOBCTL, str(ctl_r), str(rep_w), "bash",
+                 str(tree.d / "tools" / "run_all_checks.sh"), *args],
+                stdin=slave, stdout=slave, stderr=slave, cwd=tree.d, env=tree.env(None),
+                start_new_session=True, pass_fds=(ctl_r, rep_w))
+        except BaseException:
+            for fd in opened:
+                os.close(fd)
+            raise
+        # JOBCTL holds its own copies of the slave, ctl_r and rep_w.
+        for fd in (slave, ctl_r, rep_w):
+            os.close(fd)
+        self.open = [self.master, self.rep]
+
+    def pump(self, predicate, seconds):
+        """Read the terminal and the reports until predicate() holds or seconds (scaled) pass."""
+        deadline = time.monotonic() + seconds * SCALE
+        while not predicate() and time.monotonic() < deadline and self.open:
+            ready, _, _ = select.select(self.open, [], [], 0.05)
+            for fd in ready:
+                try:
+                    data = os.read(fd, 65536)
+                except OSError:
+                    data = b""
+                if not data:
+                    self.open.remove(fd)
+                elif fd == self.master:
+                    self.out += data
+                else:
+                    self.reports += data.decode("ascii").splitlines()
+        return predicate()
+
+    def report(self, prefix):
+        """The value of the first report starting with prefix, or None."""
+        for line in self.reports:
+            if line.startswith(prefix + " "):
+                return line[len(prefix) + 1:]
+        return None
+
+    def ended(self):
+        return self.report("exit") is not None
+
+    def send(self, command):
+        try:
+            os.write(self.ctl, command.encode("ascii") + b"\n")
+        except OSError:
+            pass
+
+    def observed(self):
+        """What was seen of the run, for a case whose gate never started: how the driver stopped or
+        ended by JOBCTL's reports, whether the section's shell recorded its PID, and each stopped
+        process of the run, with whether its process group had the terminal."""
+        seen = []
+        stop, end = self.report("stopped"), self.report("exit")
+        if stop is not None:
+            seen.append(f"the driver stopped by {signal.Signals(int(stop)).name}")
+        if end is not None:
+            seen.append(f"the driver ended with exit {end}")
+        if stop is None and end is None:
+            seen.append("the driver neither stopped nor ended")
+        section = alive(self.tree.d / "g.pid")
+        if not (self.tree.d / "g.pid").exists():
+            seen.append("the section's shell recorded no PID")
+        elif not section:
+            seen.append("the section's shell had ended")
+        try:
+            foreground = os.tcgetpgrp(self.master)
+        except OSError:
+            foreground = None
+        held = [(pid, pgrp, name) for pid, pgrp, state, name in session_processes(self.p.pid)
+                if state == "T" and pid != self.p.pid]
+        for pid, pgrp, name in held:
+            who = "the section's shell" if pid == section else name
+            where = "the" if pgrp == foreground else "not the"
+            seen.append(f"{who} (PID {pid}) was stopped in process group {pgrp}, {where} "
+                        "terminal's foreground group")
+        if not held and stop is None and end is None:
+            seen.append("no process of the run was stopped")
+        return "; ".join(seen)
+
+    def kill_run(self):
+        """SIGKILL the driver's process group once JOBCTL has reported its PID, the process group
+        of every process in JOBCTL's session (which holds the driver before that report and a
+        section that moved to a group of its own), and the group of each running process that a
+        pid file of the tree records when that process is in JOBCTL's session; never JOBCTL's own
+        group or this test's."""
+        groups = {pgrp for _, pgrp, _, _ in session_processes(self.p.pid)}
+        pid = self.report("pid")
+        if pid:
+            groups.add(int(pid))
+        # A recorded process that has ended could have its PID reused by an unrelated process, so
+        # its group is taken only when one read of its stat gives JOBCTL's session as its session.
+        # This test has not reaped JOBCTL yet, and Linux reuses no PID that a process, even a
+        # zombie, still has as its PID, group or session, so no other session can have that ID.
+        for pid_file in sorted(self.tree.d.glob("*.pid")) + sorted(self.tree.d.glob("*.child")):
+            recorded = alive(pid_file)
+            if recorded:
+                try:
+                    stat = Path(f"/proc/{recorded}/stat").read_text(encoding="utf-8",
+                                                                    errors="replace")
+                except OSError:
+                    continue
+                fields = stat.rpartition(") ")[2].split()
+                if len(fields) > 3 and fields[3] == str(self.p.pid):
+                    groups.add(int(fields[2]))
+        for group in groups - {self.p.pid, os.getpgrp()}:
+            if group > 1:
+                try:
+                    os.killpg(group, signal.SIGKILL)
+                except OSError:
+                    pass
+
+    def close(self):
+        """End the run and everything it started, whether or not JOBCTL reported the driver's PID,
+        so that no process group is left for the kernel to clean up, then close the pipes and the
+        terminal. It takes about 5 seconds at most. Its timed waits end at a deadline 5 seconds
+        after it starts; past that deadline it finishes the step it is in, which may be a pause of
+        0.05 seconds or, once it has sent JOBCTL SIGKILL, a wait with no time limit for JOBCTL to
+        end, then makes at most one more pass over JOBCTL's session, killing what it finds."""
+        deadline = time.monotonic() + 5
+        self.kill_run()
+        self.send("quit")
+        os.close(self.ctl)
+        try:
+            self.p.wait(timeout=max(deadline - time.monotonic(), 0))
+        except subprocess.TimeoutExpired:
+            self.p.kill()
+            self.p.wait()
+        # JOBCTL has ended. Whatever is still in its session, such as a child it forked and had
+        # not yet moved to the driver's group, is killed until nothing is left or the 5 seconds
+        # have passed.
+        while True:
+            left = session_processes(self.p.pid)
+            for pid, _, _, _ in left:
+                try:
+                    os.kill(pid, signal.SIGKILL)
+                except OSError:
+                    pass
+            if not left or time.monotonic() >= deadline:
+                break
+            time.sleep(0.05)
+        for fd in (self.master, self.rep):
+            os.close(fd)
+
+
+def session_processes(sid):
+    """(PID, process group, state, name) of each process in session sid that is not a zombie."""
+    found = []
+    for entry in os.listdir("/proc"):
+        if not entry.isdigit():
+            continue
+        try:
+            stat = Path(f"/proc/{entry}/stat").read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        name = stat[stat.find("(") + 1:stat.rfind(")")]
+        fields = stat.rpartition(") ")[2].split()
+        if len(fields) > 3 and fields[3] == str(sid) and fields[0] != "Z":
+            found.append((int(entry), int(fields[2]), fields[0], name))
+    return found
+
+
+def terminal_text(text):
+    """text as the terminal prints it, with a CR before each LF (the ONLCR output mode)."""
+    return text.replace("\n", "\r\n").encode("ascii")
+
+
+def stopped(pid_file):
+    """Whether the process recorded in pid_file is stopped (state T)."""
+    pid = alive(pid_file)
+    if not pid:
+        return False
+    try:
+        return Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rpartition(") ")[2].startswith("T")
+    except OSError:
+        return False
+
+
+# The gate of T17's section: a foreground child shell that records its PID, sleeps, writes a line
+# to the terminal and then a file. A late file means it ran to its end.
+TERMINAL_GATE = ("bash -c 'printf \"%s\\n\" \"$$\" > \"$STANDIN_DIR/gate.pid\"; sleep {sleep}; "
+                 "echo \"gate wrote this\"; : > \"$STANDIN_DIR/gate.late\"'")
+TERMINAL_HEAD = ("Sections selected: g\n"
+                 "== gate parser preflight: this python3 has the pinned markdown-it-py ==\n"
+                 f"{PREFLIGHT_OK}\n== g ==\n")
+TERMINAL_TAIL = ("gate wrote this\nline from g\n\n"
+                 "All selected gates passed (g); the other sections did not run.\n")
+
+
+def t17_terminal(notes):
+    """The serial --sections run of a one-section tree on a pseudo-terminal, as it behaves today:
+    Ctrl-C, a TERM sent only to the driver's PID, Ctrl-Z then fg, and `stty tostop` with a section
+    whose gate writes to the terminal. The TERM case is an expected failure until row 3.49 is
+    fixed. Without a pseudo-terminal the group is skipped and notes says why."""
+    failures = []
+    try:
+        for fd in pty.openpty():
+            os.close(fd)
+    except OSError as exc:
+        notes.append(f"  SKIP  T17, the serial --sections run on a pseudo-terminal: no pseudo-terminal "
+                     f"is available ({exc})")
+        return failures
+    expected_failures = []
+
+    # The time limits of a case's waits add up to at most 27 seconds, for Ctrl-Z then fg (5 for the
+    # gate, 5 for the stop, 3 for the stopped states, 8 for the end, 1 for the output and 5 for
+    # Terminal.close), each but the last multiplied by SECURECONFIG_TEST_LOAD_SCALE. A wait can run
+    # a little past its limit, which is checked between steps, and Terminal.close's wait for JOBCTL
+    # after a SIGKILL has no limit.
+    def run(label, sleep, act, tostop=False):
+        """Start the run, wait for its gate, then act(term, tree); every case ends its run."""
+        tree = Tree(synthetic([section("g", extra=TERMINAL_GATE.format(sleep=sleep))]))
+        term = None
+        try:
+            term = Terminal(tree, ("--sections", "g"), tostop)
+            if term.pump(lambda: alive(tree.d / "gate.pid"), 5):
+                act(term, tree)
+            else:
+                failures.append(f"T17 {label}: the gate recorded no PID in {5 * SCALE:g} seconds; "
+                                f"{term.observed()}; TOSTOP set {term.tostop}, reports "
+                                f"{term.reports!r}, output {term.out!r}")
+        finally:
+            if term is not None:
+                term.close()
+            tree.close()
+
+    def settled(term, want):
+        """Whether the terminal printed exactly want, once it printed as many bytes, since an echo
+        can reach the terminal's reader after the report it caused."""
+        term.pump(lambda: len(term.out) >= len(want), 1)
+        return term.out == want
+
+    def ctrl_c(term, tree):
+        os.write(term.master, b"\x03")
+        term.pump(term.ended, 5)
+        gone = wait_for(lambda: not tree.leftovers(), 3)
+        check(failures, "T17 Ctrl-C ends the run by INT, with the gate and the section's shell gone, "
+              "and the terminal shows ^C after the section's heading",
+              term.reports[1:] == ["exit -2"] and gone and not (tree.d / "gate.late").exists()
+              and settled(term, terminal_text(TERMINAL_HEAD) + b"^C"),
+              f"reports {term.reports!r}, still running {tree.leftovers()!r}, output {term.out!r}")
+
+    def term_to_driver(term, tree):
+        os.kill(int(term.report("pid")), signal.SIGTERM)
+        term.pump(term.ended, 5)
+        check(failures, "T17 a TERM to the driver's PID ends it by TERM, with nothing printed after "
+              "the section's heading", term.reports[1:] == ["exit -15"]
+              and settled(term, terminal_text(TERMINAL_HEAD)),
+              f"reports {term.reports!r}, output {term.out!r}")
+        wait_for(lambda: not tree.leftovers(), 3)
+        left, late = tree.leftovers(), (tree.d / "gate.late").exists()
+        if not left and not late:
+            failures.append("T17 a TERM to the driver's PID: the section's shell and its gate are "
+                            "gone and the gate wrote nothing late, which is what the fix for row "
+                            "3.49 must do; make this case a plain check")
+        elif left == ["g.pid", "gate.pid"] and not late:
+            expected_failures.append("row 3.49: 3 seconds after a TERM to the driver's PID ended "
+                                     "it, the section's shell and its gate still ran")
+        else:
+            failures.append(f"T17 a TERM to the driver's PID: 3 seconds after it ended the driver, "
+                            f"still running {left!r} and the gate wrote late {late}, which is "
+                            "neither row 3.49's state today (g.pid and gate.pid running and "
+                            "nothing late) nor its fix (nothing running and nothing late)")
+
+    def ctrl_z(term, tree):
+        os.write(term.master, b"\x1a")
+        term.pump(lambda: term.report("stopped") is not None or term.ended(), 5)
+        all_stopped = wait_for(lambda: stopped(tree.d / "g.pid") and stopped(tree.d / "gate.pid"), 3)
+        check(failures, "T17 Ctrl-Z stops the driver by TSTP, and the section's shell and its gate "
+              "with it", term.reports[1:] == [f"stopped {int(signal.SIGTSTP)}"] and all_stopped,
+              f"reports {term.reports!r}, output {term.out!r}")
+        term.send("fg")
+        term.pump(term.ended, 8)
+        check(failures, "T17 after Ctrl-Z, fg resumes the run, which ends with 0 and its whole output",
+              term.reports[1:] == [f"stopped {int(signal.SIGTSTP)}", "continued", "exit 0"]
+              and (tree.d / "gate.late").exists()
+              and settled(term, terminal_text(TERMINAL_HEAD) + b"^Z" + terminal_text(TERMINAL_TAIL)),
+              f"reports {term.reports!r}, output {term.out!r}")
+
+    def tostop(term, tree):
+        term.pump(term.ended, 8)
+        check(failures, "T17 under `stty tostop` the section and its gate write to the terminal, and "
+              "the run ends with 0 and no stop", term.tostop and term.reports[1:] == ["exit 0"]
+              and (tree.d / "gate.late").exists()
+              and settled(term, terminal_text(TERMINAL_HEAD + TERMINAL_TAIL)),
+              f"TOSTOP set {term.tostop}, reports {term.reports!r}, output {term.out!r}")
+
+    run("Ctrl-C", 8, ctrl_c)
+    # The gate's sleep is scaled like the waits before the TERM case judges, so that a larger scale
+    # does not give the gate the time to end on its own first.
+    run("TERM to the driver's PID", 8 * SCALE, term_to_driver)
+    run("Ctrl-Z then fg", 2, ctrl_z)
+    run("stty tostop", 0.5, tostop, tostop=True)
+    if not failures:
+        notes.append("  ok    T17, 4 cases of the serial --sections run on a pseudo-terminal (Ctrl-C, "
+                     "a TERM to the driver's PID, Ctrl-Z then fg, stty tostop), with "
+                     f"{len(expected_failures)} expected failure: {'; '.join(expected_failures)}")
+    return failures
+
+
 CASES = (t1_order, t2_concurrency, t3_status, t4_preflight, t5_refusals, t6_dependencies,
          t7_exclusive, t8_abort, t9_signals, t10_merged, t11_normaliser, t12_shape, t13_select_gates,
          t16_times)
@@ -821,18 +1208,25 @@ def main():
         return differential(sys.argv[sys.argv.index("--differential") + 1]
                             if len(sys.argv) > sys.argv.index("--differential") + 1 else "8")
     failures = []
-    for case in CASES:
-        failures += case()
+    notes = []
+    terminal_only = "--terminal" in sys.argv
+    if not terminal_only:
+        for case in CASES:
+            failures += case()
+    failures += t17_terminal(notes)
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
         return 1
-    print(f"  ok    {len(CASES)} groups of cases of the parallel mode of run_all_checks.sh (output "
-          f"order and bytes equal to serial, real concurrency, exit status, preflight and "
-          f"SECURECONFIG_SUITE_JOBS refusals, dependencies and cycles, exclusive sections, early "
-          f"abort and signal death of a section, HUP, INT and TERM to the driver including between "
-          f"a launch and the record of its PID, merged streams, the file's shape, "
-          f"SECURECONFIG_SUITE_TIMES)")
+    if not terminal_only:
+        print(f"  ok    {len(CASES)} groups of cases of the parallel mode of run_all_checks.sh (output "
+              f"order and bytes equal to serial, real concurrency, exit status, preflight and "
+              f"SECURECONFIG_SUITE_JOBS refusals, dependencies and cycles, exclusive sections, early "
+              f"abort and signal death of a section, HUP, INT and TERM to the driver including between "
+              f"a launch and the record of its PID, merged streams, the file's shape, "
+              f"SECURECONFIG_SUITE_TIMES)")
+    for note in notes:
+        print(note)
     return 0
 
 
