@@ -139,6 +139,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _walk import walk_files  # noqa: E402  fail-closed tree walk
+from _markdown import reason_present  # noqa: E402  one rule for a present reason
 from check_shell_blocks import SKIP_DIRS, blocks_of  # noqa: E402  one definition of a bash block
 
 # Root-level documents about the repository, which a reader does not copy from: the files
@@ -381,7 +382,7 @@ class Allowlist:
                 allow.findings.append(f"{where}:{lineno}: malformed allowlist block: "
                                       f"expected sha256: followed by 64 lowercase hex digits")
                 continue
-            if not reason.strip():
+            if not reason_present(reason):
                 allow.findings.append(f"{where}:{lineno}: allowlist entry with an empty "
                                       f"reason: say why the line is not a validator")
                 continue

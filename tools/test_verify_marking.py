@@ -138,6 +138,7 @@ def main():
 
         # Row 3.64: an optional fifth TAB field gives the reason an entry is kept by design.
         # The ratchet accepts and ignores it; an empty or whitespace-only one is malformed.
+        # Since row 3.106, so is one made only of whitespace and invisible format characters.
         # Before row 3.64 every 5-field line was malformed, so the refusal cases below put a
         # valid reasoned entry first and name the line and message they expect: the old code
         # refuses that first line as malformed instead, so each case fails on it.
@@ -155,12 +156,26 @@ def main():
         check("reason keeps the rest of the line", invoke(root, "--strict")[0] == 0)
         reasoned = with_reason("by design")
         later = reasoned.count("\n") + 1
-        for label, reason in (("empty", ""), ("whitespace-only", " \t ")):
+        # Row 3.106: a reason made only of invisible format characters (Unicode category Cf) is
+        # no reason either. str.strip() keeps each of these, so the four cases that hold them
+        # fail on the code before row 3.106, which loaded the line and reported it stale instead.
+        for label, reason in (("empty", ""), ("whitespace-only", " \t "),
+                              ("U+200B-only", "\u200b"), ("U+FEFF-only", "\ufeff"),
+                              ("U+2060-only", "\u2060"),
+                              ("invisible and whitespace", " \u200b\t\u2060\ufeff ")):
             baseline.write_text(reasoned + f"guide.md\tfence\t{'0' * 64}\t1\t{reason}\n",
                                 encoding="utf-8")
             rc, out = invoke(root, "--strict")
             check(f"{label} baseline reason is malformed after a reasoned entry",
                   rc == 1 and f"baseline line {later}: malformed entry" in out)
+        for label, reason in (("an ordinary", "kept by design"),
+                              ("a U+200B-wrapped ordinary", "\u200bkept by design\u200b")):
+            baseline.write_text(reasoned + f"guide.md\tfence\t{'0' * 64}\t1\t{reason}\n",
+                                encoding="utf-8")
+            rc, out = invoke(root, "--strict")
+            # The entry names no unit of the guide, so the loaded baseline reports it stale.
+            check(f"{label} baseline reason after a reasoned entry loads",
+                  rc == 1 and "stale baseline" in out and "malformed" not in out)
         baseline.write_text(reasoned + with_reason("again"), encoding="utf-8")
         rc, out = invoke(root, "--strict")
         check("a reason does not change the duplicate key check",

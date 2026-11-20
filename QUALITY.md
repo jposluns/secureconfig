@@ -61,9 +61,11 @@ baseline entry with no reason, such as one for a paragraph that would attach to 
 or a step with no concrete command, or any entry in the claim-length or version-basis sources
 baseline, such as an over-length claim awaiting a split. A reasoned waiver is a deliberate, reviewed
 exception recorded with its reason: a bracket-range or exposure-index allow entry, or a
-Verify-marking baseline entry, whose reason is filled in. A reason is filled in when it holds more
-than whitespace, so an empty or whitespace-only reason is no reason. Only deferred-work entries and
-waivers without a reason count against M1, so a reasoned waiver passes M1.
+Verify-marking baseline entry, whose reason is filled in. A reason is filled in when it holds a
+character that is neither whitespace nor in Unicode general category Cf, Zs, Zl or Zp, so an empty
+reason, or one made only of whitespace or of invisible format characters such as U+200B (zero-width
+space), is no reason. Only deferred-work entries and waivers without a reason count against M1,
+so a reasoned waiver passes M1.
 `tools/gen_guide_quality.py` sorts an entry by the file that holds it and, in the Verify-marking
 baseline, by whether its reason is filled in. Every entry in `tools/verify_marking_baseline.txt`
 with no reason, and every entry in `tools/claim_length_baseline.txt` and
