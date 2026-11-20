@@ -396,10 +396,10 @@ the script's order once it and every section before it finish. The one section r
 `plugin`, which rewrites the working tree in place, runs first. On a passing run, the only
 lines that differ between 2 runs of either mode are the credential scanner's line, in its elapsed
 time and sampling counts, and unittest's elapsed times. On 2 failing paths the modes differ in
-more. Under `--sections`, a section killed by a signal other than INT or PIPE makes the serial run print bash's job notice
-for its child shell, which the parallel run does not print. And a diagnostic that bash itself
-prints from inside a section, such as an unbound variable or a command not found, names another
-file or line. `python3 tools/test_parallel_suite.py --differential` compares the 2
+more. Under `--sections`, a section killed by a signal other than INT or PIPE (PIPE as bash 5.3.9 behaved in
+the #1312 review) makes the serial run print bash's job notice for its child shell, which the parallel run does
+not print. And a diagnostic that bash itself prints from inside a section, such as an unbound variable or a
+command not found, names another file or line. `python3 tools/test_parallel_suite.py --differential` compares the 2
 modes on the real tree and doubles the cost of a run, so no gate runs it. Use `python3 tools/version_basis.py --check vault.md` for a single enrolled guide. Review the source
 and generated diffs together. Verify mappings use the same fence-level declaration and attachment grammar as the Verify-marking
 gate. Every mapped claim must agree with its fence's declaration; later per-command comments do not
