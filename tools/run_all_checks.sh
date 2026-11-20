@@ -60,7 +60,9 @@
 # which cannot be trapped, or a QUIT, which is not trapped, sent to this shell's process group
 # does not reach the parallel run's sections, which have process groups of their own and go on
 # running, where the serial run's sections are in this shell's group; after a KILL the sections'
-# temporary folder is left too.
+# temporary folder is left too, since the KILL also ends the keeper that would remove it (see
+# par_cleanup). When this shell alone ends by any signal it does not trap, or by a failed fork,
+# the keeper removes the folder; row 3.117 records the cases that still leave it.
 # Output identity between the two modes means the same lines in the same order and the same
 # status, with 3 fields rewritten to placeholders before the comparison: the elapsed time and the
 # sampling counts in the credential scanner's one "credential scan: ..." line, and the elapsed
@@ -96,6 +98,8 @@ fi
 # serial run below from the point where that run would start. It reads this file's own text for
 # the helpers, the parser preflight, the sections and the summary, so each is the serial code.
 par_dir=""
+par_keep=""
+par_keep_pid=""
 par_starting=""
 par_signal=""
 par_selected=""
@@ -112,10 +116,28 @@ par_excl=()
 par_need=()
 declare -A par_idx=()
 
+# The sections' temporary folder belongs to a keeper, a coprocess that par_run starts and that
+# makes the folder with mktemp -d, prints its name, reads its input to the end and then removes
+# that folder, and nothing else. This shell holds the write end of that input. Bash closes it in
+# a subshell or a background command and on exec, so no section holds it; only a command
+# substitution of this shell does, until it runs a program or ends. The input ends when this
+# shell closes it here or exits, however it exits: by a signal it does not trap such as USR1, by
+# a failed fork, or by a KILL sent to it alone.
+# No trap removes anything and no EXIT trap is set, so a shell forked from this one that runs a
+# trap before it starts its command, as one ran the EXIT trap in row 3.101, removes nothing
+# (rows 3.103 and 3.113). The keeper ignores HUP, INT, QUIT, PIPE, TERM, USR1, USR2 and ALRM,
+# which mktemp and rm inherit, so such a signal sent to this shell's process group does not end
+# it; a KILL or another signal that ends a process by default, sent to that group, ends it too
+# and leaves the folder, and so does a KILL sent to the keeper alone, after which the run goes on
+# as before (row 3.117). Here this shell closes its write end and waits for the keeper, so the
+# folder is gone before the run goes on or dies.
 par_cleanup() {
-  if [ -n "$par_dir" ]; then
-    rm -rf "$par_dir"
-    par_dir=""
+  local fd=$par_keep
+  par_keep=""
+  par_dir=""
+  if [ -n "$fd" ]; then
+    exec {fd}>&-
+    wait "$par_keep_pid" 2>/dev/null
   fi
 }
 
@@ -176,13 +198,10 @@ par_launch() {
   # sourced the same way here: a fatal shell error (an unbound variable under set -u) then ends
   # it with the same status, 127, as it ends that copy. The whole run's sections run as scripts,
   # as the whole serial run does, and such an error ends them with 1 in both.
-  # A shell forked here that a stop's TERM ended before it started the section's bash ran this
-  # shell's EXIT trap and removed the folder under the sections still running (row 3.101), so no
-  # EXIT trap is set while it forks; a HUP, INT or TERM meanwhile is held as above. Until the trap
-  # is set again below, a failed fork, or a signal such as USR1 that this script does not trap and
-  # that ends this shell, ends it without par_cleanup and leaves the folder, which par_cleanup
-  # would remove with the trap set (row 3.103).
-  trap - EXIT
+  # A shell forked here that a stop's TERM ends before it starts the section's bash runs no EXIT
+  # trap, since none is set, and removes nothing (rows 3.101 and 3.103); a HUP, INT or TERM
+  # meanwhile is held as above. A failed fork ends this shell, and the keeper then removes the
+  # folder (see par_cleanup).
   set -m
   if [ -n "$par_selected" ]; then
     bash -c '. /dev/fd/3' "$PWD/tools/run_all_checks.sh" 3< "$par_dir/$name.sh" > "$par_dir/$name.out" 2>&1 < /dev/null &
@@ -191,7 +210,6 @@ par_launch() {
   fi
   par_pid[i]=$!
   set +m
-  trap par_cleanup EXIT
   par_state[i]=run
   par_t0[i]=$EPOCHREALTIME
   par_started
@@ -302,7 +320,7 @@ par_flush() {
 # file's order, once the front end chose them) with up to suite_jobs at a time. SELECTED is
 # the list --sections named, for the summary, and empty for the whole run.
 par_run() {
-  local list=$1 known need subject line name i n ordered cycle progress preflight_text helper_text
+  local list=$1 known need subject line name i n ordered cycle progress preflight_text helper_text keeper_out
   if [ "${BASH_VERSINFO[0]}" -lt 5 ] || { [ "${BASH_VERSINFO[0]}" -eq 5 ] && [ "${BASH_VERSINFO[1]}" -lt 1 ]; }; then
     printf '  FAIL  SECURECONFIG_SUITE_JOBS above 1 needs bash 5.1 or later (wait -n -p); no gate ran\n'
     exit 2
@@ -395,8 +413,29 @@ par_run() {
     exit 2
   fi
   eval "$preflight_text"
-  par_dir=$(mktemp -d) || { printf '  FAIL  mktemp could not create a folder for the sections; no gate ran\n'; exit 2; }
-  trap par_cleanup EXIT
+  # The keeper (see par_cleanup). A signal that ends this shell once the keeper is forked, before
+  # the traps below are set, ends it by that signal as before, and the keeper then removes the
+  # folder, even one that mktemp makes after this shell has ended (row 3.113). mktemp's own
+  # message, when it cannot make the folder, still comes before the FAIL line. The keeper prints
+  # a line and reads its input to the end even when mktemp fails, since bash closes a coprocess's
+  # descriptors once it has reaped it, and a read from a closed one would print an error.
+  coproc par_keeper {
+    trap '' HUP INT QUIT PIPE TERM USR1 USR2 ALRM
+    par_keep_dir=$(mktemp -d)
+    printf '%s\n' "$par_keep_dir" 2>/dev/null
+    while IFS= read -r _; do :; done
+    [ -z "$par_keep_dir" ] || rm -rf -- "$par_keep_dir"
+  }
+  par_keep_pid=$!
+  par_keep=${par_keeper[1]}
+  keeper_out=${par_keeper[0]}
+  IFS= read -r par_dir <&"$keeper_out"
+  exec {keeper_out}<&-
+  if [ -z "$par_dir" ]; then
+    printf '  FAIL  mktemp could not create a folder for the sections; no gate ran\n'
+    par_cleanup
+    exit 2
+  fi
   trap 'par_trap HUP' HUP
   trap 'par_trap INT' INT
   trap 'par_trap TERM' TERM
@@ -421,6 +460,7 @@ par_run() {
     if ! par_running; then
       printf '  FAIL  the parallel scheduler has a section it cannot start; this is a bug in tools/run_all_checks.sh\n'
       par_stop_from -1
+      par_cleanup
       exit 2
     fi
     par_reap
@@ -2187,7 +2227,8 @@ fi
 # The server and the check run in the background of this shell, which waits for them, so its HUP,
 # INT and TERM traps run at once and stop both by the PIDs started here (kill, then wait). The
 # traps then reset themselves and send this shell the same signal, so it dies by that signal, as
-# a shell running any other section does, and the suite's EXIT trap still runs. A signal that
+# a shell running any other section does, and in parallel mode the driver still removes the
+# sections' temporary folder. A signal that
 # arrives while a launch is under way, before its PID is recorded, is held in overflow_signal and
 # acted on once the PID is. A Ctrl-C reaches this shell, since the INT goes to the whole foreground
 # group. Under --sections this shell is the cut copy, a child of the suite's own shell, so a TERM
