@@ -699,7 +699,9 @@ echo "== the plugin bundle is current =="
 # mktemp -d runs in a subshell that ignores HUP, INT and TERM, so such a signal cannot end it
 # between making the folder and printing its name. This shell reads that name with read from a
 # process substitution, not from a command substitution, while it waits for which an INT can go
-# unrecorded (row 3.110), and runs read again when a trap interrupts it.
+# unrecorded (row 3.110). In bash's default mode a trapped HUP, INT or TERM does not interrupt
+# read. In POSIX mode it does, and the loop then runs read again, which assumes that mktemp -d
+# prints the name in one write, since a retry between two writes of it would keep only the rest.
 # plugin_build gives the build the write end of a pipe as its fd 3, which each process the build
 # starts inherits, and returns only when cat, which reads the other end, sees the end of the
 # pipe, that is once every process that held that fd has exited or closed it. cat and the
