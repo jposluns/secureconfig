@@ -98,6 +98,7 @@ except ImportError:  # Python before 3.11
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
 from _verify_sections import counted_guides  # noqa: E402  one definition of the guide set
+from _markdown import reason_present  # noqa: E402  the one rule for a present reason
 
 ROOT = TOOLS.parent
 # The default private directory. The private lists live outside every checkout.
@@ -499,7 +500,7 @@ def parse_exceptions(data, name, marker_ids, terms=None, show=True):
         else:
             findings.append(f"{where}: the reference is neither marker:ID nor term:TERM")
             continue
-        if not reason.strip() or reason != reason.strip():
+        if not reason_present(reason) or reason != reason.strip():
             findings.append(f"{where}: the reason is empty or has leading or trailing whitespace")
             continue
         key = (path, int(line_text), ref.casefold())

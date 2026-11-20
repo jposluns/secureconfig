@@ -33,11 +33,15 @@ files=(
 # block sits immediately before the work on purpose: anything that changes `files` has to
 # happen ABOVE it, or the list reported here would not be the list built from below. A
 # reviewer demonstrated exactly that drift with an append placed after an earlier position
-# of this block.
+# of this block. --list-inputs also prints the 8 files under tools/ from tools/version_basis.py
+# to tools/requirements-gates.txt, and CHANGELOG.md. The build reads
+# tools/requirements-gates.txt because the version-basis check, the bundle step, absolutize and
+# certify load the pinned parser through gate_parser() in tools/check_verify_marking.py, which
+# reads the pins from that file.
 if [ "${1:-}" = "--list-inputs" ] || [ "${1:-}" = "--list-guides" ]; then
   printf '%s\n' "${files[@]}"
   if [ "${1:-}" = "--list-inputs" ]; then
-    printf '%s\n' tools/version_basis.py tools/version_basis_guides.txt tools/version_basis_sources_baseline.txt tools/_markdown.py tools/check_guide_shape.py tools/check_verify_marking.py tools/_verify_sections.py CHANGELOG.md
+    printf '%s\n' tools/version_basis.py tools/version_basis_guides.txt tools/version_basis_sources_baseline.txt tools/_markdown.py tools/check_guide_shape.py tools/check_verify_marking.py tools/_verify_sections.py tools/requirements-gates.txt CHANGELOG.md
   fi
   exit 0
 fi
