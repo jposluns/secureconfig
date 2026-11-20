@@ -265,7 +265,8 @@ def main():
     check("a reasoned allowlist waiver is not an M1 entry",
           gen.m1_count("docker.md", {allow: "docker.md 80  # outbound: not a listener\n"}) == 0)
     check("a reasoned allowlist line is still parsed as the gate parses it",
-          gen.allow_entry("docker.md 80  # r") == ("docker.md", 80))
+          [gen.allow_entry("docker.md 80  # r")]
+          == list(cei.load_allowlist(_GateRoot("docker.md 80  # r\n"))) == [("docker.md", 80)])
     check("a reasoned bracket-range waiver is not an M1 entry",
           gen.m1_count("docker.md", {bracket: reasoned_bracket}) == 0)
     for label, text in [("no `#`", "docker.md 80\n"), ("nothing after `#`", "docker.md 80  #\n"),
