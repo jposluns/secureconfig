@@ -330,10 +330,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     `guard-conventions: allow` lines in the guides. A later pull request can change each of these.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
     that restores the earlier M1 text in `QUALITY.md`, the earlier count in `tools/gen_guide_quality.py` and the
-    earlier cases in `tools/test_guide_quality.py`, or changes them to match the new ruling. It keeps every existing
-    entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here. If
-    the revert pull request uses `git revert -m 1`, that puts back this pull request's `CHANGELOG.md` entry under the
-    date it merged and does not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
+    earlier cases in `tools/test_guide_quality.py`, or changes them to match the new ruling, and regenerates what
+    derives from them. It keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own
+    `CHANGELOG.md` entry, and records the new ruling here. If the revert pull request uses `git revert -m 1`, that
+    puts back this pull request's `CHANGELOG.md` entry under the date it merged and does not set `VERSION`,
+    `plugin/plugin.json` or `SKILL.md` back.
 - **Maintainer ruling of 2026-11-14 accepting the reading of the 2026-11-13 M1 ruling that #1309 applied, superseded on M1 by the ruling above (#1318).**
   The maintainer gave this ruling through AskUserQuestion in an attended session at about 16:15Z that day. No
   reasoning was recorded beyond the choice, and the notes recorded only the chosen option, not the other options
@@ -365,9 +366,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     settles the conflict in this ruling's favour.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this ruling, then a pull request
     that restores the earlier M1 requirement in `QUALITY.md`, or changes it to match the new ruling. A change to
-    how `tools/gen_guide_quality.py` counts follows the revert path of the 18:44Z entry above. That pull request keeps every
-    existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new
-    ruling here. If the revert pull request uses `git revert -m 1`, that puts back this pull request's
+    how `tools/gen_guide_quality.py` counts follows the revert path of the 18:44Z entry above. That pull request
+    keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records
+    the new ruling here. If the revert pull request uses `git revert -m 1`, that puts back this pull request's
     `CHANGELOG.md` entry under the date it merged and does not set `VERSION`, `plugin/plugin.json` or `SKILL.md` back.
 - **Maintainer ruling of 2026-11-14 ratifying the unattended proxy decision on pinning `ssr_mode=False` in the `gradio.md` TLS example (#1313).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:46Z. The
@@ -450,11 +451,12 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     and the `gate-runners` section also runs the new test. Output order and lines are identical apart from 3 fields
     that differ between any 2 runs: the credential scanner's elapsed time and sampling counts, and unittest's
     elapsed times. On 2 failing paths the lines differ as well. Under `--sections`, a section killed by a signal
-    other than INT or PIPE makes the serial run print bash's job notice for its child shell, which the parallel run
-    does not print. And a diagnostic that bash itself prints from inside a section, such as an unbound variable or a
-    command not found, names another file or line, because each section runs from its own temporary script. The exit
-    status is the same in every case tested, a fatal shell error in a section included: an unbound variable gives 1
-    in a whole run and 127 under `--sections`, and a syntax error gives 2 in both, in both modes.
+    other than INT or PIPE (PIPE as bash 5.3.9 behaved in this pull request's review) makes the serial run print
+    bash's job notice for its child shell, which the parallel run does not print. And a diagnostic that bash itself
+    prints from inside a section, such as an unbound variable or a command not found, names another file or line,
+    because each section runs from its own temporary script. The exit status is the same in every case tested, a
+    fatal shell error in a section included: an unbound variable gives 1 in a whole run and 127 under `--sections`,
+    and a syntax error gives 2 in both modes and both run shapes.
   - The orchestrator's calls, not the maintainer's: the default is off, CI is unchanged, and the `version-basis`
     section is not split, so a later pull request can change each of them. Also the orchestrator's call: a revert
     pull request keeps the overflow section's repeated TERM unless a later ruling says otherwise, because without it

@@ -54,6 +54,13 @@
 # its subject after its needs. SECURECONFIG_SUITE_TIMES, when it names a file, gets one
 # `<section> <start> <end> <status>` row per section (epoch seconds) in parallel mode only, and
 # the output does not change.
+# Two departures follow from that order and those groups. plugin, being exclusive, runs before
+# the sections above it in this file; when it exits without finishing, as when its restore fails,
+# those sections then start on the tree it left, where the serial run ran them before it. A KILL,
+# which cannot be trapped, or a QUIT, which is not trapped, sent to this shell's process group
+# does not reach the parallel run's sections, which have process groups of their own and go on
+# running, where the serial run's sections are in this shell's group; after a KILL the sections'
+# temporary folder is left too.
 # Output identity between the two modes means the same lines in the same order and the same
 # status, with 3 fields rewritten to placeholders before the comparison: the elapsed time and the
 # sampling counts in the credential scanner's one "credential scan: ..." line, and the elapsed
@@ -61,7 +68,8 @@
 # compares them. On 2 failing paths the modes also differ in lines. When a section is killed by a
 # signal under --sections, the serial run's parent shell prints bash's job notice for its child
 # shell ("Terminated   bash -c ..." for TERM, and for KILL, HUP and other signals the same notice
-# after this file's name, a line number and a PID; none for INT or PIPE), and the parallel run prints
+# after this file's name, a line number and a PID; none for INT, and none for PIPE as bash 5.3.9
+# behaved in the #1312 review), and the parallel run prints
 # none; the comparison leaves that line out and the status is the same. And a diagnostic that
 # bash itself prints from inside a section (an unbound variable, a command not found) names
 # another file or line: this file's name and line in a whole serial run and "/dev/fd/3" with
