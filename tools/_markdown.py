@@ -23,9 +23,15 @@ other. A fence indented four or more spaces, which is what a fence nested two li
 deep looks like, is not recognized. A renderer shows it as code and a reader copies from it,
 and no guide in this corpus has one today, so this is disclosed rather than handled.
 
-This module also holds the one rule for whether a waiver or baseline reason is present,
-reason_present() below, because the two gates that read such a reason already load this
-module, so every self-test fixture that runs either of them already has it.
+This module also holds reason_present() below, a rule for whether a waiver or baseline
+reason is present. Three readers use it: load_baseline() in tools/check_verify_marking.py,
+Allowlist.load() in tools/check_bracket_ranges.py and waiver_reasoned() in
+tools/gen_guide_quality.py. It lives here because the first two of those gates already load
+this module, so every self-test fixture that runs either of them already has it. Four other
+readers do not use it (TODO row 3.111): tools/check_draft.py and tools/gen_hosted.py for
+tools/redirects_allowlist.txt and tools/export_lists.py for export/public-exceptions.tsv judge
+a reason with str.strip(), and WAIVER_RE in tools/check_guard_conventions.py takes any
+non-whitespace character as the start of an in-guide waiver's reason.
 """
 import re
 import unicodedata
