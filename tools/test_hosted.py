@@ -31,9 +31,10 @@ tools/check_release.py writes it with llms-full.txt, the two zips and the notes,
 gen_hosted.py, check_hosted.py and scripts/build-site.py --check on that root, each passing:
 the documented records procedure of CONTRIBUTING.md Releasing step 9. The allowlist half: an asset redirect naming a
 zip no record names, an asset redirect for a recorded zip that is still staged, an allowlist
-entry without a reason, an entry whose source a second entry repeats, and an entry with a raw
-U+FEFF in its source. The rest: a plugin zip whose root plugin.json version differs from its
-record, and, with a record behind it, an unparsable plugin/plugin.json (a read error, exit 2),
+entry without a reason, an entry whose reason is U+200B alone, an entry whose source a second
+entry repeats, and an entry with a raw U+FEFF in its source. The rest: a plugin zip whose root
+plugin.json version differs from its record, and, with a record behind it, an unparsable
+plugin/plugin.json (a read error, exit 2),
 one nested too deeply to parse (a read error, exit 2, for the gate and the generator alike) and
 one that is a JSON array. The newest record's staged plugin zip is a finding (exit 1) in 1 FAIL
 line, never a traceback, when its root plugin.json is nested too deeply to parse, is a JSON
@@ -348,6 +349,10 @@ CASES = (
      "holds a carriage return", 1),
     ("an allowlist entry without a reason",
      lambda d: fixture(d, versions=(), allow="/old / 302\n", generate=False),
+     "non-empty reason", 1),
+    # Row 3.111: a reason of U+200B alone is no reason, as reason_present() judges it.
+    ("an allowlist entry whose reason is U+200B alone",
+     lambda d: fixture(d, versions=(), allow="/old / 302\t\u200b\n", generate=False),
      "non-empty reason", 1),
     ("an asset redirect naming a zip no record names",
      lambda d: fixture(d, allow=ASSET.format("1.0.99")),

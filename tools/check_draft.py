@@ -41,7 +41,8 @@ PART 1, INDEXABILITY AND NO DRAFT TREE:
     /downloads/secureconfig-plugin-latest.zip, each `SOURCE TARGET 302` with single spaces and
     both targets one version's zips staged in site/downloads/. Every other line is refused, so a
     missing path still returns the 404 page with status 404. An allowlist entry is
-    `SOURCE TARGET 302<TAB>REASON` with a non-empty reason, and its raw source and target hold
+    `SOURCE TARGET 302<TAB>REASON` with a reason that reason_present() in tools/_reason.py
+    accepts and no whitespace at either end, and its raw source and target hold
     only printable ASCII (`!` to `~`). Every root-relative source and target is read in a normal
     form first: it is percent-decoded until it stops changing (at most DECODE_ROUNDS rounds). A
     field is refused when the decoding does not settle, when its decoded form carries any
@@ -181,6 +182,7 @@ from urllib.parse import unquote, urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from check_csp_hashes import name_suffix  # noqa: E402  (the CSP gate's page-name rule)
+from _reason import reason_present  # noqa: E402  (the one rule for a present reason)
 
 SITE = Path("site")
 # The published base path and the draft tree the `draft` branch stages, imported by
@@ -627,7 +629,9 @@ def allowlist_entries(root):
             continue
         where = f"{REDIRECTS_ALLOWLIST}:{n}"
         rule, sep, reason = line.partition("\t")
-        if not sep or not reason or reason != reason.strip():
+        # Row 3.111: a reason is judged by reason_present(), so one made only of whitespace and
+        # invisible format characters, such as U+200B, is no reason.
+        if not sep or not reason_present(reason) or reason != reason.strip():
             findings.append(f"{where}: an entry is `SOURCE TARGET 302<TAB>REASON` with a "
                             f"non-empty reason")
             continue

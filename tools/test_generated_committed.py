@@ -73,7 +73,7 @@ def parser_problem():
 PARSER_PROBLEM = parser_problem()
 # What the gate and the build import, and the lock gate_parser() reads beside them. A fixture
 # given its own lock never reads this one, so the cases that need no parser run without it.
-TOOLS = ("_verify_sections.py", "_markdown.py", "check_verify_marking.py")
+TOOLS = ("_verify_sections.py", "_markdown.py", "_reason.py", "check_verify_marking.py")
 LOCK = "requirements-gates.txt"
 # A lock argument for a fixture that has no tools/requirements-gates.txt at all.
 ABSENT = object()

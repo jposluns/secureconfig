@@ -435,7 +435,7 @@ class ParserLoadTests(unittest.TestCase):
     its own lock, or none, under an interpreter run with -E and -S, which sees no installed
     package, so none needs an installed pinned parser or reads this checkout's lock."""
 
-    TOOLS = ('check_verify_marking.py', '_markdown.py', '_verify_sections.py')
+    TOOLS = ('check_verify_marking.py', '_markdown.py', '_reason.py', '_verify_sections.py')
     LOAD = ('cannot be loaded from tools/requirements-gates.txt and the installed '
             'markdown-it-py and mdurl: ')
     MISSING = 'FileNotFoundError: [Errno 2] No such file or directory: '
@@ -590,7 +590,7 @@ class LlmsFullCheckTests(unittest.TestCase):
     as it is, and the build's own link rewrite and link check, which need the pinned parser that
     the suite's preflight requires."""
 
-    TOOLS = ('check_verify_marking.py', '_markdown.py', '_verify_sections.py',
+    TOOLS = ('check_verify_marking.py', '_markdown.py', '_reason.py', '_verify_sections.py',
              'requirements-gates.txt')
     # With STOP_BUNDLE set, a --bundle call sends a TERM to its process group, which holds the
     # build's shell, once the build has created its folder and set the trap that removes it.
