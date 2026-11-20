@@ -991,11 +991,11 @@ def t17_terminal(notes):
         return failures
     expected_failures = []
 
-    # The time limits of a case's waits add up to 27 seconds (Ctrl-Z then fg: 5 for the gate, 5 for
-    # the stop, 3 for the stopped states, 8 for the end, 1 for the output and 5 for Terminal.close),
-    # each but the last multiplied by SECURECONFIG_TEST_LOAD_SCALE. A wait can run a little past its
-    # limit, which is checked between steps, and Terminal.close's wait for JOBCTL after a SIGKILL
-    # has no limit.
+    # The time limits of a case's waits add up to at most 27 seconds, for Ctrl-Z then fg (5 for the
+    # gate, 5 for the stop, 3 for the stopped states, 8 for the end, 1 for the output and 5 for
+    # Terminal.close), each but the last multiplied by SECURECONFIG_TEST_LOAD_SCALE. A wait can run
+    # a little past its limit, which is checked between steps, and Terminal.close's wait for JOBCTL
+    # after a SIGKILL has no limit.
     def run(label, sleep, act, tostop=False):
         """Start the run, wait for its gate, then act(term, tree); every case ends its run."""
         tree = Tree(synthetic([section("g", extra=TERMINAL_GATE.format(sleep=sleep))]))
