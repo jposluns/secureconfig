@@ -675,20 +675,68 @@ echo "== the plugin bundle is current =="
 # site/llms-full.txt is, and for the same reason: a bundle that has drifted from the guides ships
 # a reader stale configuration while the repository looks correct. The build is byte-deterministic
 # (a copy per file), so rebuilding and comparing is the whole check.
-plugin_tmp=$(mktemp -d)
-cp -a plugin/. "$plugin_tmp/"
-if bash scripts/build-plugin.sh >/dev/null 2>&1; then
-  if diff -rq "$plugin_tmp" plugin >/dev/null 2>&1; then
-    ok "plugin/ matches a fresh build"
-  else
-    bad "plugin/ is stale; run scripts/build-plugin.sh and commit the result"
+# The build rewrites plugin/ in place, so plugin/ is saved to a private folder first and put back
+# from it afterwards (TODO row 3.108). Once the save is complete, a HUP, INT or TERM that ends the
+# shell running this section, during the build or the restore included, makes plugin_trap put
+# plugin/ back from the folder and remove the folder, or print a FAIL line and keep the folder when
+# that copy fails, before the shell dies by that signal; before then, plugin/ is untouched and the
+# trap only removes the folder. It ignores further HUP, INT and TERM signals while it does so.
+# mktemp -u only picks the folder's name, so the trap knows it before mkdir creates the folder. A
+# signal that reaches this shell and not the command it waits for takes effect when that command
+# ends. The handler is a HUP, INT and TERM trap, not an EXIT trap (rows 3.101 and 3.103), and it
+# restores and removes only in the shell that set it: in any other shell, such as one forked from
+# this one, it only resets the three traps and dies by the signal. A KILL runs no trap, so a KILL
+# after the save, such as the one par_stop_from sends a section still running 5 seconds after its
+# TERM, can leave plugin/ deleted or partly rebuilt and the folder in place (row 3.110).
+plugin_tmp=""
+plugin_saved=""
+plugin_shell=$BASHPID
+# shellcheck disable=SC2329  # only the HUP, INT and TERM trap strings below call it, unseen by shellcheck
+plugin_trap() {
+  if [ "$BASHPID" = "$plugin_shell" ]; then
+    trap '' HUP INT TERM
+    if [ -n "$plugin_saved" ]; then
+      rm -rf plugin
+      if ! cp -a "$plugin_tmp" plugin; then
+        printf '  FAIL  could not restore plugin/ from %s\n' "$plugin_tmp"
+        plugin_tmp=""
+      fi
+    fi
+    if [ -n "$plugin_tmp" ]; then
+      rm -rf "$plugin_tmp"
+    fi
   fi
+  trap - HUP INT TERM
+  kill -s "$1" "$BASHPID"
+}
+trap 'plugin_trap HUP' HUP
+trap 'plugin_trap INT' INT
+trap 'plugin_trap TERM' TERM
+plugin_tmp=$(mktemp -u)
+if ! mkdir -m 700 -- "$plugin_tmp"; then
+  plugin_tmp=""
+  bad "could not create a folder to save plugin/ in; plugin/ was not rebuilt"
+elif ! cp -a plugin/. "$plugin_tmp/"; then
+  bad "could not save plugin/ to $plugin_tmp; plugin/ was not rebuilt"
+  rm -rf "$plugin_tmp"
 else
-  bad "scripts/build-plugin.sh exited non-zero"
+  plugin_saved=1
+  if bash scripts/build-plugin.sh >/dev/null 2>&1; then
+    if diff -rq "$plugin_tmp" plugin >/dev/null 2>&1; then
+      ok "plugin/ matches a fresh build"
+    else
+      bad "plugin/ is stale; run scripts/build-plugin.sh and commit the result"
+    fi
+  else
+    bad "scripts/build-plugin.sh exited non-zero"
+  fi
+  rm -rf plugin
+  cp -a "$plugin_tmp" plugin || { bad "could not restore plugin/ from $plugin_tmp"; exit 1; }
+  plugin_saved=""
+  rm -rf "$plugin_tmp"
 fi
-rm -rf plugin
-cp -a "$plugin_tmp" plugin || { bad "could not restore plugin/ from $plugin_tmp"; exit 1; }
-rm -rf "$plugin_tmp"
+plugin_tmp=""
+trap - HUP INT TERM
 
 # section: instructions
 echo "== the chat fallback file is current =="

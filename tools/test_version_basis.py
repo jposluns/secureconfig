@@ -8,6 +8,8 @@ import json
 import os
 import re
 import shlex
+import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -668,6 +670,60 @@ class LlmsFullCheckTests(unittest.TestCase):
                              (1, '', self.MESSAGE))
             self.assertFalse(bundle.exists())
             self.assertEqual(list((root / 'tmp').iterdir()), [])
+
+    # Stand-ins for mktemp and mkdir (TODO row 3.109): each runs the real command and, once that
+    # has created a path under TMPDIR, records the path and sends a TERM to its process group,
+    # which holds the build's shell, before the stand-in returns to that shell.
+    STOP = {'mktemp': ('out=$({real} "$@") || exit\n'
+                       'printf \'%s\\n\' "$out"\n'
+                       'case $out in "$TMPDIR"/*)\n'
+                       '  if [ -e "$out" ]; then printf \'%s\\n\' "$out" >> "$STOP_LOG"; '
+                       'kill -TERM 0; fi ;;\n'
+                       'esac\n'),
+            'mkdir': ('{real} "$@" || exit\n'
+                      'for arg in "$@"; do\n'
+                      '  case $arg in "$TMPDIR"/*)\n'
+                      '    if [ -d "$arg" ]; then printf \'%s\\n\' "$arg" >> "$STOP_LOG"; '
+                      'kill -TERM 0; fi ;;\n'
+                      '  esac\n'
+                      'done\n')}
+
+    def test_check_leaves_no_temporary_file_after_a_term(self):
+        """A TERM to the build's process group from inside the command that created the
+        temporary path, just after it did, ends the build by that TERM, leaves TMPDIR empty
+        and leaves site/llms-full.txt as it was."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            env = self.fixture(root)
+            bundle = root / 'site/llms-full.txt'
+            bundle.write_text('committed\n', encoding='utf-8')
+            before = self.state(bundle)
+            stop = root / 'stop'
+            stop.mkdir()
+            for name, body in self.STOP.items():
+                real = shutil.which(name, path=env['PATH'])
+                self.assertIsNotNone(real, name)
+                (stop / name).write_text('#!/bin/sh\n' + body.format(real=shlex.quote(real)),
+                                         encoding='utf-8')
+                (stop / name).chmod(0o755)
+            env['PATH'] = f"{stop}{os.pathsep}{env['PATH']}"
+            env['STOP_LOG'] = str(root / 'stopped.log')
+            process = subprocess.Popen(['bash', 'scripts/build-llms-full.sh', '--check'],
+                                       cwd=root, env=env, stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE, text=True,
+                                       start_new_session=True)
+            try:
+                stdout, stderr = process.communicate(timeout=120)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.communicate()
+                raise
+            self.assertEqual(process.returncode, -signal.SIGTERM, stdout + stderr)
+            stopped = (root / 'stopped.log').read_text(encoding='utf-8').splitlines()
+            self.assertEqual(len(stopped), 1, stopped)
+            self.assertTrue(stopped[0].startswith(str(root / 'tmp') + os.sep), stopped)
+            self.assertEqual(list((root / 'tmp').iterdir()), [])
+            self.assertEqual(self.state(bundle), before)
 
 
 class SourcesBasisTests(unittest.TestCase):

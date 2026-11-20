@@ -82,6 +82,18 @@ running afterwards, that the HUP, INT and TERM traps are reset, and that the EXI
     stops what was launched, and the shell dies by that TERM after the EXIT trap, within
     STOP_SECONDS (a process forked just before the TERM can take it into the handler it inherited
     and carry on, so the section's overflow_kill repeats the TERM and then sends KILL).
+THE PLUGIN SECTION of tools/run_all_checks.sh (from `# section: plugin` to the next section) and
+the ok and bad helpers are read out of the file and run with bash in a scratch tree whose plugin/
+holds nested folders, an executable file, a file with a carriage return and a symbolic link, with
+TMPDIR set to an empty folder and a stand-in scripts/build-plugin.sh, in a process group the
+harness creates (TODO row 3.108). Each case requires plugin/ to hold afterwards the same paths
+with the same types, modes, bytes and link targets, and TMPDIR to be empty:
+  - with no signal, the stand-in build changes nothing, the section prints its ok line, leaves
+    fail=0 and resets the HUP, INT and TERM traps, and the shell exits 0;
+  - a TERM the section's shell sends itself just after the `rm -rf plugin` line right above its
+    restore (a `kill` written into the section there) ends the shell by that TERM;
+  - a stand-in build that removes a folder of plugin/, rewrites a file and adds one, then sends a
+    TERM, an INT or a HUP to its process group, ends the shell by that signal.
 Every child's environment pins SECURECONFIG_SUITE_JOBS=1, so a setting inherited from the caller
 never turns a `--sections` case parallel, and every wait is multiplied by
 SECURECONFIG_TEST_LOAD_SCALE (default 1) for a loaded host.
@@ -973,6 +985,115 @@ def overflow_signal_failures(script, pages):
     return failures, 4
 
 
+PLUGIN_SECTION = re.compile(r"^# section: plugin\n.*?(?=^# section: )", re.M | re.S)
+# The stand-in plugin build changes nothing, unless STANDIN_SIGNAL names a signal: then it removes
+# a folder of plugin/, rewrites a file of it and adds one, as an interrupted build could leave it,
+# and sends that signal to its process group, which holds the shell running the section.
+PLUGIN_STANDIN = """if [ -n "${STANDIN_SIGNAL:-}" ]; then
+  rm -rf plugin/skills
+  printf 'partial\\n' > plugin/plugin.json
+  printf 'new\\n' > plugin/added.md
+  kill -s "$STANDIN_SIGNAL" 0
+  sleep 30
+fi
+"""
+# (case, the signal the stand-in build sends to its process group or "", whether a TERM to the
+# section's own shell is written in just after its `rm -rf plugin` line, the expected exit)
+PLUGIN_CASES = (
+    ("no signal", "", False, 0),
+    ("a TERM to the section's shell just after rm -rf plugin", "", True, -signal.SIGTERM),
+    ("a TERM to the process group during the build", "TERM", False, -signal.SIGTERM),
+    ("an INT to the process group during the build", "INT", False, -signal.SIGINT),
+    ("a HUP to the process group during the build", "HUP", False, -signal.SIGHUP),
+)
+
+
+def plugin_tree(d):
+    """A plugin/ under d with nested folders, an executable file and a symbolic link."""
+    (d / "plugin" / "skills" / "secureconfig" / "references").mkdir(parents=True)
+    (d / "plugin" / "plugin.json").write_text('{\n  "version": "1.0.1"\n}\n', encoding="utf-8")
+    (d / "plugin" / "skills" / "secureconfig" / "SKILL.md").write_text("# Skill\n",
+                                                                       encoding="utf-8")
+    (d / "plugin" / "skills" / "secureconfig" / "references" / "a.md").write_bytes(b"a\r\nb\n")
+    script = d / "plugin" / "skills" / "secureconfig" / "run.sh"
+    script.write_text("#!/bin/sh\n", encoding="utf-8")
+    script.chmod(0o755)
+    (d / "plugin" / "skills" / "link.md").symlink_to("secureconfig/SKILL.md")
+
+
+def plugin_state(root):
+    """Each path under root with its type, mode and bytes or link target."""
+    found = {}
+    for path in sorted(root.rglob("*")):
+        st = path.lstat()
+        if path.is_symlink():
+            found[str(path.relative_to(root))] = ("link", os.readlink(path))
+        elif path.is_dir():
+            found[str(path.relative_to(root))] = ("dir", st.st_mode)
+        else:
+            found[str(path.relative_to(root))] = ("file", st.st_mode, path.read_bytes())
+    return found
+
+
+def plugin_failures():
+    """Run the plugin section of tools/run_all_checks.sh, with the ok and bad helpers, on each of
+    PLUGIN_CASES in a scratch tree, and require plugin/ to be as it was, byte for byte, with no
+    folder left in TMPDIR, and the shell to exit 0 or die by the signal."""
+    text = SUITE.read_text(encoding="utf-8")
+    helpers = HELPER.findall(text)
+    sections = PLUGIN_SECTION.findall(text)
+    if len(helpers) != 2 or len(sections) != 1:
+        return [f"plugin section: tools/run_all_checks.sh no longer holds the ok and bad helpers "
+                f"and 1 plugin section in the shape this test reads ({len(helpers)} helpers, "
+                f"{len(sections)} sections)"], 0
+    lines = sections[0].split("\n")
+    # The section's own removal, the one the restore's `cp -a "$plugin_tmp" plugin ||` follows.
+    removes = [i for i, line in enumerate(lines[:-1]) if line.strip() == "rm -rf plugin"
+               and lines[i + 1].strip().startswith('cp -a "$plugin_tmp" plugin ||')]
+    bash = shutil.which("bash")
+    failures = []
+    for case, sent, inject, want_rc in PLUGIN_CASES:
+        section = sections[0]
+        if inject:
+            if len(removes) != 1:
+                failures.append(f"plugin section, {case}: the section holds {len(removes)} "
+                                f"`rm -rf plugin` lines right above its restore, not 1, so a TERM "
+                                f"cannot be sent after it")
+                continue
+            line = lines[removes[0]]
+            indent = line[:len(line) - len(line.lstrip(" "))]
+            section = "\n".join(lines[:removes[0] + 1] + [f'{indent}kill -TERM "$BASHPID"']
+                                + lines[removes[0] + 1:])
+        script = ("\n".join(helpers) + "\nfail=0\n" + section + 'printf "fail=%s\\n" "$fail"\n'
+                  + 'printf "signal traps=%s\\n" "$(trap -p HUP INT TERM)"\n')
+        d = Path(tempfile.mkdtemp())
+        try:
+            (d / "scripts").mkdir()
+            (d / "scripts" / "build-plugin.sh").write_text(PLUGIN_STANDIN, encoding="utf-8")
+            (d / "tmp").mkdir()
+            plugin_tree(d)
+            before = plugin_state(d / "plugin")
+            env = dict(os.environ, SECURECONFIG_SUITE_JOBS="1", TMPDIR=str(d / "tmp"),
+                       STANDIN_SIGNAL=sent)
+            rc, stdout, stderr = run_in_group([bash, "-c", script], d, env)
+            out = stdout + stderr
+            left = sorted(p.name for p in (d / "tmp").iterdir())
+            after = plugin_state(d / "plugin") if (d / "plugin").is_dir() else {}
+            if rc != want_rc or left or after != before:
+                changed = sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
+                failures.append(f"plugin section, {case}: expected exit {want_rc}, plugin/ as it "
+                                f"was and no folder left in TMPDIR; got exit {rc}, {changed!r} "
+                                f"changed, {left!r} left: {out!r}")
+            elif want_rc == 0 and ("  ok    plugin/ matches a fresh build" not in out
+                                   or "\nfail=0\n" not in stdout
+                                   or "\nsignal traps=\n" not in stdout):
+                failures.append(f"plugin section, {case}: expected the ok line, fail=0 and the "
+                                f"HUP, INT and TERM traps reset: {out!r}")
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+    return failures, len(PLUGIN_CASES)
+
+
 def main():
     failures = run_gate_failures()
     build_failures, build_cases, forms = pages_build_failures()
@@ -981,6 +1102,8 @@ def main():
     failures += palette_block_failures()
     overflow_cases_failures, overflow_cases = overflow_failures()
     failures += overflow_cases_failures
+    plugin_cases_failures, plugin_cases = plugin_failures()
+    failures += plugin_cases_failures
     failures += sections_failures()
     if failures:
         for f in failures:
@@ -995,7 +1118,10 @@ def main():
           f"overflow section (a SKIP or, when required, a FAIL without node or Chromium; 0 "
           f"passes and any other code fails; a missing or unlisted page fails; nothing left "
           f"running, and death by the signal, after a TERM, an INT to the process group of "
-          f"--sections overflow, or a TERM between a launch and the record of its PID), and "
+          f"--sections overflow, or a TERM between a launch and the record of its PID), "
+          f"{plugin_cases} cases of its plugin section (plugin/ as it was, byte for byte, and no "
+          f"folder left, with no signal or after a TERM just after rm -rf plugin or a TERM, INT "
+          f"or HUP to the process group during the build, and death by that signal), and "
           f"{len(SECTIONS_CASES)} cases of run_all_checks.sh --sections (only the named sections "
           f"and those they depend on after the preflight, in the file's order; an unknown or "
           f"empty name, or one holding "

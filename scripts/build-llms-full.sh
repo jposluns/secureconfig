@@ -485,8 +485,17 @@ if literal(result) != literal(source):
 sys.stdout.buffer.write(result.encode("utf-8"))
 PY
 
-built=$(mktemp)
-trap 'rm -f "$built"' EXIT
+# The built text goes to a file in a private folder. mktemp -u only picks the folder's name and
+# creates nothing, so the EXIT trap that removes the folder is set before mkdir creates it, and a
+# HUP, INT or TERM that ends this script after mkdir has made the folder, while mkdir still runs
+# included, runs that trap (TODO row 3.109). When mkdir refuses the name, as it does a name that
+# is already taken, the script clears the name and exits 1. A KILL runs no trap, so a run that
+# KILL ends can leave the folder (TODO row 3.110).
+tmp_dir=""
+trap '[ -z "$tmp_dir" ] || rm -rf -- "$tmp_dir"' EXIT
+tmp_dir=$(mktemp -u)
+mkdir -m 700 -- "$tmp_dir" || { tmp_dir=""; exit 1; }
+built="$tmp_dir/llms-full.txt"
 {
   echo "# secureconfig.ai: all guides in one file"
   echo
