@@ -38,14 +38,17 @@ A search of the tree of #1369 found seven places that judged a reason without it
 row 3.111 records them; the search may have missed some. Five of them now call it. The other
 two are both parsers of tools/redirects_allowlist.txt, tools/check_draft.py and
 tools/gen_hosted.py, which judge the reason of an entry with str.strip(). The Pages build,
-scripts/pages-build.sh, runs both, and tools/test_pages_build.py requires every module that
-build reaches to import only the standard library and this repository's modules. Here
-body_lines() imports tools/version_basis.py, which imports markdown-it-py, so neither parser
-can load this module as it stands, and TODO row 3.111 keeps the two open. Two other modules
-use the parser in
-tools/gen_hosted.py rather than one of their own: tools/check_hosted.py calls its
-read_allowlist() directly and through its redirects_text(), and scripts/build-site.py calls it
-through redirects_text().
+scripts/pages-build.sh, runs tools/check_draft.py directly and reaches tools/gen_hosted.py
+only through the imports of tools/check_hosted.py and scripts/build-site.py, which it runs.
+At run time either parser could import this module, because every import of markdown-it-py
+is inside a function, as is the import of tools/version_basis.py in body_lines(). The
+obstacle is tools/test_pages_build.py, which requires every module that build reaches, by an
+import at any depth, to import only the standard library and this repository's modules. It
+follows the import in body_lines() to tools/version_basis.py, which imports markdown-it-py,
+so it fails when either parser imports this module, and TODO row 3.111 keeps the two open.
+Two other modules use the parser in tools/gen_hosted.py rather than one of their own:
+tools/check_hosted.py calls its read_allowlist() directly and through its redirects_text(),
+and scripts/build-site.py calls it through redirects_text().
 """
 import re
 import unicodedata
