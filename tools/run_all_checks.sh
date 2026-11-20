@@ -69,12 +69,12 @@
 # signal under --sections, the serial run's parent shell prints bash's job notice for its child
 # shell ("Terminated   bash -c ..." for TERM, and for KILL, HUP and other signals the same notice
 # after this file's name, a line number and a PID; none for INT, and none for PIPE as bash 5.3.9
-# behaved in the #1312 review), and the parallel run prints
-# none; the comparison leaves that line out and the status is the same. And a diagnostic that
-# bash itself prints from inside a section (an unbound variable, a command not found) names
-# another file or line: this file's name and line in a whole serial run and "/dev/fd/3" with
-# the line in the serial run's cut copy, not this file's line, under --sections, but the section's temporary script in a whole parallel run
-# and "/dev/fd/3" with another line under --sections; that line is not left out.
+# behaved in the #1312 review), and the parallel run prints none; the comparison leaves that line
+# out and the status is the same. And a diagnostic that bash itself prints from inside a section
+# (an unbound variable, a command not found) names another file or line: this file's name and line
+# in a whole serial run and "/dev/fd/3" with the line in the serial run's cut copy, not this file's
+# line, under --sections, but the section's temporary script in a whole parallel run and
+# "/dev/fd/3" with another line under --sections; that line is not left out.
 # depends: generated-committed: llms-full plugin instructions
 # exclusive: plugin
 set -uo pipefail
