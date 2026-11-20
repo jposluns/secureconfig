@@ -29,10 +29,13 @@ Allowlist.load() in tools/check_bracket_ranges.py and waiver_reasoned() in
 tools/gen_guide_quality.py. It lives here because the first two of those gates already load
 this module, so every self-test fixture that runs either of them already has it. A search of
 the tree of #1369 found seven other places that judge a reason without it, and TODO row 3.111
-records them; the search may have missed some. Both readers of tools/redirects_allowlist.txt,
+records them; the search may have missed some. Both parsers of tools/redirects_allowlist.txt,
 tools/check_draft.py and tools/gen_hosted.py, judge the reason of an entry with str.strip(),
 and so does tools/export_lists.py for a row of an exceptions file, after its split_lines() has
-refused any line that holds a format character. In tools/check_guard_conventions.py,
+refused any line that holds a format character. Two other modules use the parser in
+tools/gen_hosted.py rather than one of their own: tools/check_hosted.py calls its
+read_allowlist() directly and through its redirects_text(), and scripts/build-site.py calls it
+through redirects_text(). In tools/check_guard_conventions.py,
 WAIVER_RE, whose reason is also tested with str.strip(), and C4_WAIVER_RE, which applies only
 to a reason that WAIVER_RE has matched, take a reason that starts with a character that is not
 whitespace, and INLINE_WAIVER_RE takes one that ends with such a character. WAIVER_RE in
