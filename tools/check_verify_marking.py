@@ -59,7 +59,7 @@ import re
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _markdown import Fences
+from _markdown import Fences, reason_present
 from _verify_sections import TITLE, heading_parts, title_text, verify_ranges
 from _verify_sections import HEADING, META_EXCLUDE, guides
 
@@ -1151,12 +1151,13 @@ def load_baseline(path):
             continue
         # An optional fifth field, the rest of the line after the fourth TAB, is the reason an
         # entry is kept by design; the ratchet ignores it, and QUALITY M1 does not count an
-        # entry that has one. When the field is present it must hold more than whitespace.
+        # entry that has one. When the field is present it must pass reason_present(), so it
+        # must hold more than whitespace and invisible format characters.
         fields = line.split("\t", 4)
         if (len(fields) < 4 or not re.fullmatch(r"[^/\\\s]+\.md", fields[0])
                 or fields[1] not in KINDS or not re.fullmatch(r"[0-9a-f]{64}", fields[2])
                 or not re.fullmatch(r"[1-9][0-9]*", fields[3])
-                or len(fields) == 5 and not fields[4].strip()):
+                or len(fields) == 5 and not reason_present(fields[4])):
             raise ValueError(f"baseline line {number}: malformed entry")
         key = tuple(fields[:3])
         if key in counts:

@@ -22,10 +22,58 @@ gates in the same way, so that a construction cannot be a fence in one and prose
 other. A fence indented four or more spaces, which is what a fence nested two list levels
 deep looks like, is not recognized. A renderer shows it as code and a reader copies from it,
 and no guide in this corpus has one today, so this is disclosed rather than handled.
+
+This module also holds reason_present() below, a rule for whether a waiver or baseline
+reason is present. Three readers use it: load_baseline() in tools/check_verify_marking.py,
+Allowlist.load() in tools/check_bracket_ranges.py and waiver_reasoned() in
+tools/gen_guide_quality.py. It lives here because the first two of those gates already load
+this module, so every self-test fixture that runs either of them already has it. A search of
+the tree of #1369 found seven other places that judge a reason without it, and TODO row 3.111
+records them; the search may have missed some. Both parsers of tools/redirects_allowlist.txt,
+tools/check_draft.py and tools/gen_hosted.py, judge the reason of an entry with str.strip(),
+and so does tools/export_lists.py for a row of an exceptions file, after its split_lines() has
+refused any line that holds a format character. Two other modules use the parser in
+tools/gen_hosted.py rather than one of their own: tools/check_hosted.py calls its
+read_allowlist() directly and through its redirects_text(), and scripts/build-site.py calls it
+through redirects_text(). In tools/check_guard_conventions.py,
+WAIVER_RE, whose reason is also tested with str.strip(), and C4_WAIVER_RE, which applies only
+to a reason that WAIVER_RE has matched, take a reason that starts with a character that is not
+whitespace, and INLINE_WAIVER_RE takes one that ends with such a character. WAIVER_RE in
+tools/check_unfiltered_ss.py needs one such character after the allow keyword and the
+whitespace that follows it.
 """
 import re
+import unicodedata
 
 FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+
+# The general categories a reason may not be made of alone (row 3.106). Cf holds the format
+# characters, such as U+200B ZERO WIDTH SPACE, U+FEFF ZERO WIDTH NO-BREAK SPACE and U+2060 WORD
+# JOINER, which str.isspace() does not count as whitespace and which Unicode lists as default
+# ignorable code points, so a renderer normally shows nothing for them. A few Cf characters,
+# such as U+0600 ARABIC NUMBER SIGN, are drawn, but they format the text around them, so a
+# reason made of them alone still says nothing. Zs, Zl and Zp hold the space, line and
+# paragraph separators, which str.isspace() already counts, since Python counts every Zs
+# character and every character of bidirectional class WS, B or S; naming them keeps the rule
+# whole on its own. Whitespace controls such as TAB and LF are Cc and stay blank through
+# str.isspace().
+BLANK_CATEGORIES = frozenset({"Cf", "Zs", "Zl", "Zp"})
+
+
+def reason_present(text):
+    """Whether `text` holds a character that is neither whitespace nor in BLANK_CATEGORIES.
+
+    A reason made only of such characters shows as nothing, so it is no reason. Before row
+    3.106 the three readers that now call this function judged a reason with str.strip(),
+    which removes whitespace but not a format character such as U+200B, so a reason of U+200B
+    alone passed. The places named in the module docstring that do not call it use
+    str.strip(), a regular expression or both. The categories come from the unicodedata
+    module of the running Python. Other characters that may show as nothing, such as a lone
+    combining mark (Mn), a control character that is not whitespace (Cc), U+3164 HANGUL
+    FILLER (Lo) or U+2800 BRAILLE PATTERN BLANK (So), count as text.
+    """
+    return any(not ch.isspace() and unicodedata.category(ch) not in BLANK_CATEGORIES
+               for ch in text)
 
 
 class Fences:

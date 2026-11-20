@@ -49,6 +49,7 @@ from pathlib import Path
 
 sys.path.insert(0, "tools")
 import check_guide_quality as c  # noqa: E402
+from _markdown import reason_present  # noqa: E402
 
 ROOT = c.ROOT
 TSV = c.TSV
@@ -141,19 +142,20 @@ def entry_guide(path, line):
 
 
 def waiver_reasoned(path, line):
-    """Whether a waiver or Verify-marking entry line carries a reason that is not whitespace only.
+    """Whether a waiver or Verify-marking entry line carries a reason, as reason_present judges it.
 
     The bracket-range allow file holds the reason in TAB field 4, the Verify-marking baseline in
     TAB field 5, and the exposure allowlist after the first `#`, as each file's header comment says.
+    A reason made only of whitespace and invisible format characters, such as U+200B, is no reason.
     """
     if path == EXPOSURE_ALLOWLIST:
         parts = line.split("#", 1)
-        return len(parts) == 2 and bool(parts[1].strip())
+        return len(parts) == 2 and reason_present(parts[1])
     if path == VERIFY_BASELINE:
         fields = line.split("\t", 4)
-        return len(fields) == 5 and bool(fields[4].strip())
+        return len(fields) == 5 and reason_present(fields[4])
     fields = line.split("\t", 3)
-    return len(fields) == 4 and bool(fields[3].strip())
+    return len(fields) == 4 and reason_present(fields[3])
 
 
 def m1_count(guide, files):
