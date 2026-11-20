@@ -87,13 +87,19 @@ the ok and bad helpers are read out of the file and run with bash in a scratch t
 holds nested folders, an executable file, a file with a carriage return and a symbolic link, with
 TMPDIR set to an empty folder and a stand-in scripts/build-plugin.sh, in a process group the
 harness creates (TODO row 3.108). Each case requires plugin/ to hold afterwards the same paths
-with the same types, modes, bytes and link targets, and TMPDIR to be empty:
+with the same types, modes, bytes and link targets, and TMPDIR to be empty, but for the taken
+folder of the last case, which must hold what it held before:
   - with no signal, the stand-in build changes nothing, the section prints its ok line, leaves
     fail=0 and resets the HUP, INT and TERM traps, and the shell exits 0;
-  - a TERM the section's shell sends itself just after the `rm -rf plugin` line right above its
-    restore (a `kill` written into the section there) ends the shell by that TERM;
+  - a TERM sent to the section's shell, or to the process group, just after the restore's
+    `rm -rf plugin || return` line (a `kill` written into the section there) ends the shell by
+    that TERM;
   - a stand-in build that removes a folder of plugin/, rewrites a file and adds one, then sends a
-    TERM, an INT or a HUP to its process group, ends the shell by that signal.
+    TERM, an INT or a HUP to its process group, ends the shell by that signal;
+  - with stand-ins for mktemp and mkdir first on PATH, mktemp -u prints the name of a folder in
+    TMPDIR that already holds a file, any other mktemp call sends a TERM to the process group and
+    fails, and mkdir given that name fails and then sends one; the shell dies by that TERM and the
+    folder is kept.
 Every child's environment pins SECURECONFIG_SUITE_JOBS=1, so a setting inherited from the caller
 never turns a `--sections` case parallel, and every wait is multiplied by
 SECURECONFIG_TEST_LOAD_SCALE (default 1) for a loaded host.
@@ -997,14 +1003,38 @@ PLUGIN_STANDIN = """if [ -n "${STANDIN_SIGNAL:-}" ]; then
   sleep 30
 fi
 """
-# (case, the signal the stand-in build sends to its process group or "", whether a TERM to the
-# section's own shell is written in just after its `rm -rf plugin` line, the expected exit)
+# Stand-ins for mktemp and mkdir, first on PATH in the taken-name case. mktemp -u prints the name
+# of a folder that already holds a file, as if another process had created that path first; any
+# other mktemp call creates nothing, sends a TERM to its process group and fails as mktemp does
+# when it cannot create a folder. mkdir runs the real mkdir and, when an argument is that name,
+# then sends a TERM to its process group, before it returns to the section's shell.
+PLUGIN_TAKEN_STANDINS = {
+    "mktemp": ('case " $* " in *" -u "*) printf \'%s\\n\' "$STANDIN_TAKEN"; exit 0 ;; esac\n'
+               'printf \'mktemp: failed to create directory\\n\' >&2\n'
+               'kill -TERM 0\n'
+               'exit 1\n'),
+    "mkdir": ('{real} "$@"\n'
+              'rc=$?\n'
+              'for arg in "$@"; do\n'
+              '  if [ "$arg" = "$STANDIN_TAKEN" ]; then kill -TERM 0; fi\n'
+              'done\n'
+              'exit "$rc"\n'),
+}
+# (case, the signal the stand-in build sends to its process group or "", the command written in
+# just after the `rm -rf plugin || return` line of plugin_put_back or "", whether the taken-name
+# stand-ins are first on PATH, the expected exit). `$$` in that command names the section's
+# shell, not the subshell that runs the restore.
 PLUGIN_CASES = (
-    ("no signal", "", False, 0),
-    ("a TERM to the section's shell just after rm -rf plugin", "", True, -signal.SIGTERM),
-    ("a TERM to the process group during the build", "TERM", False, -signal.SIGTERM),
-    ("an INT to the process group during the build", "INT", False, -signal.SIGINT),
-    ("a HUP to the process group during the build", "HUP", False, -signal.SIGHUP),
+    ("no signal", "", "", False, 0),
+    ("a TERM to the section's shell just after rm -rf plugin", "", 'kill -TERM "$$"', False,
+     -signal.SIGTERM),
+    ("a TERM to the process group just after rm -rf plugin", "", "kill -TERM 0", False,
+     -signal.SIGTERM),
+    ("a TERM to the process group during the build", "TERM", "", False, -signal.SIGTERM),
+    ("an INT to the process group during the build", "INT", "", False, -signal.SIGINT),
+    ("a HUP to the process group during the build", "HUP", "", False, -signal.SIGHUP),
+    ("a TERM to the process group as the folder's name meets a path another process made", "",
+     "", True, -signal.SIGTERM),
 )
 
 
@@ -1038,7 +1068,8 @@ def plugin_state(root):
 def plugin_failures():
     """Run the plugin section of tools/run_all_checks.sh, with the ok and bad helpers, on each of
     PLUGIN_CASES in a scratch tree, and require plugin/ to be as it was, byte for byte, with no
-    folder left in TMPDIR, and the shell to exit 0 or die by the signal."""
+    folder left in TMPDIR but the taken one, which must keep its file, and the shell to exit 0 or
+    die by the signal."""
     text = SUITE.read_text(encoding="utf-8")
     helpers = HELPER.findall(text)
     sections = PLUGIN_SECTION.findall(text)
@@ -1047,22 +1078,22 @@ def plugin_failures():
                 f"and 1 plugin section in the shape this test reads ({len(helpers)} helpers, "
                 f"{len(sections)} sections)"], 0
     lines = sections[0].split("\n")
-    # The section's own removal, the one the restore's `cp -a "$plugin_tmp" plugin ||` follows.
-    removes = [i for i, line in enumerate(lines[:-1]) if line.strip() == "rm -rf plugin"
-               and lines[i + 1].strip().startswith('cp -a "$plugin_tmp" plugin ||')]
+    # The restore's own removal, the one its `cp -a "$plugin_tmp" plugin` follows.
+    removes = [i for i, line in enumerate(lines[:-1]) if line.strip() == "rm -rf plugin || return"
+               and lines[i + 1].strip().startswith('cp -a "$plugin_tmp" plugin')]
     bash = shutil.which("bash")
     failures = []
-    for case, sent, inject, want_rc in PLUGIN_CASES:
+    for case, sent, inject, taken, want_rc in PLUGIN_CASES:
         section = sections[0]
         if inject:
             if len(removes) != 1:
                 failures.append(f"plugin section, {case}: the section holds {len(removes)} "
-                                f"`rm -rf plugin` lines right above its restore, not 1, so a TERM "
-                                f"cannot be sent after it")
+                                f"`rm -rf plugin || return` lines right above its restore's copy, "
+                                f"not 1, so a TERM cannot be sent after it")
                 continue
             line = lines[removes[0]]
             indent = line[:len(line) - len(line.lstrip(" "))]
-            section = "\n".join(lines[:removes[0] + 1] + [f'{indent}kill -TERM "$BASHPID"']
+            section = "\n".join(lines[:removes[0] + 1] + [f"{indent}{inject}"]
                                 + lines[removes[0] + 1:])
         script = ("\n".join(helpers) + "\nfail=0\n" + section + 'printf "fail=%s\\n" "$fail"\n'
                   + 'printf "signal traps=%s\\n" "$(trap -p HUP INT TERM)"\n')
@@ -1075,15 +1106,29 @@ def plugin_failures():
             before = plugin_state(d / "plugin")
             env = dict(os.environ, SECURECONFIG_SUITE_JOBS="1", TMPDIR=str(d / "tmp"),
                        STANDIN_SIGNAL=sent)
+            keep = {}
+            if taken:
+                (d / "tmp" / "taken").mkdir()
+                (d / "tmp" / "taken" / "other.txt").write_text("not the section's\n",
+                                                               encoding="utf-8")
+                keep = {"taken": plugin_state(d / "tmp" / "taken")}
+                (d / "bin").mkdir()
+                for name, body in PLUGIN_TAKEN_STANDINS.items():
+                    real = shutil.which(name)
+                    (d / "bin" / name).write_text("#!/bin/sh\n" + body.replace("{real}", real),
+                                                  encoding="utf-8")
+                    (d / "bin" / name).chmod(0o755)
+                env["PATH"] = f"{d / 'bin'}{os.pathsep}{env.get('PATH', '')}"
+                env["STANDIN_TAKEN"] = str(d / "tmp" / "taken")
             rc, stdout, stderr = run_in_group([bash, "-c", script], d, env)
             out = stdout + stderr
-            left = sorted(p.name for p in (d / "tmp").iterdir())
+            left = {p.name: plugin_state(p) for p in (d / "tmp").iterdir()}
             after = plugin_state(d / "plugin") if (d / "plugin").is_dir() else {}
-            if rc != want_rc or left or after != before:
+            if rc != want_rc or left != keep or after != before:
                 changed = sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
                 failures.append(f"plugin section, {case}: expected exit {want_rc}, plugin/ as it "
-                                f"was and no folder left in TMPDIR; got exit {rc}, {changed!r} "
-                                f"changed, {left!r} left: {out!r}")
+                                f"was and in TMPDIR only {sorted(keep)!r}, as it was; got exit "
+                                f"{rc}, {changed!r} changed, {left!r} left: {out!r}")
             elif want_rc == 0 and ("  ok    plugin/ matches a fresh build" not in out
                                    or "\nfail=0\n" not in stdout
                                    or "\nsignal traps=\n" not in stdout):
@@ -1120,8 +1165,9 @@ def main():
           f"running, and death by the signal, after a TERM, an INT to the process group of "
           f"--sections overflow, or a TERM between a launch and the record of its PID), "
           f"{plugin_cases} cases of its plugin section (plugin/ as it was, byte for byte, and no "
-          f"folder left, with no signal or after a TERM just after rm -rf plugin or a TERM, INT "
-          f"or HUP to the process group during the build, and death by that signal), and "
+          f"folder left, with no signal or after a TERM just after the restore's rm -rf plugin, a "
+          f"TERM, INT or HUP to the process group during the build, or a TERM as the folder's "
+          f"name meets a path another process made, which is kept, and death by that signal), and "
           f"{len(SECTIONS_CASES)} cases of run_all_checks.sh --sections (only the named sections "
           f"and those they depend on after the preflight, in the file's order; an unknown or "
           f"empty name, or one holding "

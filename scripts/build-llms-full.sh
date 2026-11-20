@@ -485,16 +485,14 @@ if literal(result) != literal(source):
 sys.stdout.buffer.write(result.encode("utf-8"))
 PY
 
-# The built text goes to a file in a private folder. mktemp -u only picks the folder's name and
-# creates nothing, so the EXIT trap that removes the folder is set before mkdir creates it, and a
-# HUP, INT or TERM that ends this script after mkdir has made the folder, while mkdir still runs
-# included, runs that trap (TODO row 3.109). When mkdir refuses the name, as it does a name that
-# is already taken, the script clears the name and exits 1. A KILL runs no trap, so a run that
-# KILL ends can leave the folder (TODO row 3.110).
-tmp_dir=""
-trap '[ -z "$tmp_dir" ] || rm -rf -- "$tmp_dir"' EXIT
-tmp_dir=$(mktemp -u)
-mkdir -m 700 -- "$tmp_dir" || { tmp_dir=""; exit 1; }
+# The built text goes to a file in a private folder, which mktemp -d creates and names (TODO row
+# 3.109). The EXIT trap that removes the folder is set only after mktemp -d has exited 0, so it
+# removes only a folder this script created; when mktemp -d fails, the script exits 1 and removes
+# nothing. A HUP, INT or TERM that ends this script once the trap is set runs that trap. One that
+# ends it after mktemp -d has made the folder and before the trap is set leaves the folder, and so
+# does a KILL, which runs no trap (TODO row 3.110).
+tmp_dir=$(mktemp -d) || exit 1
+trap 'rm -rf -- "$tmp_dir"' EXIT
 built="$tmp_dir/llms-full.txt"
 {
   echo "# secureconfig.ai: all guides in one file"

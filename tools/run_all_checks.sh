@@ -676,67 +676,76 @@ echo "== the plugin bundle is current =="
 # a reader stale configuration while the repository looks correct. The build is byte-deterministic
 # (a copy per file), so rebuilding and comparing is the whole check.
 # The build rewrites plugin/ in place, so plugin/ is saved to a private folder first and put back
-# from it afterwards (TODO row 3.108). Once the save is complete, a HUP, INT or TERM that ends the
-# shell running this section, during the build or the restore included, makes plugin_trap put
-# plugin/ back from the folder and remove the folder, or print a FAIL line and keep the folder when
-# that copy fails, before the shell dies by that signal; before then, plugin/ is untouched and the
-# trap only removes the folder. It ignores further HUP, INT and TERM signals while it does so.
-# mktemp -u only picks the folder's name, so the trap knows it before mkdir creates the folder. A
-# signal that reaches this shell and not the command it waits for takes effect when that command
-# ends. The handler is a HUP, INT and TERM trap, not an EXIT trap (rows 3.101 and 3.103), and it
-# restores and removes only in the shell that set it: in any other shell, such as one forked from
-# this one, it only resets the three traps and dies by the signal. A KILL runs no trap, so a KILL
-# after the save, such as the one par_stop_from sends a section still running 5 seconds after its
-# TERM, can leave plugin/ deleted or partly rebuilt and the folder in place (row 3.110).
+# from it afterwards (TODO row 3.108). The HUP, INT and TERM traps only record the first such
+# signal in plugin_sig, so a shell forked from this one that runs a trap changes nothing but its
+# own copy of that variable. Every removal and the restore are lines of this shell's own run, not
+# of a trap: after each step this shell reads plugin_sig, and once a signal is recorded it skips
+# the save, the build and the comparison that have not started, puts plugin/ back if the build has
+# started, removes the folder, resets the three traps and dies by that signal. A signal that
+# reaches this shell and not the command it waits for takes effect when that command ends, but an
+# INT that reaches it while it waits for the mktemp -d command substitution below can go
+# unrecorded, and the section then runs to the end as with no signal (row 3.110). The
+# folder is the one mktemp -d creates and names: besides plugin/, only a folder whose name
+# mktemp -d printed while exiting 0 is ever removed, so no temporary path that another process
+# created is. mktemp -d runs in a command substitution that ignores HUP, INT and TERM, so such a
+# signal cannot end it between making the folder and printing its name. plugin_shielded runs the
+# restore and the removal in a subshell that ignores the same 3 signals, which the commands it
+# starts inherit, so a signal sent to the process group then cannot stop them part way, and it
+# runs that subshell again when such a signal ends it before it ignores them. A KILL runs no
+# trap: once mktemp -d has made the folder it can leave the folder, and once the build has
+# started it can also leave plugin/ deleted or partly rebuilt, as can the KILL that par_stop_from
+# sends to a section still running 5 seconds after its TERM (row 3.110).
+plugin_sig=""
 plugin_tmp=""
-plugin_saved=""
-plugin_shell=$BASHPID
-# shellcheck disable=SC2329  # only the HUP, INT and TERM trap strings below call it, unseen by shellcheck
-plugin_trap() {
-  if [ "$BASHPID" = "$plugin_shell" ]; then
-    trap '' HUP INT TERM
-    if [ -n "$plugin_saved" ]; then
-      rm -rf plugin
-      if ! cp -a "$plugin_tmp" plugin; then
-        printf '  FAIL  could not restore plugin/ from %s\n' "$plugin_tmp"
-        plugin_tmp=""
-      fi
-    fi
-    if [ -n "$plugin_tmp" ]; then
-      rm -rf "$plugin_tmp"
-    fi
-  fi
-  trap - HUP INT TERM
-  kill -s "$1" "$BASHPID"
+plugin_built=""
+plugin_lost=""
+plugin_shielded() {
+  local rc
+  while :; do
+    ( trap '' HUP INT TERM; "$@" )
+    rc=$?
+    case $rc in 129|130|143) ;; *) return "$rc" ;; esac
+  done
 }
-trap 'plugin_trap HUP' HUP
-trap 'plugin_trap INT' INT
-trap 'plugin_trap TERM' TERM
-plugin_tmp=$(mktemp -u)
-if ! mkdir -m 700 -- "$plugin_tmp"; then
+# shellcheck disable=SC2329  # only plugin_shielded calls it, by name, unseen by shellcheck
+plugin_put_back() {
+  rm -rf plugin || return
+  cp -a "$plugin_tmp" plugin
+}
+trap 'plugin_sig=${plugin_sig:-HUP}' HUP
+trap 'plugin_sig=${plugin_sig:-INT}' INT
+trap 'plugin_sig=${plugin_sig:-TERM}' TERM
+if ! plugin_tmp=$(trap '' HUP INT TERM; mktemp -d); then
   plugin_tmp=""
-  bad "could not create a folder to save plugin/ in; plugin/ was not rebuilt"
-elif ! cp -a plugin/. "$plugin_tmp/"; then
-  bad "could not save plugin/ to $plugin_tmp; plugin/ was not rebuilt"
-  rm -rf "$plugin_tmp"
-else
-  plugin_saved=1
-  if bash scripts/build-plugin.sh >/dev/null 2>&1; then
+  [ -n "$plugin_sig" ] || bad "could not create a folder to save plugin/ in; plugin/ was not rebuilt"
+elif [ -z "$plugin_sig" ] && ! cp -a plugin/. "$plugin_tmp/"; then
+  [ -n "$plugin_sig" ] || bad "could not save plugin/ to $plugin_tmp; plugin/ was not rebuilt"
+elif [ -z "$plugin_sig" ]; then
+  plugin_built=1
+  if ! bash scripts/build-plugin.sh >/dev/null 2>&1; then
+    [ -n "$plugin_sig" ] || bad "scripts/build-plugin.sh exited non-zero"
+  elif [ -z "$plugin_sig" ]; then
     if diff -rq "$plugin_tmp" plugin >/dev/null 2>&1; then
-      ok "plugin/ matches a fresh build"
+      [ -n "$plugin_sig" ] || ok "plugin/ matches a fresh build"
     else
-      bad "plugin/ is stale; run scripts/build-plugin.sh and commit the result"
+      [ -n "$plugin_sig" ] || bad "plugin/ is stale; run scripts/build-plugin.sh and commit the result"
     fi
-  else
-    bad "scripts/build-plugin.sh exited non-zero"
   fi
-  rm -rf plugin
-  cp -a "$plugin_tmp" plugin || { bad "could not restore plugin/ from $plugin_tmp"; exit 1; }
-  plugin_saved=""
-  rm -rf "$plugin_tmp"
+fi
+if [ -n "$plugin_built" ] && ! plugin_shielded plugin_put_back; then
+  bad "could not restore plugin/ from $plugin_tmp"
+  plugin_tmp=""
+  plugin_lost=1
+fi
+if [ -n "$plugin_tmp" ]; then
+  plugin_shielded rm -rf -- "$plugin_tmp"
 fi
 plugin_tmp=""
 trap - HUP INT TERM
+if [ -n "$plugin_sig" ]; then
+  kill -s "$plugin_sig" "$BASHPID"
+fi
+[ -z "$plugin_lost" ] || exit 1
 
 # section: instructions
 echo "== the chat fallback file is current =="

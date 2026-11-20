@@ -592,7 +592,13 @@ class LlmsFullCheckTests(unittest.TestCase):
 
     TOOLS = ('check_verify_marking.py', '_markdown.py', '_verify_sections.py',
              'requirements-gates.txt')
-    STUB = ("import sys\n"
+    # With STOP_BUNDLE set, a --bundle call sends a TERM to its process group, which holds the
+    # build's shell, once the build has created its folder and set the trap that removes it.
+    STUB = ("import os\n"
+            "import signal\n"
+            "import sys\n"
+            "if os.environ.get('STOP_BUNDLE') and '--bundle' in sys.argv:\n"
+            "    os.kill(0, signal.SIGTERM)\n"
             "if sys.argv[1:] != ['--check']:\n"
             "    with open(sys.argv[-1], encoding='utf-8') as handle:\n"
             "        sys.stdout.write(handle.read())\n")
@@ -671,26 +677,55 @@ class LlmsFullCheckTests(unittest.TestCase):
             self.assertFalse(bundle.exists())
             self.assertEqual(list((root / 'tmp').iterdir()), [])
 
-    # Stand-ins for mktemp and mkdir (TODO row 3.109): each runs the real command and, once that
-    # has created a path under TMPDIR, records the path and sends a TERM to its process group,
-    # which holds the build's shell, before the stand-in returns to that shell.
-    STOP = {'mktemp': ('out=$({real} "$@") || exit\n'
-                       'printf \'%s\\n\' "$out"\n'
-                       'case $out in "$TMPDIR"/*)\n'
-                       '  if [ -e "$out" ]; then printf \'%s\\n\' "$out" >> "$STOP_LOG"; '
-                       'kill -TERM 0; fi ;;\n'
-                       'esac\n'),
-            'mkdir': ('{real} "$@" || exit\n'
-                      'for arg in "$@"; do\n'
-                      '  case $arg in "$TMPDIR"/*)\n'
-                      '    if [ -d "$arg" ]; then printf \'%s\\n\' "$arg" >> "$STOP_LOG"; '
-                      'kill -TERM 0; fi ;;\n'
-                      '  esac\n'
-                      'done\n')}
+    @staticmethod
+    def stopped_check(root, env):
+        """Run --check in a process group of its own: (exit, stdout, stderr)."""
+        process = subprocess.Popen(['bash', 'scripts/build-llms-full.sh', '--check'],
+                                   cwd=root, env=env, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, text=True, start_new_session=True)
+        try:
+            stdout, stderr = process.communicate(timeout=120)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid, signal.SIGKILL)
+            process.communicate()
+            raise
+        return process.returncode, stdout, stderr
 
-    def test_check_leaves_no_temporary_file_after_a_term(self):
-        """A TERM to the build's process group from inside the command that created the
-        temporary path, just after it did, ends the build by that TERM, leaves TMPDIR empty
+    def test_check_leaves_no_temporary_folder_after_a_term(self):
+        """A TERM to the build's process group once the build has created its folder and set
+        the trap that removes it ends the build by that TERM, leaves TMPDIR empty and leaves
+        site/llms-full.txt as it was (TODO row 3.109)."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            env = self.fixture(root)
+            bundle = root / 'site/llms-full.txt'
+            bundle.write_text('committed\n', encoding='utf-8')
+            before = self.state(bundle)
+            env['STOP_BUNDLE'] = '1'
+            rc, stdout, stderr = self.stopped_check(root, env)
+            self.assertEqual(rc, -signal.SIGTERM, stdout + stderr)
+            self.assertEqual(list((root / 'tmp').iterdir()), [])
+            self.assertEqual(self.state(bundle), before)
+
+    # Stand-ins for mktemp and mkdir. mktemp -u prints the name of a folder that already holds a
+    # file, as if another process had created that path first; any other mktemp call creates
+    # nothing, sends a TERM to its process group and fails as mktemp does when it cannot create a
+    # folder. mkdir runs the real mkdir and, when an argument is that name, then sends a TERM to
+    # its process group, which holds the build's shell, before it returns to that shell.
+    TAKEN = {'mktemp': ('case " $* " in *" -u "*) printf \'%s\\n\' "$TAKEN"; exit 0 ;; esac\n'
+                        'printf \'mktemp: failed to create directory\\n\' >&2\n'
+                        'kill -TERM 0\n'
+                        'exit 1\n'),
+             'mkdir': ('{real} "$@"\n'
+                       'rc=$?\n'
+                       'for arg in "$@"; do\n'
+                       '  if [ "$arg" = "$TAKEN" ]; then kill -TERM 0; fi\n'
+                       'done\n'
+                       'exit "$rc"\n')}
+
+    def test_check_never_removes_a_path_it_did_not_create(self):
+        """A TERM as the folder's name meets a path that another process made ends the build by
+        that TERM, leaves that path and what it holds as they were, leaves nothing else in TMPDIR
         and leaves site/llms-full.txt as it was."""
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -698,31 +733,25 @@ class LlmsFullCheckTests(unittest.TestCase):
             bundle = root / 'site/llms-full.txt'
             bundle.write_text('committed\n', encoding='utf-8')
             before = self.state(bundle)
+            taken = root / 'tmp/taken'
+            taken.mkdir()
+            (taken / 'other.txt').write_text('not the build\'s\n', encoding='utf-8')
+            held = self.state(taken / 'other.txt')
             stop = root / 'stop'
             stop.mkdir()
-            for name, body in self.STOP.items():
+            for name, body in self.TAKEN.items():
                 real = shutil.which(name, path=env['PATH'])
                 self.assertIsNotNone(real, name)
                 (stop / name).write_text('#!/bin/sh\n' + body.format(real=shlex.quote(real)),
                                          encoding='utf-8')
                 (stop / name).chmod(0o755)
             env['PATH'] = f"{stop}{os.pathsep}{env['PATH']}"
-            env['STOP_LOG'] = str(root / 'stopped.log')
-            process = subprocess.Popen(['bash', 'scripts/build-llms-full.sh', '--check'],
-                                       cwd=root, env=env, stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE, text=True,
-                                       start_new_session=True)
-            try:
-                stdout, stderr = process.communicate(timeout=120)
-            except subprocess.TimeoutExpired:
-                os.killpg(process.pid, signal.SIGKILL)
-                process.communicate()
-                raise
-            self.assertEqual(process.returncode, -signal.SIGTERM, stdout + stderr)
-            stopped = (root / 'stopped.log').read_text(encoding='utf-8').splitlines()
-            self.assertEqual(len(stopped), 1, stopped)
-            self.assertTrue(stopped[0].startswith(str(root / 'tmp') + os.sep), stopped)
-            self.assertEqual(list((root / 'tmp').iterdir()), [])
+            env['TAKEN'] = str(taken)
+            rc, stdout, stderr = self.stopped_check(root, env)
+            self.assertEqual(rc, -signal.SIGTERM, stdout + stderr)
+            self.assertEqual([p.name for p in (root / 'tmp').iterdir()], ['taken'])
+            self.assertEqual([p.name for p in taken.iterdir()], ['other.txt'])
+            self.assertEqual(self.state(taken / 'other.txt'), held)
             self.assertEqual(self.state(bundle), before)
 
 
