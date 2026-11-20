@@ -924,6 +924,16 @@ ALLOW_CASES = (
      doc("echo a-z"), entry("echo a-z"), 1, STALE),
     ("an entry with an empty reason",
      doc(GREP), entry(GREP, reason=""), 2, "empty reason"),
+    # Row 3.106: str.strip() keeps U+200B, U+FEFF and U+2060, so each of these three cases was
+    # accepted, waiving the line, before the reason was judged by _markdown.reason_present.
+    ("an entry whose reason is only U+200B (zero-width space)",
+     doc(GREP), entry(GREP, reason="\u200b"), 2, "empty reason"),
+    ("an entry whose reason is only U+FEFF (zero-width no-break space)",
+     doc(GREP), entry(GREP, reason="\ufeff"), 2, "empty reason"),
+    ("an entry whose reason is only U+2060 (word joiner)",
+     doc(GREP), entry(GREP, reason="\u2060"), 2, "empty reason"),
+    ("an entry with an ordinary reason waives its line",
+     doc(GREP), entry(GREP, reason="a grep display filter, not a validator"), 0, None),
     ("an entry with two fields is malformed",
      doc(GREP), "guide.md\t" + GREP, 2, "malformed allowlist entry"),
     ("an entry with one field is malformed",

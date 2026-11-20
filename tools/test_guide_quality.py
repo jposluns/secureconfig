@@ -11,6 +11,7 @@ stale-but-not-exemplary row.
 import sys
 
 sys.path.insert(0, "tools")
+import _markdown  # noqa: E402
 import check_guide_quality as c  # noqa: E402
 import check_exposure_index as cei  # noqa: E402
 import gen_guide_quality as gen  # noqa: E402
@@ -309,6 +310,32 @@ def main():
     check("only the unreasoned Verify-marking line of the guide counts",
           gen.m1_count("docker.md", {verify: unit + "\tby design\n" + unit.replace("2", "3")
                                      + "\n" + unit.replace("docker", "ghost") + "\n"}) == 1)
+
+    # Row 3.106: a reason made only of invisible format characters (Unicode category Cf) is no
+    # reason in any of the three files, judged by the one rule, _markdown.reason_present. The
+    # invisible cases FAIL on the code before row 3.106, whose str.strip() test kept each of these
+    # characters and so counted 0; the ordinary and wrapped cases pass on both.
+    for label, reason in [("U+200B", "\u200b"), ("U+FEFF", "\ufeff"), ("U+2060", "\u2060"),
+                          ("U+200B, U+2060 and spaces", " \u200b \u2060 ")]:
+        check(f"an allowlist waiver whose reason is only {label} is an M1 entry",
+              gen.m1_count("docker.md", {allow: f"docker.md 80  #{reason}\n"}) == 1)
+        check(f"a bracket-range waiver whose reason is only {label} is an M1 entry",
+              gen.m1_count("docker.md", {bracket: f"docker.md\t{span}\t{block}\t{reason}\n"}) == 1)
+        check(f"a Verify-marking baseline entry whose reason is only {label} is an M1 entry",
+              gen.m1_count("docker.md", {verify: unit + f"\t{reason}\n"}) == 1)
+    for label, reason in [("an ordinary reason", "outbound: not a listener"),
+                          ("an ordinary reason wrapped in U+200B", "\u200bnot a listener\u200b")]:
+        check(f"an allowlist waiver with {label} is not an M1 entry",
+              gen.m1_count("docker.md", {allow: f"docker.md 80  # {reason}\n"}) == 0)
+        check(f"a bracket-range waiver with {label} is not an M1 entry",
+              gen.m1_count("docker.md", {bracket: f"docker.md\t{span}\t{block}\t{reason}\n"}) == 0)
+        check(f"a Verify-marking baseline entry with {label} is not an M1 entry",
+              gen.m1_count("docker.md", {verify: unit + f"\t{reason}\n"}) == 0)
+    rule = getattr(_markdown, "reason_present", None)
+    check("the M1 reader uses the shared rule, which counts Cf, Zs, Zl, Zp and whitespace as blank",
+          rule is not None and getattr(gen, "reason_present", None) is rule
+          and not any(rule(ch) for ch in "\u200b\ufeff\u2060\u00ad\u00a0\u3000\u2028\u2029\t\n\r")
+          and rule("x") and rule("\u3164"))
 
     # m1() maps the count to its cell; ROOT is swapped for an in-memory tree, so nothing is written.
     class _Text:

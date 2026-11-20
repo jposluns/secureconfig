@@ -247,6 +247,7 @@
         "tools/check_guide_shape.py",
         "tools/check_verify_marking.py",
         "tools/_verify_sections.py",
+        "tools/requirements-gates.txt",
         "CHANGELOG.md"
       ]
     },
