@@ -690,21 +690,31 @@ echo "== the plugin bundle is current =="
 # of a trap: after each step this shell reads plugin_sig, and once a signal is recorded it skips
 # the save, the build and the comparison that have not started, puts plugin/ back if the build has
 # started, removes the folder, resets the three traps and dies by that signal. A signal that
-# reaches this shell and not the command it waits for takes effect when that command ends, but an
-# INT that reaches it while it waits for the mktemp -d command substitution below can go
-# unrecorded, and the section then runs to the end as with no signal (row 3.110). The
-# folder is the one mktemp -d creates and names: besides plugin/, only a folder whose name
-# mktemp -d printed while exiting 0 is ever removed, so no temporary path that another process
-# created is. mktemp -d runs in a command substitution that ignores HUP, INT and TERM, so such a
-# signal cannot end it between making the folder and printing its name. plugin_shielded runs the
-# restore and the removal in a subshell that ignores the same 3 signals, which the commands it
-# starts inherit, so a signal sent to the process group then cannot stop them part way, and it
-# runs that subshell again when such a signal ends it before it ignores them. A KILL runs no
-# trap: once mktemp -d has made the folder it can leave the folder, and once the build has
-# started it can also leave plugin/ deleted or partly rebuilt, as can the KILL that par_stop_from
-# sends to a section still running 5 seconds after its TERM (row 3.110).
+# arrives after this shell last reads plugin_sig before the build, and before the build's shell
+# has reset HUP, INT and TERM to their defaults, does not stop the build part way: the build
+# either does not start or runs to its end, and plugin/ is put back either way (row 3.110). A
+# signal that reaches this shell and not the command it waits for takes effect when that command
+# ends. The folder is the one mktemp -d creates and names: besides plugin/, only a folder whose
+# name mktemp -d printed is ever removed, so no temporary path that another process created is.
+# mktemp -d runs in a subshell that ignores HUP, INT and TERM, so such a signal cannot end it
+# between making the folder and printing its name. This shell reads that name with read from a
+# process substitution, not from a command substitution, while it waits for which an INT can go
+# unrecorded (row 3.110), and runs read again when a trap interrupts it.
+# plugin_build gives the build the write end of a pipe as its fd 3, which each process the build
+# starts inherits, and returns only when cat, which reads the other end, sees the end of the
+# pipe, that is once every process that held that fd has exited or closed it. cat and the
+# subshell that waits for it ignore HUP, INT and TERM, so a child of the build that is still
+# running when the build's own shell dies cannot write into plugin/ once the restore has started,
+# unless it closed its fd 3. plugin_shielded runs the restore and the removal in a subshell that
+# ignores the same 3 signals, which the commands it starts inherit, so a signal sent to the
+# process group then cannot stop them part way, and it runs that subshell again when such a
+# signal ends it before it ignores them. A KILL runs no trap: once mktemp -d has made the folder
+# it can leave the folder, and once the build has started it can also leave plugin/ deleted or
+# partly rebuilt, as can the KILL that par_stop_from sends to a section still running 5 seconds
+# after its TERM, such as one still waiting for a process of the build (row 3.110).
 plugin_sig=""
 plugin_tmp=""
+plugin_rc=""
 plugin_built=""
 plugin_lost=""
 plugin_shielded() {
@@ -720,17 +730,30 @@ plugin_put_back() {
   rm -rf plugin || return
   cp -a "$plugin_tmp" plugin
 }
+# The build's exit status, returned only once every process that held the write end of the pipe
+# on its fd 3, the build and each process it starts, has exited or closed it (see above).
+plugin_build() {
+  (
+    trap '' HUP INT TERM
+    { trap - HUP INT TERM; exec bash scripts/build-plugin.sh; } 3>&1 >/dev/null 2>&1 | exec cat >/dev/null
+    exit "${PIPESTATUS[0]}"
+  )
+}
 trap 'plugin_sig=${plugin_sig:-HUP}' HUP
 trap 'plugin_sig=${plugin_sig:-INT}' INT
 trap 'plugin_sig=${plugin_sig:-TERM}' TERM
-if ! plugin_tmp=$(trap '' HUP INT TERM; mktemp -d); then
-  plugin_tmp=""
+while :; do
+  IFS= read -r plugin_tmp
+  plugin_rc=$?
+  [ "$plugin_rc" -gt 128 ] || break
+done < <( (trap '' HUP INT TERM; exec mktemp -d) )
+if [ -z "$plugin_tmp" ]; then
   [ -n "$plugin_sig" ] || bad "could not create a folder to save plugin/ in; plugin/ was not rebuilt"
 elif [ -z "$plugin_sig" ] && ! cp -a plugin/. "$plugin_tmp/"; then
   [ -n "$plugin_sig" ] || bad "could not save plugin/ to $plugin_tmp; plugin/ was not rebuilt"
 elif [ -z "$plugin_sig" ]; then
   plugin_built=1
-  if ! bash scripts/build-plugin.sh >/dev/null 2>&1; then
+  if ! plugin_build; then
     [ -n "$plugin_sig" ] || bad "scripts/build-plugin.sh exited non-zero"
   elif [ -z "$plugin_sig" ]; then
     if diff -rq "$plugin_tmp" plugin >/dev/null 2>&1; then

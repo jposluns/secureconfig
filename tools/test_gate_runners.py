@@ -88,7 +88,7 @@ holds nested folders, an executable file, a file with a carriage return and a sy
 TMPDIR set to an empty folder and a stand-in scripts/build-plugin.sh, in a process group the
 harness creates (TODO row 3.108). Each case requires plugin/ to hold afterwards the same paths
 with the same types, modes, bytes and link targets, and TMPDIR to be empty, but for the taken
-folder of the last case, which must hold what it held before:
+folder of the taken-name case, which must hold what it held before:
   - with no signal, the stand-in build changes nothing, the section prints its ok line, leaves
     fail=0 and resets the HUP, INT and TERM traps, and the shell exits 0;
   - a TERM sent to the section's shell, or to the process group, just after the restore's
@@ -96,6 +96,9 @@ folder of the last case, which must hold what it held before:
     that TERM;
   - a stand-in build that removes a folder of plugin/, rewrites a file and adds one, then sends a
     TERM, an INT or a HUP to its process group, ends the shell by that signal;
+  - the same build with a TERM, after it has started a child whose TERM trap adds a file to
+    plugin/ half a second later, ends the shell by that TERM, and plugin/ is read once the child
+    is done;
   - with stand-ins for mktemp and mkdir first on PATH, mktemp -u prints the name of a folder in
     TMPDIR that already holds a file, any other mktemp call sends a TERM to the process group and
     fails, and mkdir given that name fails and then sends one; the shell dies by that TERM and the
@@ -994,8 +997,17 @@ def overflow_signal_failures(script, pages):
 PLUGIN_SECTION = re.compile(r"^# section: plugin\n.*?(?=^# section: )", re.M | re.S)
 # The stand-in plugin build changes nothing, unless STANDIN_SIGNAL names a signal: then it removes
 # a folder of plugin/, rewrites a file of it and adds one, as an interrupted build could leave it,
-# and sends that signal to its process group, which holds the shell running the section.
-PLUGIN_STANDIN = """if [ -n "${STANDIN_SIGNAL:-}" ]; then
+# and sends that signal to its process group, which holds the shell running the section. When
+# STANDIN_LATE names a file, it first starts a child whose TERM trap waits half a second, adds a
+# file to plugin/ and then creates that file, so the child writes into plugin/ after the build's
+# own shell has died.
+PLUGIN_STANDIN = """if [ -n "${STANDIN_LATE:-}" ]; then
+  ( trap 'sleep 0.5; printf "late\\\\n" > plugin/late.md; : > "$STANDIN_LATE"; exit 0' TERM
+    : > "$STANDIN_LATE.ready"
+    for _ in $(seq 600); do sleep 0.05; done ) &
+  until [ -e "$STANDIN_LATE.ready" ]; do sleep 0.01; done
+fi
+if [ -n "${STANDIN_SIGNAL:-}" ]; then
   rm -rf plugin/skills
   printf 'partial\\n' > plugin/plugin.json
   printf 'new\\n' > plugin/added.md
@@ -1022,19 +1034,22 @@ PLUGIN_TAKEN_STANDINS = {
 }
 # (case, the signal the stand-in build sends to its process group or "", the command written in
 # just after the `rm -rf plugin || return` line of plugin_put_back or "", whether the taken-name
-# stand-ins are first on PATH, the expected exit). `$$` in that command names the section's
-# shell, not the subshell that runs the restore.
+# stand-ins are first on PATH, whether the stand-in build starts the child that writes late, the
+# expected exit). `$$` in that command names the section's shell, not the subshell that runs the
+# restore.
 PLUGIN_CASES = (
-    ("no signal", "", "", False, 0),
+    ("no signal", "", "", False, False, 0),
     ("a TERM to the section's shell just after rm -rf plugin", "", 'kill -TERM "$$"', False,
+     False, -signal.SIGTERM),
+    ("a TERM to the process group just after rm -rf plugin", "", "kill -TERM 0", False, False,
      -signal.SIGTERM),
-    ("a TERM to the process group just after rm -rf plugin", "", "kill -TERM 0", False,
-     -signal.SIGTERM),
-    ("a TERM to the process group during the build", "TERM", "", False, -signal.SIGTERM),
-    ("an INT to the process group during the build", "INT", "", False, -signal.SIGINT),
-    ("a HUP to the process group during the build", "HUP", "", False, -signal.SIGHUP),
+    ("a TERM to the process group during the build", "TERM", "", False, False, -signal.SIGTERM),
+    ("an INT to the process group during the build", "INT", "", False, False, -signal.SIGINT),
+    ("a HUP to the process group during the build", "HUP", "", False, False, -signal.SIGHUP),
     ("a TERM to the process group as the folder's name meets a path another process made", "",
-     "", True, -signal.SIGTERM),
+     "", True, False, -signal.SIGTERM),
+    ("a TERM to the process group during the build, with a child of the build that writes into "
+     "plugin/ half a second after it", "TERM", "", False, True, -signal.SIGTERM),
 )
 
 
@@ -1083,7 +1098,7 @@ def plugin_failures():
                and lines[i + 1].strip().startswith('cp -a "$plugin_tmp" plugin')]
     bash = shutil.which("bash")
     failures = []
-    for case, sent, inject, taken, want_rc in PLUGIN_CASES:
+    for case, sent, inject, taken, late, want_rc in PLUGIN_CASES:
         section = sections[0]
         if inject:
             if len(removes) != 1:
@@ -1120,8 +1135,20 @@ def plugin_failures():
                     (d / "bin" / name).chmod(0o755)
                 env["PATH"] = f"{d / 'bin'}{os.pathsep}{env.get('PATH', '')}"
                 env["STANDIN_TAKEN"] = str(d / "tmp" / "taken")
+            if late:
+                env["STANDIN_LATE"] = str(d / "late.done")
             rc, stdout, stderr = run_in_group([bash, "-c", script], d, env)
             out = stdout + stderr
+            if late:
+                # The child's write lands after the section's shell has exited unless the section
+                # waited for it, so plugin/ is read only once the child is done.
+                deadline = time.monotonic() + 10 * SCALE
+                while not (d / "late.done").exists() and time.monotonic() < deadline:
+                    time.sleep(0.05)
+                if not (d / "late.done").exists():
+                    failures.append(f"plugin section, {case}: the stand-in build's child never "
+                                    f"wrote into plugin/: {out!r}")
+                    continue
             left = {p.name: plugin_state(p) for p in (d / "tmp").iterdir()}
             after = plugin_state(d / "plugin") if (d / "plugin").is_dir() else {}
             if rc != want_rc or left != keep or after != before:
@@ -1166,7 +1193,8 @@ def main():
           f"--sections overflow, or a TERM between a launch and the record of its PID), "
           f"{plugin_cases} cases of its plugin section (plugin/ as it was, byte for byte, and no "
           f"folder left, with no signal or after a TERM just after the restore's rm -rf plugin, a "
-          f"TERM, INT or HUP to the process group during the build, or a TERM as the folder's "
+          f"TERM, INT or HUP to the process group during the build, a TERM during the build with "
+          f"a child of the build that writes into plugin/ after it, or a TERM as the folder's "
           f"name meets a path another process made, which is kept, and death by that signal), and "
           f"{len(SECTIONS_CASES)} cases of run_all_checks.sh --sections (only the named sections "
           f"and those they depend on after the preflight, in the file's order; an unknown or "
