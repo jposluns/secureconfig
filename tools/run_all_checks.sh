@@ -600,11 +600,15 @@ par_run() {
   fi
   # It runs in a subshell, which these traps do not reach, so a HUP, INT or TERM sent to this
   # shell alone while tools/check_parser_pin.py runs is held until the preflight has ended and
-  # then re-raised, and this shell never ends while that check runs on (row 3.123).
+  # then re-raised, and this shell never ends while that check runs on (row 3.123). The subshell
+  # traps HUP and TERM itself and then exits with 129 or 143 once its running command has ended,
+  # so it is not killed by a HUP or TERM sent to the whole process group, and this shell prints no
+  # job notice for it, unless the signal comes before the subshell has set its traps; bash prints
+  # none for INT. The check still gets each signal's default action.
   trap 'par_signal=HUP' HUP
   trap 'par_signal=INT' INT
   trap 'par_signal=TERM' TERM
-  ( eval "$preflight_text" )
+  ( trap 'exit 129' HUP; trap 'exit 143' TERM; eval "$preflight_text" )
   preflight_status=$?
   trap - HUP INT TERM
   [ -z "$par_signal" ] || par_die "$par_signal"
@@ -662,13 +666,15 @@ par_run() {
     fi
     # Each step of the section's script must succeed, and the line that writes its status comes
     # last, so a failed write or read ends the run here with a FAIL line, never a script that runs
-    # part of the section and passes (row 3.126).
+    # part of the section and passes (row 3.126). The redirection is on an inner group, since bash
+    # ignores the ! of a group whose own redirection fails, so a script file that cannot be opened
+    # ends the run here with that FAIL line too.
     # shellcheck disable=SC2016  # the section's own shell expands $fail, not this one
-    if ! {
+    if ! { {
       printf 'set -uo pipefail\ncd %q || exit 2\nunset SECURECONFIG_SUITE_JOBS\n' "$PWD" &&
         printf '%s\n' "$helper_text" && cat "$par_dir/$name.body" &&
         printf 'printf "%%s\\n" "$fail" > %q\n' "$par_dir/$name.status"
-    } > "$par_dir/$name.sh"; then
+    } > "$par_dir/$name.sh"; }; then
       printf "  FAIL  could not build the script of section '%s' of tools/run_all_checks.sh; no gate ran\n" "$name"
       par_cleanup
       exit 2
