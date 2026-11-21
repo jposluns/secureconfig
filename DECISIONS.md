@@ -1976,6 +1976,33 @@ listed here for the record, under its heading as entered, and that ruling's entr
   copy; the `DONE.md` row for 3.111 gives the results. The maintainer's ruling of 2026-11-20 confirming the proxy
   decision on TODO row 3.111 (#1375), above, confirms this decision. This entry stays here as the record of the vote,
   and that ruling's entry records the outcome and its revert path.
+- **Proxy decision of 2026-11-21 on closing TODO row 3.104 as not reproduced, for the maintainer's later review
+  (#1381).** Decided at 2026-11-21T11:14:00Z, when the second vote arrived, by a vote of lab_infra and guardrails that
+  grc's vote made unanimous at 11:14:38Z; the private record of the vote calls it a D-1096 vote. Row 3.104 records
+  that in `tools/run_all_checks.sh` a TERM sent to a section's process group before the section's bash has started
+  sometimes has no effect. The votes followed the first of two diagnoses under load, whose load batches ran until
+  about 11:10Z that day and which did not reproduce it. The record gives the votes but not the question's text or its
+  options, beyond option A, which the lab_infra vote describes as "close as not reproduced"; this entry letters it A,
+  as the record does. The votes, as recorded, were all for option A, and the record gives each voter's conditions and
+  no other reasoning. The lab_infra vote (c195) gave "close as not reproduced; the DONE entry should name the reopen
+  measurement: a TERM with kill status 0 followed by the section running on". The guardrails vote (c196) was A "with
+  conditions: keep the diagnosis scripts and logs (or their digests and location) with the DONE entry, and state the
+  conditions covered (load levels, batch shape, host)". The record then says "Both voters chose A, so A is taken (grc
+  copied); recorded for the maintainer's review." The grc vote (c197) was A, "unanimous, with the condition that the
+  DONE entry say exactly 'not reproduced in 7,929 instrumented launches; the original observations are consistent with
+  the finished-before-TERM case but not shown to be it' and name the reopen trigger (any recorded run-on with kill
+  status 0)". The record then notes that the first diagnosis's probe scripts and logs had gone with its worker's
+  scratch space, so an evidence-capture run was dispatched to rebuild the probes and return their source, counts, log
+  digests and the conditions covered. That run is the second diagnosis. Its effect, applied in this change: row 3.104
+  moves to `DONE.md` as dropped, not reproduced. That row quotes grc's words exactly, gives the counts of both
+  diagnoses, names as the reopen trigger any recorded run-on after a TERM whose kill returned 0, and states the
+  conditions covered and not covered, among them load levels, batch shape and host. It says that the second
+  diagnosis's probe scripts and log digests are kept in the orchestrator's private records, without naming a private
+  path, so guardrails' condition is met by a pointer to those records, not by the scripts or digests in the row. The
+  7,929 in grc's words are the first diagnosis's stopped launches; the second diagnosis's 1,400 ran after the vote,
+  and the row gives them separately. No code or test changes. This decision is not a maintainer ruling and awaits the
+  maintainer's review. The revert path is the maintainer's review: a different ruling moves row 3.104 back to
+  `TODO.md` and removes its `DONE.md` row.
 
 ## Profile: predicting these rulings
 
