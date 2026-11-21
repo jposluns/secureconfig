@@ -938,20 +938,26 @@ echo "== the plugin bundle is current =="
 # has reset HUP, INT and TERM to their defaults, does not stop the build part way: the build
 # either does not start or runs to its end, and plugin/ is put back either way (row 3.110). A
 # signal that reaches this shell and not the command it waits for takes effect when that command
-# ends. The folder is the one mktemp -d creates and names: besides plugin/, only the folder whose
-# whole name mktemp -d printed is ever removed, so no temporary path that another process created
-# is. mktemp -d runs in a subshell that ignores HUP, INT and TERM, so such a signal cannot end it
-# between making the folder and printing its name. That subshell takes the name through a command
-# substitution, which drops only the newline that ends it, since a name mktemp -d makes ends in
-# its template's characters, and prints it followed by a NUL, which no path holds. This shell
-# reads up to that NUL, so under a TMPDIR holding a newline the name is kept whole and no folder
-# that mktemp -d did not create is saved into, restored from or removed (row 3.124). This shell
-# reads that name with read from a process substitution, not from a command substitution, while
-# it waits for which an INT can go unrecorded (row 3.110). In bash's default mode a trapped HUP,
-# INT or TERM does not interrupt read. In POSIX mode it does, and the loop then runs read again.
-# The subshell prints nothing until mktemp -d has exited and then prints the name and its NUL in
-# one write, so such a retry loses no part of the name, as it did when read waited for mktemp -d
-# itself to exit after it had printed the name, which left the folder behind (row 3.124).
+# ends. The folder is the one mktemp -d creates and names: besides plugin/, only a folder that
+# this shell has confirmed is the one mktemp -d made is ever saved into, restored from or removed,
+# so no temporary path that another process created is. mktemp -d runs in a subshell that ignores
+# HUP, INT and TERM, so such a signal cannot end it between making the folder and printing its
+# name. That subshell takes the name through a command substitution, which drops only the newline
+# that ends it, since a name mktemp -d makes ends in its template's characters, puts $PWD/ before
+# a relative name, and prints the name's length in characters and then the name, each followed by
+# a NUL, which no path holds. This shell reads up to each NUL with plugin_read, so under a TMPDIR
+# holding a newline the name is kept whole (row 3.124). It reads with read from a process
+# substitution, not from a command substitution, while it waits for which an INT can go
+# unrecorded (row 3.110). In bash's default mode a trapped HUP, INT or TERM does not interrupt
+# read. In POSIX mode it does, and plugin_read then runs read again, which loses what the
+# interrupted read had taken. The subshell prints nothing until mktemp -d has exited, so a signal
+# while mktemp -d runs loses nothing. But bash writes a name that holds a newline in 2 writes,
+# split after that newline, so a signal between them leaves read only the rest of the name, which
+# is shorter and can be relative (row 3.124). The length goes out in the first write, before any
+# newline, so it is read whole. This shell therefore uses the name only when its read ended at the
+# NUL, it is absolute, it is a folder and not a symbolic link, and its length is the one printed
+# before it; otherwise it prints a FAIL line naming what it read, even after a signal, and saves
+# into, builds and removes nothing, so that folder is left.
 # plugin_build gives the build the write end of a pipe as its fd 3, which each process the build
 # starts inherits, and returns only when cat, which reads the other end, sees the end of the
 # pipe, that is once every process that held that fd has exited or closed it. cat and the
@@ -967,6 +973,9 @@ echo "== the plugin bundle is current =="
 plugin_sig=""
 plugin_tmp=""
 plugin_rc=""
+plugin_got=""
+plugin_len=""
+plugin_unknown=""
 plugin_built=""
 plugin_lost=""
 plugin_shielded() {
@@ -991,15 +1000,32 @@ plugin_build() {
     exit "${PIPESTATUS[0]}"
   )
 }
+# Reads one NUL-ended field into plugin_got, and runs read again when a trapped signal interrupted
+# it (see above); returns read's status.
+plugin_read() {
+  while :; do
+    IFS= read -r -d '' plugin_got
+    plugin_rc=$?
+    [ "$plugin_rc" -gt 128 ] || return "$plugin_rc"
+  done
+}
 trap 'plugin_sig=${plugin_sig:-HUP}' HUP
 trap 'plugin_sig=${plugin_sig:-INT}' INT
 trap 'plugin_sig=${plugin_sig:-TERM}' TERM
-while :; do
-  IFS= read -r -d '' plugin_tmp
-  plugin_rc=$?
-  [ "$plugin_rc" -gt 128 ] || break
-done < <( (trap '' HUP INT TERM; plugin_new=$(mktemp -d) && printf '%s\0' "$plugin_new") )
-if [ -z "$plugin_tmp" ]; then
+{ plugin_read && plugin_len=$plugin_got && plugin_read; } < <( (trap '' HUP INT TERM
+  plugin_new=$(mktemp -d) && { [ "${plugin_new#/}" != "$plugin_new" ] || plugin_new=$PWD/$plugin_new; } \
+    && printf '%s\0%s\0' "${#plugin_new}" "$plugin_new") )
+# The name is used only when the read ended at its NUL and it is absolute, a folder, not a
+# symbolic link, and as long as the length printed before it (see above).
+if [ "$plugin_rc" -eq 0 ] && [ -n "$plugin_len" ] && [ "${#plugin_got}" = "$plugin_len" ] \
+    && [ "${plugin_got#/}" != "$plugin_got" ] && [ -d "$plugin_got" ] && [ ! -L "$plugin_got" ]; then
+  plugin_tmp=$plugin_got
+elif [ -n "$plugin_len$plugin_got" ]; then
+  plugin_unknown=1
+fi
+if [ -n "$plugin_unknown" ]; then
+  bad "mktemp -d made a folder in ${TMPDIR:-/tmp} whose name could not be confirmed, so plugin/ was not rebuilt and that folder was not removed; the name read was $plugin_got"
+elif [ -z "$plugin_tmp" ]; then
   [ -n "$plugin_sig" ] || bad "could not create a folder to save plugin/ in; plugin/ was not rebuilt"
 elif [ -z "$plugin_sig" ] && ! cp -a plugin/. "$plugin_tmp/"; then
   [ -n "$plugin_sig" ] || bad "could not save plugin/ to $plugin_tmp; plugin/ was not rebuilt"

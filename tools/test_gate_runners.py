@@ -91,7 +91,7 @@ holds nested folders, an executable file, a file with a carriage return and a sy
 TMPDIR set to an empty folder and a stand-in scripts/build-plugin.sh, in a process group the
 harness creates (TODO row 3.108). Each case requires plugin/ to hold afterwards the same paths
 with the same types, modes, bytes and link targets, and TMPDIR to be empty, but for the taken
-folder of the taken-name case, which must hold what it held before:
+folder of the taken-name case, which must hold what it held before, and the split-name case below:
   - with no signal, the stand-in build changes nothing, the section prints its ok line, leaves
     fail=0 and resets the HUP, INT and TERM traps, and the shell exits 0;
   - a TERM sent to the section's shell, or to the process group, just after the restore's
@@ -108,7 +108,13 @@ folder of the taken-name case, which must hold what it held before:
     folder is kept;
   - under bash --posix, with a stand-in for mktemp first on PATH that makes the folder, prints its
     name and sends a TERM to the process group before it exits, the shell dies by that TERM and
-    TMPDIR is empty (row 3.124).
+    TMPDIR is empty (row 3.124);
+  - under bash --posix, with TMPDIR set to a folder whose name holds a newline and a stand-in
+    printf, defined before the section, that writes the folder's name in 2 writes, split after
+    that newline, and between them makes a folder holding a file at the relative rest of the
+    name and sends a TERM to the process group, the shell dies by that TERM, the folder mktemp -d
+    made is left empty and named on a FAIL line, and the folder at the relative rest is kept
+    with its file (row 3.124).
 Every child's environment pins SECURECONFIG_SUITE_JOBS=1, so a setting inherited from the caller
 never turns a `--sections` case parallel, and every wait is multiplied by
 SECURECONFIG_TEST_LOAD_SCALE (default 1) for a loaded host.
@@ -1070,9 +1076,34 @@ PLUGIN_LATE_EXIT_STANDINS = {
                'sleep {pause}\n'),
 }
 PLUGIN_STANDIN_SETS = {"taken": PLUGIN_TAKEN_STANDINS, "late exit": PLUGIN_LATE_EXIT_STANDINS}
+# A stand-in for bash's printf, defined before the section in the split-name case, where TMPDIR
+# holds a newline. A call whose output holds a NUL and a newline, as the subshell's print of the
+# name mktemp -d made then does, writes that output in 2 writes, split after its first newline,
+# as bash's own printf was seen to do under strace in #1380's round-2 QA. Between them it makes a
+# folder holding a file at the relative rest of the name up to its NUL, sends a TERM to its
+# process group and waits. Under bash --posix that TERM interrupts the read that has taken the
+# first part, so the read after it gets only the relative rest (row 3.124). Any other call runs
+# bash's printf as it is.
+PLUGIN_SPLIT_PRINTF = r"""printf() {
+  builtin printf "$@" > "$STANDIN_SPLIT" || return
+  if [ "$(tr -d '\000' < "$STANDIN_SPLIT" | wc -c)" = "$(wc -c < "$STANDIN_SPLIT")" ] \
+      || [ "$(wc -l < "$STANDIN_SPLIT")" -eq 0 ]; then
+    cat "$STANDIN_SPLIT"
+    return
+  fi
+  head -n 1 "$STANDIN_SPLIT"
+  standin_rest=$(tail -n +2 "$STANDIN_SPLIT" | tr -d '\000')
+  mkdir -p -- "$standin_rest"
+  builtin printf 'not the section'"'"'s\n' > "$standin_rest/other.txt"
+  kill -TERM 0
+  sleep {pause}
+  tail -n +2 "$STANDIN_SPLIT"
+}
+"""
 # (case, the signal the stand-in build sends to its process group or "", the command written in
-# just after the `rm -rf plugin || return` line of plugin_put_back or "", the stand-ins first on
-# PATH, a key of PLUGIN_STANDIN_SETS or "", whether the stand-in build starts the child that writes
+# just after the `rm -rf plugin || return` line of plugin_put_back or "", the stand-ins: a key of
+# PLUGIN_STANDIN_SETS for those first on PATH, "split" for PLUGIN_SPLIT_PRINTF with a TMPDIR that
+# holds a newline, or "", whether the stand-in build starts the child that writes
 # late, whether the section runs under bash --posix, the expected exit). `$$` in that command
 # names the section's shell, not the subshell that runs the restore.
 PLUGIN_CASES = (
@@ -1093,6 +1124,8 @@ PLUGIN_CASES = (
      "plugin/ half a second after it", "TERM", "", "", True, False, -signal.SIGTERM),
     ("a TERM to the process group after mktemp -d printed the folder's name and before it "
      "exited, under bash --posix", "", "", "late exit", False, True, -signal.SIGTERM),
+    ("a TERM to the process group between the 2 writes of a folder's name that holds a newline, "
+     "under bash --posix", "", "", "split", False, True, -signal.SIGTERM),
 )
 
 
@@ -1153,17 +1186,23 @@ def plugin_failures():
             indent = line[:len(line) - len(line.lstrip(" "))]
             section = "\n".join(lines[:removes[0] + 1] + [f"{indent}{inject}"]
                                 + lines[removes[0] + 1:])
-        script = ("\n".join(helpers) + "\nfail=0\n" + section + 'printf "fail=%s\\n" "$fail"\n'
+        split = standins == "split"
+        prefix = PLUGIN_SPLIT_PRINTF.replace("{pause}", f"{0.5 * SCALE:g}") if split else ""
+        script = (prefix + "\n".join(helpers) + "\nfail=0\n" + section
+                  + 'printf "fail=%s\\n" "$fail"\n'
                   + 'printf "signal traps=%s\\n" "$(trap -p HUP INT TERM)"\n')
         d = Path(tempfile.mkdtemp())
         try:
             (d / "scripts").mkdir()
             (d / "scripts" / "build-plugin.sh").write_text(PLUGIN_STANDIN, encoding="utf-8")
-            (d / "tmp").mkdir()
+            tmp = d / "tmp" / "a\nb" if split else d / "tmp"
+            tmp.mkdir(parents=True)
             plugin_tree(d)
             before = plugin_state(d / "plugin")
-            env = dict(os.environ, SECURECONFIG_SUITE_JOBS="1", TMPDIR=str(d / "tmp"),
+            env = dict(os.environ, SECURECONFIG_SUITE_JOBS="1", TMPDIR=str(tmp),
                        STANDIN_SIGNAL=sent)
+            if split:
+                env["STANDIN_SPLIT"] = str(d / "split.out")
             keep = {}
             if standins == "taken":
                 (d / "tmp" / "taken").mkdir()
@@ -1171,7 +1210,7 @@ def plugin_failures():
                                                                encoding="utf-8")
                 keep = {"taken": plugin_state(d / "tmp" / "taken")}
                 env["STANDIN_TAKEN"] = str(d / "tmp" / "taken")
-            if standins:
+            if standins in PLUGIN_STANDIN_SETS:
                 (d / "bin").mkdir()
                 for name, body in PLUGIN_STANDIN_SETS[standins].items():
                     real = shutil.which(name)
@@ -1194,10 +1233,33 @@ def plugin_failures():
                     failures.append(f"plugin section, {case}: the stand-in build's child never "
                                     f"wrote into plugin/: {out!r}")
                     continue
-            left = {p.name: plugin_state(p) for p in (d / "tmp").iterdir()}
+            left = {p.name: plugin_state(p) for p in tmp.iterdir()}
             after = plugin_state(d / "plugin") if (d / "plugin").is_dir() else {}
+            changed = sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
+            if split:
+                # The section cannot confirm the name it read, so it must remove nothing: the
+                # folder mktemp -d made stays, empty, and a FAIL line names it, and the folder at
+                # the relative rest of its name keeps its file.
+                made = sorted(left)
+                rest = d / "b"
+                decoys = sorted(p.name for p in rest.iterdir()) if rest.is_dir() else []
+                kept = (len(made) == 1 and decoys == made
+                        and (rest / made[0] / "other.txt").is_file()
+                        and (rest / made[0] / "other.txt").read_text(encoding="utf-8")
+                        == "not the section's\n")
+                # The FAIL line names TMPDIR, which holds a newline, so it is read to the end.
+                named = (len(made) == 1 and "  FAIL  " in out
+                         and made[0] in out[out.index("  FAIL  "):])
+                if (rc != want_rc or after != before or len(made) != 1 or left[made[0]] != {}
+                        or not kept or not named):
+                    failures.append(f"plugin section, {case}: expected exit {want_rc}, plugin/ as "
+                                    f"it was, in TMPDIR only the folder mktemp -d made, empty and "
+                                    f"named on a FAIL line, and the folder at the relative rest "
+                                    f"of its name kept with its file; got exit {rc}, {changed!r} "
+                                    f"changed, {left!r} left, {decoys!r} at the relative rest: "
+                                    f"{out!r}")
+                continue
             if rc != want_rc or left != keep or after != before:
-                changed = sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
                 failures.append(f"plugin section, {case}: expected exit {want_rc}, plugin/ as it "
                                 f"was and in TMPDIR only {sorted(keep)!r}, as it was; got exit "
                                 f"{rc}, {changed!r} changed, {left!r} left: {out!r}")
@@ -1243,7 +1305,9 @@ def main():
           f"a child of the build that writes into plugin/ after it, a TERM as the folder's "
           f"name meets a path another process made, which is kept, or a TERM after mktemp -d "
           f"printed the folder's name and before it exited, under bash --posix, and death by "
-          f"that signal), and "
+          f"that signal; and after a TERM between the 2 writes of a folder's name that holds a "
+          f"newline, under bash --posix, that folder kept and named on a FAIL line, nothing "
+          f"removed and death by that TERM), and "
           f"{len(SECTIONS_CASES)} cases of run_all_checks.sh --sections (only the named sections "
           f"and those they depend on after the preflight, in the file's order; an unknown or "
           f"empty name, or one holding "
