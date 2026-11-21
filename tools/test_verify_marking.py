@@ -41,7 +41,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="verify-marking-test-") as directory:
         root = Path(directory)
         (root / "tools").mkdir()
-        for name in ("check_verify_marking.py", "_markdown.py",
+        for name in ("check_verify_marking.py", "_markdown.py", "_reason.py",
                      "_verify_sections.py", "version_basis.py", "requirements-gates.txt"):
             shutil.copyfile(TOOLS / name, root / "tools" / name)
         (root / "tools/version_basis_guides.txt").write_text("guide.md\n", encoding="utf-8")

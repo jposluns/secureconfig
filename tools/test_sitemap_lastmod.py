@@ -3,11 +3,12 @@
 
 Each case builds a throwaway git repository whose commits carry fixed committer dates, with folder
 pages, site/robots.txt and site/sitemap.xml under site/. It copies the shipped gate and the
-modules it imports (check_sitemap.py, check_draft.py, check_csp_hashes.py) into the fixture's
-tools/, untracked, and runs the gate as a subprocess under `python3 -I -B`, so what is under test
-is the shipped entry point against real history. Git runs with no system or global configuration,
-and discovery stops at each case's own temporary directory. A must-fail case names the exit status
-and the substrings its finding must carry; a pass must print one ok line and no FAIL line.
+modules it imports (check_sitemap.py, check_draft.py, check_csp_hashes.py, _reason.py) into the
+fixture's tools/, untracked, and runs the gate as a subprocess under `python3 -I -B`, so what is
+under test is the shipped entry point against real history. Git runs with no system or global
+configuration, and discovery stops at each case's own temporary directory. A must-fail case names
+the exit status and the substrings its finding must carry; a pass must print one ok line and no
+FAIL line.
 
 Each run sets the BASE line of the fixture's copy of check_draft.py to the case's base, so the
 cases hold whichever base the shipped file names. The base-path cases take their pages from
@@ -36,7 +37,8 @@ sys.path.insert(0, str(TOOLS))
 from check_draft import INDEXABLE, QUALITY  # noqa: E402  (the pages a shipped sitemap lists; the noindex quality page is not one)
 
 BUILD = TOOLS.parent / "scripts" / "build-site.py"
-GATES = ("check_sitemap_lastmod.py", "check_sitemap.py", "check_draft.py", "check_csp_hashes.py")
+GATES = ("check_sitemap_lastmod.py", "check_sitemap.py", "check_draft.py", "check_csp_hashes.py",
+         "_reason.py")
 # The line of check_draft.py that sets the base path, which each run sets to its own base.
 BASE_LINE = re.compile(r'^BASE = "[^"\n]*"$', re.M)
 ROBOTS = "User-agent: *\nAllow: /\n\nSitemap: https://secureconfig.ai/sitemap.xml\n"

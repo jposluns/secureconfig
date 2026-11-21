@@ -2,10 +2,10 @@
 """Recorded cases for the guide-counts section of tools/run_all_checks.sh.
 
 Each case writes a fixture tree holding two guides, a README.md and copies of the tools the
-section imports (tools/check_verify_marking.py, tools/_markdown.py and tools/_verify_sections.py)
-beside a parser lock, then runs the section's own text, from its guide_files=() line to the next
-section, with bash in that tree and python3 bound to this interpreter, and checks the ok or FAIL
-line it prints.
+section imports (tools/check_verify_marking.py, tools/_markdown.py, tools/_reason.py and
+tools/_verify_sections.py) beside a parser lock, then runs the section's own text, from its
+guide_files=() line to the next section, with bash in that tree and python3 bound to this
+interpreter, and checks the ok or FAIL line it prints.
 
 The README cases pin how HTML is read, by blank_comment_blocks() in tools/_verify_sections.py, the
 rule SKILL.md's count is read by. A whole HTML comment that stands as an HTML block of its own
@@ -34,7 +34,7 @@ TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
 from check_verify_marking import ParserUnavailable, gate_parser  # noqa: E402
 
-COPIED = ("check_verify_marking.py", "_markdown.py", "_verify_sections.py")
+COPIED = ("check_verify_marking.py", "_markdown.py", "_reason.py", "_verify_sections.py")
 LOCK = "requirements-gates.txt"
 SENTENCE = "that is 2 guides across the 1 categories indexed below"
 STALE = "that is 9 guides across the 1 categories indexed below"

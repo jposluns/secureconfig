@@ -178,7 +178,8 @@ class Preflight(unittest.TestCase):
         for label, text, message in cases:
             with self.subTest(lock=label), tempfile.TemporaryDirectory() as directory:
                 copy = Path(directory)
-                for name in ("check_verify_marking.py", "_markdown.py", "_verify_sections.py"):
+                for name in ("check_verify_marking.py", "_markdown.py", "_reason.py",
+                             "_verify_sections.py"):
                     (copy / name).write_bytes((TOOLS / name).read_bytes())
                 (copy / "requirements-gates.txt").write_text(text, encoding="utf-8")
                 result = subprocess.run([sys.executable, "-I", "-B", "-", str(copy)],

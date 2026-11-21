@@ -26,16 +26,17 @@ if [ "${#files[@]}" -eq 0 ]; then
 fi
 
 if [ "${1:-}" = "--list-inputs" ]; then
-  # The guide list, the script it came from, VERSION, LICENSE and NOTICE, the 8 files under
+  # The guide list, the script it came from, VERSION, LICENSE and NOTICE, the 9 files under
   # tools/ from tools/version_basis.py to tools/requirements-gates.txt, and CHANGELOG.md are all
   # inputs to this build, and the generated-file record has to say so. Changing
   # build-llms-full.sh changes what this bundle contains, VERSION sets plugin.json's version
   # below, LICENSE and NOTICE are copied into plugin/ and plugin/skills/secureconfig/ below, and
-  # the version-basis check below reads the 8 tools/ files and CHANGELOG.md. It reads
+  # the version-basis check below reads the 9 tools/ files and CHANGELOG.md. It reads
+  # tools/_reason.py because tools/_markdown.py imports reason_present() from it, and
   # tools/requirements-gates.txt because it loads the pinned parser through gate_parser() in
   # tools/check_verify_marking.py, which reads the pins from that file.
   printf '%s\n' "${files[@]}" scripts/build-llms-full.sh VERSION "${notices[@]}" \
-    tools/version_basis.py tools/version_basis_guides.txt tools/version_basis_sources_baseline.txt tools/_markdown.py tools/check_guide_shape.py tools/check_verify_marking.py tools/_verify_sections.py tools/requirements-gates.txt CHANGELOG.md
+    tools/version_basis.py tools/version_basis_guides.txt tools/version_basis_sources_baseline.txt tools/_markdown.py tools/_reason.py tools/check_guide_shape.py tools/check_verify_marking.py tools/_verify_sections.py tools/requirements-gates.txt CHANGELOG.md
   exit 0
 fi
 

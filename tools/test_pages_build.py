@@ -29,6 +29,10 @@ literal that is a file name, such as "copy-baseline.py"):
     literal, because the Pages build installs nothing: no markdown-it-py, so
     scripts/build-site.py reads README.md's install section with its own standard-library reader.
 
+It also requires the build to reach each module in REQUIRED_MODULES, tools/_reason.py, which
+holds reason_present() for both parsers of tools/redirects_allowlist.txt, so a third-party import
+added to that module fails here.
+
 Before the files, it runs its own cases (SELF_CASES): each of those 4 forms is refused, the
 backslash both in a string and as a line continuation (the continuation also after a line
 holding a form feed), while a double-quoted key inside a triple-double-quoted f-string, a
@@ -69,6 +73,10 @@ RUN = re.compile(r"^\s*python3\s+(?:-\S+\s+)*([\w./-]+\.py)\b", re.M)
 FILE_NAME = re.compile(r"^[\w-]+\.py$")
 # The copied template gate the build must run (baseline 1.6.0, SPECIFICATION section 4 item 3).
 PALETTE_GATE = ROOT / ".baseline" / "check_palette.py"
+# Repository modules the build must reach, so that this test checks each of them (row 3.111).
+# tools/check_draft.py and tools/gen_hosted.py import reason_present() from tools/_reason.py, so a
+# third-party import added to it fails here; this test also fails when the build stops reaching it.
+REQUIRED_MODULES = (ROOT / "tools" / "_reason.py",)
 
 
 def local(name, root=ROOT):
@@ -337,6 +345,12 @@ def main():
                         f"mandatory in the build")
     found, seen = scan(pending)
     failures += found
+    for path in REQUIRED_MODULES:
+        if path not in seen:
+            failures.append(f"{path.relative_to(ROOT)} is not reached from "
+                            f"{BUILD.relative_to(ROOT)}, so this test does not check it; "
+                            f"tools/check_draft.py and tools/gen_hosted.py import reason_present() "
+                            f"from it")
     if failures:
         for f in failures:
             print(f"  FAIL  {f}")
