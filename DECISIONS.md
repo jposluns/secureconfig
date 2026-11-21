@@ -1744,9 +1744,12 @@ the maintainer may be away, a decision that blocks progress is taken by majority
 maintainer would decide: one each from lab_infra and guardrails, given the context through inbox-send, and the
 orchestrator's own. Each such decision is recorded with its question, the three predictions and its outcome, for the
 maintainer's later review. In the predictions quoted below, words in square brackets replace a pronoun in the quoted
-reasoning. The two proxy decisions of 2026-11-11 at the end of this section were taken under a later rule, the
-unattended decision rule of 2026-10-31, which the first of them states. An entry that a ruling above confirms stays
-listed here for the record, under its heading as entered, and that ruling's entry records the outcome.
+reasoning. The two proxy decisions of 2026-11-11 near the end of this section were taken under a later rule, the
+unattended decision rule of 2026-10-31, which the first of them states. The proxy decision of 2026-11-20 after them,
+the last entry, was taken unattended by a unanimous vote of lab_infra, guardrails and grc. An entry that a ruling
+above confirms stays listed here for the record, under its heading as entered, and that ruling's entry records the
+outcome. Such an entry, like the proxy decision of 2026-11-20, which the maintainer confirmed the same day, no longer
+awaits the review that the heading of this section names.
 
 - **Proxy decision of 2026-10-27 on TODO 1.383 closure, for the maintainer's later review (#1002).** Decided at
   2026-10-27T23:11:19Z under that directive. The outcome, as the record reads:
@@ -1905,11 +1908,10 @@ listed here for the record, under its heading as entered, and that ruling's entr
   moved the other five to `reason_present()`, left out: `tools/check_draft.py` and `tools/gen_hosted.py`. The
   Cloudflare Pages build, `scripts/pages-build.sh`, runs the first directly and reaches the second only through the
   imports of `tools/check_hosted.py` and `scripts/build-site.py`, which it runs. Every module that build reaches may
-  import only the standard library and this repository's modules (`tools/test_pages_build.py`), and
-  `reason_present()` lived in `tools/_markdown.py`, which reaches markdown-it-py through `tools/version_basis.py`. The
-  record gives three options,
-  each a label and a description, and both are quoted here exactly as the record has them. The record letters only
-  option A, as "(option A)" in its STATUS line, though the lab_infra vote it records speaks of "C's copies"; this
+  import only the standard library and this repository's modules (`tools/test_pages_build.py`), and `reason_present()`
+  lived in `tools/_markdown.py`, which reaches markdown-it-py through `tools/version_basis.py`. The record gives three
+  options, each a label and a description, and both are quoted here exactly as the record has them. The record letters
+  only option A, as "(option A)" in its STATUS line, though the lab_infra vote it records speaks of "C's copies"; this
   entry letters the other two B and C, in the record's order. Option A was "Yes, new module (Recommended)", described
   as "a stdlib-only module holds reason_present(); _markdown.py imports it; both Pages-build readers use it; about 13
   self-test fixtures that copy _markdown.py and the input listings are updated; full QA. Predicted and best for the
