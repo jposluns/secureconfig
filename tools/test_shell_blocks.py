@@ -42,7 +42,7 @@ def run_against(block, fence="```bash", env=None, path_prefix=None, raw=None, ho
     d = Path(tempfile.mkdtemp())
     try:
         (d / "tools").mkdir()
-        for f in ("check_shell_blocks.py", "_walk.py", "_markdown.py"):
+        for f in ("check_shell_blocks.py", "_walk.py", "_markdown.py", "_reason.py"):
             shutil.copy(TOOLS / f, d / "tools" / f)
         if raw_bytes is not None:
             body = None
@@ -91,7 +91,7 @@ def run_multi(guides, path_prefix=None):
     d = Path(tempfile.mkdtemp())
     try:
         (d / "tools").mkdir()
-        for f in ("check_shell_blocks.py", "_walk.py", "_markdown.py"):
+        for f in ("check_shell_blocks.py", "_walk.py", "_markdown.py", "_reason.py"):
             shutil.copy(TOOLS / f, d / "tools" / f)
         for name, body in guides.items():
             (d / name).write_text(body, encoding="utf-8")

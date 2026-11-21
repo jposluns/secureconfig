@@ -12,7 +12,7 @@ from _walk import isolated_git_environment
 from check_verify_marking import ParserUnavailable, gate_parser
 
 TOOLS = Path(__file__).resolve().parent
-MODULES = ("check_bare_urls", "_markdown", "_walk", "version_basis",
+MODULES = ("check_bare_urls", "_markdown", "_reason", "_walk", "version_basis",
            "check_verify_marking", "_verify_sections")
 BARE = "See https://example.com/__init__.py\n"
 

@@ -23,65 +23,37 @@ other. A fence indented four or more spaces, which is what a fence nested two li
 deep looks like, is not recognized. A renderer shows it as code and a reader copies from it,
 and no guide in this corpus has one today, so this is disclosed rather than handled.
 
-This module also holds reason_present() below, a rule for whether a waiver, allowlist,
-exception or baseline reason is present. These readers use it: load_baseline() in
-tools/check_verify_marking.py, Allowlist.load() in tools/check_bracket_ranges.py,
-waiver_reasoned() in tools/gen_guide_quality.py, parse_exceptions() in tools/export_lists.py,
-_analyze_fence() and _scan_inline() in tools/check_guard_conventions.py and _waived_lines() in
-tools/check_unfiltered_ss.py. It lives here because the first two of those gates already load
-this module, so every self-test fixture that runs either of them already has it. The regular
-expressions of the last two gates find a waiver, and reason_present() then judges the reason
-each one captures: WAIVER_RE in both, C4_WAIVER_RE, which applies only to a reason that
+This module also provides reason_present(), a rule for whether a waiver, allowlist, exception
+or baseline reason is present, and BLANK_CATEGORIES, the set it reads. Both are defined in
+tools/_reason.py, which imports only the standard library, and imported here, so a reader that
+imports them from this module keeps working unchanged. These readers import reason_present()
+from this module: load_baseline() in tools/check_verify_marking.py, Allowlist.load() in
+tools/check_bracket_ranges.py, waiver_reasoned() in tools/gen_guide_quality.py,
+parse_exceptions() in tools/export_lists.py, _analyze_fence() and _scan_inline() in
+tools/check_guard_conventions.py and _waived_lines() in tools/check_unfiltered_ss.py. The
+regular expressions of the last two gates find a waiver, and reason_present() then judges the
+reason each one captures: WAIVER_RE in both, C4_WAIVER_RE, which applies only to a reason that
 WAIVER_RE has matched, and INLINE_WAIVER_RE. tools/export_lists.py calls it after its
-split_lines() has refused any line that holds a control or format character.
-A search of the tree of #1369 found seven places that judged a reason without it, and TODO
-row 3.111 records them; the search may have missed some. Five of them now call it. The other
-two are both parsers of tools/redirects_allowlist.txt, tools/check_draft.py and
-tools/gen_hosted.py, which judge the reason of an entry with str.strip(). The Pages build,
+split_lines() has refused any line that holds a control or format character. The two parsers of
+tools/redirects_allowlist.txt, allowlist_entries() in tools/check_draft.py and read_allowlist()
+in tools/gen_hosted.py, import it from tools/_reason.py instead. The Pages build,
 scripts/pages-build.sh, runs tools/check_draft.py directly and reaches tools/gen_hosted.py
 only through the imports of tools/check_hosted.py and scripts/build-site.py, which it runs.
-At run time either parser could import this module, because every import of markdown-it-py
-is inside a function, as is the import of tools/version_basis.py in body_lines(). The
-obstacle is tools/test_pages_build.py, which requires every module that build reaches, by an
-import at any depth, to import only the standard library and this repository's modules. It
-follows the import in body_lines() to tools/version_basis.py, which imports markdown-it-py,
-so it fails when either parser imports this module, and TODO row 3.111 keeps the two open.
-Two other modules use the parser in tools/gen_hosted.py rather than one of their own:
-tools/check_hosted.py calls its read_allowlist() directly and through its redirects_text(),
-and scripts/build-site.py calls it through redirects_text().
+tools/test_pages_build.py requires every module that build reaches, by an import at any depth,
+to import only the standard library and this repository's modules. It follows the import in
+body_lines() here to tools/version_basis.py, which imports markdown-it-py, so it fails when
+either parser imports this module. Two other modules use the parser in tools/gen_hosted.py
+rather than one of their own: tools/check_hosted.py calls its read_allowlist() directly and
+through its redirects_text(), and scripts/build-site.py calls it through redirects_text(). A
+search of the tree of #1369 found seven places that judged a reason without reason_present(),
+and TODO row 3.111 recorded them; the search may have missed some. All seven now call it. A
+self-test fixture that copies this module needs tools/_reason.py too.
 """
 import re
-import unicodedata
+
+from _reason import BLANK_CATEGORIES, reason_present  # noqa: F401  (defined there, row 3.111)
 
 FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
-
-# The general categories a reason may not be made of alone (row 3.106). Cf holds the format
-# characters, such as U+200B ZERO WIDTH SPACE, U+FEFF ZERO WIDTH NO-BREAK SPACE and U+2060 WORD
-# JOINER, which str.isspace() does not count as whitespace and which Unicode lists as default
-# ignorable code points, so a renderer normally shows nothing for them. A few Cf characters,
-# such as U+0600 ARABIC NUMBER SIGN, are drawn, but they format the text around them, so a
-# reason made of them alone still says nothing. Zs, Zl and Zp hold the space, line and
-# paragraph separators, which str.isspace() already counts, since Python counts every Zs
-# character and every character of bidirectional class WS, B or S; naming them keeps the rule
-# whole on its own. Whitespace controls such as TAB and LF are Cc and stay blank through
-# str.isspace().
-BLANK_CATEGORIES = frozenset({"Cf", "Zs", "Zl", "Zp"})
-
-
-def reason_present(text):
-    """Whether `text` holds a character that is neither whitespace nor in BLANK_CATEGORIES.
-
-    A reason made only of such characters shows as nothing, so it is no reason. Before row
-    3.106 the first three readers to call this function judged a reason with str.strip(),
-    which removes whitespace but not a format character such as U+200B, so a reason of U+200B
-    alone passed. The two places named in the module docstring that do not call it use
-    str.strip(). The categories come from the unicodedata
-    module of the running Python. Other characters that may show as nothing, such as a lone
-    combining mark (Mn), a control character that is not whitespace (Cc), U+3164 HANGUL
-    FILLER (Lo) or U+2800 BRAILLE PATTERN BLANK (So), count as text.
-    """
-    return any(not ch.isspace() and unicodedata.category(ch) not in BLANK_CATEGORIES
-               for ch in text)
 
 
 class Fences:

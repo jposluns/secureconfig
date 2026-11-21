@@ -39,7 +39,8 @@ tab, in file order), then, only when a record exists, the two latest lines, in t
     /downloads/secureconfig-plugin-latest.zip /downloads/secureconfig-plugin-1.0.<N>.zip 302
 
 An allowlist entry line is `SOURCE TARGET 302<TAB>REASON` with single spaces, printable ASCII
-fields (`!` to `~`), a source no other entry carries and a non-empty reason.
+fields (`!` to `~`), a source no other entry carries and a reason that reason_present() in
+tools/_reason.py accepts, with no whitespace at either end.
 tools/check_draft.py reads each entry's source and target in a percent-decoded normal form,
 refuses one that does not normalize cleanly, and refuses any `/draft` entry, while
 tools/check_hosted.py holds each release-asset entry to the record: a recorded zip that is no
@@ -60,6 +61,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _archives import ARCHIVES, archive_name  # noqa: E402  (the release's archive kinds)
+from _reason import reason_present  # noqa: E402  (the one rule for a present reason)
 
 SITE_ORIGIN = "https://secureconfig.ai"
 DOWNLOADS = "downloads"
@@ -294,9 +296,14 @@ def read_allowlist(root):
         if not line or line.startswith("#"):
             continue
         rule, sep, reason = line.partition("\t")
-        if not sep or not reason or reason != reason.strip() or not ENTRY.fullmatch(rule):
+        # Row 3.111: a reason is judged by reason_present(), so one made only of whitespace and
+        # invisible format characters, such as U+200B, is no reason.
+        if (not sep or not reason_present(reason) or reason != reason.strip()
+                or not ENTRY.fullmatch(rule)):
             raise HostedError(f"{ALLOWLIST}:{n} is not `SOURCE TARGET 302<TAB>REASON` with "
-                              f"single spaces, printable ASCII fields and a non-empty reason")
+                              f"single spaces, printable ASCII fields and a reason that is "
+                              f"not only whitespace and format characters (Unicode category "
+                              f"Cf) and has no whitespace at either end")
         source = rule.split(" ", 1)[0]
         first = sources.setdefault(source, n)
         if first != n:

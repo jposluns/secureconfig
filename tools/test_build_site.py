@@ -371,7 +371,7 @@ def schema_cases():
         # The whole script on a tree whose content.json has no "home": exit 2 and 1 FAIL line.
         count += 1
         for rel in ("scripts/build-site.py", "tools/check_csp_hashes.py", "tools/gen_hosted.py",
-                    "tools/_archives.py"):
+                    "tools/_archives.py", "tools/_reason.py"):
             (root / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / rel, root / rel)
         content = json.loads(json.dumps(original))

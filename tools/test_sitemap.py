@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Cases for check_sitemap.py: the real files pass, and each defect it names fails.
 
-Each case copies the real gate and the modules it imports (check_draft.py, check_csp_hashes.py)
-into a throwaway tree with the real pages under site/, site/robots.txt and site/sitemap.xml,
-applies one change, and runs the gate as a subprocess, so what is under test is the shipped entry
-point. A must-fail case names a substring its finding must carry; every case checks the exit
-status, the ok line on a pass and a FAIL line on a refusal.
+Each case copies the real gate and the modules it imports (check_draft.py, check_csp_hashes.py,
+_reason.py) into a throwaway tree with the real pages under site/, site/robots.txt and
+site/sitemap.xml, applies one change, and runs the gate as a subprocess, so what is under test
+is the shipped entry point. A must-fail case names a substring its finding must carry; every
+case checks the exit status, the ok line on a pass and a FAIL line on a refusal.
 
 Each run sets the BASE line of the copied check_draft.py, so the cases hold whichever base the
 shipped file names. CASES run at base /, the promoted site, where the real sitemap lists the 7
@@ -28,7 +28,7 @@ TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 SITE = ROOT / "site"
 BUILD = ROOT / "scripts" / "build-site.py"
-GATES = ("check_sitemap.py", "check_draft.py", "check_csp_hashes.py")
+GATES = ("check_sitemap.py", "check_draft.py", "check_csp_hashes.py", "_reason.py")
 # The line of check_draft.py that sets the base path, which each run sets to its own base.
 BASE_LINE = re.compile(r'^BASE = "[^"\n]*"$', re.M)
 PAGES = ("index.html", "404.html", "guides/index.html", "for-ai/index.html",
