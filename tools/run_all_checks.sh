@@ -604,20 +604,22 @@ par_run() {
   # per-user process limit is still exhausted when the keeper forks rm (row 3.117), the keeper
   # then removes the
   # folder, even one that mktemp makes after this shell has ended (row 3.113). mktemp's own
-  # message, when it cannot make the folder, still comes before the FAIL line. The keeper prints
-  # a line and reads its input to the end even when mktemp fails, since bash closes a coprocess's
+  # message, when it cannot make the folder, still comes before the FAIL line. The keeper ends
+  # the name with a NUL, which no path holds, and this shell reads up to it, so a name holding a
+  # newline, as under a TMPDIR holding one, is read whole (row 3.118). The keeper prints the NUL
+  # and reads its input to the end even when mktemp fails, since bash closes a coprocess's
   # descriptors once it has reaped it, and a read from a closed one would print an error.
   coproc par_keeper {
     trap '' HUP INT QUIT PIPE TERM USR1 USR2 ALRM
     par_keep_dir=$(mktemp -d)
-    printf '%s\n' "$par_keep_dir" 2>/dev/null
+    printf '%s\0' "$par_keep_dir" 2>/dev/null
     while IFS= read -r _; do :; done
     [ -z "$par_keep_dir" ] || rm -rf -- "$par_keep_dir"
   }
   par_keep_pid=$!
   par_keep=${par_keeper[1]}
   keeper_out=${par_keeper[0]}
-  IFS= read -r par_dir <&"$keeper_out"
+  IFS= read -r -d '' par_dir <&"$keeper_out"
   exec {keeper_out}<&-
   if [ -z "$par_dir" ]; then
     printf '  FAIL  mktemp could not create a folder for the sections; no gate ran\n'
@@ -628,12 +630,26 @@ par_run() {
   trap 'par_trap INT' INT
   trap 'par_trap TERM' TERM
   printf '%s\n' "$helper_text" > "$par_dir/helpers"
-  awk -v dir="$par_dir" -v want=",$list," '
-    /^# section: / { keep = index(want, "," substr($0, 12) ",") > 0; if (out != "") close(out); out = dir "/" substr($0, 12) ".body" }
+  # awk reads the folder's name from its environment, not from -v, which would turn a backslash
+  # sequence in it, as under a TMPDIR ending in \n, into another character (row 3.125). A
+  # non-zero exit of awk, or a selected section without its body, ends the run here with a FAIL
+  # line, since each section's script would otherwise run without its body, and the run could
+  # pass with no section run (row 3.125).
+  if ! par_awk_dir=$par_dir awk -v want=",$list," '
+    /^# section: / { keep = index(want, "," substr($0, 12) ",") > 0; if (out != "") close(out); out = ENVIRON["par_awk_dir"] "/" substr($0, 12) ".body" }
     /^# end of sections$/ { keep = 0 }
     keep { print > out }
-  ' tools/run_all_checks.sh
+  ' tools/run_all_checks.sh; then
+    printf '  FAIL  awk could not cut the sections out of tools/run_all_checks.sh; no gate ran\n'
+    par_cleanup
+    exit 2
+  fi
   for name in "${par_names[@]}"; do
+    if [ ! -f "$par_dir/$name.body" ]; then
+      printf "  FAIL  awk wrote no body for section '%s' of tools/run_all_checks.sh; no gate ran\n" "$name"
+      par_cleanup
+      exit 2
+    fi
     {
       printf 'set -uo pipefail\ncd %q || exit 2\nunset SECURECONFIG_SUITE_JOBS\n' "$PWD"
       cat "$par_dir/helpers" "$par_dir/$name.body"
@@ -922,14 +938,20 @@ echo "== the plugin bundle is current =="
 # has reset HUP, INT and TERM to their defaults, does not stop the build part way: the build
 # either does not start or runs to its end, and plugin/ is put back either way (row 3.110). A
 # signal that reaches this shell and not the command it waits for takes effect when that command
-# ends. The folder is the one mktemp -d creates and names: besides plugin/, only a folder whose
-# name mktemp -d printed is ever removed, so no temporary path that another process created is.
-# mktemp -d runs in a subshell that ignores HUP, INT and TERM, so such a signal cannot end it
-# between making the folder and printing its name. This shell reads that name with read from a
-# process substitution, not from a command substitution, while it waits for which an INT can go
-# unrecorded (row 3.110). In bash's default mode a trapped HUP, INT or TERM does not interrupt
-# read. In POSIX mode it does, and the loop then runs read again, which assumes that mktemp -d
-# prints the name in one write, since a retry between two writes of it would keep only the rest.
+# ends. The folder is the one mktemp -d creates and names: besides plugin/, only the folder whose
+# whole name mktemp -d printed is ever removed, so no temporary path that another process created
+# is. mktemp -d runs in a subshell that ignores HUP, INT and TERM, so such a signal cannot end it
+# between making the folder and printing its name. That subshell takes the name through a command
+# substitution, which drops only the newline that ends it, since a name mktemp -d makes ends in
+# its template's characters, and prints it followed by a NUL, which no path holds. This shell
+# reads up to that NUL, so under a TMPDIR holding a newline the name is kept whole and no folder
+# that mktemp -d did not create is saved into, restored from or removed (row 3.124). This shell
+# reads that name with read from a process substitution, not from a command substitution, while
+# it waits for which an INT can go unrecorded (row 3.110). In bash's default mode a trapped HUP,
+# INT or TERM does not interrupt read. In POSIX mode it does, and the loop then runs read again.
+# The subshell prints nothing until mktemp -d has exited and then prints the name and its NUL in
+# one write, so such a retry loses no part of the name, as it did when read waited for mktemp -d
+# itself to exit after it had printed the name, which left the folder behind (row 3.124).
 # plugin_build gives the build the write end of a pipe as its fd 3, which each process the build
 # starts inherits, and returns only when cat, which reads the other end, sees the end of the
 # pipe, that is once every process that held that fd has exited or closed it. cat and the
@@ -973,10 +995,10 @@ trap 'plugin_sig=${plugin_sig:-HUP}' HUP
 trap 'plugin_sig=${plugin_sig:-INT}' INT
 trap 'plugin_sig=${plugin_sig:-TERM}' TERM
 while :; do
-  IFS= read -r plugin_tmp
+  IFS= read -r -d '' plugin_tmp
   plugin_rc=$?
   [ "$plugin_rc" -gt 128 ] || break
-done < <( (trap '' HUP INT TERM; exec mktemp -d) )
+done < <( (trap '' HUP INT TERM; plugin_new=$(mktemp -d) && printf '%s\0' "$plugin_new") )
 if [ -z "$plugin_tmp" ]; then
   [ -n "$plugin_sig" ] || bad "could not create a folder to save plugin/ in; plugin/ was not rebuilt"
 elif [ -z "$plugin_sig" ] && ! cp -a plugin/. "$plugin_tmp/"; then

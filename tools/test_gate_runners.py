@@ -105,7 +105,10 @@ folder of the taken-name case, which must hold what it held before:
   - with stand-ins for mktemp and mkdir first on PATH, mktemp -u prints the name of a folder in
     TMPDIR that already holds a file, any other mktemp call sends a TERM to the process group and
     fails, and mkdir given that name fails and then sends one; the shell dies by that TERM and the
-    folder is kept.
+    folder is kept;
+  - under bash --posix, with a stand-in for mktemp first on PATH that makes the folder, prints its
+    name and sends a TERM to the process group before it exits, the shell dies by that TERM and
+    TMPDIR is empty (row 3.124).
 Every child's environment pins SECURECONFIG_SUITE_JOBS=1, so a setting inherited from the caller
 never turns a `--sections` case parallel, and every wait is multiplied by
 SECURECONFIG_TEST_LOAD_SCALE (default 1) for a loaded host.
@@ -1054,24 +1057,42 @@ PLUGIN_TAKEN_STANDINS = {
               'done\n'
               'exit "$rc"\n'),
 }
+# A stand-in for mktemp, first on PATH in the late-exit case: it makes the folder with the real
+# mktemp and prints its name, then waits, sends a TERM to its process group and waits again before
+# it exits, so the TERM lands after mktemp -d printed the name and before it exited. Under bash
+# --posix a trapped TERM interrupts read, and a section that read up to the end of mktemp's output
+# lost the name it had read and left the folder (row 3.124).
+PLUGIN_LATE_EXIT_STANDINS = {
+    "mktemp": ('made=$({real} "$@") || exit\n'
+               'printf \'%s\\n\' "$made"\n'
+               'sleep {pause}\n'
+               'kill -TERM 0\n'
+               'sleep {pause}\n'),
+}
+PLUGIN_STANDIN_SETS = {"taken": PLUGIN_TAKEN_STANDINS, "late exit": PLUGIN_LATE_EXIT_STANDINS}
 # (case, the signal the stand-in build sends to its process group or "", the command written in
-# just after the `rm -rf plugin || return` line of plugin_put_back or "", whether the taken-name
-# stand-ins are first on PATH, whether the stand-in build starts the child that writes late, the
-# expected exit). `$$` in that command names the section's shell, not the subshell that runs the
-# restore.
+# just after the `rm -rf plugin || return` line of plugin_put_back or "", the stand-ins first on
+# PATH, a key of PLUGIN_STANDIN_SETS or "", whether the stand-in build starts the child that writes
+# late, whether the section runs under bash --posix, the expected exit). `$$` in that command
+# names the section's shell, not the subshell that runs the restore.
 PLUGIN_CASES = (
-    ("no signal", "", "", False, False, 0),
-    ("a TERM to the section's shell just after rm -rf plugin", "", 'kill -TERM "$$"', False,
+    ("no signal", "", "", "", False, False, 0),
+    ("a TERM to the section's shell just after rm -rf plugin", "", 'kill -TERM "$$"', "",
+     False, False, -signal.SIGTERM),
+    ("a TERM to the process group just after rm -rf plugin", "", "kill -TERM 0", "", False,
      False, -signal.SIGTERM),
-    ("a TERM to the process group just after rm -rf plugin", "", "kill -TERM 0", False, False,
+    ("a TERM to the process group during the build", "TERM", "", "", False, False,
      -signal.SIGTERM),
-    ("a TERM to the process group during the build", "TERM", "", False, False, -signal.SIGTERM),
-    ("an INT to the process group during the build", "INT", "", False, False, -signal.SIGINT),
-    ("a HUP to the process group during the build", "HUP", "", False, False, -signal.SIGHUP),
+    ("an INT to the process group during the build", "INT", "", "", False, False,
+     -signal.SIGINT),
+    ("a HUP to the process group during the build", "HUP", "", "", False, False,
+     -signal.SIGHUP),
     ("a TERM to the process group as the folder's name meets a path another process made", "",
-     "", True, False, -signal.SIGTERM),
+     "", "taken", False, False, -signal.SIGTERM),
     ("a TERM to the process group during the build, with a child of the build that writes into "
-     "plugin/ half a second after it", "TERM", "", False, True, -signal.SIGTERM),
+     "plugin/ half a second after it", "TERM", "", "", True, False, -signal.SIGTERM),
+    ("a TERM to the process group after mktemp -d printed the folder's name and before it "
+     "exited, under bash --posix", "", "", "late exit", False, True, -signal.SIGTERM),
 )
 
 
@@ -1120,7 +1141,7 @@ def plugin_failures():
                and lines[i + 1].strip().startswith('cp -a "$plugin_tmp" plugin')]
     bash = shutil.which("bash")
     failures = []
-    for case, sent, inject, taken, late, want_rc in PLUGIN_CASES:
+    for case, sent, inject, standins, late, posix, want_rc in PLUGIN_CASES:
         section = sections[0]
         if inject:
             if len(removes) != 1:
@@ -1144,22 +1165,24 @@ def plugin_failures():
             env = dict(os.environ, SECURECONFIG_SUITE_JOBS="1", TMPDIR=str(d / "tmp"),
                        STANDIN_SIGNAL=sent)
             keep = {}
-            if taken:
+            if standins == "taken":
                 (d / "tmp" / "taken").mkdir()
                 (d / "tmp" / "taken" / "other.txt").write_text("not the section's\n",
                                                                encoding="utf-8")
                 keep = {"taken": plugin_state(d / "tmp" / "taken")}
+                env["STANDIN_TAKEN"] = str(d / "tmp" / "taken")
+            if standins:
                 (d / "bin").mkdir()
-                for name, body in PLUGIN_TAKEN_STANDINS.items():
+                for name, body in PLUGIN_STANDIN_SETS[standins].items():
                     real = shutil.which(name)
-                    (d / "bin" / name).write_text("#!/bin/sh\n" + body.replace("{real}", real),
-                                                  encoding="utf-8")
+                    body = body.replace("{real}", real).replace("{pause}", f"{0.5 * SCALE:g}")
+                    (d / "bin" / name).write_text("#!/bin/sh\n" + body, encoding="utf-8")
                     (d / "bin" / name).chmod(0o755)
                 env["PATH"] = f"{d / 'bin'}{os.pathsep}{env.get('PATH', '')}"
-                env["STANDIN_TAKEN"] = str(d / "tmp" / "taken")
             if late:
                 env["STANDIN_LATE"] = str(d / "late.done")
-            rc, stdout, stderr = run_in_group([bash, "-c", script], d, env)
+            argv = [bash, "--posix", "-c", script] if posix else [bash, "-c", script]
+            rc, stdout, stderr = run_in_group(argv, d, env)
             out = stdout + stderr
             if late:
                 # The child's write lands after the section's shell has exited unless the section
@@ -1217,8 +1240,10 @@ def main():
           f"{plugin_cases} cases of its plugin section (plugin/ as it was, byte for byte, and no "
           f"folder left, with no signal or after a TERM just after the restore's rm -rf plugin, a "
           f"TERM, INT or HUP to the process group during the build, a TERM during the build with "
-          f"a child of the build that writes into plugin/ after it, or a TERM as the folder's "
-          f"name meets a path another process made, which is kept, and death by that signal), and "
+          f"a child of the build that writes into plugin/ after it, a TERM as the folder's "
+          f"name meets a path another process made, which is kept, or a TERM after mktemp -d "
+          f"printed the folder's name and before it exited, under bash --posix, and death by "
+          f"that signal), and "
           f"{len(SECTIONS_CASES)} cases of run_all_checks.sh --sections (only the named sections "
           f"and those they depend on after the preflight, in the file's order; an unknown or "
           f"empty name, or one holding "
