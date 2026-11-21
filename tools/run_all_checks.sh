@@ -51,7 +51,8 @@
 # printed, no later section's output and no summary follow, and the status is its exit status, or its signal: re-raised on this
 # shell for the whole run, 128 plus the signal under --sections. HUP, INT and TERM sent to this
 # shell stop every section's process group and are re-raised. The parser preflight runs first, in
-# the foreground, in both modes. A section that rewrites the working tree in place is named by an
+# the foreground, in both modes; in parallel mode such a signal that arrives while it runs is held
+# until it has ended and then re-raised (row 3.123). A section that rewrites the working tree in place is named by an
 # `# exclusive:` line, runs alone, and runs before the others; a `# depends:` line also orders
 # its subject after its needs. SECURECONFIG_SUITE_TIMES, when it names a file, gets one
 # `<section> <start> <end> <status>` row per section (epoch seconds) in parallel mode only, and
@@ -505,7 +506,7 @@ par_flush() {
 # file's order, once the front end chose them) with up to suite_jobs at a time. SELECTED is
 # the list --sections named, for the summary, and empty for the whole run.
 par_run() {
-  local list=$1 known need subject line name i n ordered cycle progress preflight_text helper_text keeper_out
+  local list=$1 known need subject line name i n ordered cycle progress preflight_text preflight_status helper_text keeper_out
   if [ "${BASH_VERSINFO[0]}" -lt 5 ] || { [ "${BASH_VERSINFO[0]}" -eq 5 ] && [ "${BASH_VERSINFO[1]}" -lt 1 ]; }; then
     printf '  FAIL  SECURECONFIG_SUITE_JOBS above 1 needs bash 5.1 or later (wait -n -p); no gate ran\n'
     exit 2
@@ -597,7 +598,17 @@ par_run() {
     printf '  FAIL  tools/run_all_checks.sh has no "# preflight" line above the parser preflight or no helper block before it; no gate ran\n'
     exit 2
   fi
-  eval "$preflight_text"
+  # It runs in a subshell, which these traps do not reach, so a HUP, INT or TERM sent to this
+  # shell alone while tools/check_parser_pin.py runs is held until the preflight has ended and
+  # then re-raised, and this shell never ends while that check runs on (row 3.123).
+  trap 'par_signal=HUP' HUP
+  trap 'par_signal=INT' INT
+  trap 'par_signal=TERM' TERM
+  ( eval "$preflight_text" )
+  preflight_status=$?
+  trap - HUP INT TERM
+  [ -z "$par_signal" ] || par_die "$par_signal"
+  [ "$preflight_status" -eq 0 ] || exit "$preflight_status"
   # The keeper (see par_cleanup). A signal that ends this shell once the keeper is forked, before
   # the traps below are set, ends it by that signal as before, and, unless it is a KILL or another
   # signal the keeper does not ignore sent to the process group, which ends the keeper too, or the
@@ -629,7 +640,6 @@ par_run() {
   trap 'par_trap HUP' HUP
   trap 'par_trap INT' INT
   trap 'par_trap TERM' TERM
-  printf '%s\n' "$helper_text" > "$par_dir/helpers"
   # awk reads the folder's name from its environment, not from -v, which would turn a backslash
   # sequence in it, as under a TMPDIR ending in \n, into another character (row 3.125). A
   # non-zero exit of awk, or a selected section without its body, ends the run here with a FAIL
@@ -650,12 +660,19 @@ par_run() {
       par_cleanup
       exit 2
     fi
-    {
-      printf 'set -uo pipefail\ncd %q || exit 2\nunset SECURECONFIG_SUITE_JOBS\n' "$PWD"
-      cat "$par_dir/helpers" "$par_dir/$name.body"
-      # shellcheck disable=SC2016  # the section's own shell expands $fail, not this one
-      printf 'printf "%%s\\n" "$fail" > %q\n' "$par_dir/$name.status"
-    } > "$par_dir/$name.sh"
+    # Each step of the section's script must succeed, and the line that writes its status comes
+    # last, so a failed write or read ends the run here with a FAIL line, never a script that runs
+    # part of the section and passes (row 3.126).
+    # shellcheck disable=SC2016  # the section's own shell expands $fail, not this one
+    if ! {
+      printf 'set -uo pipefail\ncd %q || exit 2\nunset SECURECONFIG_SUITE_JOBS\n' "$PWD" &&
+        printf '%s\n' "$helper_text" && cat "$par_dir/$name.body" &&
+        printf 'printf "%%s\\n" "$fail" > %q\n' "$par_dir/$name.status"
+    } > "$par_dir/$name.sh"; then
+      printf "  FAIL  could not build the script of section '%s' of tools/run_all_checks.sh; no gate ran\n" "$name"
+      par_cleanup
+      exit 2
+    fi
   done
   while [ "$par_next" -lt "$par_n" ]; do
     par_schedule
