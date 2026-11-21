@@ -1012,7 +1012,7 @@ def run_repo(files, unreadable_dir=False, unreadable_allow=False):
     try:
         (d / "tools").mkdir()
         for name in ("check_bracket_ranges.py", "check_shell_blocks.py", "_walk.py",
-                     "_markdown.py"):
+                     "_markdown.py", "_reason.py"):
             shutil.copy(TOOLS / name, d / "tools" / name)
         for rel, body in files:
             p = d / rel

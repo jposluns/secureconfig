@@ -17,6 +17,20 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-20 confirming the proxy decision on TODO row 3.111 (#1375).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 23:08Z. The
+  orchestrator's private record of the ruling gives the chosen label and description, and both are quoted exactly.
+  The maintainer chose "Accept A, merge (Recommended)", whose description read: "Option A stands; #1375 merges after
+  its fix-diff round converges on both families and gates pass at the exact head. Predicted and best for the
+  project." No reasoning was recorded beyond the choice.
+  - Effect. This ruling confirms "Proxy decision of 2026-11-20 on where `reason_present()` lives for the two
+    Pages-build readers of TODO row 3.111, for the maintainer's later review (#1375)", below, which stays listed under
+    "Proxy decisions awaiting maintainer review" as the record of the vote. Option A, which #1375 applies, stands:
+    `tools/_reason.py` holds `reason_present()`, and both parsers of `tools/redirects_allowlist.txt` use it.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it: it moves `reason_present()` back or replaces the new module, and row 3.111 reopens or stays
+    closed on that ruling's terms. That pull request keeps every existing entry in `CHANGELOG.md` and
+    `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-19 on the serial run of TODO row 3.49 (#1368).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:45Z. The
   full question text is held in the orchestrator's private session record. The label and description are quoted
@@ -1878,6 +1892,37 @@ listed here for the record, under its heading as entered, and that ruling's entr
   guardrails disputed that citation, pointing to the unattended rule of 2026-10-31. The outcome is option 2. The
   maintainer's ruling of 2026-11-12 on the REASONED definition (#1290), above, confirms this decision, which is now
   a maintainer ruling. That ruling's entry records the decision's effect and its revert path.
+- **Proxy decision of 2026-11-20 on where `reason_present()` lives for the two Pages-build readers of TODO row 3.111,
+  for the maintainer's later review (#1375).** Decided at 2026-11-20T13:20Z, unattended, by a unanimous vote of
+  lab_infra, guardrails and grc, which the private record of the vote calls a D-1096 vote. The question, recorded at
+  12:47Z that day, asked how to handle the two reason readers of row 3.111 that the reason-readers pull request, which
+  moved the other five to `reason_present()`, left out: `tools/check_draft.py` and `tools/gen_hosted.py`. The
+  Cloudflare Pages build, `scripts/pages-build.sh`, runs the first directly and reaches the second only through the
+  imports of `tools/check_hosted.py` and `scripts/build-site.py`, which it runs. Every module that build reaches may
+  import only the standard library and this repository's modules (`tools/test_pages_build.py`), and
+  `reason_present()` lived in `tools/_markdown.py`, which reaches markdown-it-py through `tools/version_basis.py`. The
+  record gives three options,
+  each a label and a description, and both are quoted here exactly as the record has them. The record letters only
+  option A, as "(option A)" in its STATUS line, though the lab_infra vote it records speaks of "C's copies"; this
+  entry letters the other two B and C, in the record's order. Option A was "Yes, new module (Recommended)", described
+  as "a stdlib-only module holds reason_present(); _markdown.py imports it; both Pages-build readers use it; about 13
+  self-test fixtures that copy _markdown.py and the input listings are updated; full QA. Predicted and best for the
+  project." Option B was "Leave the 2 open", described as "keep row 3.111 narrowed to those two readers until the
+  maintainer looks at it." Option C was "Copy the rule", described as "a small copy of the rule in each Pages-build
+  reader, with a test that keeps the copies identical to reason_present()." The votes, as recorded, were all for "Yes,
+  new module (Recommended)", option A. The lab_infra vote gave "one implementation; C's copies can drift in behaviour
+  the test does not cover", on the basis of the message only. The guardrails vote gave "one definition over copies;
+  reversible, inside a vote's scope". The grc vote gave "single source of truth that keeps the Pages-build import
+  rule", on the basis of the message only, and asked that the Pages-build import test name the new module and that
+  each updated fixture be run once against the old copy to show it reads the new module. The record says that work
+  starts after the reason-readers pull request merges, and it does not give that pull request's number; this pull
+  request names it as #1372, which this pull request follows. Its effect, applied in this change: `tools/_reason.py`,
+  which imports only the standard library, now holds `reason_present()`, `tools/_markdown.py` imports it from there,
+  both parsers use it, and row 3.111 moves to `DONE.md`. As grc asked, `tools/test_pages_build.py` names the new
+  module, and each of the 15 self-tests whose fixtures now copy it was run once in its earlier form, without that
+  copy; the `DONE.md` row for 3.111 gives the results. The maintainer's ruling of 2026-11-20 confirming the proxy
+  decision on TODO row 3.111 (#1375), above, confirms this decision. This entry stays here as the record of the vote,
+  and that ruling's entry records the outcome and its revert path.
 
 ## Profile: predicting these rulings
 

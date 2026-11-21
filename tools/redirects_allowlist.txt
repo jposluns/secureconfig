@@ -1,9 +1,10 @@
 # The gated redirect list: every site/_redirects line beyond the two generated latest links.
 #
 # A line that is empty or starts with `#` is a comment. An entry is `SOURCE TARGET 302<TAB>REASON`
-# with single spaces, printable ASCII fields (`!` to `~`) and a non-empty reason, and no two
-# entries share a source. tools/gen_hosted.py copies each entry's rule (the part before the
-# tab), in file order, into site/_redirects between its header and the latest links.
+# with single spaces, printable ASCII fields (`!` to `~`) and a reason that is not only whitespace
+# and format characters (Unicode category Cf) and has no whitespace at either end, and no two
+# entries share a source. tools/gen_hosted.py copies each entry's rule (the part before the tab),
+# in file order, into site/_redirects between its header and the latest links.
 # tools/check_draft.py checks each entry: the status is the literal 302, and every
 # root-relative source and target is percent-decoded to a normal form first. A field that does
 # not normalize cleanly is refused: an unsettled decoding, any character outside `!` to `~` (a

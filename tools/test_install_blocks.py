@@ -45,8 +45,8 @@ build_site = gate.build_site
 # The files a copy of the gate needs: the gate, the parser loader and its imports, the site build
 # and its imports, and README.md.
 COPIED = ("tools/check_install_blocks.py", "tools/check_verify_marking.py", "tools/_markdown.py",
-          "tools/_verify_sections.py", "tools/check_csp_hashes.py", "tools/gen_hosted.py",
-          "tools/_archives.py", "scripts/build-site.py", "README.md")
+          "tools/_reason.py", "tools/_verify_sections.py", "tools/check_csp_hashes.py",
+          "tools/gen_hosted.py", "tools/_archives.py", "scripts/build-site.py", "README.md")
 HASH = "--hash=sha256:" + "0" * 64
 
 
