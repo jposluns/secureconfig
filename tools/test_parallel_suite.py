@@ -32,7 +32,9 @@ THE CASES (numbered as in the implementation plan, which is not in this reposito
       section is 1 in a whole run and 127 under --sections in both modes.
   T9  HUP, INT and TERM sent to the driver kill every section's process group, remove its temp
       folder and are re-raised, including a TERM sent between a section's launch and the record
-      of its PID, judged only after a bounded wait for the files an unstopped section writes.
+      of its PID, judged only after a bounded wait for the files an unstopped section writes; and
+      the driver's own death by an untrapped USR1 just after a launch, by a TERM before its traps
+      are set, or by a failed fork leaves no temp folder (rows 3.103 and 3.113).
   T10 a section that writes to stdout and stderr in turn prints them in the same order as serial.
   T11 (the part that needs no real suite) the normaliser of the differential run rewrites or drops
       only the fields and lines it names (the job notice in its TERM, KILL, HUP, ABRT, "I/O
@@ -89,6 +91,12 @@ if [ "${{STANDIN_PREFLIGHT:-}}" = refuse ]; then
   exit 2
 fi
 printf '{PREFLIGHT_OK}\\n'
+"""
+# The real mktemp is the first one on PATH after the tree's bin, which Tree.env puts first.
+STANDIN_MKTEMP = """#!/usr/bin/env bash
+made=$(PATH=${PATH#*:} mktemp "$@") || exit
+printf '%s\\n' "$made"
+kill -TERM 0
 """
 # The lines whose text differs from run to run, and what they are normalised to. Nothing else is
 # left out of the differential comparison.
@@ -489,13 +497,17 @@ def sleepers(n):
             for i in range(1, n + 1)]
 
 
-def signal_run(text, sig, injected=None, wait_names=("s1", "s2", "s3"), late=()):
+def signal_run(text, sig, injected=None, wait_names=("s1", "s2", "s3"), late=(), extra_bin=None):
     """Run the parallel suite, send sig to the driver once every wait_names child runs (at once when
     injected), and return (exit, output, leftovers, temp entries left). With late, once the driver
     is gone, first wait up to 3 seconds for those files under the tree, which a section forked
     just before the signal writes when it is not stopped; launched.pid among them also counts every
-    live process of that PID's process group as left over."""
+    live process of that PID's process group as left over. extra_bin maps a name to the text of a
+    stand-in command put first on PATH."""
     t = Tree(injected or text)
+    for name, body in (extra_bin or {}).items():
+        (t.d / "bin" / name).write_text(body, encoding="utf-8")
+        (t.d / "bin" / name).chmod(0o755)
     try:
         p = t.start((), "4")
         if injected is None:
@@ -559,6 +571,35 @@ def t9_signals():
                                         late=("launched.pid", "s1.pid", "s1.child"))
         check(failures, "T9 a TERM between a launch and the record of its PID", rc == -signal.SIGTERM
               and not left and not tmp, f"exit {rc}, still running {left!r}, temp left {tmp!r}: {out!r}")
+        # Rows 3.103 and 3.113: the driver's own death, however it comes, leaves no temp folder.
+        # A USR1, which the driver does not trap, just after a launch's PID is recorded (row 3.103's
+        # window, where no EXIT trap was set), and a TERM once the folder exists and before the
+        # driver's traps are set (row 3.113). The USR1 does not stop the sections, which run on in
+        # their own process groups, so only the exit and the temp folder are judged; Tree.close
+        # stops the sections.
+        usr1 = src.replace(line, f'{line}  kill -USR1 "$BASHPID"\n')
+        rc, out, left, tmp = signal_run(text, signal.SIGUSR1, injected=usr1)
+        check(failures, "T9 a USR1 just after the record of a launch's PID", rc == -signal.SIGUSR1
+              and not tmp, f"exit {rc}, temp left {tmp!r}: {out!r}")
+    # A stand-in mktemp, first on PATH, makes the folder with the real one, prints its name and
+    # sends a TERM to the driver's process group, so the TERM arrives once the folder exists and
+    # before the driver can set its traps, wherever in the driver mktemp runs.
+    rc, out, left, tmp = signal_run(text, None, injected=text, extra_bin={"mktemp": STANDIN_MKTEMP})
+    check(failures, "T9 a TERM once the temp folder exists, before the driver's traps are set",
+          rc == -signal.SIGTERM and not left and not tmp,
+          f"exit {rc}, still running {left!r}, temp left {tmp!r}: {out!r}")
+    # A failed fork ends the driver with 254 (bash 5.3.9). ulimit -u 1 fails every fork of the
+    # driver from the second launch on and changes no other process's limit; root is not held to it.
+    fork = "  set -m\n"
+    if os.geteuid() == 0:
+        failures.append("T9 runs as root, which ulimit -u does not hold, so a failed fork cannot be made")
+    elif src.count(fork) != 1:
+        failures.append(f"T9 the launch's {fork!r} is not in the driver once")
+    else:
+        failed = src.replace(fork, f'  [ "$i" -lt 1 ] || ulimit -u 1\n{fork}')
+        rc, out, left, tmp = signal_run(text, None, injected=failed)
+        check(failures, "T9 a failed fork of a launch", rc == 254 and "fork: Resource temporarily "
+              "unavailable" in out and not tmp, f"exit {rc}, temp left {tmp!r}: {out!r}")
     return failures
 
 
@@ -1223,7 +1264,8 @@ def main():
               f"order and bytes equal to serial, real concurrency, exit status, preflight and "
               f"SECURECONFIG_SUITE_JOBS refusals, dependencies and cycles, exclusive sections, early "
               f"abort and signal death of a section, HUP, INT and TERM to the driver including between "
-              f"a launch and the record of its PID, merged streams, the file's shape, "
+              f"a launch and the record of its PID, no temp folder after the driver's death by USR1, "
+              f"an early TERM or a failed fork, merged streams, the file's shape, "
               f"SECURECONFIG_SUITE_TIMES)")
     for note in notes:
         print(note)

@@ -146,7 +146,11 @@ SCOPE
   tokens, excluding option fragments and whole <placeholders>. Unknown
   command words without those operators remain outside this check.
   Shell-parser blind spots below also apply. No C1 or C2 check applies to
-  inline spans; diagnostics use the span opener's guide:line.
+  inline spans; diagnostics use the span opener's guide:line. When the pinned
+  parser is absent or mismatched (a ParserUnavailable from
+  check_verify_marking.gate_parser, raised itself or as the cause of a
+  ValueError from version_basis), the scan stops with one line naming that
+  cause, not one C3-INLINE-MARKDOWN finding per enrolled guide (row 3.114).
 
   An inline exception uses this visible standalone code span on the physical
   line immediately before the command span's line:
@@ -333,7 +337,7 @@ from urllib.parse import unquote
 # above this line on purpose: they must never resolve from tools/.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _markdown import Fences, FENCE_RE, reason_present  # noqa: E402
-from check_verify_marking import code_spans, guide_context
+from check_verify_marking import ParserUnavailable, code_spans, guide_context
 
 # Top-level guides only, matching check_verify_safety.py: a fenced block in the
 # plugin mirror or in .aiqt docs is not something a reader copies from, and the
@@ -2527,12 +2531,28 @@ def _scan_inline(path, text, findings, stats, opts):
                         and f[2] != waivers.get(line))
 
 
+def parser_unavailable(exc):
+    """Return the ParserUnavailable that is exc or caused it, or None.
+
+    tools/version_basis.py re-raises ParserUnavailable as a plain ValueError
+    chained with `from`, so only the cause chain tells a missing or mismatched
+    parser apart from metadata that is really invalid (row 3.114).
+    """
+    while exc is not None:
+        if isinstance(exc, ParserUnavailable):
+            return exc
+        exc = exc.__cause__
+    return None
+
+
 def scan_text(path, text, findings, stats, opts, *, inline=True):
     verify_lines = None
     if opts.example_hosts:
         try:
             verify_lines = guide_context(text, enrolled=inline)[3]
-        except ValueError:
+        except ValueError as exc:
+            if parser_unavailable(exc):
+                raise
             verify_lines = None  # unreadable sections: every fence counts
     for lang, start, body in _blocks(text):
         if lang in SHELL_INFOS or lang in CONSOLE_INFOS:
@@ -2545,7 +2565,9 @@ def scan_text(path, text, findings, stats, opts, *, inline=True):
     if inline:
         try:
             _scan_inline(path, text, findings, stats, opts)
-        except ValueError:
+        except ValueError as exc:
+            if parser_unavailable(exc):
+                raise
             findings.append((path, 1, "C3-INLINE-MARKDOWN", ""))
 
 
@@ -2576,8 +2598,19 @@ def run_scan(opts):
     for path in iter_md_files(opts.roots):
         stats.files += 1
         with open(path, "r", encoding="utf-8", errors="replace") as fh:
-            scan_text(path, fh.read(), findings, stats, opts,
+            text = fh.read()
+        try:
+            scan_text(path, text, findings, stats, opts,
                       inline=Path(path).name in enrolled)
+        except ValueError as exc:
+            if not parser_unavailable(exc):
+                raise
+            # One line for the whole run: every enrolled guide would fail
+            # the same way, and no finding here would be about a guide.
+            print("%s: parser unavailable: %s" % (path, exc))
+            print("GATE %s: FAIL -- the pinned parser is unavailable; this "
+                  "is a host problem, not a code finding" % GATE)
+            return 1
     findings.sort(key=lambda f: (f[0], f[1], f[2]))
     for path, lineno, code, extra in findings:
         print("%s:%d: [%s] %s%s" % (path, lineno, code, MESSAGES[code], extra))
@@ -4624,13 +4657,56 @@ def run_self_test():
               % ("PASS" if ok else "FAIL", name, exp, got))
         if not ok:
             failures += 1
+    if not _parser_unavailable_case():
+        failures += 1
+    total = len(SELF_TEST_CASES) + 1
     if failures:
         print("GATE %s-selftest: FAIL -- %d of %d case(s)"
-              % (GATE, failures, len(SELF_TEST_CASES)))
+              % (GATE, failures, total))
         return 1
-    print("GATE %s-selftest: PASS -- %d case(s)"
-          % (GATE, len(SELF_TEST_CASES)))
+    print("GATE %s-selftest: PASS -- %d case(s)" % (GATE, total))
     return 0
+
+
+def _parser_unavailable_case():
+    """Row 3.114: simulate an absent or mismatched parser on one enrolled
+    guide. The scan must name the cause in one line and fail, never report
+    C3-INLINE-MARKDOWN ("invalid front matter") for the guide."""
+    import contextlib
+    import io
+    import check_verify_marking
+    tools = Path(__file__).resolve().parent
+    names = sorted((tools / "version_basis_guides.txt").read_text(
+        encoding="utf-8").splitlines())
+    guide = str(tools.parent / names[0])
+    cause = ("markdown-it-py installed 0.0.0, pinned 9.9.9; "
+             "install tools/requirements-gates.txt")
+
+    def unavailable(*, required=False):
+        if required:
+            raise ParserUnavailable(cause)
+        return None
+
+    saved, out = check_verify_marking.gate_parser, io.StringIO()
+    check_verify_marking.gate_parser = unavailable
+    try:
+        with contextlib.redirect_stdout(out):
+            rc = run_scan(parse_args([guide]))
+    except Exception as exc:  # noqa: BLE001  a crash fails the case
+        rc = "%s: %s" % (type(exc).__name__, exc)
+    finally:
+        check_verify_marking.gate_parser = saved
+    lines = out.getvalue().splitlines()
+    ok = (rc == 1 and len(lines) == 2
+          and lines[0].startswith(guide + ": parser unavailable: ")
+          and lines[0].endswith(cause)
+          and lines[1].startswith("GATE %s: FAIL -- the pinned parser is "
+                                  "unavailable" % GATE)
+          and "C3-INLINE-MARKDOWN" not in out.getvalue())
+    print("%s %-48s expect=%s got=%s"
+          % ("PASS" if ok else "FAIL", "parser-unavailable",
+             "one cause line", lines[:1] or [rc]))
+    return ok
 
 
 def parse_args(argv):
