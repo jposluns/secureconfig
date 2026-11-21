@@ -1028,10 +1028,12 @@ TERMINAL_TAIL = ("gate wrote this\nline from g\n\n"
 
 
 def t17_terminal(notes):
-    """The serial run of a one-section tree on a pseudo-terminal: under --sections, Ctrl-C, a TERM
-    sent only to the driver's PID, Ctrl-Z then fg, and `stty tostop` with a section whose gate
-    writes to the terminal, and in a whole run a TERM sent only to the driver's PID. Without a
-    pseudo-terminal the group is skipped and notes says why."""
+    """The serial run on a pseudo-terminal, in 7 cases. Under --sections g, of a tree with one
+    section g: Ctrl-C, a TERM sent only to the driver's PID, Ctrl-Z then fg, and `stty tostop`
+    with a section whose gate writes to the terminal. In a whole run: a TERM sent only to the
+    driver's PID, in the same one-section tree, and a KILL and a USR1 sent only to the driver's
+    PID while g's gate sleeps, in a tree of sections g and h. Without a pseudo-terminal the group
+    is skipped and notes says why."""
     failures = []
     try:
         for fd in pty.openpty():
