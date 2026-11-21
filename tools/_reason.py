@@ -3,9 +3,11 @@
 
 reason_present() lived in tools/_markdown.py until TODO row 3.111 moved it here. This module
 imports only the standard library, so the two parsers of tools/redirects_allowlist.txt,
-tools/check_draft.py and tools/gen_hosted.py, can import it. scripts/pages-build.sh runs both,
-and tools/test_pages_build.py requires every module that build reaches to import only the
-standard library and this repository's modules. tools/_markdown.py reaches markdown-it-py through
+tools/check_draft.py and tools/gen_hosted.py, can import it. The Pages build,
+scripts/pages-build.sh, runs tools/check_draft.py directly and reaches tools/gen_hosted.py only
+through the imports of tools/check_hosted.py and scripts/build-site.py, which it runs. The test
+tools/test_pages_build.py requires every module that build reaches to import only the standard
+library and this repository's modules. tools/_markdown.py reaches markdown-it-py through
 body_lines(), which imports tools/version_basis.py, so the two parsers cannot import that module.
 tools/_markdown.py imports reason_present() and BLANK_CATEGORIES from here, so every reader that
 imports them from tools/_markdown.py gets these same objects. Keep this module to the standard

@@ -301,7 +301,8 @@ def read_allowlist(root):
         if (not sep or not reason_present(reason) or reason != reason.strip()
                 or not ENTRY.fullmatch(rule)):
             raise HostedError(f"{ALLOWLIST}:{n} is not `SOURCE TARGET 302<TAB>REASON` with "
-                              f"single spaces, printable ASCII fields and a non-empty reason")
+                              f"single spaces, printable ASCII fields and a reason with "
+                              f"visible text and no whitespace at either end")
         source = rule.split(" ", 1)[0]
         first = sources.setdefault(source, n)
         if first != n:

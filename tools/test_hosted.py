@@ -349,11 +349,11 @@ CASES = (
      "holds a carriage return", 1),
     ("an allowlist entry without a reason",
      lambda d: fixture(d, versions=(), allow="/old / 302\n", generate=False),
-     "non-empty reason", 1),
+     "reason with visible text", 1),
     # Row 3.111: a reason of U+200B alone is no reason, as reason_present() judges it.
     ("an allowlist entry whose reason is U+200B alone",
      lambda d: fixture(d, versions=(), allow="/old / 302\t\u200b\n", generate=False),
-     "non-empty reason", 1),
+     "reason with visible text", 1),
     ("an asset redirect naming a zip no record names",
      lambda d: fixture(d, allow=ASSET.format("1.0.99")),
      "no record names", 1),

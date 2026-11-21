@@ -24,7 +24,7 @@ Each row is one physical line. `tools/check_todo_rows.py`, which `tools/run_all_
 fails a line holding two row starts such as `| 3.6 |`, the shape a lost line break leaves when it
 joins two rows.
 
-Next ids: **1.476**, **2.50**, **3.117**, **4.17**.
+Next ids: **1.476**, **2.50**, **3.121**, **4.17**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -183,6 +183,7 @@ marked, and those are the ones worth taking first.
 | 3.114 | `tools/check_guard_conventions.py`: when the installed markdown-it-py does not match the version pinned in `tools/requirements-gates.txt`, the guard-conventions scan reports "invalid front matter" and hides the cause. `tools/version_basis.py` catches `ParserUnavailable` from `tools/check_verify_marking.py` and raises a plain `ValueError` in its place (lines 966 and 967, and lines 820 and 821, at e1120045). `except ValueError:` around `_scan_inline()` (lines 2548 and 2549) catches that `ValueError` and records a `C3-INLINE-MARKDOWN` finding, which is reported with the fixed message at line 587, "cannot select Verify inline spans: invalid front matter". This is from a reading of the code; the #1372 round-1 QA ran the scan on a host with markdown-it-py 3.0.0, where the pin is 4.2.0, and its scan reported 113 findings, which a re-run in the round-2 QA split into 103 `C3-INLINE-MARKDOWN` findings with that message and 10 `C4-EXAMPLE-HOST` findings. It predates #1372. Found in the #1372 review and sent to this file. (L, S) | `[gap]` |
 | 3.115 | `DECISIONS.md` lines 510 to 514 at 19f9d857 (#1373), the entry for the maintainer's rulings of 2026-11-13 that wave 1 of the exit-status sweep followed: it does not say that the 23:08Z choice was not the predicted option, which the orchestrator's private record of that ruling states, though the profile at the end of the file says that a wrong prediction is recorded (line 1887). It also lacks the sentence that no reasoning was recorded beyond the choice, which its neighbours carry (lines 354, 376, 413 to 414 and 529) and the header expects (line 14). Both are omissions, not false statements. Found in #1373's review as LOW L1 of its round-1 QA and accepted under the operating model, so the entry is unchanged. (L, XS) | `[gap]` |
 | 3.116 | `DECISIONS.md` lines 524 to 526 at 19f9d857 (#1373), the Revert bullet of the same entry: it says only that the revert path is a later ruling and a pull request that follows it, and does not name what a revert restores, which other entries do. Here that would be #1310's exit numbers and per-guide notes. Found in #1373's review as LOW L2 of its round-1 QA and accepted under the operating model, so the entry is unchanged. (L, XS) | `[gap]` |
+| 3.120 | `DECISIONS.md` lines 1727 and 1728 at ea052761 (#1375), the introduction of the section "Proxy decisions awaiting maintainer review": it places "The two proxy decisions of 2026-11-11" at the end of the section, but #1375 adds its entry for the vote of 2026-11-20 after them and does not change that introduction. Found in #1375's review as LOW F2 of its round-1 QA and sent to this file. (L, XS) | `[gap]` |
 
 ## Decisions
 

@@ -1882,28 +1882,32 @@ listed here for the record, under its heading as entered, and that ruling's entr
   for the maintainer's later review (#1375).** Decided at 2026-11-20T13:20Z, unattended, by a unanimous vote of
   lab_infra, guardrails and grc, which the private record of the vote calls a D-1096 vote. The question, recorded at
   12:47Z that day, asked how to handle the two reason readers of row 3.111 that the reason-readers pull request, which
-  moved the other five to `reason_present()`, left out: `tools/check_draft.py` and `tools/gen_hosted.py`. Both run in
-  the Cloudflare Pages build, whose modules may import only the standard library (`tools/test_pages_build.py`), and
-  `reason_present()` lived in `tools/_markdown.py`, which reaches markdown-it-py through `tools/version_basis.py`. The
-  options, with their labels quoted exactly and their descriptions quoted from the record, were these. Option A was
-  "Yes, new module (Recommended)", described as "a stdlib-only module holds reason_present(); _markdown.py imports it;
-  both Pages-build readers use it; about 13 self-test fixtures that copy _markdown.py and the input listings are
-  updated; full QA" and "Predicted and best for the project". Option B was "Leave the 2 open", described as "keep row
-  3.111 narrowed to those two readers until the maintainer looks at it". Option C was "Copy the rule", described as "a
-  small copy of the rule in each Pages-build reader, with a test that keeps the copies identical to reason_present()".
-  The votes, as recorded, were all for "Yes, new module (Recommended)", option A. The lab_infra vote gave "one
-  implementation; C's copies can drift in behaviour the test does not cover", on the basis of the message only. The
-  guardrails vote gave "one definition over copies; reversible, inside a vote's scope". The grc vote gave "single
-  source of truth that keeps the Pages-build import rule", on the basis of the message only, and asked that the
-  Pages-build import test name the new module and that each updated fixture be run once against the old copy to show
-  it reads the new module. The record says that work starts after the reason-readers pull request merges; that is
-  #1372, which this pull request follows. Its effect, applied in this change: `tools/_reason.py`, which imports only
-  the standard library, now holds `reason_present()`, `tools/_markdown.py` imports it from there, both parsers use it,
-  and row 3.111 moves to `DONE.md`. As grc asked, `tools/test_pages_build.py` names the new module, and each of the 15
-  self-tests whose fixtures now copy it was run once in its earlier form, without that copy; the `DONE.md` row for
-  3.111 gives the results. The maintainer has not yet reviewed this decision, so it is not a maintainer ruling. The
-  revert path is the maintainer's review: a different ruling moves `reason_present()` back or replaces the new module,
-  and row 3.111 reopens or stays closed on that ruling's terms.
+  moved the other five to `reason_present()`, left out: `tools/check_draft.py` and `tools/gen_hosted.py`. The
+  Cloudflare Pages build, `scripts/pages-build.sh`, runs the first directly and reaches the second only through the
+  imports of `tools/check_hosted.py` and `scripts/build-site.py`, which it runs. Every module that build reaches may
+  import only the standard library (`tools/test_pages_build.py`), and `reason_present()` lived in
+  `tools/_markdown.py`, which reaches markdown-it-py through `tools/version_basis.py`. The record gives three options,
+  each a label and a description, and both are quoted here exactly as the record has them. The record letters only
+  option A, as "(option A)" in its STATUS line, though the lab_infra vote it records speaks of "C's copies"; this
+  entry letters the other two B and C, in the record's order. Option A was "Yes, new module (Recommended)", described
+  as "a stdlib-only module holds reason_present(); _markdown.py imports it; both Pages-build readers use it; about 13
+  self-test fixtures that copy _markdown.py and the input listings are updated; full QA. Predicted and best for the
+  project." Option B was "Leave the 2 open", described as "keep row 3.111 narrowed to those two readers until the
+  maintainer looks at it." Option C was "Copy the rule", described as "a small copy of the rule in each Pages-build
+  reader, with a test that keeps the copies identical to reason_present()." The votes, as recorded, were all for "Yes,
+  new module (Recommended)", option A. The lab_infra vote gave "one implementation; C's copies can drift in behaviour
+  the test does not cover", on the basis of the message only. The guardrails vote gave "one definition over copies;
+  reversible, inside a vote's scope". The grc vote gave "single source of truth that keeps the Pages-build import
+  rule", on the basis of the message only, and asked that the Pages-build import test name the new module and that
+  each updated fixture be run once against the old copy to show it reads the new module. The record says that work
+  starts after the reason-readers pull request merges, and it does not give that pull request's number; this pull
+  request names it as #1372, which this pull request follows. Its effect, applied in this change: `tools/_reason.py`,
+  which imports only the standard library, now holds `reason_present()`, `tools/_markdown.py` imports it from there,
+  both parsers use it, and row 3.111 moves to `DONE.md`. As grc asked, `tools/test_pages_build.py` names the new
+  module, and each of the 15 self-tests whose fixtures now copy it was run once in its earlier form, without that
+  copy; the `DONE.md` row for 3.111 gives the results. The maintainer has not yet reviewed this decision, so it is not
+  a maintainer ruling. The revert path is the maintainer's review: a different ruling moves `reason_present()` back or
+  replaces the new module, and row 3.111 reopens or stays closed on that ruling's terms.
 
 ## Profile: predicting these rulings
 

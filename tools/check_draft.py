@@ -633,7 +633,7 @@ def allowlist_entries(root):
         # invisible format characters, such as U+200B, is no reason.
         if not sep or not reason_present(reason) or reason != reason.strip():
             findings.append(f"{where}: an entry is `SOURCE TARGET 302<TAB>REASON` with a "
-                            f"non-empty reason")
+                            f"reason with visible text and no whitespace at either end")
             continue
         matched = ALLOW_ENTRY.fullmatch(rule)
         if not matched:
