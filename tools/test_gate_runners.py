@@ -77,6 +77,9 @@ running afterwards, that the HUP, INT and TERM traps are reset, and that the EXI
     server, and the shell dies by that TERM after the EXIT trap; an INT to the process group of a
     copy of the suite run with `--sections overflow`, which reaches the shell running the section,
     stops both too, and the suite dies by that INT;
+  - a TERM sent only to the PID of that copy of the suite, which reaches the shell running the
+    section through the serial run's supervisor (row 3.49), stops both too, and the suite dies
+    by that TERM;
   - a TERM the section's shell sends itself between the launch of the server, or of the check,
     and the record of its PID (a `kill` written into the section just before that record) still
     stops what was launched, and the shell dies by that TERM after the EXIT trap, within
@@ -926,9 +929,9 @@ def window(text, line):
 
 def overflow_signal_failures(script, pages):
     """A TERM to the shell running the overflow section, an INT to the process group of the suite
-    run with --sections overflow, and a TERM between the launch of the server, or of the check,
-    and the record of its PID. Each shell is to die by the signal it got, as a Popen exit of minus
-    that signal's number."""
+    run with --sections overflow, a TERM to the suite's own PID in that run, and a TERM between the
+    launch of the server, or of the check, and the record of its PID. Each shell is to die by the
+    signal it got, as a Popen exit of minus that signal's number."""
     failures = []
     bash = shutil.which("bash")
     d = Path(tempfile.mkdtemp())
@@ -963,6 +966,25 @@ def overflow_signal_failures(script, pages):
     finally:
         survivors(d)
         shutil.rmtree(d, ignore_errors=True)
+    # Row 3.49: a TERM sent only to the suite's own PID reaches the section's shell, a child of
+    # the serial run, through the serial run's supervisor.
+    d = Path(tempfile.mkdtemp())
+    try:
+        overflow_tree(d, pages)
+        overflow_bin(d, OVERFLOW_SECTIONS_PYTHON)
+        (d / "tools").mkdir()
+        (d / "tools" / "run_all_checks.sh").write_text(SUITE.read_text(encoding="utf-8"),
+                                                       encoding="utf-8")
+        rc, out, left = interrupt(d, [bash, str(d / "tools" / "run_all_checks.sh"), "--sections",
+                                      "overflow"], overflow_env(d, 0, "sleep 60", ""), "check.pid")
+        if (rc != -signal.SIGTERM or left or not (d / "check.pid").exists()
+                or "Sections selected: overflow" not in out):
+            failures.append(f"--sections overflow, a TERM to the suite's own PID while the check "
+                            f"runs: expected death by TERM and nothing left running; got exit "
+                            f"{rc}, {left!r} still running: {out!r}")
+    finally:
+        survivors(d)
+        shutil.rmtree(d, ignore_errors=True)
     for launch, line, names in (("the server", "  overflow_pid=$!\n", ["server.pid"]),
                                 ("the check", "    overflow_check_pid=$!\n",
                                  ["server.pid", "check.pid"])):
@@ -991,7 +1013,7 @@ def overflow_signal_failures(script, pages):
         finally:
             survivors(d)
             shutil.rmtree(d, ignore_errors=True)
-    return failures, 4
+    return failures, 5
 
 
 PLUGIN_SECTION = re.compile(r"^# section: plugin\n.*?(?=^# section: )", re.M | re.S)
@@ -1190,7 +1212,8 @@ def main():
           f"overflow section (a SKIP or, when required, a FAIL without node or Chromium; 0 "
           f"passes and any other code fails; a missing or unlisted page fails; nothing left "
           f"running, and death by the signal, after a TERM, an INT to the process group of "
-          f"--sections overflow, or a TERM between a launch and the record of its PID), "
+          f"--sections overflow, a TERM to the suite's own PID under --sections overflow, or a "
+          f"TERM between a launch and the record of its PID), "
           f"{plugin_cases} cases of its plugin section (plugin/ as it was, byte for byte, and no "
           f"folder left, with no signal or after a TERM just after the restore's rm -rf plugin, a "
           f"TERM, INT or HUP to the process group during the build, a TERM during the build with "
