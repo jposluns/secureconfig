@@ -55,8 +55,12 @@ THE CASES (numbered as in the implementation plan, which is not in this reposito
       tostop` the run ends with 0 and no stop. A TERM sent only to the driver's PID, under
       --sections and in a whole run, ends the driver by TERM with nothing printed after the
       section's heading, and 3 seconds later the section's shell and its gate are gone and the
-      gate wrote nothing late (row 3.49, which the serial run's supervisor fixed). Without a
-      pseudo-terminal the group prints a SKIP line saying why.
+      gate wrote nothing late (row 3.49, which the serial run's supervisor fixed). A KILL and a
+      USR1 sent only to the driver's PID in a whole run of 2 sections end the driver by that
+      signal, and no output follows the exit: within 15 seconds the section's shell, its gate and
+      the rest of the driver's process group are gone, the gate wrote nothing late and the second
+      section never started (the supervisor's watcher). Without a pseudo-terminal the group prints
+      a SKIP line saying why.
 
 NOT HERE (run by hand, see main's --differential and --inject, because each runs the real suite
 and so doubles its cost, which no gate pays): T11, the output identity of the real suite in both
@@ -1037,14 +1041,15 @@ def t17_terminal(notes):
                      f"is available ({exc})")
         return failures
 
-    # The time limits of a case's waits add up to at most 27 seconds, for Ctrl-Z then fg (5 for the
-    # gate, 5 for the stop, 3 for the stopped states, 8 for the end, 1 for the output and 5 for
-    # Terminal.close), each but the last multiplied by SECURECONFIG_TEST_LOAD_SCALE. A wait can run
-    # a little past its limit, which is checked between steps, and Terminal.close's wait for JOBCTL
-    # after a SIGKILL has no limit.
-    def run(label, sleep, act, tostop=False, args=("--sections", "g")):
-        """Start the run, wait for its gate, then act(term, tree); every case ends its run."""
-        tree = Tree(synthetic([section("g", extra=TERMINAL_GATE.format(sleep=sleep))]))
+    # The time limits of a case's waits add up to at most 32 seconds, for a KILL or a USR1 to the
+    # driver's PID (5 for the gate, 1 for the output, 5 for the end, 15 for what is left, 1 for late
+    # output and 5 for Terminal.close), each but the last multiplied by SECURECONFIG_TEST_LOAD_SCALE.
+    # A wait can run a little past its limit, which is checked between steps, and Terminal.close's
+    # wait for JOBCTL after a SIGKILL has no limit.
+    def run(label, sleep, act, tostop=False, args=("--sections", "g"), more=()):
+        """Start the run, wait for its gate, then act(term, tree); every case ends its run. more
+        holds sections after g."""
+        tree = Tree(synthetic([section("g", extra=TERMINAL_GATE.format(sleep=sleep)), *more]))
         term = None
         try:
             term = Terminal(tree, args, tostop)
@@ -1092,6 +1097,29 @@ def t17_terminal(notes):
                   f"{(tree.d / 'gate.late').exists()}, output {term.out!r}")
         return act
 
+    def untrapped_to_driver(sig):
+        """sig, which the driver cannot trap (KILL) or does not trap (USR1), sent only to the
+        driver's PID in a whole run of sections g and h while g's gate runs."""
+        def act(term, tree):
+            pid = int(term.report("pid"))
+            head = terminal_text(TERMINAL_WHOLE_HEAD)
+            settled(term, head)
+            os.kill(pid, sig)
+            term.pump(term.ended, 5)
+            at_exit = term.out
+            gone = wait_for(lambda: not tree.leftovers() and not group_alive(pid), 15)
+            term.pump(lambda: False, 1)
+            check(failures, f"T17 a {sig.name} to the driver's PID in a whole run ends it by "
+                  f"{sig.name}, and no section output appears after the exit: within 15 seconds the "
+                  "section's shell, its gate and the rest of the driver's process group are gone, "
+                  "the gate wrote nothing late and section h never started (M1 of #1377's QA)",
+                  term.reports[1:] == [f"exit {-sig}"] and at_exit == head and term.out == at_exit
+                  and gone and not (tree.d / "gate.late").exists() and not (tree.d / "h.pid").exists(),
+                  f"reports {term.reports!r}, output at the exit {at_exit!r}, output now "
+                  f"{term.out!r}, still running {tree.leftovers()!r}, group {group_alive(pid)!r}, "
+                  f"the gate wrote late {(tree.d / 'gate.late').exists()}")
+        return act
+
     def ctrl_z(term, tree):
         os.write(term.master, b"\x1a")
         term.pump(lambda: term.report("stopped") is not None or term.ended(), 5)
@@ -1121,13 +1149,18 @@ def t17_terminal(notes):
     run("TERM to the driver's PID", 8 * SCALE, term_to_driver(TERMINAL_HEAD, "under --sections"))
     run("TERM to the driver's PID in a whole run", 8 * SCALE,
         term_to_driver(TERMINAL_WHOLE_HEAD, "in a whole run"), args=())
+    # The gate sleeps for 4 seconds, scaled, so that a run the driver's death does not stop prints
+    # the gate's line and section h well within the 15 seconds the case waits.
+    for sig in (signal.SIGKILL, signal.SIGUSR1):
+        run(f"{sig.name} to the driver's PID in a whole run", 4 * SCALE, untrapped_to_driver(sig),
+            args=(), more=(section("h"),))
     run("Ctrl-Z then fg", 2, ctrl_z)
     run("stty tostop", 0.5, tostop, tostop=True)
     if not failures:
-        notes.append("  ok    T17, 5 cases of the serial run on a pseudo-terminal (under --sections "
-                     "Ctrl-C, a TERM to the driver's PID, Ctrl-Z then fg and stty tostop, and a "
-                     "TERM to the driver's PID in a whole run), each TERM stopping the section's "
-                     "shell and its gate (row 3.49)")
+        notes.append("  ok    T17, 7 cases of the serial run on a pseudo-terminal (under --sections "
+                     "Ctrl-C, a TERM to the driver's PID, Ctrl-Z then fg and stty tostop, and in a "
+                     "whole run a TERM, a KILL and a USR1 to the driver's PID), each signal to the "
+                     "driver's PID stopping the section's shell and its gate (row 3.49)")
     return failures
 
 

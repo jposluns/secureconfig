@@ -111,8 +111,12 @@ anything but letters, digits and hyphens.
 `SECURECONFIG_SUITE_JOBS=N`, a whole number from 1 to 64, is an opt-in parallel mode of the same
 script for either run. Unset or `1` is the serial run, which is the reference; CI sets nothing,
 so it stays serial. The suite's own shell runs the serial run as a supervised child in its process
-group, and a HUP, INT or TERM sent only to the suite's PID stops every process below it and is
-re-raised (row 3.49). `BASH_ENV` is read by both shells, so anything it prints appears twice.
+group, and a HUP, INT or TERM sent only to the suite's PID is passed on to every process below it
+and is re-raised; a process that ignores the signal goes on running, as a gate's own background
+children do with an INT (row 3.49). When the suite's shell ends without waiting for the child, as by
+a KILL or a signal it does not trap such as USR1, a watcher stops the child and every process below
+it, with TERM and then KILL after 10 seconds. `BASH_ENV` is read by both shells, so anything it
+prints appears twice.
 At N above 1 each section runs in its own bash process and process group, with its standard
 output and standard error merged into one buffer, and the buffers print in the file's order as each section and every one before it finish, so the output
 holds the same lines in the same order and the status is the same. The summary is the same code.
@@ -129,12 +133,14 @@ review) makes the serial run print bash's job notice for its child shell, which 
 print. And a diagnostic that bash itself prints from inside a section, such as an unbound variable or a
 command not found, names another file or line.
 In either mode, a whole run that ends with a status from 129 to 192 that no signal caused, such as a
-section's `exit 143`, dies by the signal of that number minus 128: the serial run's supervisor
+section's `exit 143`, sends itself the signal of that number minus 128: the serial run's supervisor
 matches the parallel driver here, by the maintainer's ruling of 2026-11-20. Under `--sections`
-such a status stays the exit status. So in a whole run a status of 147 sends STOP, which stops the
-suite and leaves it stopped. A status from 148 to 150 sends TSTP, TTIN or TTOU, stop signals that
-Linux discards for an orphaned process group, as in a session with no terminal (148 measured; 149
-and 150 not run), and that may stop a run in a terminal session (not measured; row 3.121).
+such a status stays the exit status. Most such signals end the run: `exit 143` dies by TERM and
+`exit 160` by signal 32. A status of 145, 146, 151 or 156 sends CHLD, CONT, URG or WINCH, which by
+default do not end a process, so the run exits with that status. A status of 147 sends STOP, which
+stops the suite and leaves it stopped. A status from 148 to 150 sends TSTP, TTIN or TTOU, stop
+signals that Linux discards for an orphaned process group (148 measured; 149 and 150 not run), and
+that may stop a run whose process group is not orphaned (row 3.121).
 Every gate in the suite, in either mode, is deterministic and offline: no gate reaches the
 network, so no outside service can change a gate's answer. The `gates` job that runs it is not
 offline. Before the suite starts, `.github/workflows/checks.yml` fetches its pinned actions, Python,

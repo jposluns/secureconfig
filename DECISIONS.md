@@ -20,8 +20,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 - **Maintainer ruling of 2026-11-20 on the exit status of a whole serial run under the row 3.49 supervisor (#1377).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 23:55Z. The
   record of the ruling names its subject as "row 3.49 exit status" and does not hold the full question text: a whole
-  serial run that ends with a status from 129 to 192 not caused by a signal now dies by the signal of that number
-  minus 128, as the parallel driver's does. The label and description are quoted exactly. The maintainer chose
+  serial run that ends with a status from 129 to 192 not caused by a signal now sends itself the signal of that
+  number minus 128, as the parallel driver's does. The label and description are quoted exactly. The maintainer chose
   "Accept, match parallel (Recommended)", whose description read:
   "Serial matches the parallel driver's existing convention; CLAUDE.md's Gates section and a TODO row record the 129-192 case (including that 147-150 would stop the suite). Predicted and best for the project."
   A probe for #1377 in a new session with no terminal found that a section's `exit 147` in a whole run left the
@@ -31,11 +31,12 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   Gates section, and is to renumber its rows to 3.121 to 3.123, with the Next ids line at 3.124.
   - Effect. Carried out by #1377. In a whole serial run, the supervisor re-raises a status from 129 to 192 as the
     signal of that number minus 128, by the rule that `par_flush` applies in a whole parallel run, so a section's
-    `exit 143` ends either run by TERM, where before #1377 the serial run exited with 143. The Gates section of
-    `CLAUDE.md` and `AGENTS.md` states this for both modes, including that a status of 147 stops the suite and
-    that 148 to 150 send stop signals that Linux discards for an orphaned process group, as in a session with no
-    terminal (148 measured; 149 and 150 not run), and that may stop a run in a terminal session (not measured).
-    Row 3.121 in `TODO.md` records the case for both modes.
+    `exit 143` ends either run by TERM, where before #1377 the serial run exited with 143. A status of 145, 146,
+    151 or 156 sends CHLD, CONT, URG or WINCH, which by default do not end a process, so the run exits with that
+    status, and `exit 160` ends it by signal 32. The Gates section of `CLAUDE.md` and `AGENTS.md` states this for
+    both modes, including that a status of 147 stops the suite and that 148 to 150 send stop signals that Linux
+    discards for an orphaned process group (148 measured; 149 and 150 not run), and that may stop a run whose
+    process group is not orphaned. Row 3.121 in `TODO.md` records the case for both modes.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
     own `CHANGELOG.md` entry, and records the new ruling here.
@@ -49,8 +50,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   driver, and that a pending-decisions entry, "Row 3.49 supervisor and the byte-identity ruling", is to be marked
   DECIDED; `PENDING-DECISIONS.md` holds no such entry, so nothing there changes.
   - Effect. Carried out by #1377, which follows the merge of #1374. With `SECURECONFIG_SUITE_JOBS` unset or
-    1, `tools/run_all_checks.sh` runs the serial run as a supervised child, which stops every process below it on
-    a HUP, INT or TERM sent to the suite's PID and dies by that signal. `CLAUDE.md` and `AGENTS.md` add the PID
+    1, `tools/run_all_checks.sh` runs the serial run as a supervised child, which passes a HUP, INT or TERM sent to
+    the suite's PID on to every process below it and dies by that signal; a process that ignores the signal, as a
+    gate's own background children ignore an INT, goes on running. `CLAUDE.md` and `AGENTS.md` add the PID
     in bash's job notice to the fields that output identity sets aside and say that `BASH_ENV` is read by both
     shells, so anything it prints appears twice. Row 3.49 is in `DONE.md`. The two-family QA that the description
     names is the review of #1377 and is not recorded here.
