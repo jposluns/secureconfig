@@ -20,10 +20,13 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 - **Maintainer ruling of 2026-11-21 confirming the proxy decision on TODO row 3.104 (#1381).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 18:58Z. The
   question asked whether to merge #1381 and summarized the row, the two diagnoses, with no case in 7,929 instrumented
-  launches, the unanimous vote and the reopen trigger. The record of the ruling gives the labels of the three options
-  offered and no description of them, and the labels are quoted exactly. The options were "Merge it (Recommended)",
-  "Keep the row open" and "Diagnose further", and the maintainer chose "Merge it (Recommended)". No reasoning was
-  recorded beyond the choice.
+  launches, the unanimous vote and the reopen trigger. The record of the ruling gives the label and description of
+  each of the three options offered, and the labels and descriptions are quoted exactly. One option was "Merge it
+  (Recommended)", whose description read: "Main is merged in, CI runs on that exact head, and #1381 merges on green.
+  Row 3.104 closes, with its reopen trigger recorded." Another was "Keep the row open", whose description read:
+  "Close #1381 unmerged, and add the diagnosis counts to row 3.104 instead." The remaining option was "Diagnose
+  further", whose description read: "Run more probes first, for example on 2 pinned CPUs or another bash version,
+  before deciding." The maintainer chose "Merge it (Recommended)". No reasoning was recorded beyond the choice.
   - Effect. This ruling confirms "Proxy decision of 2026-11-21 on closing TODO row 3.104 as not reproduced, for the
     maintainer's later review (#1381)", below, which stays listed under "Proxy decisions awaiting maintainer review"
     as the record of the vote. Option A, which #1381 applies, stands: row 3.104 is in `DONE.md` as dropped, not
