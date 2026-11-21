@@ -17,6 +17,21 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-21 confirming the proxy decision on TODO row 3.104 (#1381).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 18:58Z. The
+  question asked whether to merge #1381 and summarized the row, the two diagnoses, with no case in 7,929 instrumented
+  launches, the unanimous vote and the reopen trigger. The record of the ruling gives the labels of the three options
+  offered and no description of them, and the labels are quoted exactly. The options were "Merge it (Recommended)",
+  "Keep the row open" and "Diagnose further", and the maintainer chose "Merge it (Recommended)". No reasoning was
+  recorded beyond the choice.
+  - Effect. This ruling confirms "Proxy decision of 2026-11-21 on closing TODO row 3.104 as not reproduced, for the
+    maintainer's later review (#1381)", below, which stays listed under "Proxy decisions awaiting maintainer review"
+    as the record of the vote. Option A, which #1381 applies, stands: row 3.104 is in `DONE.md` as dropped, not
+    reproduced, and reopens on any recorded run-on after a TERM whose kill returned 0.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it: it moves row 3.104 back to `TODO.md` and removes its `DONE.md` row, or keeps the row closed on
+    that ruling's terms. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds
+    its own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-20 on the exit status of a whole serial run under the row 3.49 supervisor (#1377).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 23:55Z. The
   record of the ruling names its subject as "row 3.49 exit status" and does not hold the full question text: a whole
@@ -2013,10 +2028,10 @@ listed here for the record, under its heading as entered, and that ruling's entr
   scripts, and that the first diagnosis's scripts and logs were lost; it names no private path. So guardrails' first
   condition, on the scripts and logs, is met in part, for the second diagnosis only, by a pointer to those records,
   not by scripts or digests in the row. The 7,929 in grc's words are the first diagnosis's stopped launches; the
-  second diagnosis's 1,400 ran after the vote, and the row gives them separately. No code or test changes. This
-  decision is not a maintainer ruling and awaits the
-  maintainer's review. The revert path is the maintainer's review: a different ruling moves row 3.104 back to
-  `TODO.md` and removes its `DONE.md` row.
+  second diagnosis's 1,400 ran after the vote, and the row gives them separately. No code or test changes. The
+  maintainer's ruling of 2026-11-21 confirming the proxy decision on TODO row 3.104 (#1381), above, confirms this
+  decision. This entry stays here as the record of the vote, and that ruling's entry records the outcome and its
+  revert path.
 
 ## Profile: predicting these rulings
 
