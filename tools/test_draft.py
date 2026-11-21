@@ -569,10 +569,11 @@ CASES = [
                allow="/old-draft /index.html 302\tan old page\n"),
      OK_LINE, 0),
     ("an allowlist entry without a reason", redirects(LATEST, allow="/old / 302\n"),
-     "reason with visible text", 1),
+     "not only whitespace and format characters", 1),
     # Row 3.111: a reason of U+200B alone is no reason, as reason_present() judges it.
     ("an allowlist entry whose reason is U+200B alone",
-     redirects(LATEST, allow="/old / 302\t\u200b\n"), "reason with visible text", 1),
+     redirects(LATEST, allow="/old / 302\t\u200b\n"),
+     "not only whitespace and format characters", 1),
     ("an aged-out zip redirected to its own release asset",
      redirects(ASSET + "\n" + LATEST, allow=ASSET + "\taged out of site/downloads/\n"),
      OK_LINE, 0),

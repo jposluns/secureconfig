@@ -17,6 +17,20 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-20 confirming the proxy decision on TODO row 3.111 (#1375).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 23:08Z. The
+  orchestrator's private record of the ruling gives the chosen label and description, and both are quoted exactly.
+  The maintainer chose "Accept A, merge (Recommended)", whose description read: "Option A stands; #1375 merges after
+  its fix-diff round converges on both families and gates pass at the exact head. Predicted and best for the
+  project." No reasoning was recorded beyond the choice.
+  - Effect. This ruling confirms "Proxy decision of 2026-11-20 on where `reason_present()` lives for the two
+    Pages-build readers of TODO row 3.111, for the maintainer's later review (#1375)", below, which stays listed under
+    "Proxy decisions awaiting maintainer review" as the record of the vote. Option A, which #1375 applies, stands:
+    `tools/_reason.py` holds `reason_present()`, and both parsers of `tools/redirects_allowlist.txt` use it.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it: it moves `reason_present()` back or replaces the new module, and row 3.111 reopens or stays
+    closed on that ruling's terms. That pull request keeps every existing entry in `CHANGELOG.md` and
+    `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-19 on the serial run of TODO row 3.49 (#1368).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:45Z. The
   full question text is held in the orchestrator's private session record. The label and description are quoted
@@ -1885,8 +1899,9 @@ listed here for the record, under its heading as entered, and that ruling's entr
   moved the other five to `reason_present()`, left out: `tools/check_draft.py` and `tools/gen_hosted.py`. The
   Cloudflare Pages build, `scripts/pages-build.sh`, runs the first directly and reaches the second only through the
   imports of `tools/check_hosted.py` and `scripts/build-site.py`, which it runs. Every module that build reaches may
-  import only the standard library (`tools/test_pages_build.py`), and `reason_present()` lived in
-  `tools/_markdown.py`, which reaches markdown-it-py through `tools/version_basis.py`. The record gives three options,
+  import only the standard library and this repository's modules (`tools/test_pages_build.py`), and
+  `reason_present()` lived in `tools/_markdown.py`, which reaches markdown-it-py through `tools/version_basis.py`. The
+  record gives three options,
   each a label and a description, and both are quoted here exactly as the record has them. The record letters only
   option A, as "(option A)" in its STATUS line, though the lab_infra vote it records speaks of "C's copies"; this
   entry letters the other two B and C, in the record's order. Option A was "Yes, new module (Recommended)", described
@@ -1905,9 +1920,9 @@ listed here for the record, under its heading as entered, and that ruling's entr
   which imports only the standard library, now holds `reason_present()`, `tools/_markdown.py` imports it from there,
   both parsers use it, and row 3.111 moves to `DONE.md`. As grc asked, `tools/test_pages_build.py` names the new
   module, and each of the 15 self-tests whose fixtures now copy it was run once in its earlier form, without that
-  copy; the `DONE.md` row for 3.111 gives the results. The maintainer has not yet reviewed this decision, so it is not
-  a maintainer ruling. The revert path is the maintainer's review: a different ruling moves `reason_present()` back or
-  replaces the new module, and row 3.111 reopens or stays closed on that ruling's terms.
+  copy; the `DONE.md` row for 3.111 gives the results. The maintainer's ruling of 2026-11-20 confirming the proxy
+  decision on TODO row 3.111 (#1375), above, confirms this decision. This entry stays here as the record of the vote,
+  and that ruling's entry records the outcome and its revert path.
 
 ## Profile: predicting these rulings
 
