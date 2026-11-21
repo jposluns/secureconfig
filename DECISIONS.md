@@ -17,15 +17,58 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-20 on the exit status of a whole serial run under the row 3.49 supervisor (#1377).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 23:55Z. The
+  record of the ruling names its subject as "row 3.49 exit status" and does not hold the full question text: a whole
+  serial run that ends with a status from 129 to 192 not caused by a signal now dies by the signal of that number
+  minus 128, as the parallel driver's does. The label and description are quoted exactly. The maintainer chose
+  "Accept, match parallel (Recommended)", whose description read:
+  "Serial matches the parallel driver's existing convention; CLAUDE.md's Gates section and a TODO row record the 129-192 case (including that 147-150 would stop the suite). Predicted and best for the project."
+  A probe for #1377 in a new session with no terminal found that a section's `exit 147` in a whole run left the
+  supervisor and the parallel driver stopped, but that `exit 148` gave exit 148, since Linux discards TSTP, TTIN and
+  TTOU for an orphaned process group; 149 and 150 were not run.
+  The record of the ruling also says that the row 3.49 change is to carry this ruling in `DECISIONS.md` and in the
+  Gates section, and is to renumber its rows to 3.121 to 3.123, with the Next ids line at 3.124.
+  - Effect. Carried out by #1377. In a whole serial run, the supervisor re-raises a status from 129 to 192 as the
+    signal of that number minus 128, by the rule that `par_flush` applies in a whole parallel run, so a section's
+    `exit 143` ends either run by TERM, where before #1377 the serial run exited with 143. The Gates section of
+    `CLAUDE.md` and `AGENTS.md` states this for both modes, including that a status of 147 stops the suite and
+    that 148 to 150 send stop signals that Linux discards for an orphaned process group, as in a session with no
+    terminal (148 measured; 149 and 150 not run), and that may stop a run in a terminal session (not measured).
+    Row 3.121 in `TODO.md` records the case for both modes.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
+    own `CHANGELOG.md` entry, and records the new ruling here.
+- **Maintainer ruling of 2026-11-20 that the row 3.49 supervisor meets the 2026-11-19 output rule (#1377).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 23:13Z, on
+  whether the plan for TODO row 3.49 meets the ruling of 2026-11-19 below that the serial run may become a
+  supervised child only if every existing test's serial output stays byte-identical. The label and description are
+  quoted exactly. The maintainer chose "Meets it, PID set aside (Recommended)", whose description read:
+  "Treat the job-notice PID like the run-varying fields CLAUDE.md already sets aside, document the BASH_ENV difference, and implement the plan with full two-family QA. Predicted and best for the project."
+  The record of the ruling also says that the implementation follows the merge of #1374, which touches the same
+  driver, and that a pending-decisions entry, "Row 3.49 supervisor and the byte-identity ruling", is to be marked
+  DECIDED; `PENDING-DECISIONS.md` holds no such entry, so nothing there changes.
+  - Effect. Carried out by #1377, which follows the merge of #1374. With `SECURECONFIG_SUITE_JOBS` unset or
+    1, `tools/run_all_checks.sh` runs the serial run as a supervised child, which stops every process below it on
+    a HUP, INT or TERM sent to the suite's PID and dies by that signal. `CLAUDE.md` and `AGENTS.md` add the PID
+    in bash's job notice to the fields that output identity sets aside and say that `BASH_ENV` is read by both
+    shells, so anything it prints appears twice. Row 3.49 is in `DONE.md`. The two-family QA that the description
+    names is the review of #1377 and is not recorded here.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
+    own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-19 on the serial run of TODO row 3.49 (#1368).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 15:45Z. The
   full question text is held in the orchestrator's private session record. The label and description are quoted
   exactly. The maintainer chose "Yes, if output identical (Recommended)", whose description read:
   "Allowed only if every existing test's serial output stays byte-identical; any changed line is named in the PR for review before merge."
-  - Effect. Not yet carried out: row 3.49 is still open in `TODO.md`. Since #1366, which carried out the 3.105
-    ruling below, row 3.49 says that the `llms-full` section runs `scripts/build-llms-full.sh --check`, which never
-    writes `site/llms-full.txt`, and sets no EXIT trap, and the `# exclusive:` line of `tools/run_all_checks.sh`
-    names `plugin` alone, so the `llms-full` section no longer runs alone.
+  - Effect. Carried out by #1377, under the ruling of 2026-11-20 above, which judged that the supervised serial
+    run meets this rule with the PID in bash's job notice set aside like the other fields that vary between any
+    2 runs. The serial run is now a supervised child of the suite's own shell, and row 3.49 is in `DONE.md`.
+    Before #1377, since #1366, which carried out the 3.105 ruling below, row 3.49 said that the `llms-full`
+    section runs `scripts/build-llms-full.sh --check`, which never writes `site/llms-full.txt`, and sets no EXIT
+    trap, and the `# exclusive:` line of `tools/run_all_checks.sh` names `plugin` alone, so the `llms-full`
+    section no longer runs alone.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
     own `CHANGELOG.md` entry, and records the new ruling here.
@@ -34,8 +77,10 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   full question text is held in the orchestrator's private session record. The label and description are quoted
   exactly. The maintainer chose "Linux, bash 5.1+, /proc (Recommended)", whose description read:
   "Supervisor design; find the gate's process tree via /proc; best-effort with the race documented; macOS and older bash out of scope."
-  - Effect. Not yet carried out: row 3.49 is still open in `TODO.md`, where it asks for a design of a fix for a
-    TERM sent only to the suite's own PID that does not stop a running gate.
+  - Effect. Carried out by #1377: the serial run's supervisor in `tools/run_all_checks.sh` finds the gate's
+    process tree through `/proc/PID/task/*/children` and stops it on a HUP, INT or TERM sent to the suite's PID,
+    best-effort, and row 3.122 in `TODO.md` records the cases it leaves. Row 3.49, which asked for a design of a
+    fix for a TERM sent only to the suite's own PID that does not stop a running gate, is in `DONE.md`.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
     own `CHANGELOG.md` entry, and records the new ruling here.

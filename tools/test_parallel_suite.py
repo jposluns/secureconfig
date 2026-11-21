@@ -47,16 +47,16 @@ THE CASES (numbered as in the implementation plan, which is not in this reposito
   T16 SECURECONFIG_SUITE_TIMES gets one row per section in parallel mode and none in serial mode,
       changes no output, and a caller's setting never reaches these stand-in runs.
   T17 (serial mode, not the parallel one, with its own ok line, and alone with --terminal) the
-      serial --sections run of one stand-in section, whose foreground gate sleeps and then writes
-      to the terminal, on a pseudo-terminal. A job-control shell (JOBCTL) starts the driver in a
-      process group of its own and makes it the terminal's foreground group. It records today's
-      behaviour: Ctrl-C ends the run by INT with the section's shell and the gate gone; Ctrl-Z
-      stops the driver, the section's shell and the gate, and fg resumes them to a run that ends
-      with 0; under `stty tostop` the run ends with 0 and no stop. A TERM sent only to the
-      driver's PID ends the driver by TERM, and the check that the section's shell and its gate
-      are then gone, with nothing written late, is an expected failure for row 3.49 only while
-      both still run and nothing is written late; the group fails once that check passes, and on
-      any other state. Without a pseudo-terminal the group prints a SKIP line saying why.
+      serial run of one stand-in section, whose foreground gate sleeps and then writes to the
+      terminal, on a pseudo-terminal. A job-control shell (JOBCTL) starts the driver in a process
+      group of its own and makes it the terminal's foreground group. Under --sections: Ctrl-C ends
+      the run by INT with the section's shell and the gate gone; Ctrl-Z stops the driver, the
+      section's shell and the gate, and fg resumes them to a run that ends with 0; under `stty
+      tostop` the run ends with 0 and no stop. A TERM sent only to the driver's PID, under
+      --sections and in a whole run, ends the driver by TERM with nothing printed after the
+      section's heading, and 3 seconds later the section's shell and its gate are gone and the
+      gate wrote nothing late (row 3.49, which the serial run's supervisor fixed). Without a
+      pseudo-terminal the group prints a SKIP line saying why.
 
 NOT HERE (run by hand, see main's --differential and --inject, because each runs the real suite
 and so doubles its cost, which no gate pays): T11, the output identity of the real suite in both
@@ -1016,39 +1016,38 @@ def stopped(pid_file):
 # to the terminal and then a file. A late file means it ran to its end.
 TERMINAL_GATE = ("bash -c 'printf \"%s\\n\" \"$$\" > \"$STANDIN_DIR/gate.pid\"; sleep {sleep}; "
                  "echo \"gate wrote this\"; : > \"$STANDIN_DIR/gate.late\"'")
-TERMINAL_HEAD = ("Sections selected: g\n"
-                 "== gate parser preflight: this python3 has the pinned markdown-it-py ==\n"
-                 f"{PREFLIGHT_OK}\n== g ==\n")
+TERMINAL_WHOLE_HEAD = ("== gate parser preflight: this python3 has the pinned markdown-it-py ==\n"
+                       f"{PREFLIGHT_OK}\n== g ==\n")
+TERMINAL_HEAD = "Sections selected: g\n" + TERMINAL_WHOLE_HEAD
 TERMINAL_TAIL = ("gate wrote this\nline from g\n\n"
                  "All selected gates passed (g); the other sections did not run.\n")
 
 
 def t17_terminal(notes):
-    """The serial --sections run of a one-section tree on a pseudo-terminal, as it behaves today:
-    Ctrl-C, a TERM sent only to the driver's PID, Ctrl-Z then fg, and `stty tostop` with a section
-    whose gate writes to the terminal. The TERM case is an expected failure until row 3.49 is
-    fixed. Without a pseudo-terminal the group is skipped and notes says why."""
+    """The serial run of a one-section tree on a pseudo-terminal: under --sections, Ctrl-C, a TERM
+    sent only to the driver's PID, Ctrl-Z then fg, and `stty tostop` with a section whose gate
+    writes to the terminal, and in a whole run a TERM sent only to the driver's PID. Without a
+    pseudo-terminal the group is skipped and notes says why."""
     failures = []
     try:
         for fd in pty.openpty():
             os.close(fd)
     except OSError as exc:
-        notes.append(f"  SKIP  T17, the serial --sections run on a pseudo-terminal: no pseudo-terminal "
+        notes.append(f"  SKIP  T17, the serial run on a pseudo-terminal: no pseudo-terminal "
                      f"is available ({exc})")
         return failures
-    expected_failures = []
 
     # The time limits of a case's waits add up to at most 27 seconds, for Ctrl-Z then fg (5 for the
     # gate, 5 for the stop, 3 for the stopped states, 8 for the end, 1 for the output and 5 for
     # Terminal.close), each but the last multiplied by SECURECONFIG_TEST_LOAD_SCALE. A wait can run
     # a little past its limit, which is checked between steps, and Terminal.close's wait for JOBCTL
     # after a SIGKILL has no limit.
-    def run(label, sleep, act, tostop=False):
+    def run(label, sleep, act, tostop=False, args=("--sections", "g")):
         """Start the run, wait for its gate, then act(term, tree); every case ends its run."""
         tree = Tree(synthetic([section("g", extra=TERMINAL_GATE.format(sleep=sleep))]))
         term = None
         try:
-            term = Terminal(tree, ("--sections", "g"), tostop)
+            term = Terminal(tree, args, tostop)
             if term.pump(lambda: alive(tree.d / "gate.pid"), 5):
                 act(term, tree)
             else:
@@ -1076,27 +1075,22 @@ def t17_terminal(notes):
               and settled(term, terminal_text(TERMINAL_HEAD) + b"^C"),
               f"reports {term.reports!r}, still running {tree.leftovers()!r}, output {term.out!r}")
 
-    def term_to_driver(term, tree):
-        os.kill(int(term.report("pid")), signal.SIGTERM)
-        term.pump(term.ended, 5)
-        check(failures, "T17 a TERM to the driver's PID ends it by TERM, with nothing printed after "
-              "the section's heading", term.reports[1:] == ["exit -15"]
-              and settled(term, terminal_text(TERMINAL_HEAD)),
-              f"reports {term.reports!r}, output {term.out!r}")
-        wait_for(lambda: not tree.leftovers(), 3)
-        left, late = tree.leftovers(), (tree.d / "gate.late").exists()
-        if not left and not late:
-            failures.append("T17 a TERM to the driver's PID: the section's shell and its gate are "
-                            "gone and the gate wrote nothing late, which is what the fix for row "
-                            "3.49 must do; make this case a plain check")
-        elif left == ["g.pid", "gate.pid"] and not late:
-            expected_failures.append("row 3.49: 3 seconds after a TERM to the driver's PID ended "
-                                     "it, the section's shell and its gate still ran")
-        else:
-            failures.append(f"T17 a TERM to the driver's PID: 3 seconds after it ended the driver, "
-                            f"still running {left!r} and the gate wrote late {late}, which is "
-                            "neither row 3.49's state today (g.pid and gate.pid running and "
-                            "nothing late) nor its fix (nothing running and nothing late)")
+    def term_to_driver(head, shape):
+        """A TERM sent only to the driver's PID, judged against the output head of the run."""
+        def act(term, tree):
+            os.kill(int(term.report("pid")), signal.SIGTERM)
+            term.pump(term.ended, 5)
+            check(failures, f"T17 a TERM to the driver's PID {shape} ends it by TERM, with nothing "
+                  "printed after the section's heading", term.reports[1:] == ["exit -15"]
+                  and settled(term, terminal_text(head)),
+                  f"reports {term.reports!r}, output {term.out!r}")
+            gone = wait_for(lambda: not tree.leftovers(), 3)
+            check(failures, f"T17 a TERM to the driver's PID {shape} stops the section's shell and "
+                  "its gate within 3 seconds, and the gate writes nothing late (row 3.49)",
+                  gone and not (tree.d / "gate.late").exists(),
+                  f"still running {tree.leftovers()!r}, the gate wrote late "
+                  f"{(tree.d / 'gate.late').exists()}, output {term.out!r}")
+        return act
 
     def ctrl_z(term, tree):
         os.write(term.master, b"\x1a")
@@ -1122,15 +1116,18 @@ def t17_terminal(notes):
               f"TOSTOP set {term.tostop}, reports {term.reports!r}, output {term.out!r}")
 
     run("Ctrl-C", 8, ctrl_c)
-    # The gate's sleep is scaled like the waits before the TERM case judges, so that a larger scale
+    # The gate's sleep is scaled like the waits before the TERM cases judge, so that a larger scale
     # does not give the gate the time to end on its own first.
-    run("TERM to the driver's PID", 8 * SCALE, term_to_driver)
+    run("TERM to the driver's PID", 8 * SCALE, term_to_driver(TERMINAL_HEAD, "under --sections"))
+    run("TERM to the driver's PID in a whole run", 8 * SCALE,
+        term_to_driver(TERMINAL_WHOLE_HEAD, "in a whole run"), args=())
     run("Ctrl-Z then fg", 2, ctrl_z)
     run("stty tostop", 0.5, tostop, tostop=True)
     if not failures:
-        notes.append("  ok    T17, 4 cases of the serial --sections run on a pseudo-terminal (Ctrl-C, "
-                     "a TERM to the driver's PID, Ctrl-Z then fg, stty tostop), with "
-                     f"{len(expected_failures)} expected failure: {'; '.join(expected_failures)}")
+        notes.append("  ok    T17, 5 cases of the serial run on a pseudo-terminal (under --sections "
+                     "Ctrl-C, a TERM to the driver's PID, Ctrl-Z then fg and stty tostop, and a "
+                     "TERM to the driver's PID in a whole run), each TERM stopping the section's "
+                     "shell and its gate (row 3.49)")
     return failures
 
 

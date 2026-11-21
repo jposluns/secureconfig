@@ -110,9 +110,11 @@ later one. A local run can do either: with no argument the suite runs every sect
 anything but letters, digits and hyphens.
 `SECURECONFIG_SUITE_JOBS=N`, a whole number from 1 to 64, is an opt-in parallel mode of the same
 script for either run. Unset or `1` is the serial run, which is the reference; CI sets nothing,
-so it stays serial. At N above 1 each section runs in its own bash process and
-process group, with its standard output and standard error merged into one buffer, and the
-buffers print in the file's order as each section and every one before it finish, so the output
+so it stays serial. The suite's own shell runs the serial run as a supervised child in its process
+group, and a HUP, INT or TERM sent only to the suite's PID stops every process below it and is
+re-raised (row 3.49). `BASH_ENV` is read by both shells, so anything it prints appears twice.
+At N above 1 each section runs in its own bash process and process group, with its standard
+output and standard error merged into one buffer, and the buffers print in the file's order as each section and every one before it finish, so the output
 holds the same lines in the same order and the status is the same. The summary is the same code.
 `plugin`, which rewrites the working tree in place, runs first and alone (the `# exclusive:`
 line of the script); `llms-full` builds into a temporary file through
@@ -120,12 +122,19 @@ line of the script); `llms-full` builds into a temporary file through
 after `llms-full`, `plugin` and `instructions` (its `# depends:` line). A section that exits early or dies by a signal ends the run as in the
 serial one, and HUP, INT and TERM stop every section's process group and are re-raised. Any other
 value, an empty one included, is refused with status 2 before any gate runs. Output identity
-sets aside 3 fields that vary between any 2 runs: the credential scanner's elapsed time and
-sampling counts, and unittest's elapsed times. On 2 failing paths the lines differ too. Under
-`--sections`, a section killed by a signal other than INT or PIPE (PIPE as bash 5.3.9 behaved in the #1312
+sets aside 4 fields that vary between any 2 runs: the credential scanner's elapsed time and
+sampling counts, unittest's elapsed times, and the PID in bash's job notice. On 2 failing paths
+the lines differ too. Under `--sections`, a section killed by a signal other than INT or PIPE (PIPE as bash 5.3.9 behaved in the #1312
 review) makes the serial run print bash's job notice for its child shell, which the parallel run does not
 print. And a diagnostic that bash itself prints from inside a section, such as an unbound variable or a
 command not found, names another file or line.
+In either mode, a whole run that ends with a status from 129 to 192 that no signal caused, such as a
+section's `exit 143`, dies by the signal of that number minus 128: the serial run's supervisor
+matches the parallel driver here, by the maintainer's ruling of 2026-11-20. Under `--sections`
+such a status stays the exit status. So in a whole run a status of 147 sends STOP, which stops the
+suite and leaves it stopped. A status from 148 to 150 sends TSTP, TTIN or TTOU, stop signals that
+Linux discards for an orphaned process group, as in a session with no terminal (148 measured; 149
+and 150 not run), and that may stop a run in a terminal session (not measured; row 3.121).
 Every gate in the suite, in either mode, is deterministic and offline: no gate reaches the
 network, so no outside service can change a gate's answer. The `gates` job that runs it is not
 offline. Before the suite starts, `.github/workflows/checks.yml` fetches its pinned actions, Python,

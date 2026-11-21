@@ -36,7 +36,9 @@
 # fallback file in place.
 #
 # Parallel mode (opt-in). SECURECONFIG_SUITE_JOBS=N, a whole number from 1 to 64, runs up to N
-# sections at once. Unset or 1 is the serial run below, which stays the reference. Any other
+# sections at once. Unset or 1 is the serial run below, which stays the reference, and which the
+# serial run's supervisor below runs as a child of this shell, so that a HUP, INT or TERM sent to
+# this shell stops every process below it (row 3.49). Any other
 # value is refused with status 2 before any gate runs, and so is an empty one. Each section runs in
 # its own bash process and its own process group with its standard output and standard error
 # merged into one buffer, and the buffers print in this file's order as each section and every
@@ -81,6 +83,127 @@
 # depends: generated-committed: llms-full plugin instructions
 # exclusive: plugin
 set -uo pipefail
+
+# The serial run's supervisor (row 3.49). With SECURECONFIG_SUITE_JOBS unset or 1, this shell runs
+# this file again as a background child, with the same bash, the same name as $0 and the same
+# arguments, in the same process group and with the same standard input, and that child is the
+# serial run; Ctrl-C, Ctrl-Z, `stty tostop` and a KILL to the process group reach it as before. A
+# HUP, INT or TERM sent to this shell's PID then reaches every process below it. This shell stops
+# the child and each process under it with STOP, parents first, reading a process's children from
+# /proc only once it has stopped, so none can fork unseen; it then sends each of them the same
+# signal and CONT. It waits for the child, and up to 5 seconds for the rest, and sends no KILL.
+# It then dies by that signal when the child died by it; otherwise, in a whole run, a status from
+# 129 to 192 is re-raised as par_flush re-raises it (row 3.121), and any other status is its exit
+# status. A signal that arrives before the child's PID is recorded is held and acted on once it
+# is. This shell prints nothing, and its standard error goes to /dev/null once the child has
+# started, so the output is the serial run's own; only the PID in bash's job notice, which varies
+# between any 2 runs, differs from a run without this block. The child skips this block because
+# SECURECONFIG_SUITE_CHILD names its parent, and unsets that variable at once, so a nested suite
+# is supervised; the --sections cut copy skips it because it is sourced; parallel mode is never
+# supervised. It is best-effort on Linux with bash 5.1 or later and /proc (DECISIONS.md,
+# 2026-11-19 and 2026-11-20), and row 3.122 records the cases it leaves. BASH_ENV is read by
+# both shells, so what it prints appears twice, and options given to bash, such as -x, reach
+# only this shell.
+if [ "${SECURECONFIG_SUITE_JOBS-1}" = 1 ] && [ "${SECURECONFIG_SUITE_CHILD-}" != "$PPID" ] &&
+   [ "${BASH_SOURCE[0]}" = "$0" ] && [ -f "$0" ]; then
+  sup_pid=""
+  sup_sig=""
+  sup_num=""
+  sup_starting=1
+  sup_whole=""
+  sup_seen=""
+  sup_rc=""
+  sup_state=""
+  sup_start=""
+  sup_pids=()
+  sup_starts=()
+  [ "$#" -gt 0 ] || sup_whole=1
+  # The state and start time of process $1, from /proc/$1/stat.
+  sup_stat() {
+    local line fields
+    { IFS= read -r line < "/proc/$1/stat"; } 2>/dev/null || return 1
+    read -r -a fields <<< "${line##*) }"
+    sup_state=${fields[0]}
+    sup_start=${fields[19]}
+  }
+  # STOP $1 and every process below it, parents first, each process's children read once it has
+  # stopped; each stopped process and its start time are recorded.
+  sup_freeze() {
+    local queue=("$1") i=0 pid _ file kids
+    while [ "$i" -lt "${#queue[@]}" ]; do
+      pid=${queue[i]}
+      i=$((i + 1))
+      kill -s STOP "$pid" 2>/dev/null || continue
+      for _ in {1..100}; do
+        sup_stat "$pid" || break
+        case $sup_state in T|t|Z|X) break ;; esac
+        sleep 0.01
+      done
+      sup_stat "$pid" || continue
+      sup_pids+=("$pid")
+      sup_starts+=("$sup_start")
+      for file in /proc/"$pid"/task/*/children; do
+        kids=()
+        read -r -d '' -a kids < "$file" 2>/dev/null
+        queue+=("${kids[@]}")
+      done
+    done
+  }
+  # Whether the process recorded at index $1 still runs: the same start time and not a zombie.
+  sup_alive() {
+    sup_stat "${sup_pids[$1]}" && [ "$sup_start" = "${sup_starts[$1]}" ] && [ "$sup_state" != Z ]
+  }
+  sup_stop() {
+    trap '' HUP INT TERM
+    sup_freeze "$sup_pid"
+    if [ "${#sup_pids[@]}" -gt 0 ]; then
+      kill -s "$sup_sig" "${sup_pids[@]}" 2>/dev/null
+      kill -s CONT "${sup_pids[@]}" 2>/dev/null
+    fi
+  }
+  # shellcheck disable=SC2329  # only the HUP, INT and TERM trap strings below call it, unseen by shellcheck
+  sup_trap() {
+    if [ -z "$sup_sig" ]; then
+      sup_sig=$1
+      sup_num=$2
+      [ -n "$sup_starting" ] || sup_stop
+    fi
+  }
+  trap 'sup_trap HUP 1' HUP
+  trap 'sup_trap INT 2' INT
+  trap 'sup_trap TERM 15' TERM
+  # bash makes a background command ignore INT and QUIT; the subshell gives them back, and <&0
+  # keeps standard input, which a background command would otherwise read from /dev/null.
+  ( trap - HUP INT QUIT TERM; SECURECONFIG_SUITE_CHILD=$$ exec "$BASH" "$0" "$@" ) <&0 &
+  sup_pid=$!
+  exec 2>/dev/null
+  sup_starting=""
+  [ -z "$sup_sig" ] || sup_stop
+  # A trap interrupts wait; wait again, which gives the child's status once it has ended.
+  while :; do
+    sup_seen=$sup_sig
+    wait "$sup_pid"
+    sup_rc=$?
+    [ "$sup_sig" != "$sup_seen" ] || break
+  done
+  for _ in {1..50}; do
+    sup_seen=""
+    for i in "${!sup_pids[@]}"; do
+      sup_alive "$i" && sup_seen=1
+    done
+    [ -n "$sup_seen" ] || break
+    sleep 0.1
+  done
+  if [ -n "$sup_sig" ] && [ "$sup_rc" -eq "$((128 + sup_num))" ]; then
+    trap - "$sup_sig"
+    kill -s "$sup_sig" "$BASHPID"
+  elif [ -n "$sup_whole" ] && [ "$sup_rc" -gt 128 ] && [ "$sup_rc" -lt 193 ]; then
+    trap - HUP INT TERM
+    kill -s "$((sup_rc - 128))" "$BASHPID"
+  fi
+  exit "$sup_rc"
+fi
+unset SECURECONFIG_SUITE_CHILD
 
 cd "$(dirname "$0")/.." || exit 2
 
@@ -2236,8 +2359,9 @@ fi
 # sections' temporary folder. A signal that
 # arrives while a launch is under way, before its PID is recorded, is held in overflow_signal and
 # acted on once the PID is. A Ctrl-C reaches this shell, since the INT goes to the whole foreground
-# group. Under --sections this shell is the cut copy, a child of the suite's own shell, so a TERM
-# sent only to the suite's PID does not reach it.
+# group. Under --sections this shell is the cut copy, a child of the serial run's shell, and a HUP,
+# INT or TERM sent only to the suite's PID reaches it through the serial run's supervisor (see the
+# top of this file), which passes it on to this shell in a whole run too.
 overflow_pid=""
 overflow_check_pid=""
 overflow_dir=""
