@@ -34,7 +34,9 @@ THE CASES (numbered as in the implementation plan, which is not in this reposito
       folder and are re-raised, including a TERM sent between a section's launch and the record
       of its PID, judged only after a bounded wait for the files an unstopped section writes; and
       the driver's own death by an untrapped USR1 just after a launch, by a TERM before its traps
-      are set, or by a failed fork leaves no temp folder (rows 3.103 and 3.113).
+      are set, or by a failed fork leaves no temp folder (rows 3.103 and 3.113). The failed fork
+      case runs only where ulimit -u 1 makes a fork fail, which it does not for root, and
+      otherwise prints a SKIP line saying why (row 3.119).
   T10 a section that writes to stdout and stderr in turn prints them in the same order as serial.
   T11 (the part that needs no real suite) the normaliser of the differential run rewrites or drops
       only the fields and lines it names (the job notice in its TERM, KILL, HUP, ABRT, "I/O
@@ -61,6 +63,12 @@ THE CASES (numbered as in the implementation plan, which is not in this reposito
       the rest of the driver's process group are gone, the gate wrote nothing late and the second
       section never started (the supervisor's watcher). Without a pseudo-terminal the group prints
       a SKIP line saying why.
+  T18 a TMPDIR holding a newline, beside a folder named as its first line that holds a file: the
+      real plugin section and 2 stand-in sections end with 0 and serial's output in both modes,
+      that folder keeps its file and nothing else, TMPDIR is left empty and plugin/ is unchanged
+      (rows 3.118 and 3.124).
+  T19 a TMPDIR whose name ends in a backslash, n and d: 2 stand-in sections both run and end
+      with 0 and serial's output in both modes, and TMPDIR is left empty (row 3.125).
 
 NOT HERE (run by hand, see main's --differential and --inject, because each runs the real suite
 and so doubles its cost, which no gate pays): T11, the output identity of the real suite in both
@@ -592,15 +600,34 @@ def t9_signals():
     check(failures, "T9 a TERM once the temp folder exists, before the driver's traps are set",
           rc == -signal.SIGTERM and not left and not tmp,
           f"exit {rc}, still running {left!r}, temp left {tmp!r}: {out!r}")
+    return failures
+
+
+def fork_limit_holds():
+    """Whether a process of this user with RLIMIT_NPROC at 1, as `ulimit -u 1` sets it, fails to
+    fork. Root is not held to that limit, so there it forks and this is False."""
+    probe = ("import os, resource\n"
+             "resource.setrlimit(resource.RLIMIT_NPROC, (1, 1))\n"
+             "try:\n    pid = os.fork()\nexcept BlockingIOError:\n    raise SystemExit(0)\n"
+             "if pid == 0:\n    os._exit(0)\nos.waitpid(pid, 0)\nraise SystemExit(1)\n")
+    return subprocess.run([sys.executable, "-I", "-c", probe]).returncode == 0
+
+
+def t9_failed_fork(notes):
+    """T9's failed fork of a launch, which needs a fork that ulimit -u 1 makes fail; where none
+    fails, as for root, the case is skipped and notes says why (row 3.119)."""
+    failures = []
+    text = synthetic(sleepers(3), [], [])
     # A failed fork ends the driver with 254 (bash 5.3.9). ulimit -u 1 fails every fork of the
     # driver from the second launch on and changes no other process's limit; root is not held to it.
     fork = "  set -m\n"
-    if os.geteuid() == 0:
-        failures.append("T9 runs as root, which ulimit -u does not hold, so a failed fork cannot be made")
-    elif src.count(fork) != 1:
+    if not fork_limit_holds():
+        notes.append("  SKIP  T9, a failed fork of a launch: a process with ulimit -u 1 still forks "
+                     "here, as it does for root, so no failed fork can be made")
+    elif text.count(fork) != 1:
         failures.append(f"T9 the launch's {fork!r} is not in the driver once")
     else:
-        failed = src.replace(fork, f'  [ "$i" -lt 1 ] || ulimit -u 1\n{fork}')
+        failed = text.replace(fork, f'  [ "$i" -lt 1 ] || ulimit -u 1\n{fork}')
         rc, out, left, tmp = signal_run(text, None, injected=failed)
         check(failures, "T9 a failed fork of a launch", rc == 254 and "fork: Resource temporarily "
               "unavailable" in out and not tmp, f"exit {rc}, temp left {tmp!r}: {out!r}")
@@ -1166,9 +1193,78 @@ def t17_terminal(notes):
     return failures
 
 
+def t18_tmpdir_newline():
+    """T18: a TMPDIR holding a newline, <T>/tmp/a, a newline and b, beside a folder <T>/tmp/a that
+    holds a file. Before rows 3.118 and 3.124 the parallel driver wrote its sections' files into
+    <T>/tmp/a, and the plugin section, in both modes, saved plugin/ into it, put plugin/ back from
+    it and removed it."""
+    failures = []
+    text = SUITE.read_text(encoding="utf-8")
+    start = text.find("# section: plugin\n")
+    end = text.find("\n# section: ", start + 1)
+    if start < 0 or end < 0:
+        return ["T18 the suite holds no `# section: plugin` with another section after it"]
+    suite = synthetic([text[start:end + 1], section("a"), section("b")], [], [])
+    results = []
+    for jobs in (None, "4"):
+        t = Tree(suite)
+        try:
+            (t.d / "scripts").mkdir()
+            (t.d / "scripts" / "build-plugin.sh").write_text("exit 0\n", encoding="utf-8")
+            (t.d / "plugin").mkdir()
+            (t.d / "plugin" / "bundle.txt").write_text("bundle\n", encoding="utf-8")
+            taken = t.d / "tmp" / "a"
+            tmpdir = t.d / "tmp" / "a\nb"
+            taken.mkdir()
+            tmpdir.mkdir()
+            (taken / "keep.txt").write_text("not the suite's\n", encoding="utf-8")
+            rc, out = t.run((), jobs, extra={"TMPDIR": str(tmpdir)})
+            results.append((rc, out))
+            kept = sorted(x.name for x in taken.iterdir()) if taken.is_dir() else None
+            left = sorted(x.name for x in tmpdir.iterdir())
+            plugin = t.d / "plugin"
+            bundle = sorted(x.name for x in plugin.iterdir()) if plugin.is_dir() else None
+            check(failures, f"T18 a TMPDIR holding a newline, jobs={jobs}", rc == 0
+                  and kept == ["keep.txt"] and not left and bundle == ["bundle.txt"]
+                  and "  ok    plugin/ matches a fresh build\n" in out,
+                  f"exit {rc}, tmp/a holds {kept!r}, TMPDIR holds {left!r}, plugin/ holds "
+                  f"{bundle!r}: {out!r}")
+        finally:
+            t.close()
+    check(failures, "T18 the same output and exit as serial", results[0] == results[1],
+          f"{results[0]!r} vs {results[1]!r}")
+    return failures
+
+
+def t19_tmpdir_backslash():
+    """T19: a TMPDIR whose name ends in a backslash, n and d. Before row 3.125 awk -v read the
+    driver's folder with its backslash escapes interpreted, so it wrote no section body there, and
+    the parallel run ran no section yet printed the summary of a pass and exited 0."""
+    failures = []
+    suite = synthetic([section("a"), section("b")], [], [])
+    results = []
+    for jobs in (None, "4"):
+        t = Tree(suite)
+        try:
+            tmpdir = t.d / "tmp" / "c\\nd"
+            tmpdir.mkdir()
+            rc, out = t.run((), jobs, extra={"TMPDIR": str(tmpdir)})
+            results.append((rc, out))
+            left = sorted(x.name for x in tmpdir.iterdir())
+            ran = [n for t_, k, n in t.events() if k == "end"]
+            check(failures, f"T19 a TMPDIR holding a backslash escape, jobs={jobs}", rc == 0
+                  and ran == ["a", "b"] and "line from a\n" in out and "line from b\n" in out
+                  and not left, f"exit {rc}, sections ended {ran!r}, TMPDIR holds {left!r}: {out!r}")
+        finally:
+            t.close()
+    check(failures, "T19 the same output and exit as serial", results[0] == results[1],
+          f"{results[0]!r} vs {results[1]!r}")
+    return failures
+
+
 CASES = (t1_order, t2_concurrency, t3_status, t4_preflight, t5_refusals, t6_dependencies,
          t7_exclusive, t8_abort, t9_signals, t10_merged, t11_normaliser, t12_shape, t13_select_gates,
-         t16_times)
+         t16_times, t18_tmpdir_newline, t19_tmpdir_backslash)
 
 
 def normalise(output):
@@ -1286,6 +1382,7 @@ def main():
     if not terminal_only:
         for case in CASES:
             failures += case()
+        failures += t9_failed_fork(notes)
     failures += t17_terminal(notes)
     if failures:
         for f in failures:
@@ -1297,8 +1394,9 @@ def main():
               f"SECURECONFIG_SUITE_JOBS refusals, dependencies and cycles, exclusive sections, early "
               f"abort and signal death of a section, HUP, INT and TERM to the driver including between "
               f"a launch and the record of its PID, no temp folder after the driver's death by USR1, "
-              f"an early TERM or a failed fork, merged streams, the file's shape, "
-              f"SECURECONFIG_SUITE_TIMES)")
+              f"an early TERM or, unless a SKIP line says otherwise, a failed fork, merged streams, "
+              f"the file's shape, SECURECONFIG_SUITE_TIMES, a TMPDIR holding a newline or a "
+              f"backslash escape)")
     for note in notes:
         print(note)
     return 0
