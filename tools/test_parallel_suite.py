@@ -74,6 +74,15 @@ THE CASES (numbered as in the implementation plan, which is not in this reposito
   T20 a stand-in awk that fails, or leaves a selected section without its body, only for the call
       that cuts the sections: the parallel run ends with 2 and a FAIL line, no section starts, no
       summary prints and TMPDIR is left empty (row 3.125).
+  T21 a section's script that cannot be built: a stand-in cat that writes part of b's body and
+      then fails, a b.sh that is a link to /dev/full, so each write to it fails, and a b.sh that
+      is a folder, so it cannot be opened: the parallel run ends with 2 and a FAIL line, no
+      section starts, no summary prints and TMPDIR is left empty (row 3.126).
+  T22 a HUP, INT or TERM sent to the driver alone while a stand-in preflight runs: the driver ends
+      by that signal only once the preflight has ended, with the preflight's lines and nothing
+      else printed, no section started and TMPDIR left empty (row 3.123). The same signals sent
+      to the driver's whole process group end it by that signal with only the preflight's heading
+      printed, and no job notice, no section started and TMPDIR left empty.
 
   T23 a KILL sent to the keeper alone leaves the sections' folder, under a name that records its
       boot ID, PID namespace, driver and keeper, and the run exits 0 with its output unchanged; the
@@ -1346,9 +1355,111 @@ def t20_awk_fails():
     return failures
 
 
+# Stand-ins for T21, first on PATH. The cat runs the real cat, the first one on PATH after the
+# tree's bin, on each argument in turn, and for b's body writes its first 2 lines and then fails
+# as a read error would. The awks run the real awk and, for the call that cuts the sections,
+# then make b.sh a link to /dev/full, or a folder, which bash cannot open for writing.
+STANDIN_CAT_CUTS_B = """#!/usr/bin/env bash
+[ "$#" -gt 0 ] || PATH=${PATH#*:} exec cat
+for arg in "$@"; do
+  case $arg in
+    */b.body)
+      PATH=${PATH#*:} head -n 2 -- "$arg"
+      printf 'cat: %s: Input/output error\\n' "$arg" >&2
+      exit 1 ;;
+  esac
+  PATH=${PATH#*:} cat -- "$arg" || exit
+done
+"""
+STANDIN_AWK_FULL_B = """#!/usr/bin/env bash
+if [ -z "${par_awk_dir+set}" ]; then
+  PATH=${PATH#*:} exec awk "$@"
+fi
+PATH=${PATH#*:} awk "$@" || exit
+ln -s /dev/full "$par_awk_dir/b.sh"
+"""
+STANDIN_AWK_DIR_B = """#!/usr/bin/env bash
+if [ -z "${par_awk_dir+set}" ]; then
+  PATH=${PATH#*:} exec awk "$@"
+fi
+PATH=${PATH#*:} awk "$@" || exit
+mkdir "$par_awk_dir/b.sh"
+"""
+
+
+def t21_build_fails():
+    """T21: a section's script that cannot be built. Before row 3.126 the driver did not check the
+    build, so a read of b's body that failed part way still got the status line, and the run ran
+    the part of b that was read and printed the summary of a pass. Before the inner group of that
+    check, a b.sh that could not be opened was not caught, and the run started its sections."""
+    failures = []
+    suite = synthetic([section("a"), section("b")], [], [])
+    line = "  FAIL  could not build the script of section 'b' of tools/run_all_checks.sh; no gate ran\n"
+    for label, name, stand_in in (("b's body cannot be read to its end", "cat", STANDIN_CAT_CUTS_B),
+                                  ("b's script cannot be written", "awk", STANDIN_AWK_FULL_B),
+                                  ("b's script cannot be opened", "awk", STANDIN_AWK_DIR_B)):
+        t = Tree(suite)
+        try:
+            (t.d / "bin" / name).write_text(stand_in, encoding="utf-8")
+            (t.d / "bin" / name).chmod(0o755)
+            rc, out = t.run((), "4")
+            ran = [n for t_, k, n in t.events() if k == "start"]
+            left = sorted(x.name for x in (t.d / "tmp").iterdir())
+            check(failures, f"T21 {label}", rc == 2 and line in out and "== b ==" not in out
+                  and "All gates passed." not in out and not ran and not left,
+                  f"exit {rc}, sections started {ran!r}, TMPDIR holds {left!r}: {out!r}")
+        finally:
+            t.close()
+    return failures
+
+
+def t22_preflight_signal():
+    """T22: a HUP, INT or TERM sent to the driver alone while the parser preflight runs. Before row
+    3.123 the driver had no trap set then, so it ended at once while the preflight's check ran on.
+    The same signals sent to the driver's whole process group end the driver by that signal with
+    only the preflight's heading printed; before the subshell trapped HUP and TERM itself, the
+    driver printed bash's job notice for it after that heading."""
+    failures = []
+    suite = synthetic([section("a"), section("b")], [], [])
+    slow = ('#!/usr/bin/env bash\nprintf "%s\\n" "$$" > "$STANDIN_DIR/preflight.pid"\n'
+            f"sleep {2 * SCALE:g}\nprintf '{PREFLIGHT_OK}\\n'\n")
+    heading = "== gate parser preflight: this python3 has the pinned markdown-it-py ==\n"
+    for target, sig in [(target, sig) for target in ("the driver", "the driver's process group")
+                        for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)]:
+        want = heading + (f"{PREFLIGHT_OK}\n" if target == "the driver" else "")
+        t = Tree(suite)
+        try:
+            (t.d / "bin" / "python3").write_text(slow, encoding="utf-8")
+            p = t.start((), "4")
+            wait_for(lambda: alive(t.d / "preflight.pid") or p.poll() is not None, 60)
+            if p.poll() is None:
+                if target == "the driver":
+                    p.send_signal(sig)
+                else:
+                    os.killpg(p.pid, sig)
+            try:
+                p.wait(timeout=60 * SCALE)
+            except subprocess.TimeoutExpired:
+                os.killpg(p.pid, signal.SIGKILL)
+            # Judged as soon as the driver has ended, before its output is read, since a shell of
+            # the preflight's command substitution holds that output open until it ends.
+            left = t.leftovers()
+            out, _ = p.communicate(timeout=60 * SCALE)
+            ran = [n for t_, k, n in t.events() if k == "start"]
+            tmp = sorted(x.name for x in (t.d / "tmp").iterdir())
+            check(failures, f"T22 {sig.name} to {target} while the preflight runs",
+                  p.returncode == -sig and out == want and not left and not ran and not tmp,
+                  f"exit {p.returncode}, still running {left!r}, sections started {ran!r}, "
+                  f"temp left {tmp!r}: {out!r}")
+        finally:
+            t.close()
+    return failures
+
+
 CASES = (t1_order, t2_concurrency, t3_status, t4_preflight, t5_refusals, t6_dependencies,
          t7_exclusive, t8_abort, t9_signals, t10_merged, t11_normaliser, t12_shape, t13_select_gates,
-         t16_times, t18_tmpdir_newline, t19_tmpdir_backslash, t20_awk_fails)
+         t16_times, t18_tmpdir_newline, t19_tmpdir_backslash, t20_awk_fails, t21_build_fails,
+         t22_preflight_signal)
 
 
 def start_time(pid):
@@ -1582,7 +1693,9 @@ def main():
               f"an early TERM or, unless a SKIP line says otherwise, a failed fork, the folder a "
               f"killed keeper left removed by the next run, merged streams, "
               f"the file's shape, SECURECONFIG_SUITE_TIMES, a TMPDIR holding a newline or a "
-              f"backslash escape, a failed or incomplete cut of the sections)")
+              f"backslash escape, a failed or incomplete cut of the sections, a section's script "
+              f"that cannot be built, a HUP, INT or TERM to the driver or its process group during "
+              f"the preflight)")
     for note in notes:
         print(note)
     return 0
