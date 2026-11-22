@@ -19,27 +19,36 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 - **Maintainer ruling of 2026-11-21 re-raising only the statuses whose signal ends a process, closing TODO row 3.121 (#1385).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 19:56Z. The
-  record of the ruling available to this change gives the three option labels and the choice, not the question
-  text or any option's description: by its options, the question was which statuses from 129 to 192 that end a
-  whole run the suite still sends itself, in either mode, as the signal of that number minus 128 (row 3.121). The
-  options were "Re-raise only fatal signals", "Skip only the stop signals" and "Stop re-raising", quoted as that
-  record gives them. The maintainer chose "Re-raise only fatal signals". That record holds no reasoning beyond the
-  choice. This ruling refines the ruling of 2026-11-20 answered at about 23:55Z below, which made the serial run
-  re-raise every such status as the parallel driver did, by narrowing it, in both modes, to the statuses whose
-  signal ends a process by default.
-  - Effect. Carried out by #1385. In a whole run, in either mode, `par_flush` and the serial run's supervisor send
-    the run the signal of a status from 129 to 192 minus 128 only when that signal ends a process by default by
-    the Linux default actions in signal(7), which `suite_fatal_status` in `tools/run_all_checks.sh` decides and its
-    comment states. For the stop signals (147 to 150), for CHLD, CONT, URG and WINCH (145, 146, 151 and 156) and
-    for any other status, the run exits with that status, so it is never left stopped. Every real-time signal, 32
-    to 64, ends a process by default, so `exit 160` still ends the run by signal 32. Under `--sections` the status
-    stays the exit status. The Gates section of `CLAUDE.md` and `AGENTS.md` and the header of the script say so,
-    case T24 in `tools/test_parallel_suite.py` checks it in both modes, and row 3.121 is in `DONE.md`.
+  record of the ruling gives the question and the label and description of each of the three options offered, and
+  the question, labels and descriptions are quoted exactly. The question is quoted whole in three consecutive
+  parts, and it began:
+  "Row 3.121 (secureconfig suite). Since your 11-20 ruling, a whole run that ends with a status from 129 to 192 sends itself the signal of that number minus 128."
+  It went on:
+  "A section's plain 'exit 147' therefore sends STOP and leaves the suite stopped, and 148 to 150 send TSTP, TTIN or TTOU, which can stop it too. Statuses 145, 146, 151 and 156 send signals that don't end a process, so the run exits with that status."
+  It ended:
+  "Bash can't tell a plain 'exit 143' from a real death by TERM, so the fix has to choose by status. Which direction should the fix take?"
+  One option was "Skip only the stop signals", whose description read:
+  "Prediction: keep your 11-20 rule, the smallest change. For statuses 147 to 150 the run exits with the status instead of sending a stop signal. Everything else stays as ruled."
+  Another was "Re-raise only fatal signals", whose description read:
+  "My recommendation. Re-raise only statuses whose signal ends a process by default (for example 129, 130, 143), and exit with the status for every other one: stop signals (147 to 150), signals that don't end a process (145, 146, 151, 156) and anything unusual. Both modes behave the same, and the rule is easy to state."
+  The remaining option was "Stop re-raising", whose description read:
+  "Go-wild option. Withdraw the 11-20 rule: a whole run always exits with its status, and only a signal the suite itself caught is re-raised. This changes what callers see for 'exit 143'."
+  The maintainer chose "Re-raise only fatal signals". No reasoning was recorded beyond the choice. This ruling
+  refines the ruling of 2026-11-20 answered at about 23:55Z, below.
+  - Effect. By the chosen option's description, only statuses whose signal ends a process by default, for example
+    129, 130 and 143, are re-raised, and every other status is the exit status: stop signals (147 to 150), signals
+    that do not end a process (145, 146, 151 and 156) and anything unusual. Both modes behave the same. What
+    follows in this bullet is this pull request's reading, not the description's. In that reading, #1385 carries
+    the ruling out in a whole run: `par_flush` and the serial run's supervisor send the run the signal of a status
+    from 129 to 192 minus 128 only when that signal ends a process by default by the Linux default actions in
+    signal(7), which `suite_fatal_status` in `tools/run_all_checks.sh` decides and its comment states. Every
+    real-time signal, 32 to 64, ends a process by default, so `exit 160` still ends the run by signal 32. Under
+    `--sections` the status stays the exit status. The Gates section of `CLAUDE.md` and `AGENTS.md` and the
+    header of the script say so, case T24 in `tools/test_parallel_suite.py` checks it in both modes, and row 3.121
+    is in `DONE.md`.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
-    own `CHANGELOG.md` entry, and records the new ruling here. A return to the ruling of 2026-11-20 alone removes
-    `suite_fatal_status` and its 2 calls, so that every whole-run status from 129 to 192 is re-raised again, and
-    changes case T24 and the Gates section to match.
+    own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-21 confirming the proxy decision on TODO row 3.104 (#1381).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 18:58Z. The
   question asked whether to merge #1381 and summarized the row, the two diagnoses, with no case in 7,929 instrumented
