@@ -17,6 +17,29 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-21 re-raising only the statuses whose signal ends a process, closing TODO row 3.121 (#1385).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 19:56Z. The
+  record of the ruling available to this change gives the three option labels and the choice, not the question
+  text or any option's description: by its options, the question was which statuses from 129 to 192 that end a
+  whole run the suite still sends itself, in either mode, as the signal of that number minus 128 (row 3.121). The
+  options were "Re-raise only fatal signals", "Skip only the stop signals" and "Stop re-raising", quoted as that
+  record gives them. The maintainer chose "Re-raise only fatal signals". That record holds no reasoning beyond the
+  choice. This ruling refines the ruling of 2026-11-20 answered at about 23:55Z below, which made the serial run
+  re-raise every such status as the parallel driver did, by narrowing it, in both modes, to the statuses whose
+  signal ends a process by default.
+  - Effect. Carried out by #1385. In a whole run, in either mode, `par_flush` and the serial run's supervisor send
+    the run the signal of a status from 129 to 192 minus 128 only when that signal ends a process by default by
+    the Linux default actions in signal(7), which `suite_fatal_status` in `tools/run_all_checks.sh` decides and its
+    comment states. For the stop signals (147 to 150), for CHLD, CONT, URG and WINCH (145, 146, 151 and 156) and
+    for any other status, the run exits with that status, so it is never left stopped. Every real-time signal, 32
+    to 64, ends a process by default, so `exit 160` still ends the run by signal 32. Under `--sections` the status
+    stays the exit status. The Gates section of `CLAUDE.md` and `AGENTS.md` and the header of the script say so,
+    case T24 in `tools/test_parallel_suite.py` checks it in both modes, and row 3.121 is in `DONE.md`.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
+    own `CHANGELOG.md` entry, and records the new ruling here. A return to the ruling of 2026-11-20 alone removes
+    `suite_fatal_status` and its 2 calls, so that every whole-run status from 129 to 192 is re-raised again, and
+    changes case T24 and the Gates section to match.
 - **Maintainer ruling of 2026-11-21 confirming the proxy decision on TODO row 3.104 (#1381).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 18:58Z. The
   question asked whether to merge #1381 and summarized the row, the two diagnoses, with no case in 7,929 instrumented

@@ -133,14 +133,14 @@ review) makes the serial run print bash's job notice for its child shell, which 
 print. And a diagnostic that bash itself prints from inside a section, such as an unbound variable or a
 command not found, names another file or line.
 In either mode, a whole run that ends with a status from 129 to 192 that no signal caused, such as a
-section's `exit 143`, sends itself the signal of that number minus 128: the serial run's supervisor
-matches the parallel driver here, by the maintainer's ruling of 2026-11-20. Under `--sections`
-such a status stays the exit status. Most such signals end the run: `exit 143` dies by TERM and
-`exit 160` by signal 32. A status of 145, 146, 151 or 156 sends CHLD, CONT, URG or WINCH, which by
-default do not end a process, so the run exits with that status. A status of 147 sends STOP, which
-stops the suite and leaves it stopped. A status from 148 to 150 sends TSTP, TTIN or TTOU, stop
-signals that Linux discards for an orphaned process group (148 measured; 149 and 150 not run), and
-that may stop a run whose process group is not orphaned (row 3.121).
+section's `exit 143`, sends itself the signal of that number minus 128 only when that signal ends a
+process by default by the Linux default actions in signal(7): `exit 143` dies by TERM and `exit 160`
+by signal 32, since every real-time signal, 32 to 64, ends a process by default. The serial run's
+supervisor matches the parallel driver here, by the maintainer's rulings of 2026-11-20 and
+2026-11-21. Any other status is the exit status: 145, 146, 151 and 156, whose CHLD, CONT, URG and
+WINCH by default do not end a process, and 147 to 150, whose STOP, TSTP, TTIN and TTOU would stop
+the run, so the run is never left stopped (row 3.121). Under `--sections` such a status stays the
+exit status.
 Every gate in the suite, in either mode, is deterministic and offline: no gate reaches the
 network, so no outside service can change a gate's answer. The `gates` job that runs it is not
 offline. Before the suite starts, `.github/workflows/checks.yml` fetches its pinned actions, Python,
