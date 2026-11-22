@@ -17,6 +17,32 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-21 on moving to squash-only landing (#1384).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 19:50Z. The
+  record of the ruling given to this pull request does not hold the question text or the options' descriptions;
+  read from the options, the question was whether and how secureconfig moves to squash-only landing, with how a
+  listed page's sitemap `lastmod` is then kept. The labels are quoted exactly. The three options were "Prepare,
+  then switch", "Keep merge commits" and "Switch, loosen the date gate", and the maintainer chose "Prepare, then
+  switch". As the record gives that choice, secureconfig moves to squash-only landing after a pull request lands
+  the `tools/check_release.py` fix and the documentation updates, and `tools/check_sitemap_lastmod.py` stays
+  unchanged. A page's `lastmod` is kept by re-dating the commit that changes the page and setting the `lastmod` on
+  the landing day, and the maintainer then changes the repository settings. The record holds no reasoning beyond
+  the choice.
+  - Effect. Carried out in part by #1384. `tools/check_release.py` accepts a target whose subject ends in `(#N)`, a
+    squash commit's shape, as well as one that begins `Merge pull request #N from `, reading both with
+    `merged_number()` from `tools/check_changelog_prs.py`, and names the target's pull request in the release body
+    and notes either way. `tools/test_release.py` adds a fixture whose `main` holds real merge commits and then
+    squash commits, and the releases before, across and after that move pass. The docstrings of
+    `tools/check_release.py` and `tools/check_changelog_prs.py`, a comment in `tools/test_changelog_prs.py`,
+    `CONTRIBUTING.md` and `SECURITY.md` now describe both shapes. The code of `tools/check_sitemap_lastmod.py` is
+    unchanged; its docstring and `CONTRIBUTING.md`'s "Shipping a change" section give the landing-day procedure.
+    Not yet carried out: the repository settings, which the maintainer changes after #1384 lands, so pull requests
+    land as merge commits until then.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it; if the repository settings were changed, the maintainer changes them back. Any squash commits
+    already on `main` stay there, so that pull request keeps the squash shape in `tools/check_release.py` and its
+    tests unless the new ruling says otherwise. It keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`,
+    adds its own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-21 confirming the proxy decision on TODO row 3.104 (#1381).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 18:58Z. The
   question asked whether to merge #1381 and summarized the row, the two diagnoses, with no case in 7,929 instrumented

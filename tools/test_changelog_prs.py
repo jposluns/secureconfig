@@ -138,11 +138,13 @@ case(
     "#25 merged but never referenced",
 )
 
-# Since #299 this repository merges with merge commits, whose subject GitHub writes
-# as `Merge pull request #N from <owner>/<branch>`. A gate reading only the squash suffix
-# read none of those subjects, so it checked such a pull request only when another
-# commit happened to end in its `(#N)`, and it still reported a pass. Two merges, as
-# above, so the newest-exemption cannot account for the missing one.
+# From #299 this repository merged with merge commits, whose subject GitHub writes as
+# `Merge pull request #N from <owner>/<branch>`, until the move to squash merges that the
+# maintainer's ruling of 2026-11-21 in DECISIONS.md sets out; main keeps both shapes after
+# that move, so the merge-commit cases below still apply. A gate reading only the
+# squash suffix read none of those subjects, so it checked such a pull request only when
+# another commit happened to end in its `(#N)`, and it still reported a pass. Two merges,
+# as above, so the newest-exemption cannot account for the missing one.
 case(
     "a merge-commit pull request with no reference fails",
     ["Merge pull request #10 from o/a", "Merge pull request #11 from o/b"],

@@ -51,6 +51,18 @@ today's UTC date for the edited page; commit on that UTC day, or set the date ag
 on the committed tree. On a mismatch, set the `lastmod` to the date the finding names; a commit
 that changes only site/sitemap.xml does not move that date.
 
+SQUASH MERGES: the maintainer's ruling of 2026-11-21 in DECISIONS.md moves this repository to
+squash merges and keeps this gate's rule as it is. A squash commit is then the last commit on
+main that changed the page, and it is dated when the pull request lands, in the offset it
+records. A pull request's own run dates the page by its branch commit, as MERGES above infers,
+so that run cannot catch a landing on a later day. The landing-day procedure keeps the gate
+green: on the day the pull request is to land, recommit the change to the page so that its
+commit carries that day's date (an amend does, as does a rebase that rewrites it), set the
+page's `lastmod` to that date as KEEPING IT GREEN says, rerun the gates, and squash the pull
+request on that same day. If the squash commit records another date, because it landed on a
+later day or in an offset whose date differs, this gate fails on main until a pull request
+that changes only site/sitemap.xml sets the `lastmod` to the date the finding names.
+
 WHERE IT RUNS: in tools/run_all_checks.sh only, after tools/check_sitemap.py. It is not in
 scripts/pages-build.sh, the Pages build check, because that build may run without the history,
 where this gate fails closed.

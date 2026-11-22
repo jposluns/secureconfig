@@ -13,6 +13,12 @@ passing twin that differs only in its defect: the two clean releases below, a fi
 later one, are the twins, and each finding case changes one thing about them. Every case runs
 the shipped entry point under `python3 -I -B`.
 
+Most fixtures land each pull request as one commit with a merge commit's subject. One fixture
+lands #10 to #12 as real two-parent merges and #13 and #14 as squash commits whose subjects end
+in `(#N)`, as main's history holds both shapes once the repository moves to squash merges.
+Releases of a merge commit before the move, of a squash commit across it and of a squash commit
+after it pass, and a target on main whose subject has neither shape is refused.
+
 The zips are read from the clean later release, and two builds give byte-equal zips. The skill
 zip holds exactly the files git records under `plugin/skills/secureconfig/` at the target, with
 `SKILL.md` at its root, and the plugin zip exactly those under `plugin/`, in sorted order and
@@ -187,9 +193,12 @@ def changelog(entries, broken=False):
 
 
 def build(root, history=HISTORY, suite=PASSING_SUITE, omit=(), version=None, plugin=None,
-          broken=None, checks=WORKFLOW, skill=True, extra=()):
+          broken=None, checks=WORKFLOW, skill=True, extra=(), landing=None):
     """A repository whose main is `history`; returns each pull request's merge commit.
 
+    `landing` maps a pull request to how it lands on main: "merge" for a real two-parent merge
+    of a branch commit, with the subject GitHub writes, or "squash" for one commit whose subject
+    ends in `(#N)`. Any other pull request lands as one commit with the merge commit's subject.
     `checks` is the text of .github/workflows/checks.yml, its bytes, None for no such file,
     SYMLINK for a symlink to a file holding the stub, or DIRECTORY for a directory holding it.
     The skill folder holds a guide, an executable script and, unless `skill` is false, SKILL.md.
@@ -235,7 +244,17 @@ def build(root, history=HISTORY, suite=PASSING_SUITE, omit=(), version=None, plu
         write(root, "site/llms-full.txt", f"bundle {pr}\n")
         write(root, "CHANGELOG.md", changelog(entries, broken == pr))
         git(root, "add", "-A")
-        git(root, "commit", "-q", "-m", f"Merge pull request #{pr} from o/b{pr}", when=when)
+        shape = (landing or {}).get(pr)
+        if shape == "squash":
+            git(root, "commit", "-q", "-m", f"Change {pr} (#{pr})", when=when)
+        elif shape == "merge":
+            git(root, "checkout", "-q", "-b", f"b{pr}")
+            git(root, "commit", "-q", "-m", f"Change {pr}", when=when)
+            git(root, "checkout", "-q", "main")
+            git(root, "merge", "-q", "--no-ff", "-m", f"Merge pull request #{pr} from o/b{pr}",
+                f"b{pr}", when=when)
+        else:
+            git(root, "commit", "-q", "-m", f"Merge pull request #{pr} from o/b{pr}", when=when)
         commits[pr] = git(root, "rev-parse", "HEAD")
     return commits
 
@@ -533,6 +552,65 @@ def archive_unit_cases():
     chat_limit_cases()
 
 
+def switch_cases(tmp):
+    """Check 1 across a move from merge commits to squash merges, as main's history will hold.
+
+    #10 to #12 land as real two-parent merges and #13 and #14 as squash commits, so the
+    release before the move, one across it and one after it each have a target of their own
+    shape and a range of the shapes the chain holds there. A release that was not built reads
+    as empty text, so its own case fails and the cases after it still run.
+    """
+    def built(path):
+        return path.read_text(encoding="utf-8") if path.is_file() else ""
+
+    repo = tmp / "switch"
+    c = build(repo, landing={10: "merge", 11: "merge", 12: "merge", 13: "squash", 14: "squash"})
+    expect("a first release of a real merge commit before the move to squash merges passes",
+           release(repo, c[11], "v1.0.11", None, tmp / "switch-merge"), 0, OK, RECORDED)
+    first = tmp / "switch-first"
+    expect("a first release of a squash-landed target passes",
+           release(repo, c[13], "v1.0.13", None, first), 0, OK, RECORDED)
+    body = built(first / "body.md")
+    expect("its body names the squash-landed target's pull request and the whole range",
+           (0, body), 0, "the merge of pull request #13.",
+           "Pull requests merged in that range (5): #9, #10, #11, #12, #13.")
+    git(repo, "tag", "v1.0.11", c[11])
+    expect("a merge-commit target followed on its date by a squash merge is refused",
+           release(repo, c[12], "v1.0.12", "v1.0.11", tmp / "switch-midday"), 1,
+           "is not the last merge of 2026-10-03 UTC", "'Change 13 (#13)' merged later that day")
+    later = tmp / "switch-later"
+    expect("a later release from a merge-commit tag to a squash-landed target passes",
+           release(repo, c[13], "v1.0.13", "v1.0.11", later), 0, OK, RECORDED,
+           "each one referenced under its UTC merge date")
+    notes = built(later / "assets" / "RELEASE-NOTES-v1.0.13.md")
+    expect("its notes name the squash-landed target and take the range's merge and squash dates",
+           (0, notes), 0, "the merge of pull request #13.",
+           "## 2026-10-03\n\n- Change 12 (#12).\n- Change 13 (#13).\n",
+           absent=("## 2026-10-02", "## 2026-10-04"))
+    body = built(later / "body.md")
+    expect("its body lists the merge-commit and the squash pull requests of the range",
+           (0, body), 0, "Pull requests merged in that range (2): #12, #13.")
+    git(repo, "tag", "v1.0.13", c[13])
+    after = tmp / "switch-after"
+    expect("a release from a squash-landed tag to a squash-landed target passes",
+           release(repo, c[14], "v1.0.14", "v1.0.13", after), 0, OK, RECORDED)
+    body = built(after / "body.md")
+    expect("its body lists only the squash pull request after the previous target",
+           (0, body), 0, "the merge of pull request #14.",
+           "Pull requests merged in that range (1): #14.")
+    # A commit on main's first-parent chain whose subject has neither shape, after #14 and
+    # numbered above it, so only its subject keeps it from being a target.
+    write(repo, "VERSION", "1.0.15\n")
+    write(repo, "plugin/plugin.json", '{\n  "name": "fixture",\n  "version": "1.0.15"\n}\n')
+    git(repo, "commit", "-q", "-am", "plain commit", when="2026-10-05T10:00:00Z")
+    plain = git(repo, "rev-parse", "HEAD")
+    expect("a target on main whose subject records no pull request is refused",
+           release(repo, plain, "v1.0.15", "v1.0.13", tmp / "switch-plain"), 1,
+           "the target's subject 'plain commit' records no pull request: it neither begins "
+           "`Merge pull request #N from ` nor ends in `(#N)`",
+           absent=("is not on the first-parent chain",))
+
+
 def cases(tmp):
     # The two clean releases, which every finding case below differs from by one thing.
     repo = tmp / "clean"
@@ -688,9 +766,7 @@ def cases(tmp):
     expect("a target off main's first-parent chain is refused",
            release(repo, side, "v1.0.15", "v1.0.11", tmp / "side"), 1,
            "is not on the first-parent chain of main")
-    expect("a target that is not a pull request merge is refused",
-           release(repo, git(repo, "rev-parse", "HEAD~5"), "v1.0.9", None, tmp / "plain"), 1,
-           "does not begin `Merge pull request #N from `")
+    switch_cases(tmp)
     expect("an abbreviated target id cannot be checked",
            release(repo, c[13][:12], "v1.0.13", "v1.0.11", tmp / "short"), 2,
            "not a full 40-character")

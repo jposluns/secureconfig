@@ -419,6 +419,24 @@ an older one merges last: #50 merged after #51 and set `1.0.50` against a `main`
 enforces this; the suite is offline by policy and a pull request number is only knowable from
 outside.
 
+A pull request lands on `main` as a merge commit, whose subject begins
+`Merge pull request #N from `, until the maintainer changes the repository settings to allow
+squash merges only, as the ruling of 2026-11-21 in `DECISIONS.md` sets out; from then on it
+lands as a squash commit, whose subject must end in its `(#N)`. `main` keeps the merge commits
+from before that move, and `tools/check_changelog_prs.py` and `tools/check_release.py` read
+both shapes. A squash commit whose subject does not end in `(#N)` records no pull request, so
+the changelog gate does not count it and the release check refuses it as a target.
+
+Under squash merges, a pull request that changes a page listed in `site/sitemap.xml` keeps that
+page's `lastmod` right by landing on the day it names. The squash commit is then the last commit
+that changed the page, and `tools/check_sitemap_lastmod.py` compares the `lastmod` with that
+commit's committer date, which the pull request's own run cannot see. On the day it is to land,
+recommit the change to the page so that its commit carries that day's date (an amend does),
+set the page's `lastmod` to that date, rerun the gates, and squash it on that same day. If it
+lands on another day, the gate fails on `main` until a pull request that changes only
+`site/sitemap.xml` sets the `lastmod` to the date the gate names. The gate's docstring gives
+the rule and this procedure.
+
 A pull request that changes `VERSION` or a guide also runs `bash scripts/build-llms-full.sh` and
 `bash scripts/build-plugin.sh` and commits every file they change. One that changes the root
 `LICENSE` or `NOTICE` runs `bash scripts/build-plugin.sh`, which copies both, byte for byte, to
@@ -497,7 +515,8 @@ brief checks that they do. No gate enforces this; it stays with the author and t
 
 ## Releasing
 
-A release is a GitHub release on a tag `v1.0.<N>` that names one merge commit on `main`, where
+A release is a GitHub release on a tag `v1.0.<N>` that names the commit one pull request landed
+on `main`, a merge commit or a squash commit, where
 `1.0.<N>` is `VERSION` at that commit, for example `v1.0.1153`. Releases are cut "on
 completion of major milestones or on demand", on no fixed schedule, under the maintainer's
 rulings of 2026-11-01 in `DECISIONS.md`. A release changes nothing on `main`, and its tag is
@@ -533,11 +552,14 @@ list of pull requests and a link to `CHANGELOG.md` at the tag.
    the previous one.
    `TZ=UTC git log --first-parent --date=format-local:%Y-%m-%dT%H:%M:%SZ --format='%H %cd %s' main`
    lists the merges with their UTC times. The target's subject begins
-   `Merge pull request #N from `, and the tag is `v` plus `git show <sha>:VERSION`. The target
+   `Merge pull request #N from ` for a merge commit or ends in `(#N)` for a squash commit, and
+   `tools/check_release.py` takes either shape, so the merge commits from before the move to
+   squash merges stay valid targets. The tag is `v` plus `git show <sha>:VERSION`. The target
    is the merge of #1194 or a later one, as step 3 explains.
 3. Before cutting the release, run the whole suite on the target through a temporary branch and
    require it to succeed. From #1194 on, no run starts on a push to `main`, and a pull request's
-   run checks the pull request, possibly only some sections, not the merge commit, so no earlier
+   run checks the pull request, possibly only some sections, not the merge commit or squash
+   commit it lands as, so no earlier
    run stands in for this one. `workflow_dispatch` runs on a branch or tag, not on a bare
    commit, and the target is usually no longer the head of `main`, so push a temporary branch
    `release-check/v1.0.<N>` at the target with
