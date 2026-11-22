@@ -145,11 +145,13 @@ BUILD-LLMS-FULL.SH (row 3.110): the script is copied into a scratch tree with it
 README.md and run with --check, with a stand-in python3 first on PATH that records its last
 argument and prints nothing, and TMPDIR set to a folder holding a folder named as the build names
 its own, for a process that has ended. Beside it are folders named for this live process, for
-another boot ID, for another PID namespace and with another name, each holding a file, and a
-symbolic link and a file named as the stale folder is. The build must remove the stale folder
-only, keep every other entry with its bytes, name its own folder with this boot ID and namespace,
-remove it, and exit 1, since the tree has no site/llms-full.txt. Without /proc's boot ID and PID
-namespace the case prints a SKIP line saying why.
+another boot ID, for another PID namespace, with another name, and for this live process with a
+leading zero in its PID or start time, each holding a file, a symbolic link and a file named as
+the stale folder is, and a second stale folder that a stand-in rm first on PATH cannot remove.
+The build must remove the stale folder only, keep every other entry with its file and bytes,
+print nothing of rm's message, name its own folder with this boot ID and namespace, remove it,
+and exit 1, since the tree has no site/llms-full.txt. Without /proc's boot ID and PID namespace
+the case prints a SKIP line saying why.
 
 Nothing here runs a real gate; tools/run_all_checks.sh runs those. Exit 0 ok, 1 on a finding.
 """
@@ -1285,6 +1287,16 @@ def plugin_failures():
 
 LLMS = ROOT / "scripts" / "build-llms-full.sh"
 LLMS_NAME = re.compile(r"secureconfig-llms\.([0-9a-f-]{36})\.([0-9]+)\.([0-9]+)\.([0-9]+)\.[A-Za-z0-9]+")
+# A stand-in rm first on PATH that fails, with a message as rm's own, for an entry named *.Stuck00001
+# and runs the real rm, the first one on PATH after the scratch tree's bin, for anything else.
+STANDIN_RM = """#!/usr/bin/env bash
+for arg; do
+  case $arg in
+    *.Stuck00001) printf "rm: cannot remove '%s/kept': Permission denied\\n" "$arg" >&2; exit 1 ;;
+  esac
+done
+PATH=${PATH#*:} exec rm "$@"
+"""
 
 
 def proc_start(pid):
@@ -1300,11 +1312,13 @@ def llms_failures():
     README.md and a stand-in python3 first on PATH that records its arguments and prints nothing,
     with TMPDIR set to a folder holding a folder named as the build names its own for a process that
     has ended, beside a folder named for this live process, for another boot ID, for another PID
-    namespace and with another name, each holding a file, and a symbolic link and a file named as
-    the stale folder is (row 3.110). The build must remove the stale folder only, keep every other
-    entry with its bytes, name its own folder with this boot ID and namespace, remove it and exit 1,
-    since the tree has no site/llms-full.txt. Returns (failures, whether the case ran): without
-    /proc's boot ID and PID namespace it does not run."""
+    namespace, with another name, and for this live process with a leading zero in its PID or
+    start time, each holding a file, a symbolic link and a file named as the stale folder is, and a
+    second stale folder that a stand-in rm cannot remove (row 3.110). The build must remove the
+    stale folder only, keep every other entry with its file and bytes, print nothing of rm's
+    message, name its own folder with this boot ID and namespace, remove it and exit 1, since the
+    tree has no site/llms-full.txt. Returns (failures, whether the case ran): without /proc's boot
+    ID and PID namespace it does not run."""
     failures = []
     try:
         boot = Path("/proc/sys/kernel/random/boot_id").read_text(encoding="utf-8").strip()
@@ -1324,6 +1338,8 @@ def llms_failures():
         (d / "bin" / "python3").write_text('#!/usr/bin/env bash\nprintf \'%s\\n\' "${@: -1}" >> "$STANDIN_LOG"\n',
                                            encoding="utf-8")
         (d / "bin" / "python3").chmod(0o755)
+        (d / "bin" / "rm").write_text(STANDIN_RM, encoding="utf-8")
+        (d / "bin" / "rm").chmod(0o755)
         tmp = d / "tmp"
         ended = subprocess.Popen(["sleep", "60"])
         ended_start = proc_start(ended.pid)
@@ -1336,6 +1352,9 @@ def llms_failures():
         for name in (stale, f"secureconfig-llms.{boot}.{ns}.{me}.{mine}.Live000001",
                      f"secureconfig-llms.{other_boot}.{ns}.{ended.pid}.{ended_start}.Boot000001",
                      f"secureconfig-llms.{boot}.{int(ns) + 1}.{ended.pid}.{ended_start}.Ns00000001",
+                     f"secureconfig-llms.{boot}.{ns}.0{me}.{mine}.Zero000001",
+                     f"secureconfig-llms.{boot}.{ns}.{me}.0{mine}.Zero000002",
+                     f"secureconfig-llms.{boot}.{ns}.{ended.pid}.{ended_start}.Stuck00001",
                      "secureconfig-llms.leftover"):
             (tmp / name).mkdir()
             (tmp / name / "kept").write_text(f"{name}\n", encoding="utf-8")
@@ -1359,10 +1378,10 @@ def llms_failures():
         log = (d / "log").read_text(encoding="utf-8").splitlines() if (d / "log").exists() else []
         built = Path(log[-1]) if log else None
         match = LLMS_NAME.fullmatch(built.parent.name) if built else None
-        if p.returncode != 1 or after != want or not intact:
+        if p.returncode != 1 or after != want or not intact or "Stuck00001" in p.stdout + p.stderr:
             failures.append(f"build-llms-full.sh beside a folder an ended run left: exit {p.returncode} "
                             f"(wanted 1), TMPDIR holds {after!r}, wanted {want!r}, the others intact "
-                            f"{intact}: {p.stdout!r} {p.stderr!r}")
+                            f"{intact}, wanted nothing of rm's message: {p.stdout!r} {p.stderr!r}")
         if not (match and match.group(1) == boot and match.group(2) == ns):
             failures.append(f"build-llms-full.sh named its folder {built.parent.name if built else None!r}, "
                             f"not secureconfig-llms.{boot}.{ns}.PID.START.XXXXXXXXXX")

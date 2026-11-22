@@ -87,8 +87,10 @@ THE CASES (numbered as in the implementation plan, which is not in this reposito
   T23 a KILL sent to the keeper alone leaves the sections' folder, under a name that records its
       boot ID, PID namespace, driver and keeper, and the run exits 0 with its output unchanged; the
       next parallel run, with the same output, removes that folder and keeps every other entry of
-      TMPDIR with its bytes: folders named for a live driver or keeper, another boot ID, another
-      namespace or with another name, and a symbolic link and a file named as the stale folder is
+      TMPDIR, each with its file and bytes: folders named for a live driver or keeper, another
+      boot ID, another namespace, with another name, or for this live process with a leading zero
+      in its PIDs or start times, and a symbolic link and a file named as the stale folder is; a
+      stale folder that a stand-in rm cannot remove stays, and nothing of rm's message is printed
       (row 3.117).
 
 NOT HERE (run by hand, see main's --differential and --inject, because each runs the real suite
@@ -1486,15 +1488,28 @@ def keeper_of(driver):
 
 STALE_NAME = re.compile(r"secureconfig-suite\.([0-9a-f-]{36})\.([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)"
                         r"\.([0-9]+)\.[A-Za-z0-9]+")
+# A stand-in rm first on PATH that fails, with a message as rm's own, for an entry named *.Stuck00001
+# and runs the real rm, the first one on PATH after the tree's bin, for anything else.
+STANDIN_RM = """#!/usr/bin/env bash
+for arg; do
+  case $arg in
+    *.Stuck00001) printf "rm: cannot remove '%s/kept': Permission denied\\n" "$arg" >&2; exit 1 ;;
+  esac
+done
+PATH=${PATH#*:} exec rm "$@"
+"""
 
 
 def t23_stale_folder():
     """T23 (row 3.117): a KILL sent to the keeper alone leaves the sections' folder, and the run
     goes on to exit 0 with its output unchanged. The next parallel run removes that folder and
-    keeps every other entry of TMPDIR, each with its bytes: a folder named for a run whose driver
-    or keeper still runs, for another boot ID or another PID namespace, or with another name, and
-    a symbolic link and a file named as the stale folder is. Before row 3.117's fix the folder had
-    no name the suite alone makes and no run removed it."""
+    keeps every other entry of TMPDIR, each with its bytes, whose file must still exist: a folder
+    named for a run whose driver or keeper still runs, for another boot ID or another PID
+    namespace, with another name, or for this live process with a leading zero in its PIDs or in
+    its start times, and a symbolic link and a file named as the stale folder is. A stale folder
+    that a stand-in rm cannot remove stays, and that run's output is still unchanged, with nothing
+    of rm's message. Before row 3.117's fix the folder had no name the suite alone makes and no
+    run removed it."""
     failures = []
     suite = synthetic([section("a", sleep="1"), section("b")], [], [])
     t = Tree(suite)
@@ -1534,10 +1549,15 @@ def t23_stale_folder():
                          f"secureconfig-suite.{boot}.{ns}.{dpid}.{dstart}.{me}.{mine}.Keeper0001",
                          f"secureconfig-suite.{other_boot}.{ns}.{dpid}.{dstart}.{kpid}.{kstart}.Boot000001",
                          f"secureconfig-suite.{boot}.{int(ns) + 1}.{dpid}.{dstart}.{kpid}.{kstart}.Ns00000001",
+                         f"secureconfig-suite.{boot}.{ns}.0{me}.{mine}.0{me}.{mine}.Zero000001",
+                         f"secureconfig-suite.{boot}.{ns}.{me}.0{mine}.{me}.0{mine}.Zero000002",
+                         f"secureconfig-suite.{boot}.{ns}.{dpid}.{dstart}.{kpid}.{kstart}.Stuck00001",
                          "secureconfig-suite.leftover"):
                 (tmp / name).mkdir()
                 (tmp / name / "kept").write_text(f"{name}\n", encoding="utf-8")
                 kept[name] = f"{name}\n"
+            (t.d / "bin" / "rm").write_text(STANDIN_RM, encoding="utf-8")
+            (t.d / "bin" / "rm").chmod(0o755)
             outside = t.d / "outside"
             outside.mkdir()
             (outside / "kept").write_text("outside\n", encoding="utf-8")
@@ -1548,8 +1568,9 @@ def t23_stale_folder():
             (tmp / plain_file).write_text("a file\n", encoding="utf-8")
         rc, out = t.run((), "4")
         after = sorted(x.name for x in tmp.iterdir())
-        intact = all((tmp / name / "kept").read_text(encoding="utf-8") == body
-                     for name, body in kept.items() if (tmp / name / "kept").exists())
+        intact = all((tmp / name / "kept").exists()
+                     and (tmp / name / "kept").read_text(encoding="utf-8") == body
+                     for name, body in kept.items())
         want = sorted(kept) + ([plain_file] if match else [])
         check(failures, "T23 the next parallel run removes the stale folder and keeps every other entry",
               rc == 0 and out == plain and after == sorted(want) and intact

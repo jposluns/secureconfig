@@ -493,61 +493,91 @@ PY
 # The built text goes to a file in a private folder, which mktemp -d creates and names (TODO row
 # 3.109). The EXIT trap that removes the folder is set only after mktemp -d has exited 0, so it
 # removes only a folder this script created; when mktemp -d fails, the script exits 1 and removes
-# nothing. A HUP, INT or TERM that ends this script once the trap is set runs that trap. One that
-# ends it after mktemp -d has made the folder and before the trap is set leaves the folder, and so
-# does a KILL, which runs no trap (TODO row 3.110).
+# nothing beyond what the sweep below has already removed. A HUP, INT or TERM that ends this
+# script once the trap is set runs that trap. One that ends it after mktemp -d has made the
+# folder and before the trap is set leaves the folder, and so does a KILL, which runs no trap
+# (TODO row 3.110).
 # No process can remove such a folder once this script has ended, so its next run does. The
 # folder is named secureconfig-llms.BOOT.NS.PID.START.XXXXXXXXXX: the kernel's boot ID, the inode
 # number of this script's PID namespace, and this script's PID and start time, read from /proc, so
 # the name records the folder's owner when mktemp -d makes it. Before it makes its own folder,
-# this script removes each entry of the same TMPDIR whose name has exactly that shape, this boot
-# ID and this namespace, that is a folder, not a symbolic link, owned by this user, and whose
-# recorded process has ended: its PID does not run with its recorded start time, and a zombie
-# does not run. No other program makes such a name, so only a folder that an earlier run of this
-# script made, and that ended, is removed. A folder of a run still going, of another boot,
-# namespace or host sharing TMPDIR, or with any other name is kept, and a process the earlier run
-# started that is still running finds its folder gone. Where /proc does not give the boot ID, the
-# namespace and the start time, the folder is named secureconfig-llms.XXXXXXXXXX, which only its
-# own run removes, and this script removes nothing else.
+# this script removes each entry of the same TMPDIR whose name has exactly that shape, with no
+# leading zero in the PID or start time, this boot ID and this namespace, that is a folder, not a
+# symbolic link, owned by this user, and whose recorded process has ended. The process has ended
+# when /proc has no entry for its PID, or when that PID runs with another start time or as a
+# zombie. When /proc has an entry for the PID but its stat cannot be read, the process counts as
+# running and the folder is kept, so the check fails closed. The sweep trusts the name: it removes
+# a folder of this user named in exactly that shape for an ended process whatever made it, and
+# nothing else in this repository makes such a name. A folder of a run still going, of another
+# boot, namespace or host sharing TMPDIR, or with any other name is kept, and a process the
+# earlier run started that is still running finds its folder gone. rm's messages are discarded
+# and its failure does not end the script, so a folder that rm cannot remove in full stays, and
+# each later run tries again without printing anything. Between these checks and rm, a process
+# that can rename entries in TMPDIR (this user, root, or any user when TMPDIR is writable by others
+# and not sticky) can put another entry under the name. rm then removes a symbolic link without
+# following it, but removes a different folder with its contents. Where /proc does not give the
+# boot ID, the namespace and the start time, or /proc/self is not this script's own entry, as in
+# a PID namespace that uses its parent's /proc, the folder is named secureconfig-llms.XXXXXXXXXX,
+# which only its own run removes, and this script removes nothing else.
 llms_boot=""
 llms_ns=""
 llms_tag=""
-# The start time of process $1 in llms_start, from /proc/$1/stat; status 1 when it has ended.
+# The start time of process $1 in llms_start, from /proc/$1/stat. Status 0 when the process runs,
+# 1 when it has ended (/proc has no entry for $1, or it is a zombie), and 2 when /proc has an entry
+# for $1 whose stat cannot be read or gives no start time.
 llms_start_of() {
   local line fields
-  { IFS= read -r line < "/proc/$1/stat"; } 2>/dev/null || return 1
+  if ! { IFS= read -r line < "/proc/$1/stat"; } 2>/dev/null; then
+    [ -e "/proc/$1" ] && return 2
+    return 1
+  fi
   read -r -a fields <<< "${line##*) }"
-  case ${fields[0]} in Z|X) return 1 ;; esac
+  case ${fields[0]-} in Z|X) return 1 ;; esac
+  [[ ${fields[19]-} =~ ^[0-9]+$ ]] || return 2
   llms_start=${fields[19]}
 }
+# Status 0 when process $1 has ended or runs with a start time other than $2, and 1 when it runs
+# with start time $2 or /proc cannot tell (see llms_start_of).
+llms_ended() {
+  local llms_start rc=0
+  llms_start_of "$1" || rc=$?
+  case $rc in
+    0) [ "$llms_start" != "$2" ] ;;
+    1) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 # The part of the name that records process $1, in llms_tag, with llms_boot and llms_ns set;
-# status 1, and llms_tag empty, when /proc does not give it.
+# status 1, and llms_tag empty, when /proc does not give it or /proc/self is not /proc/$1, this
+# script's own entry.
 llms_tag_of() {
   local llms_start ns
   llms_tag=""
   { IFS= read -r llms_boot < /proc/sys/kernel/random/boot_id; } 2>/dev/null || return 1
   ns=$(readlink /proc/self/ns/pid 2>/dev/null) || return 1
   llms_ns=${ns//[!0-9]/}
-  [[ $llms_boot =~ ^[0-9a-f-]{36}$ ]] && [ -n "$llms_ns" ] && llms_start_of "$1" || return 1
+  [[ $llms_boot =~ ^[0-9a-f-]{36}$ ]] && [ -n "$llms_ns" ] && [ /proc/self -ef "/proc/$1" ] &&
+    llms_start_of "$1" || return 1
   llms_tag=$llms_boot.$llms_ns.$1.$llms_start.
 }
 # Remove the folders that earlier runs left (see above); llms_tag_of has set llms_boot and llms_ns.
 llms_sweep() {
-  local dir llms_start m=()
+  local dir m=() pid='([1-9][0-9]*)' start='(0|[1-9][0-9]*)'
   for dir in "${TMPDIR:-/tmp}"/secureconfig-llms.*; do
-    [[ ${dir##*/} =~ ^secureconfig-llms\.([0-9a-f-]{36})\.([0-9]+)\.([0-9]+)\.([0-9]+)\.[A-Za-z0-9]+$ ]] ||
+    [[ ${dir##*/} =~ ^secureconfig-llms\.([0-9a-f-]{36})\.$pid\.$pid\.$start\.[A-Za-z0-9]+$ ]] ||
       continue
     m=("${BASH_REMATCH[@]}")
     [ "${m[1]}" = "$llms_boot" ] && [ "${m[2]}" = "$llms_ns" ] && [ -d "$dir" ] && [ ! -L "$dir" ] &&
       [ -O "$dir" ] || continue
-    if llms_start_of "${m[3]}" && [ "$llms_start" = "${m[4]}" ]; then continue; fi
-    rm -rf -- "$dir" || true
+    if llms_ended "${m[3]}" "${m[4]}"; then
+      rm -rf -- "$dir" 2>/dev/null || true
+    fi
   done
 }
 if llms_tag_of "$$"; then
   llms_sweep
 fi
-tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/secureconfig-llms.${llms_tag}XXXXXXXXXX") || exit 1
+tmp_dir=$(mktemp -d -- "${TMPDIR:-/tmp}/secureconfig-llms.${llms_tag}XXXXXXXXXX") || exit 1
 trap 'rm -rf -- "$tmp_dir"' EXIT
 built="$tmp_dir/llms-full.txt"
 {

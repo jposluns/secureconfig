@@ -333,35 +333,63 @@ par_cleanup() {
 # the kernel's boot ID, the inode number of the keeper's PID namespace, and the PID and start time
 # of this shell and of the keeper, read from /proc, so the name records the folder's owners when
 # mktemp -d makes it. Before it makes its own folder, the keeper removes each entry of the same
-# TMPDIR whose name has exactly that shape, this boot ID and this namespace, that is a folder, not
-# a symbolic link, owned by this user, and whose 2 recorded processes have both ended: neither PID
-# runs with its recorded start time, and a zombie does not run. No other program makes such a
-# name, so only a folder that an earlier parallel run of this suite made, and whose driver and
-# keeper have both ended, is removed. A folder of a run still going, of another boot, namespace
-# or host sharing TMPDIR, or with any other name is kept, and a section of the earlier run that is
-# still running, in its own process group, finds its folder gone. Where /proc does not give the
-# boot ID, the namespace and both start times, the keeper names its folder
+# TMPDIR whose name has exactly that shape, with no leading zero in a PID or start time, this boot
+# ID and this namespace, that is a folder, not a symbolic link, owned by this user, and whose 2
+# recorded processes have both ended. A recorded process has ended when /proc has no entry for its
+# PID, or when that PID runs with another start time or as a zombie. When /proc has an entry for
+# the PID but its stat cannot be read, the process counts as running and the folder is kept, so
+# the check fails closed. The sweep trusts the name: it removes a folder of this user named in
+# exactly that shape for ended processes whatever made it, and nothing else in this repository
+# makes such a name. A folder of a run still going, of another boot, namespace or host sharing
+# TMPDIR, or with any other name is kept, and a section of the earlier run that is still running,
+# in its own process group, finds its folder gone. rm's messages are discarded and its failure does
+# not end the keeper, so a folder that rm cannot remove in full stays, and each later parallel run
+# tries again without printing anything. Between these checks and rm, a process that can rename
+# entries in TMPDIR (this user, root, or any user when TMPDIR is writable by others and not
+# sticky) can put another entry under the name. rm then removes a symbolic link without following
+# it, but removes a different folder with its contents. Where /proc does not give the boot ID, the
+# namespace and both start times, or /proc/self is not the keeper's own entry, as in a PID
+# namespace that uses its parent's /proc, the keeper names its folder
 # secureconfig-suite.XXXXXXXXXX, which only its own keeper removes, and removes nothing else.
 par_boot=""
 par_ns=""
 par_tag=""
-# The start time of process $1 in par_start, from /proc/$1/stat; status 1 when it has ended.
+# The start time of process $1 in par_start, from /proc/$1/stat. Status 0 when the process runs,
+# 1 when it has ended (/proc has no entry for $1, or it is a zombie), and 2 when /proc has an entry
+# for $1 whose stat cannot be read or gives no start time.
 par_start_of() {
   local line fields
-  { IFS= read -r line < "/proc/$1/stat"; } 2>/dev/null || return 1
+  if ! { IFS= read -r line < "/proc/$1/stat"; } 2>/dev/null; then
+    [ -e "/proc/$1" ] && return 2
+    return 1
+  fi
   read -r -a fields <<< "${line##*) }"
-  case ${fields[0]} in Z|X) return 1 ;; esac
+  case ${fields[0]-} in Z|X) return 1 ;; esac
+  [[ ${fields[19]-} =~ ^[0-9]+$ ]] || return 2
   par_start=${fields[19]}
 }
+# Status 0 when process $1 has ended or runs with a start time other than $2, and 1 when it runs
+# with start time $2 or /proc cannot tell (see par_start_of).
+par_ended() {
+  local par_start rc=0
+  par_start_of "$1" || rc=$?
+  case $rc in
+    0) [ "$par_start" != "$2" ] ;;
+    1) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 # The part of the name that records processes $1 and $2, in par_tag, with par_boot and par_ns set;
-# status 1, and par_tag empty, when /proc does not give it.
+# status 1, and par_tag empty, when /proc does not give it or /proc/self is not /proc/$2, the
+# keeper's own entry.
 par_tag_of() {
   local par_start first ns
   par_tag=""
   { IFS= read -r par_boot < /proc/sys/kernel/random/boot_id; } 2>/dev/null || return 1
   ns=$(readlink /proc/self/ns/pid 2>/dev/null) || return 1
   par_ns=${ns//[!0-9]/}
-  [[ $par_boot =~ ^[0-9a-f-]{36}$ ]] && [ -n "$par_ns" ] && par_start_of "$1" || return 1
+  [[ $par_boot =~ ^[0-9a-f-]{36}$ ]] && [ -n "$par_ns" ] && [ /proc/self -ef "/proc/$2" ] &&
+    par_start_of "$1" || return 1
   first=$1.$par_start
   par_start_of "$2" || return 1
   par_tag=$par_boot.$par_ns.$first.$2.$par_start.
@@ -369,16 +397,16 @@ par_tag_of() {
 # Remove the folders that earlier parallel runs left (see above); par_tag_of has set par_boot and
 # par_ns.
 par_sweep() {
-  local dir par_start m=()
+  local dir m=() pid='([1-9][0-9]*)' start='(0|[1-9][0-9]*)'
   for dir in "${TMPDIR:-/tmp}"/secureconfig-suite.*; do
-    [[ ${dir##*/} =~ ^secureconfig-suite\.([0-9a-f-]{36})\.([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)\.[A-Za-z0-9]+$ ]] ||
+    [[ ${dir##*/} =~ ^secureconfig-suite\.([0-9a-f-]{36})\.$pid\.$pid\.$start\.$pid\.$start\.[A-Za-z0-9]+$ ]] ||
       continue
     m=("${BASH_REMATCH[@]}")
     [ "${m[1]}" = "$par_boot" ] && [ "${m[2]}" = "$par_ns" ] && [ -d "$dir" ] && [ ! -L "$dir" ] &&
       [ -O "$dir" ] || continue
-    if par_start_of "${m[3]}" && [ "$par_start" = "${m[4]}" ]; then continue; fi
-    if par_start_of "${m[5]}" && [ "$par_start" = "${m[6]}" ]; then continue; fi
-    rm -rf -- "$dir"
+    if par_ended "${m[3]}" "${m[4]}" && par_ended "${m[5]}" "${m[6]}"; then
+      rm -rf -- "$dir" 2>/dev/null || true
+    fi
   done
 }
 
@@ -684,7 +712,7 @@ par_run() {
   coproc par_keeper {
     trap '' HUP INT QUIT PIPE TERM USR1 USR2 ALRM
     ! par_tag_of "$$" "$BASHPID" || par_sweep
-    par_keep_dir=$(mktemp -d "${TMPDIR:-/tmp}/secureconfig-suite.${par_tag}XXXXXXXXXX")
+    par_keep_dir=$(mktemp -d -- "${TMPDIR:-/tmp}/secureconfig-suite.${par_tag}XXXXXXXXXX")
     printf '%s\0' "$par_keep_dir" 2>/dev/null
     while IFS= read -r _; do :; done
     [ -z "$par_keep_dir" ] || rm -rf -- "$par_keep_dir"
