@@ -63,9 +63,10 @@
 # does not reach the parallel run's sections, which have process groups of their own and go on
 # running, where the serial run's sections are in this shell's group; after a KILL the sections'
 # temporary folder is left too, since the KILL also ends the keeper that would remove it (see
-# par_cleanup). When this shell alone ends by any signal it does not trap, or by a failed fork,
-# the keeper removes the folder, unless the per-user process limit is still exhausted when the
-# keeper forks rm; row 3.117 records the cases that still leave it.
+# par_cleanup), until the next parallel run removes it (see par_sweep). When this shell alone
+# ends by any signal it does not trap, or by a failed fork, the keeper removes the folder, or,
+# when the per-user process limit is still exhausted as the keeper forks rm, the next parallel
+# run does; row 3.117 records the cases that still leave it.
 # Output identity between the two modes means the same lines in the same order and the same
 # status, with 3 fields rewritten to placeholders before the comparison: the elapsed time and the
 # sampling counts in the credential scanner's one "credential scan: ..." line, and the elapsed
@@ -313,8 +314,9 @@ declare -A par_idx=()
 # which mktemp and rm inherit, so such a signal sent to this shell's process group does not end
 # it; a KILL or another signal that ends a process by default, sent to that group, ends it too
 # and leaves the folder, and so does a KILL sent to the keeper alone, after which the run goes on
-# as before (row 3.117). Here this shell closes its write end and waits for the keeper, so the
-# folder is gone before the run goes on or dies.
+# as before, and the next parallel run then removes that folder (par_sweep, row 3.117). Here this
+# shell closes its write end and waits for the keeper, so the folder is gone before the run goes
+# on or dies.
 par_cleanup() {
   local fd=$par_keep
   par_keep=""
@@ -323,6 +325,60 @@ par_cleanup() {
     exec {fd}>&-
     wait "$par_keep_pid" 2>/dev/null
   fi
+}
+
+# No process can remove the folder once a KILL has ended the keeper, so the next parallel run does
+# (row 3.117). The keeper names its folder secureconfig-suite.BOOT.NS.PID.START.PID.START.XXXXXXXXXX:
+# the kernel's boot ID, the inode number of the keeper's PID namespace, and the PID and start time
+# of this shell and of the keeper, read from /proc, so the name records the folder's owners when
+# mktemp -d makes it. Before it makes its own folder, the keeper removes each entry of the same
+# TMPDIR whose name has exactly that shape, this boot ID and this namespace, that is a folder, not
+# a symbolic link, owned by this user, and whose 2 recorded processes have both ended: neither PID
+# runs with its recorded start time, and a zombie does not run. No other program makes such a
+# name, so only a folder that an earlier parallel run of this suite made, and whose driver and
+# keeper have both ended, is removed. A folder of a run still going, of another boot, namespace
+# or host sharing TMPDIR, or with any other name is kept, and a section of the earlier run that is
+# still running, in its own process group, finds its folder gone. Where /proc does not give the
+# boot ID, the namespace and both start times, the keeper names its folder
+# secureconfig-suite.XXXXXXXXXX, which only its own keeper removes, and removes nothing else.
+par_boot=""
+par_ns=""
+par_tag=""
+# The start time of process $1 in par_start, from /proc/$1/stat; status 1 when it has ended.
+par_start_of() {
+  local line fields
+  { IFS= read -r line < "/proc/$1/stat"; } 2>/dev/null || return 1
+  read -r -a fields <<< "${line##*) }"
+  case ${fields[0]} in Z|X) return 1 ;; esac
+  par_start=${fields[19]}
+}
+# The part of the name that records processes $1 and $2, in par_tag, with par_boot and par_ns set;
+# status 1, and par_tag empty, when /proc does not give it.
+par_tag_of() {
+  local par_start first ns
+  par_tag=""
+  { IFS= read -r par_boot < /proc/sys/kernel/random/boot_id; } 2>/dev/null || return 1
+  ns=$(readlink /proc/self/ns/pid 2>/dev/null) || return 1
+  par_ns=${ns//[!0-9]/}
+  [[ $par_boot =~ ^[0-9a-f-]{36}$ ]] && [ -n "$par_ns" ] && par_start_of "$1" || return 1
+  first=$1.$par_start
+  par_start_of "$2" || return 1
+  par_tag=$par_boot.$par_ns.$first.$2.$par_start.
+}
+# Remove the folders that earlier parallel runs left (see above); par_tag_of has set par_boot and
+# par_ns.
+par_sweep() {
+  local dir par_start m=()
+  for dir in "${TMPDIR:-/tmp}"/secureconfig-suite.*; do
+    [[ ${dir##*/} =~ ^secureconfig-suite\.([0-9a-f-]{36})\.([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)\.[A-Za-z0-9]+$ ]] ||
+      continue
+    m=("${BASH_REMATCH[@]}")
+    [ "${m[1]}" = "$par_boot" ] && [ "${m[2]}" = "$par_ns" ] && [ -d "$dir" ] && [ ! -L "$dir" ] &&
+      [ -O "$dir" ] || continue
+    if par_start_of "${m[3]}" && [ "$par_start" = "${m[4]}" ]; then continue; fi
+    if par_start_of "${m[5]}" && [ "$par_start" = "${m[6]}" ]; then continue; fi
+    rm -rf -- "$dir"
+  done
 }
 
 # Stop every running section above index $1 (-1: all): TERM to its process group, up to 5 seconds
@@ -385,8 +441,8 @@ par_launch() {
   # A shell forked here that a stop's TERM ends before it starts the section's bash runs no EXIT
   # trap, since none is set, and removes nothing (rows 3.101 and 3.103); a HUP, INT or TERM
   # meanwhile is held as above. A failed fork ends this shell, and the keeper then removes the
-  # folder (see par_cleanup), unless the per-user process limit is still exhausted when the
-  # keeper forks rm (row 3.117).
+  # folder (see par_cleanup), or, when the per-user process limit is still exhausted as the
+  # keeper forks rm, the next parallel run does (par_sweep, row 3.117).
   set -m
   if [ -n "$par_selected" ]; then
     bash -c '. /dev/fd/3' "$PWD/tools/run_all_checks.sh" 3< "$par_dir/$name.sh" > "$par_dir/$name.out" 2>&1 < /dev/null &
@@ -603,7 +659,8 @@ par_run() {
   # signal the keeper does not ignore sent to the process group, which ends the keeper too, or the
   # per-user process limit is still exhausted when the keeper forks rm (row 3.117), the keeper
   # then removes the
-  # folder, even one that mktemp makes after this shell has ended (row 3.113). mktemp's own
+  # folder, even one that mktemp makes after this shell has ended (row 3.113); in the cases this
+  # excepts, the next parallel run removes it (par_sweep). mktemp's own
   # message, when it cannot make the folder, still comes before the FAIL line. The keeper ends
   # the name with a NUL, which no path holds, and this shell reads up to it, so a name holding a
   # newline, as under a TMPDIR holding one, is read whole (row 3.118). The keeper prints the NUL
@@ -611,7 +668,8 @@ par_run() {
   # descriptors once it has reaped it, and a read from a closed one would print an error.
   coproc par_keeper {
     trap '' HUP INT QUIT PIPE TERM USR1 USR2 ALRM
-    par_keep_dir=$(mktemp -d)
+    ! par_tag_of "$$" "$BASHPID" || par_sweep
+    par_keep_dir=$(mktemp -d "${TMPDIR:-/tmp}/secureconfig-suite.${par_tag}XXXXXXXXXX")
     printf '%s\0' "$par_keep_dir" 2>/dev/null
     while IFS= read -r _; do :; done
     [ -z "$par_keep_dir" ] || rm -rf -- "$par_keep_dir"
@@ -969,7 +1027,9 @@ echo "== the plugin bundle is current =="
 # signal ends it before it ignores them. A KILL runs no trap: once mktemp -d has made the folder
 # it can leave the folder, and once the build has started it can also leave plugin/ deleted or
 # partly rebuilt, as can the KILL that par_stop_from sends to a section still running 5 seconds
-# after its TERM, such as one still waiting for a process of the build (row 3.110).
+# after its TERM, such as one still waiting for a process of the build (row 3.110). No later run
+# removes that folder, as later runs remove the parallel driver's and the llms-full build's, since
+# after a KILL during the build or the restore it can hold the only copy of plugin/ as it was.
 plugin_sig=""
 plugin_tmp=""
 plugin_rc=""

@@ -496,7 +496,58 @@ PY
 # nothing. A HUP, INT or TERM that ends this script once the trap is set runs that trap. One that
 # ends it after mktemp -d has made the folder and before the trap is set leaves the folder, and so
 # does a KILL, which runs no trap (TODO row 3.110).
-tmp_dir=$(mktemp -d) || exit 1
+# No process can remove such a folder once this script has ended, so its next run does. The
+# folder is named secureconfig-llms.BOOT.NS.PID.START.XXXXXXXXXX: the kernel's boot ID, the inode
+# number of this script's PID namespace, and this script's PID and start time, read from /proc, so
+# the name records the folder's owner when mktemp -d makes it. Before it makes its own folder,
+# this script removes each entry of the same TMPDIR whose name has exactly that shape, this boot
+# ID and this namespace, that is a folder, not a symbolic link, owned by this user, and whose
+# recorded process has ended: its PID does not run with its recorded start time, and a zombie
+# does not run. No other program makes such a name, so only a folder that an earlier run of this
+# script made, and that ended, is removed. A folder of a run still going, of another boot,
+# namespace or host sharing TMPDIR, or with any other name is kept, and a process the earlier run
+# started that is still running finds its folder gone. Where /proc does not give the boot ID, the
+# namespace and the start time, the folder is named secureconfig-llms.XXXXXXXXXX, which only its
+# own run removes, and this script removes nothing else.
+llms_boot=""
+llms_ns=""
+llms_tag=""
+# The start time of process $1 in llms_start, from /proc/$1/stat; status 1 when it has ended.
+llms_start_of() {
+  local line fields
+  { IFS= read -r line < "/proc/$1/stat"; } 2>/dev/null || return 1
+  read -r -a fields <<< "${line##*) }"
+  case ${fields[0]} in Z|X) return 1 ;; esac
+  llms_start=${fields[19]}
+}
+# The part of the name that records process $1, in llms_tag, with llms_boot and llms_ns set;
+# status 1, and llms_tag empty, when /proc does not give it.
+llms_tag_of() {
+  local llms_start ns
+  llms_tag=""
+  { IFS= read -r llms_boot < /proc/sys/kernel/random/boot_id; } 2>/dev/null || return 1
+  ns=$(readlink /proc/self/ns/pid 2>/dev/null) || return 1
+  llms_ns=${ns//[!0-9]/}
+  [[ $llms_boot =~ ^[0-9a-f-]{36}$ ]] && [ -n "$llms_ns" ] && llms_start_of "$1" || return 1
+  llms_tag=$llms_boot.$llms_ns.$1.$llms_start.
+}
+# Remove the folders that earlier runs left (see above); llms_tag_of has set llms_boot and llms_ns.
+llms_sweep() {
+  local dir llms_start m=()
+  for dir in "${TMPDIR:-/tmp}"/secureconfig-llms.*; do
+    [[ ${dir##*/} =~ ^secureconfig-llms\.([0-9a-f-]{36})\.([0-9]+)\.([0-9]+)\.([0-9]+)\.[A-Za-z0-9]+$ ]] ||
+      continue
+    m=("${BASH_REMATCH[@]}")
+    [ "${m[1]}" = "$llms_boot" ] && [ "${m[2]}" = "$llms_ns" ] && [ -d "$dir" ] && [ ! -L "$dir" ] &&
+      [ -O "$dir" ] || continue
+    if llms_start_of "${m[3]}" && [ "$llms_start" = "${m[4]}" ]; then continue; fi
+    rm -rf -- "$dir" || true
+  done
+}
+if llms_tag_of "$$"; then
+  llms_sweep
+fi
+tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/secureconfig-llms.${llms_tag}XXXXXXXXXX") || exit 1
 trap 'rm -rf -- "$tmp_dir"' EXIT
 built="$tmp_dir/llms-full.txt"
 {

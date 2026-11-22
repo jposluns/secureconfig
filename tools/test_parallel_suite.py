@@ -74,6 +74,12 @@ THE CASES (numbered as in the implementation plan, which is not in this reposito
   T20 a stand-in awk that fails, or leaves a selected section without its body, only for the call
       that cuts the sections: the parallel run ends with 2 and a FAIL line, no section starts, no
       summary prints and TMPDIR is left empty (row 3.125).
+  T21 a KILL sent to the keeper alone leaves the sections' folder, under a name that records its
+      boot ID, PID namespace, driver and keeper, and the run exits 0 with its output unchanged; the
+      next parallel run, with the same output, removes that folder and keeps every other entry of
+      TMPDIR with its bytes: folders named for a live driver or keeper, another boot ID, another
+      namespace or with another name, and a symbolic link and a file named as the stale folder is
+      (row 3.117).
 
 NOT HERE (run by hand, see main's --differential and --inject, because each runs the real suite
 and so doubles its cost, which no gate pays): T11, the output identity of the real suite in both
@@ -1339,9 +1345,107 @@ def t20_awk_fails():
     return failures
 
 
+def start_time(pid):
+    """The start time of process pid, field 22 of /proc/PID/stat, or None when it has ended."""
+    try:
+        return Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rpartition(") ")[2].split()[19]
+    except (OSError, IndexError):
+        return None
+
+
+def keeper_of(driver):
+    """The PID of the driver's keeper, its bash child in the driver's own process group, or 0."""
+    for stat in Path("/proc").glob("[0-9]*/stat"):
+        try:
+            text = stat.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        fields = text.rpartition(") ")[2].split()
+        if (text[text.find("(") + 1:text.rfind(")")] == "bash" and len(fields) > 2
+                and fields[1] == fields[2] == str(driver) and not fields[0].startswith("Z")):
+            return int(stat.parent.name)
+    return 0
+
+
+STALE_NAME = re.compile(r"secureconfig-suite\.([0-9a-f-]{36})\.([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)"
+                        r"\.([0-9]+)\.[A-Za-z0-9]+")
+
+
+def t21_stale_folder():
+    """T21 (row 3.117): a KILL sent to the keeper alone leaves the sections' folder, and the run
+    goes on to exit 0 with its output unchanged. The next parallel run removes that folder and
+    keeps every other entry of TMPDIR, each with its bytes: a folder named for a run whose driver
+    or keeper still runs, for another boot ID or another PID namespace, or with another name, and
+    a symbolic link and a file named as the stale folder is. Before row 3.117's fix the folder had
+    no name the suite alone makes and no run removed it."""
+    failures = []
+    suite = synthetic([section("a", sleep="1"), section("b")], [], [])
+    t = Tree(suite)
+    tmp = t.d / "tmp"
+    try:
+        rc, plain = t.run((), "4")
+        check(failures, "T21 an ordinary parallel run", rc == 0 and not list(tmp.iterdir()),
+              f"exit {rc}, TMPDIR holds {sorted(x.name for x in tmp.iterdir())!r}: {plain!r}")
+        (t.d / "a.pid").unlink(missing_ok=True)
+        p = t.start((), "4")
+        keeper = 0
+        if wait_for(lambda: (t.d / "a.pid").exists() or p.poll() is not None, 60) and p.poll() is None:
+            keeper = keeper_of(p.pid)
+            if keeper:
+                os.kill(keeper, signal.SIGKILL)
+        try:
+            out, _ = p.communicate(timeout=60 * SCALE)
+        except subprocess.TimeoutExpired:
+            os.killpg(p.pid, signal.SIGKILL)
+            out, _ = p.communicate()
+        left = sorted(tmp.iterdir())
+        check(failures, "T21 a KILL to the keeper alone leaves its folder and the run unchanged",
+              keeper and p.returncode == 0 and out == plain and len(left) == 1,
+              f"keeper {keeper}, exit {p.returncode}, TMPDIR holds {[x.name for x in left]!r}: {out!r}")
+        if len(left) != 1:
+            return failures
+        stale = left[0]
+        match = STALE_NAME.fullmatch(stale.name)
+        check(failures, "T21 the folder's name records its boot ID, namespace and owners", match,
+              repr(stale.name))
+        kept = {}
+        if match:
+            boot, ns, dpid, dstart, kpid, kstart = match.groups()
+            me, mine = str(os.getpid()), start_time(os.getpid())
+            other_boot = boot[:-1] + ("0" if boot[-1] != "0" else "1")
+            for name in (f"secureconfig-suite.{boot}.{ns}.{me}.{mine}.{kpid}.{kstart}.Driver0001",
+                         f"secureconfig-suite.{boot}.{ns}.{dpid}.{dstart}.{me}.{mine}.Keeper0001",
+                         f"secureconfig-suite.{other_boot}.{ns}.{dpid}.{dstart}.{kpid}.{kstart}.Boot000001",
+                         f"secureconfig-suite.{boot}.{int(ns) + 1}.{dpid}.{dstart}.{kpid}.{kstart}.Ns00000001",
+                         "secureconfig-suite.leftover"):
+                (tmp / name).mkdir()
+                (tmp / name / "kept").write_text(f"{name}\n", encoding="utf-8")
+                kept[name] = f"{name}\n"
+            outside = t.d / "outside"
+            outside.mkdir()
+            (outside / "kept").write_text("outside\n", encoding="utf-8")
+            link = f"secureconfig-suite.{boot}.{ns}.{dpid}.{dstart}.{kpid}.{kstart}.Link000001"
+            (tmp / link).symlink_to(outside)
+            kept[link] = "outside\n"
+            plain_file = f"secureconfig-suite.{boot}.{ns}.{dpid}.{dstart}.{kpid}.{kstart}.File000001"
+            (tmp / plain_file).write_text("a file\n", encoding="utf-8")
+        rc, out = t.run((), "4")
+        after = sorted(x.name for x in tmp.iterdir())
+        intact = all((tmp / name / "kept").read_text(encoding="utf-8") == body
+                     for name, body in kept.items() if (tmp / name / "kept").exists())
+        want = sorted(kept) + ([plain_file] if match else [])
+        check(failures, "T21 the next parallel run removes the stale folder and keeps every other entry",
+              rc == 0 and out == plain and after == sorted(want) and intact
+              and (not match or (tmp / plain_file).read_text(encoding="utf-8") == "a file\n"),
+              f"exit {rc}, TMPDIR holds {after!r}, wanted {sorted(want)!r}, contents intact {intact}: {out!r}")
+    finally:
+        t.close()
+    return failures
+
+
 CASES = (t1_order, t2_concurrency, t3_status, t4_preflight, t5_refusals, t6_dependencies,
          t7_exclusive, t8_abort, t9_signals, t10_merged, t11_normaliser, t12_shape, t13_select_gates,
-         t16_times, t18_tmpdir_newline, t19_tmpdir_backslash, t20_awk_fails)
+         t16_times, t18_tmpdir_newline, t19_tmpdir_backslash, t20_awk_fails, t21_stale_folder)
 
 
 def normalise(output):
@@ -1473,7 +1577,8 @@ def main():
               f"a launch and the record of its PID, no temp folder after the driver's death by USR1, "
               f"an early TERM or, unless a SKIP line says otherwise, a failed fork, merged streams, "
               f"the file's shape, SECURECONFIG_SUITE_TIMES, a TMPDIR holding a newline or a "
-              f"backslash escape, a failed or incomplete cut of the sections)")
+              f"backslash escape, a failed or incomplete cut of the sections, the folder a killed "
+              f"keeper left removed by the next run)")
     for note in notes:
         print(note)
     return 0
