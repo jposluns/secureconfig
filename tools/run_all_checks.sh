@@ -49,7 +49,10 @@
 # with 127 under --sections, and a syntax error ends it with 2 in both modes and both run shapes)
 # or is killed by a signal ends the run the way it ends the serial one: its output is the last
 # printed, no later section's output and no summary follow, and the status is its exit status, or its signal: re-raised on this
-# shell for the whole run, 128 plus the signal under --sections. HUP, INT and TERM sent to this
+# shell for the whole run, 128 plus the signal under --sections. In a whole run, in either mode,
+# a status from 129 to 192 is re-raised as the signal of that number minus 128 only when that
+# signal ends a process by default (suite_fatal_status), so a section's `exit 143` ends the run by
+# TERM, and its `exit 147` gives exit 147 and never leaves the run stopped. HUP, INT and TERM sent to this
 # shell stop every section's process group and are re-raised. The parser preflight runs first, in
 # the foreground, in both modes; in parallel mode such a signal that arrives while it runs is held
 # until it has ended and then re-raised (row 3.123). A section that rewrites the working tree in place is named by an
@@ -64,9 +67,10 @@
 # does not reach the parallel run's sections, which have process groups of their own and go on
 # running, where the serial run's sections are in this shell's group; after a KILL the sections'
 # temporary folder is left too, since the KILL also ends the keeper that would remove it (see
-# par_cleanup). When this shell alone ends by any signal it does not trap, or by a failed fork,
-# the keeper removes the folder, unless the per-user process limit is still exhausted when the
-# keeper forks rm; row 3.117 records the cases that still leave it.
+# par_cleanup), until the next parallel run removes it (see par_sweep). When this shell alone
+# ends by any signal it does not trap, or by a failed fork, the keeper removes the folder, or,
+# when the per-user process limit is still exhausted as the keeper forks rm, the next parallel
+# run does; row 3.117 records the cases that still leave it.
 # Output identity between the two modes means the same lines in the same order and the same
 # status, with 3 fields rewritten to placeholders before the comparison: the elapsed time and the
 # sampling counts in the credential scanner's one "credential scan: ..." line, and the elapsed
@@ -95,15 +99,16 @@ set -uo pipefail
 # process's children from /proc only once it has stopped, so none can fork unseen; it then sends
 # each of them the same signal and CONT. It waits for the child, and up to 5 seconds for the rest,
 # and sends no KILL. It then dies by that signal when the child died by it; otherwise, in a whole
-# run, a status from 129 to 192 is re-raised as par_flush re-raises it (row 3.121), and any other
-# status is its exit status. A signal that arrives before the child's PID is recorded is held and
-# acted on once it is. When this shell ends without waiting for the child, as by a KILL or a signal
-# it does not trap such as USR1, a watcher (see sup_watcher) stops the child and each process
-# under it, with TERM and then KILL. This shell prints nothing, and its standard error goes to
-# /dev/null once the child has started, so the output is the serial run's own. Compared with a run
-# of this file with this block skipped, the run differs in the PID in bash's job notice, which
-# varies between any 2 runs, and in a whole run's status from 129 to 192 (row 3.121). What BASH_ENV
-# prints appears twice, since both shells read it, and options given to bash, such as -x, reach
+# run, a status from 129 to 192 whose signal ends a process by default is re-raised as par_flush
+# re-raises it (suite_fatal_status, row 3.121), and any other status is its exit status. A signal
+# that arrives before the child's PID is recorded is held and acted on once it is. When this
+# shell ends without waiting for the child, as by a KILL or a signal it does not trap such as
+# USR1, a watcher (see sup_watcher) stops the child and each process under it, with TERM and then
+# KILL. This shell prints nothing, and its standard error goes to /dev/null once the child has
+# started, so the output is the serial run's own. Compared with a run of this file with this block
+# skipped, the run differs in the PID in bash's job notice, which varies between any 2 runs, and
+# in a whole run's status from 129 to 192 whose signal ends a process by default (row 3.121). What
+# BASH_ENV prints appears twice, since both shells read it, and options given to bash, such as -x, reach
 # only this shell, so the serial run prints no -x trace. After a signal sent only to this shell's
 # PID, the output ends where the run was stopped, where without this block the running gate went
 # on, and under --sections or after an INT the rest of the run did too. Compared with this file
@@ -113,6 +118,21 @@ set -uo pipefail
 # it because it is sourced; parallel mode is never supervised. It is best-effort on Linux with bash
 # 5.1 or later and /proc (DECISIONS.md, 2026-11-19 and 2026-11-20), and row 3.122 records the cases
 # it leaves.
+# Whether a whole run that ends with status $1 sends itself the signal of that number minus 128,
+# in either mode (row 3.121; DECISIONS.md, 2026-11-21): only a status from 129 to 192 whose signal
+# ends a process by default. By the Linux default actions in signal(7), with the signal numbers of
+# x86, ARM and most other architectures, those are every signal from 1 to 64 but CHLD (17), CONT
+# (18), STOP (19), TSTP (20), TTIN (21), TTOU (22), URG (23) and WINCH (28), whose default is to
+# ignore the signal, to continue or to stop. Every real-time signal, 32 to 64, ends a process by
+# default. Alpha, SPARC, MIPS and PA-RISC number some of these signals otherwise, and this list
+# does not follow them. Any other status, as from 145 to 150, 151 or 156, is the exit status, so
+# a stop signal never leaves the run stopped.
+suite_fatal_status() {
+  [ "$1" -gt 128 ] && [ "$1" -lt 193 ] || return 1
+  case $(($1 - 128)) in
+    17|18|19|20|21|22|23|28) return 1 ;;
+  esac
+}
 if [ "${SECURECONFIG_SUITE_JOBS-1}" = 1 ] && [ "${SECURECONFIG_SUITE_CHILD-}" != "$PPID" ] &&
    [ "${BASH_SOURCE[0]}" = "$0" ] && [ -f "$0" ]; then
   sup_pid=""
@@ -258,7 +278,7 @@ if [ "${SECURECONFIG_SUITE_JOBS-1}" = 1 ] && [ "${SECURECONFIG_SUITE_CHILD-}" !=
   if [ -n "$sup_sig" ] && [ "$sup_rc" -eq "$((128 + sup_num))" ]; then
     trap - "$sup_sig"
     kill -s "$sup_sig" "$BASHPID"
-  elif [ -n "$sup_whole" ] && [ "$sup_rc" -gt 128 ] && [ "$sup_rc" -lt 193 ]; then
+  elif [ -n "$sup_whole" ] && suite_fatal_status "$sup_rc"; then
     trap - HUP INT TERM
     kill -s "$((sup_rc - 128))" "$BASHPID"
   fi
@@ -314,8 +334,9 @@ declare -A par_idx=()
 # which mktemp and rm inherit, so such a signal sent to this shell's process group does not end
 # it; a KILL or another signal that ends a process by default, sent to that group, ends it too
 # and leaves the folder, and so does a KILL sent to the keeper alone, after which the run goes on
-# as before (row 3.117). Here this shell closes its write end and waits for the keeper, so the
-# folder is gone before the run goes on or dies.
+# as before, and the next parallel run then removes that folder (par_sweep, row 3.117). Here this
+# shell closes its write end and waits for the keeper, so the folder is gone before the run goes
+# on or dies.
 par_cleanup() {
   local fd=$par_keep
   par_keep=""
@@ -324,6 +345,90 @@ par_cleanup() {
     exec {fd}>&-
     wait "$par_keep_pid" 2>/dev/null
   fi
+}
+
+# No process can remove the folder once a KILL has ended the keeper, so the next parallel run does
+# (row 3.117). The keeper names its folder secureconfig-suite.BOOT.NS.PID.START.PID.START.XXXXXXXXXX:
+# the kernel's boot ID, the inode number of the keeper's PID namespace, and the PID and start time
+# of this shell and of the keeper, read from /proc, so the name records the folder's owners when
+# mktemp -d makes it. Before it makes its own folder, the keeper removes each entry of the same
+# TMPDIR whose name has exactly that shape, with no leading zero in a PID or start time, this boot
+# ID and this namespace, that is a folder, not a symbolic link, owned by this user, and whose 2
+# recorded processes have both ended. A recorded process has ended when /proc has no entry for its
+# PID, or when that PID runs with another start time or as a zombie. When /proc has an entry for
+# the PID but its stat cannot be read, the process counts as running and the folder is kept, so
+# the check fails closed. The sweep trusts the name: it removes a folder of this user named in
+# exactly that shape for ended processes whatever made it, and nothing else in this repository
+# makes such a name. A folder of a run still going, of another boot, namespace or host sharing
+# TMPDIR, or with any other name is kept, and a section of the earlier run that is still running,
+# in its own process group, finds its folder gone. rm's messages are discarded and its failure does
+# not end the keeper, so a folder that rm cannot remove in full stays, and each later parallel run
+# tries again without printing anything. Between these checks and rm, a process that can rename
+# entries in TMPDIR (this user, root, TMPDIR's owner, a group member when TMPDIR is group writable
+# and not sticky, or any user when it is writable by others and not sticky) can put another entry
+# under the name, and so can a process that can rename a parent folder of TMPDIR, since rm resolves
+# the full path again. rm then removes a symbolic link without following it, but removes a
+# different folder with its contents. Where /proc does not give the boot ID, the
+# namespace and both start times, or /proc/self is not the keeper's own entry, as in a PID
+# namespace that uses its parent's /proc, the keeper names its folder
+# secureconfig-suite.XXXXXXXXXX, which only its own keeper removes, and removes nothing else.
+par_boot=""
+par_ns=""
+par_tag=""
+# The start time of process $1 in par_start, from /proc/$1/stat. Status 0 when the process runs,
+# 1 when it has ended (/proc has no entry for $1, or it is a zombie), and 2 when /proc has an entry
+# for $1 whose stat cannot be read or gives no start time.
+par_start_of() {
+  local line fields
+  if ! { IFS= read -r line < "/proc/$1/stat"; } 2>/dev/null; then
+    [ -e "/proc/$1" ] && return 2
+    return 1
+  fi
+  read -r -a fields <<< "${line##*) }"
+  case ${fields[0]-} in Z|X) return 1 ;; esac
+  [[ ${fields[19]-} =~ ^[0-9]+$ ]] || return 2
+  par_start=${fields[19]}
+}
+# Status 0 when process $1 has ended or runs with a start time other than $2, and 1 when it runs
+# with start time $2 or /proc cannot tell (see par_start_of).
+par_ended() {
+  local par_start rc=0
+  par_start_of "$1" || rc=$?
+  case $rc in
+    0) [ "$par_start" != "$2" ] ;;
+    1) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+# The part of the name that records processes $1 and $2, in par_tag, with par_boot and par_ns set;
+# status 1, and par_tag empty, when /proc does not give it or /proc/self is not /proc/$2, the
+# keeper's own entry.
+par_tag_of() {
+  local par_start first ns
+  par_tag=""
+  { IFS= read -r par_boot < /proc/sys/kernel/random/boot_id; } 2>/dev/null || return 1
+  ns=$(readlink /proc/self/ns/pid 2>/dev/null) || return 1
+  par_ns=${ns//[!0-9]/}
+  [[ $par_boot =~ ^[0-9a-f-]{36}$ ]] && [ -n "$par_ns" ] && [ /proc/self -ef "/proc/$2" ] &&
+    par_start_of "$1" || return 1
+  first=$1.$par_start
+  par_start_of "$2" || return 1
+  par_tag=$par_boot.$par_ns.$first.$2.$par_start.
+}
+# Remove the folders that earlier parallel runs left (see above); par_tag_of has set par_boot and
+# par_ns.
+par_sweep() {
+  local dir m=() pid='([1-9][0-9]*)' start='(0|[1-9][0-9]*)'
+  for dir in "${TMPDIR:-/tmp}"/secureconfig-suite.*; do
+    [[ ${dir##*/} =~ ^secureconfig-suite\.([0-9a-f-]{36})\.$pid\.$pid\.$start\.$pid\.$start\.[A-Za-z0-9]+$ ]] ||
+      continue
+    m=("${BASH_REMATCH[@]}")
+    [ "${m[1]}" = "$par_boot" ] && [ "${m[2]}" = "$par_ns" ] && [ -d "$dir" ] && [ ! -L "$dir" ] &&
+      [ -O "$dir" ] || continue
+    if par_ended "${m[3]}" "${m[4]}" && par_ended "${m[5]}" "${m[6]}"; then
+      rm -rf -- "$dir" 2>/dev/null || true
+    fi
+  done
 }
 
 # Stop every running section above index $1 (-1: all): TERM to its process group, up to 5 seconds
@@ -386,8 +491,8 @@ par_launch() {
   # A shell forked here that a stop's TERM ends before it starts the section's bash runs no EXIT
   # trap, since none is set, and removes nothing (rows 3.101 and 3.103); a HUP, INT or TERM
   # meanwhile is held as above. A failed fork ends this shell, and the keeper then removes the
-  # folder (see par_cleanup), unless the per-user process limit is still exhausted when the
-  # keeper forks rm (row 3.117).
+  # folder (see par_cleanup), or, when the per-user process limit is still exhausted as the
+  # keeper forks rm, the next parallel run does (par_sweep, row 3.117).
   set -m
   if [ -n "$par_selected" ]; then
     bash -c '. /dev/fd/3' "$PWD/tools/run_all_checks.sh" 3< "$par_dir/$name.sh" > "$par_dir/$name.out" 2>&1 < /dev/null &
@@ -488,8 +593,10 @@ par_flush() {
       par_cleanup
       status=${par_rc[i]}
       # A whole serial run is one shell, which a signal kills; --sections runs the sections in a
-      # child shell, and the parent exits with its status, 128 plus the signal. Same here.
-      if [ -z "$par_selected" ] && [ "$status" -gt 128 ] && [ "$status" -lt 193 ]; then
+      # child shell, and the parent exits with its status, 128 plus the signal. Same here. In a
+      # whole run a status whose signal does not end a process by default, as a section's
+      # `exit 147`, is the exit status, as in the serial run (suite_fatal_status).
+      if [ -z "$par_selected" ] && suite_fatal_status "$status"; then
         kill -s "$((status - 128))" "$BASHPID"
       fi
       exit "$status"
@@ -618,7 +725,8 @@ par_run() {
   # signal the keeper does not ignore sent to the process group, which ends the keeper too, or the
   # per-user process limit is still exhausted when the keeper forks rm (row 3.117), the keeper
   # then removes the
-  # folder, even one that mktemp makes after this shell has ended (row 3.113). mktemp's own
+  # folder, even one that mktemp makes after this shell has ended (row 3.113); in the cases this
+  # excepts, the next parallel run removes it (par_sweep). mktemp's own
   # message, when it cannot make the folder, still comes before the FAIL line. The keeper ends
   # the name with a NUL, which no path holds, and this shell reads up to it, so a name holding a
   # newline, as under a TMPDIR holding one, is read whole (row 3.118). The keeper prints the NUL
@@ -626,7 +734,8 @@ par_run() {
   # descriptors once it has reaped it, and a read from a closed one would print an error.
   coproc par_keeper {
     trap '' HUP INT QUIT PIPE TERM USR1 USR2 ALRM
-    par_keep_dir=$(mktemp -d)
+    ! par_tag_of "$$" "$BASHPID" || par_sweep
+    par_keep_dir=$(mktemp -d -- "${TMPDIR:-/tmp}/secureconfig-suite.${par_tag}XXXXXXXXXX")
     printf '%s\0' "$par_keep_dir" 2>/dev/null
     while IFS= read -r _; do :; done
     [ -z "$par_keep_dir" ] || rm -rf -- "$par_keep_dir"
@@ -992,7 +1101,9 @@ echo "== the plugin bundle is current =="
 # signal ends it before it ignores them. A KILL runs no trap: once mktemp -d has made the folder
 # it can leave the folder, and once the build has started it can also leave plugin/ deleted or
 # partly rebuilt, as can the KILL that par_stop_from sends to a section still running 5 seconds
-# after its TERM, such as one still waiting for a process of the build (row 3.110).
+# after its TERM, such as one still waiting for a process of the build (row 3.110). No later run
+# removes that folder, as later runs remove the parallel driver's and the llms-full build's, since
+# after a KILL during the build or the restore it can hold the only copy of plugin/ as it was.
 plugin_sig=""
 plugin_tmp=""
 plugin_rc=""
