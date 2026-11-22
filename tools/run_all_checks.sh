@@ -49,7 +49,10 @@
 # with 127 under --sections, and a syntax error ends it with 2 in both modes and both run shapes)
 # or is killed by a signal ends the run the way it ends the serial one: its output is the last
 # printed, no later section's output and no summary follow, and the status is its exit status, or its signal: re-raised on this
-# shell for the whole run, 128 plus the signal under --sections. HUP, INT and TERM sent to this
+# shell for the whole run, 128 plus the signal under --sections. In a whole run, in either mode,
+# a status from 129 to 192 is re-raised as the signal of that number minus 128 only when that
+# signal ends a process by default (suite_fatal_status), so a section's `exit 143` ends the run by
+# TERM, and its `exit 147` gives exit 147 and never leaves the run stopped. HUP, INT and TERM sent to this
 # shell stop every section's process group and are re-raised. The parser preflight runs first, in
 # the foreground, in both modes; in parallel mode such a signal that arrives while it runs is held
 # until it has ended and then re-raised (row 3.123). A section that rewrites the working tree in place is named by an
@@ -96,15 +99,16 @@ set -uo pipefail
 # process's children from /proc only once it has stopped, so none can fork unseen; it then sends
 # each of them the same signal and CONT. It waits for the child, and up to 5 seconds for the rest,
 # and sends no KILL. It then dies by that signal when the child died by it; otherwise, in a whole
-# run, a status from 129 to 192 is re-raised as par_flush re-raises it (row 3.121), and any other
-# status is its exit status. A signal that arrives before the child's PID is recorded is held and
-# acted on once it is. When this shell ends without waiting for the child, as by a KILL or a signal
-# it does not trap such as USR1, a watcher (see sup_watcher) stops the child and each process
-# under it, with TERM and then KILL. This shell prints nothing, and its standard error goes to
-# /dev/null once the child has started, so the output is the serial run's own. Compared with a run
-# of this file with this block skipped, the run differs in the PID in bash's job notice, which
-# varies between any 2 runs, and in a whole run's status from 129 to 192 (row 3.121). What BASH_ENV
-# prints appears twice, since both shells read it, and options given to bash, such as -x, reach
+# run, a status from 129 to 192 whose signal ends a process by default is re-raised as par_flush
+# re-raises it (suite_fatal_status, row 3.121), and any other status is its exit status. A signal
+# that arrives before the child's PID is recorded is held and acted on once it is. When this
+# shell ends without waiting for the child, as by a KILL or a signal it does not trap such as
+# USR1, a watcher (see sup_watcher) stops the child and each process under it, with TERM and then
+# KILL. This shell prints nothing, and its standard error goes to /dev/null once the child has
+# started, so the output is the serial run's own. Compared with a run of this file with this block
+# skipped, the run differs in the PID in bash's job notice, which varies between any 2 runs, and
+# in a whole run's status from 129 to 192 whose signal ends a process by default (row 3.121). What
+# BASH_ENV prints appears twice, since both shells read it, and options given to bash, such as -x, reach
 # only this shell, so the serial run prints no -x trace. After a signal sent only to this shell's
 # PID, the output ends where the run was stopped, where without this block the running gate went
 # on, and under --sections or after an INT the rest of the run did too. Compared with this file
@@ -114,6 +118,21 @@ set -uo pipefail
 # it because it is sourced; parallel mode is never supervised. It is best-effort on Linux with bash
 # 5.1 or later and /proc (DECISIONS.md, 2026-11-19 and 2026-11-20), and row 3.122 records the cases
 # it leaves.
+# Whether a whole run that ends with status $1 sends itself the signal of that number minus 128,
+# in either mode (row 3.121; DECISIONS.md, 2026-11-21): only a status from 129 to 192 whose signal
+# ends a process by default. By the Linux default actions in signal(7), with the signal numbers of
+# x86, ARM and most other architectures, those are every signal from 1 to 64 but CHLD (17), CONT
+# (18), STOP (19), TSTP (20), TTIN (21), TTOU (22), URG (23) and WINCH (28), whose default is to
+# ignore the signal, to continue or to stop. Every real-time signal, 32 to 64, ends a process by
+# default. Alpha, SPARC, MIPS and PA-RISC number some of these signals otherwise, and this list
+# does not follow them. Any other status, as from 145 to 150, 151 or 156, is the exit status, so
+# a stop signal never leaves the run stopped.
+suite_fatal_status() {
+  [ "$1" -gt 128 ] && [ "$1" -lt 193 ] || return 1
+  case $(($1 - 128)) in
+    17|18|19|20|21|22|23|28) return 1 ;;
+  esac
+}
 if [ "${SECURECONFIG_SUITE_JOBS-1}" = 1 ] && [ "${SECURECONFIG_SUITE_CHILD-}" != "$PPID" ] &&
    [ "${BASH_SOURCE[0]}" = "$0" ] && [ -f "$0" ]; then
   sup_pid=""
@@ -259,7 +278,7 @@ if [ "${SECURECONFIG_SUITE_JOBS-1}" = 1 ] && [ "${SECURECONFIG_SUITE_CHILD-}" !=
   if [ -n "$sup_sig" ] && [ "$sup_rc" -eq "$((128 + sup_num))" ]; then
     trap - "$sup_sig"
     kill -s "$sup_sig" "$BASHPID"
-  elif [ -n "$sup_whole" ] && [ "$sup_rc" -gt 128 ] && [ "$sup_rc" -lt 193 ]; then
+  elif [ -n "$sup_whole" ] && suite_fatal_status "$sup_rc"; then
     trap - HUP INT TERM
     kill -s "$((sup_rc - 128))" "$BASHPID"
   fi
@@ -574,8 +593,10 @@ par_flush() {
       par_cleanup
       status=${par_rc[i]}
       # A whole serial run is one shell, which a signal kills; --sections runs the sections in a
-      # child shell, and the parent exits with its status, 128 plus the signal. Same here.
-      if [ -z "$par_selected" ] && [ "$status" -gt 128 ] && [ "$status" -lt 193 ]; then
+      # child shell, and the parent exits with its status, 128 plus the signal. Same here. In a
+      # whole run a status whose signal does not end a process by default, as a section's
+      # `exit 147`, is the exit status, as in the serial run (suite_fatal_status).
+      if [ -z "$par_selected" ] && suite_fatal_status "$status"; then
         kill -s "$((status - 128))" "$BASHPID"
       fi
       exit "$status"

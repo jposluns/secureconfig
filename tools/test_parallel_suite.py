@@ -83,6 +83,11 @@ THE CASES (numbered as in the implementation plan, which is not in this reposito
       else printed, no section started and TMPDIR left empty (row 3.123). The same signals sent
       to the driver's whole process group end it by that signal with only the preflight's heading
       printed, and no job notice, no section started and TMPDIR left empty.
+  T24 a section's `exit N` with N from 129 to 192, in both modes, in a process group that is not
+      orphaned: in a whole run, an N whose signal, N minus 128, ends a process by default (129,
+      138, 143, 160 and 192) ends the run by that signal, and any other (145 to 151 and 156)
+      is the exit status, with the run never left stopped. Under --sections, 143 and 147 are the
+      exit status. The output stops after the section's heading and equals serial's (row 3.121).
 
   T23 a KILL sent to the keeper alone leaves the sections' folder, under a name that records its
       boot ID, PID namespace, driver and keeper, and the run exits 0 with its output unchanged; the
@@ -1458,10 +1463,79 @@ def t22_preflight_signal():
     return failures
 
 
+# T24's statuses (row 3.121): a section's `exit N` whose signal, N minus 128, ends a process by
+# default, so a whole run dies by it (HUP, USR1, TERM and the real-time signals 32 and 64), and
+# one whose signal does not (CHLD, CONT, STOP, TSTP, TTIN, TTOU, URG and WINCH), so a whole run
+# exits with N.
+STATUS_RERAISED = (129, 138, 143, 160, 192)
+STATUS_KEPT = (145, 146, 147, 148, 149, 150, 151, 156)
+
+
+def proc_state(pid):
+    """The state letter of process pid from /proc, or "" when it cannot be read."""
+    try:
+        return Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rpartition(") ")[2][:1]
+    except OSError:
+        return ""
+
+
+def status_run(text, args, jobs):
+    """(exit, output, stopped) of one run of text. The driver runs in a process group of its own
+    whose parent, this process, is in the same session, so the group is not orphaned and TSTP,
+    TTIN and TTOU stop it as STOP does. A driver found stopped is killed with its group, and its
+    exit is then None and stopped True."""
+    t = Tree(text)
+    try:
+        p = subprocess.Popen(["bash", str(t.d / "tools" / "run_all_checks.sh"), *args], cwd=t.d,
+                             stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT, text=True, env=t.env(jobs), process_group=0)
+        stopped = False
+        deadline = time.monotonic() + 60 * SCALE
+        while p.poll() is None and time.monotonic() < deadline:
+            if proc_state(p.pid) in ("T", "t"):
+                stopped = True
+                break
+            time.sleep(0.02)
+        if p.poll() is None:
+            os.killpg(p.pid, signal.SIGKILL)
+            out, _ = p.communicate()
+            return None, out, stopped
+        out, _ = p.communicate()
+        return p.returncode, out, stopped
+    finally:
+        t.close()
+
+
+def t24_status():
+    """T24: a section's `exit N` with N from 129 to 192 (row 3.121). In a whole run, in both modes,
+    the run dies by signal N minus 128 only when that signal ends a process by default, and
+    otherwise exits with N and is never left stopped; under --sections it exits with N. Before
+    this check both modes sent themselves that signal for every such N, so 147 stopped the run
+    and, in a process group that is not orphaned, so did 148 to 150."""
+    failures = []
+    cases = [((), n, -(n - 128)) for n in STATUS_RERAISED] + [((), n, n) for n in STATUS_KEPT]
+    cases += [(("--sections", "s1,s2,s3"), n, n) for n in (143, 147)]
+    for args, n, want in cases:
+        secs = [section("s1"), section("s2", extra=f"exit {n}"), section("s3")]
+        text = synthetic(secs, [], [])
+        results = []
+        for jobs in (None, "4"):
+            rc, out, stopped = status_run(text, args, jobs)
+            results.append(out)
+            check(failures, f"T24 a section's exit {n}, args {args}, jobs={jobs}", rc == want
+                  and not stopped and "== s1 ==\nline from s1\n== s2 ==\n" in out
+                  and "line from s2" not in out and "== s3 ==" not in out
+                  and "gates passed" not in out and "One or more gates failed" not in out,
+                  f"exit {rc} (want {want}), left stopped {stopped}: {out!r}")
+        check(failures, f"T24 a section's exit {n}, args {args}: the same output as serial",
+              results[0] == results[1], f"{results[0]!r} vs {results[1]!r}")
+    return failures
+
+
 CASES = (t1_order, t2_concurrency, t3_status, t4_preflight, t5_refusals, t6_dependencies,
          t7_exclusive, t8_abort, t9_signals, t10_merged, t11_normaliser, t12_shape, t13_select_gates,
          t16_times, t18_tmpdir_newline, t19_tmpdir_backslash, t20_awk_fails, t21_build_fails,
-         t22_preflight_signal)
+         t22_preflight_signal, t24_status)
 
 
 def start_time(pid):
@@ -1716,7 +1790,8 @@ def main():
               f"the file's shape, SECURECONFIG_SUITE_TIMES, a TMPDIR holding a newline or a "
               f"backslash escape, a failed or incomplete cut of the sections, a section's script "
               f"that cannot be built, a HUP, INT or TERM to the driver or its process group during "
-              f"the preflight)")
+              f"the preflight). They include a section's exit status from 129 to 192 in a whole "
+              f"run and under --sections.")
     for note in notes:
         print(note)
     return 0
