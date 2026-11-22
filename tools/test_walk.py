@@ -7,7 +7,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-from _walk import isolated_git_environment, walk_files
+# `python3 -I` leaves the script's folder off sys.path, so put tools/ there for _walk.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _walk import isolated_git_environment, walk_files  # noqa: E402
 
 TOOLS = Path(__file__).resolve().parent
 GATES = {
@@ -163,6 +165,9 @@ def fixture_environment_cases():
         # Exercise the walker fixtures without recursively launching this matrix.
         ("test_walk.py", "--fixtures-only"),
     )
+    # Entry points that must also run under `python3 -I`, which leaves the script's folder
+    # off sys.path, so these run with -I here and fail if they cannot import a sibling.
+    isolated = {"test_changelog_prs.py"}
     with tempfile.TemporaryDirectory() as directory:
         external = Path(directory)
         git(external, "init", "-q")
@@ -182,9 +187,10 @@ def fixture_environment_cases():
                 # The existing new-tab self-test assumes the upstream default host.
                 env["AIQT_SITE_HOST"] = "aiqt.ai"
                 label = (script, variable)
+                flags = ("-I", "-B") if script in isolated else ("-B",)
                 try:
                     result = subprocess.run(
-                        [sys.executable, "-B", str(TOOLS / script), *args],
+                        [sys.executable, *flags, str(TOOLS / script), *args],
                         cwd=TOOLS.parent, env=env, capture_output=True,
                         text=True, timeout=300,
                     )
