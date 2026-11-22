@@ -15,16 +15,21 @@ WHAT IT CHECKS: every merged pull request must appear somewhere in CHANGELOG.md 
 `#N`. A commit subject records a merged pull request in one of two shapes, and the gate
 reads both:
 
-- a squash merge, whose subject ends in a `(#N)` suffix; the early history used these;
+- a squash merge, whose subject ends in a `(#N)` suffix; the early history used these,
+  and pull requests land this way again after the move to squash merges that the
+  maintainer's ruling of 2026-11-21 in DECISIONS.md sets out;
 - a merge commit, whose subject begins `Merge pull request #N from `; this repository
-  has merged that way since #299.
+  merged that way from #299 until that move.
+
+The history holds both shapes, and the gate reads every subject in it whatever its order.
 
 Reading only the first shape left merge-commit pull requests unchecked while the gate
 still reported a pass. It still caught #303 and #306, but only because a commit on each
 one's branch, which reached main with the merge, ended in that pull request's `(#N)`.
 A merge of one branch into another, such as
 `Merge remote-tracking branch 'origin/main' into ...`, is neither shape and does not
-count, nor does a `#N` anywhere else in a subject.
+count, nor does a `#N` anywhere else in a subject. So a squash commit whose subject does
+not end in its `(#N)` records no pull request, and this gate does not count it.
 
 THE ONE EXEMPTION: the highest-numbered merged pull request, even when a lower-numbered
 one merged after it. A pull request cannot reference its own number until it is opened,

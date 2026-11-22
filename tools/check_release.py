@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Check a release candidate offline before it is published.
 
-A release is a GitHub release on a tag `v1.0.<N>` that names one merge commit on `main`, with
-five assets: `llms-full.txt`, the skill zip, the plugin zip, the full release notes and
-`SHA256SUMS`.
+A release is a GitHub release on a tag `v1.0.<N>` that names the commit one pull request landed
+on `main`, a merge commit or a squash commit, with five assets: `llms-full.txt`, the skill zip,
+the plugin zip, the full release notes and `SHA256SUMS`.
 CONTRIBUTING.md's "Releasing" section gives the procedure and DECISIONS.md the rulings of
 2026-11-01. This tool is run by that procedure, not on every pull request; its self-test,
 tools/test_release.py, runs in tools/run_all_checks.sh so the shipped rule is tested there.
@@ -18,12 +18,16 @@ WHAT IT CHECKS, reading only local git objects, for a target commit, a tag, the 
 release's tag (or --first) and a release directory holding `body.md` and `assets/`:
 
 1. The target is a full commit id on the first-parent chain of `main` (--main), and its
-   subject begins `Merge pull request #N from `. It is the last first-parent merge of its UTC
-   date on that chain so far. That date may be today's: a release covers the merges on the
-   target's date only up to the target, and a merge that lands on that date afterwards is
-   covered by the next release, as check 6 requires. `.github/workflows/checks.yml` exists at
-   the target as a regular file and its top-level `on:` block mapping has a `workflow_dispatch`
-   key, read as THE DISPATCH TRIGGER below says.
+   subject records a pull request in one of the two shapes tools/check_changelog_prs.py reads:
+   a merge commit's subject begins `Merge pull request #N from `, and a squash commit's ends in
+   `(#N)`. The body and notes name pull request #N either way, and the chain may hold both
+   shapes, as it does when a repository moves from merge commits to squash merges. Here and
+   below, a merge is a first-parent commit whose subject has either shape. The target is the
+   last first-parent merge of its UTC date on that chain so far. That date may be today's: a
+   release covers the merges on the target's date only up to the target, and a merge that
+   lands on that date afterwards is covered by the next release, as check 6 requires.
+   `.github/workflows/checks.yml` exists at the target as a regular file and its top-level
+   `on:` block mapping has a `workflow_dispatch` key, read as THE DISPATCH TRIGGER below says.
 2. The tag is `v` plus `VERSION` at the target, `VERSION` is `1.0.<N>` once trailing
    newlines are dropped (as scripts/build-plugin.sh reads it), with `<N>` made of ASCII digits,
    not 0 and with no leading zero, as the zip names need, and `plugin/plugin.json` at the
@@ -37,9 +41,10 @@ release's tag (or --first) and a release directory holding `body.md` and `assets
    first release) to the target is referenced, with no newest-PR exemption, so a target whose
    own entry is missing is refused.
 6. With --previous, each pull request merged in the range is referenced under the dated
-   heading equal to its merge commit's UTC committer date, and that date is on or after the
-   previous release's UTC date and on or before the target's. A merge on the previous
-   release's own date came after its target, so the previous release did not cover it; the
+   heading equal to its merge's UTC committer date, a merge commit's or a squash commit's, and
+   that date is on or after the previous release's UTC date and on or before the target's. A
+   merge on the previous release's own date came after its target, so the previous release
+   did not cover it; the
    notes then also take that date's section, which also holds entries the previous release
    covered. The notes otherwise take only the dates after the previous release's and up to the
    target's, so they leave none of the range out. A first release extracts no sections, so
@@ -180,7 +185,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _archives import (ARCHIVES, LATEST_SUFFIX, SOURCE, VERSION_SHAPE,  # noqa: E402
                        ArchiveError, archive_name, build_all)
 from check_changelog_format import HEADING, check as format_findings  # noqa: E402
-from check_changelog_prs import MERGE_COMMIT, merged_number, referenced  # noqa: E402
+from check_changelog_prs import merged_number, referenced  # noqa: E402
 
 REPOSITORY = "https://github.com/jposluns/secureconfig"
 CHANGELOG = "CHANGELOG.md"
@@ -707,13 +712,14 @@ def examine(root, main_ref, target, tag, previous, gates_run):
     chain = first_parent(root, main_ref)
     position = next((i for i, (commit, _, _) in enumerate(chain) if commit == target), None)
     subject = git(root, "log", "-1", "--format=%s", target, "--").strip()
-    merge = MERGE_COMMIT.match(subject)
+    # A merge commit's or a squash commit's subject, read as check_changelog_prs.py reads both.
+    own_pr = merged_number(subject)
     if position is None:
         findings.append(f"the target {target[:12]} is not on the first-parent chain of "
                         f"{main_ref}")
-    if not merge:
-        findings.append(f"the target's subject {subject!r} does not begin "
-                        "`Merge pull request #N from `")
+    if own_pr is None:
+        findings.append(f"the target's subject {subject!r} records no pull request: it neither "
+                        "begins `Merge pull request #N from ` nor ends in `(#N)`")
     target_date = utc_date(git(root, "log", "-1", "--format=%ct", target, "--").strip())
     if position is not None:
         for commit, date, later in chain[:position]:
@@ -819,7 +825,7 @@ def examine(root, main_ref, target, tag, previous, gates_run):
     pr_list = ", ".join(f"#{n}" for n in numbers)
     changelog_url = f"{REPOSITORY}/blob/{tag}/{CHANGELOG}"
     llms, *zip_names, notes_name, sums_name = names(tag)
-    own = f"pull request #{merge.group(1)}"
+    own = f"pull request #{own_pr}"
     if previous is None:
         covered = f"up to {target_date} UTC (that date only up to the target)"
         notes = (f"# secureconfig {tag} release notes\n\n"
@@ -973,7 +979,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parent.parent)
     parser.add_argument("--main", default="main", help="the branch the target merged into")
-    parser.add_argument("--target", required=True, help="the full id of the merge commit")
+    parser.add_argument("--target", required=True,
+                        help="the full id of the pull request's merge commit or squash commit")
     parser.add_argument("--tag", required=True, help="the new tag, v plus VERSION at the target")
     first = parser.add_mutually_exclusive_group(required=True)
     first.add_argument("--previous", help="the previous release's tag")

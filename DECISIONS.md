@@ -17,6 +17,48 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-21 on moving to squash-only landing (#1384).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 19:50Z. The
+  record of the ruling given to this pull request, which the orchestrator checked against the session transcript,
+  gives the question, the label and description of each of the three options offered, and the choice. The
+  question, the labels and the descriptions are quoted exactly. The question read, quoted one sentence at a time:
+  "Squash-only merges for jposluns/secureconfig (asked by guardrails for you)."
+  "A worker's read-only assessment says it fits after changes."
+  "(a) tools/check_release.py assumes merge commits; a fix is drafted but not applied."
+  "(b) tools/check_sitemap_lastmod.py would go red when a PR that edits a listed page lands on a later day than its page commit."
+  "That needs a rule from you."
+  "(c) Some docs go stale."
+  "No release process here needs real merge commits."
+  "Repository settings are yours to change."
+  "What should happen?"
+  One option was "Prepare, then switch", whose description read:
+  "Prediction, following guardrails' switch at your direction. A PR lands the check_release.py fix and doc updates. On landing day the page commit is re-dated and lastmod set, so the sitemap gate stays as it is. Then you set squash-only in Settings and in the main ruleset."
+  Another was "Keep merge commits", whose description read:
+  "My recommendation. This repo's kit, gates and records rely on merge commits (merge_main BASE and TESTED, PR-numbered merge subjects). PRs already get a per-commit review, and same-day re-dating adds a manual step to every page edit. Record the reasons and change nothing."
+  The remaining option was "Switch, loosen the date gate", whose description read:
+  "Go-wild option. Land the check_release.py fix, and change the sitemap gate to accept any lastmod from the page commit's date to the landing date, which weakens that check. Then switch to squash-only."
+  The maintainer chose "Prepare, then switch". No reasoning was recorded beyond the choice.
+  - Effect. By the chosen option's description, a pull request lands the check_release.py fix and doc updates; on
+    landing day the page commit is re-dated and `lastmod` set, so the sitemap gate stays as it is; then the
+    maintainer sets squash-only in Settings and in the main ruleset. In this pull request's reading, #1384 is that
+    pull request, and it carries out the first step as follows. `tools/check_release.py` accepts a target whose
+    subject ends in `(#N)`, a squash commit's shape, as well as one that begins `Merge pull request #N from `,
+    reading both with `merged_number()` from `tools/check_changelog_prs.py`, and names the target's pull request in
+    the release body and notes either way. `tools/test_release.py` adds a fixture whose `main` holds real merge
+    commits and then squash commits, and the releases before, across and after that move pass. The docstrings of
+    `tools/check_release.py` and `tools/check_changelog_prs.py`, a comment in `tools/test_changelog_prs.py`,
+    `CONTRIBUTING.md` and `SECURITY.md` now describe both shapes. Also in this pull request's reading, the page
+    commit is the commit that changes a page listed in `site/sitemap.xml`, and the sitemap gate is
+    `tools/check_sitemap_lastmod.py`, whose code #1384 leaves unchanged; its docstring and `CONTRIBUTING.md`'s
+    "Shipping a change" section give the landing-day procedure. Not yet carried out: the last step, which the
+    description places after that pull request lands; in this pull request's reading, pull requests land as merge
+    commits until then.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
+    own `CHANGELOG.md` entry, and records the new ruling here. This pull request's reasoning, which the record does
+    not give, is that if the repository settings were changed, the maintainer would change them back, and that
+    squash commits already on `main` would stay there, so that pull request would keep the squash shape in
+    `tools/check_release.py` and its tests unless the new ruling says otherwise.
 - **Maintainer ruling of 2026-11-21 re-raising only the statuses whose signal ends a process, closing TODO row 3.121 (#1385).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 19:56Z. The
   record of the ruling gives the question and the label and description of each of the three options offered, and

@@ -52,9 +52,10 @@ in scope. Ordinary editorial corrections are welcome as normal issues or pull re
 Reports are triaged privately. A confirmed issue is fixed on `main` through the normal pull-request
 and gate process, and the advisory names the affected and fixed commits; you are credited unless you
 ask otherwise. Fixes land on the current `main`, versioned as `1.0.<pull request number>`.
-Releases are GitHub releases on `v1.0.<N>` tags, each naming one merge commit on `main`, and are
-cut on completion of major milestones or on demand, on no fixed schedule. A published release's tag
-is never moved, so a fix reaches a release only when a later release is cut from a `main` commit
+Releases are GitHub releases on `v1.0.<N>` tags, each naming the merge commit or squash commit
+that one pull request landed on `main`, and are cut on completion of major milestones or on
+demand, on no fixed schedule. A published release's tag is never moved, so a fix reaches a
+release only when a later release is cut from a `main` commit
 that includes it. An installed plugin bundle or a copied guide must be refreshed from `main`, or
 from a release that includes the fix, to pick up a correction. CONTRIBUTING.md's "Releasing"
 section gives the steps for cutting a release.
