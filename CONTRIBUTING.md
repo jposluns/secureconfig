@@ -425,17 +425,21 @@ squash merges only, as the ruling of 2026-11-21 in `DECISIONS.md` sets out; from
 lands as a squash commit, whose subject must end in its `(#N)`. `main` keeps the merge commits
 from before that move, and `tools/check_changelog_prs.py` and `tools/check_release.py` read
 both shapes. A squash commit whose subject does not end in `(#N)` records no pull request, so
-the changelog gate does not count it and the release check refuses it as a target.
+the changelog gate does not count it and the release check refuses it as a target. Inside a
+release's range the release check skips such a commit silently, with no finding: the release
+body's list of the pull requests merged in that range leaves it out, no `CHANGELOG.md` entry is
+required for it, and it does not count as a later merge on its UTC date.
 
 Under squash merges, a pull request that changes a page listed in `site/sitemap.xml` keeps that
 page's `lastmod` right by landing on the day it names. The squash commit is then the last commit
 that changed the page, and `tools/check_sitemap_lastmod.py` compares the `lastmod` with that
-commit's committer date, which the pull request's own run cannot see. On the day it is to land,
-recommit the change to the page so that its commit carries that day's date (an amend does),
-set the page's `lastmod` to that date, rerun the gates, and squash it on that same day. If it
-lands on another day, the gate fails on `main` until a pull request that changes only
-`site/sitemap.xml` sets the `lastmod` to the date the gate names. The gate's docstring gives
-the rule and this procedure.
+commit's committer date, in the offset that commit records, which the pull request's own run
+cannot see. On the day it is to land, recommit the change to the page so that its commit carries
+that day's date (an amend does), set the page's `lastmod` to that date, rerun the gates, and
+squash it on that same day. If the squash commit records another date, because it lands on a
+later day or because its committer offset gives a different date even on the same day, the gate
+fails on `main` until a pull request that changes only `site/sitemap.xml` sets the `lastmod` to
+the date the gate names. The gate's docstring gives the rule and this procedure.
 
 A pull request that changes `VERSION` or a guide also runs `bash scripts/build-llms-full.sh` and
 `bash scripts/build-plugin.sh` and commits every file they change. One that changes the root
