@@ -513,8 +513,10 @@ PY
 # earlier run started that is still running finds its folder gone. rm's messages are discarded
 # and its failure does not end the script, so a folder that rm cannot remove in full stays, and
 # each later run tries again without printing anything. Between these checks and rm, a process
-# that can rename entries in TMPDIR (this user, root, or any user when TMPDIR is writable by others
-# and not sticky) can put another entry under the name. rm then removes a symbolic link without
+# that can rename entries in TMPDIR (this user, root, TMPDIR's owner, a group member when TMPDIR
+# is group writable and not sticky, or any user when it is writable by others and not sticky) can
+# put another entry under the name, and so can a process that can rename a parent folder of
+# TMPDIR, since rm resolves the full path again. rm then removes a symbolic link without
 # following it, but removes a different folder with its contents. Where /proc does not give the
 # boot ID, the namespace and the start time, or /proc/self is not this script's own entry, as in
 # a PID namespace that uses its parent's /proc, the folder is named secureconfig-llms.XXXXXXXXXX,
