@@ -29,7 +29,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-from _walk import isolated_git_environment
+# `python3 -I` leaves the script's folder off sys.path, so put tools/ there for _walk.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _walk import isolated_git_environment  # noqa: E402
 
 TOOLS = Path(__file__).resolve().parent
 HAVE_SHELLCHECK = shutil.which("shellcheck") is not None

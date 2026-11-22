@@ -167,7 +167,8 @@ def fixture_environment_cases():
     )
     # Entry points that must also run under `python3 -I`, which leaves the script's folder
     # off sys.path, so these run with -I here and fail if they cannot import a sibling.
-    isolated = {"test_changelog_prs.py"}
+    isolated = {"test_shell_blocks.py", "test_workflow_pins.py", "test_changelog_prs.py",
+                "test_walk.py"}
     with tempfile.TemporaryDirectory() as directory:
         external = Path(directory)
         git(external, "init", "-q")
