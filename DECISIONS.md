@@ -33,8 +33,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   "My recommendation. Re-raise only statuses whose signal ends a process by default (for example 129, 130, 143), and exit with the status for every other one: stop signals (147 to 150), signals that don't end a process (145, 146, 151, 156) and anything unusual. Both modes behave the same, and the rule is easy to state."
   The remaining option was "Stop re-raising", whose description read:
   "Go-wild option. Withdraw the 11-20 rule: a whole run always exits with its status, and only a signal the suite itself caught is re-raised. This changes what callers see for 'exit 143'."
-  The maintainer chose "Re-raise only fatal signals". No reasoning was recorded beyond the choice. This ruling
-  refines the ruling of 2026-11-20 answered at about 23:55Z, below.
+  The maintainer chose "Re-raise only fatal signals". No reasoning was recorded beyond the choice. In this pull
+  request's reading, this ruling refines the ruling of 2026-11-20 answered at about 23:55Z, below.
   - Effect. By the chosen option's description, only statuses whose signal ends a process by default, for example
     129, 130 and 143, are re-raised, and every other status is the exit status: stop signals (147 to 150), signals
     that do not end a process (145, 146, 151 and 156) and anything unusual. Both modes behave the same. What
