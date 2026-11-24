@@ -11,6 +11,10 @@ the pinned CommonMark parser (gate_parser(required=True) in tools/check_verify_m
 by tools/requirements-gates.txt) and fails unless:
 
   - install_blocks() accepts the section (its refusal is the finding);
+  - install_blocks() extracted exactly BLOCKS (4) blocks, 1 route in 1 form each, so that each
+    Copy button on the page copies 1 route: this repository's marketplace in a session and in a
+    shell, then the shared catalogue's. The gate holds this count itself, so a build changed to
+    accept 3 blocks, 5 blocks or the 2 merged blocks that each hold both routes still fails here;
   - the parser finds exactly 1 level-2 heading "Install in Claude Code";
   - from that heading to the next level-1 or level-2 heading, the parser finds exactly as many
     code blocks, fenced or indented and at any depth, as install_blocks() extracted, and each in
@@ -39,7 +43,9 @@ spec = importlib.util.spec_from_file_location("build_site", ROOT / "scripts" / "
 build_site = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build_site)
 WHERE = "README.md section 'Install in Claude Code'"
-INFO = {key: info for key, info, _ in build_site.INSTALL_FENCES}  # each block's info string
+# The number of install blocks README.md's section must hold: 2 routes, each in a session and in a
+# shell, each block on its own so that its Copy button copies 1 route.
+BLOCKS = 4
 
 
 def starts(lines):
@@ -57,6 +63,10 @@ def compare(text, parser):
         blocks = build_site.install_blocks(text)
     except build_site.SourceError as exc:
         return [f"scripts/build-site.py refuses README.md: {exc}"], []
+    if len(blocks) != BLOCKS:
+        return [f"{WHERE}: scripts/build-site.py reads {len(blocks)} "
+                f"{starts([line for _, line, _ in blocks])}, where the section must hold exactly "
+                f"{BLOCKS}, 1 route in 1 form each, so that each Copy button copies 1 route"], blocks
     tokens = parser.parse(text)
     title = build_site.INSTALL[3:]
     heads = [i for i, t in enumerate(tokens) if t.type == "heading_open" and t.tag == "h2"
@@ -72,8 +82,9 @@ def compare(text, parser):
                 f"{starts([t.map[0] + 1 for t in parsed])}, where scripts/build-site.py reads "
                 f"{len(blocks)} {starts([line for _, line, _ in blocks])}"], blocks
     findings = []
+    infos = {key: info for key, info, _ in build_site.INSTALL_FENCES}  # each block's info string
     for n, (token, (key, line, body)) in enumerate(zip(parsed, blocks), 1):
-        info = INFO[key]
+        info = infos[key]
         content = token.content[:-1] if token.content.endswith("\n") else token.content
         got = (token.type, token.level, token.map[0] + 1, token.info.strip(), content)
         if got != ("fence", 0, line, info, body):
@@ -110,7 +121,7 @@ def main():
         return 1
     print(f"  ok    {WHERE}: the pinned parser finds the {len(blocks)} fenced blocks "
           f"scripts/build-site.py reads, from lines "
-          f"{' and '.join(str(line) for _, line, _ in blocks)}, with the same info strings and "
+          f"{', '.join(str(line) for _, line, _ in blocks)}, with the same info strings and "
           f"content")
     return 0
 

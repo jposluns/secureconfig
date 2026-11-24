@@ -6,24 +6,30 @@ Each case edits this checkout's README.md and runs the gate's compare() on it wi
 parser:
 
   - AGREE: README.md as it is, the shell block edited, the shell block fenced with tildes, and
-    README.md with CRLF line endings pass, and compare() returns the blocks install_blocks() read;
+    README.md with CRLF line endings pass, and compare() returns the 4 blocks install_blocks()
+    read;
   - MISREAD: layouts install_blocks() accepts but reads differently from CommonMark fail, and
     install_blocks() is first shown to accept each, so the gate is what catches it, and each fails
     for its own reason: the in-session block commented out, the in-session block inside an HTML
     block, an indented code block in the section, a fence in a block quote, a setext level-2
     heading before the shell block, a second install heading in setext form, the in-session
-    block commented out beside an added indented code block (2 blocks to each reader, not the same
-    2), and the in-session block inside an HTML block beside an added fence in a block quote (2
+    block commented out beside an added indented code block (4 blocks to each reader, not the same
+    4), and the in-session block inside an HTML block beside an added fence in a block quote (4
     blocks to each reader with the same info strings in the same order, which a gate comparing
-    only the number of blocks and their info strings would pass), both blocks commented out above
-    an HTML block holding a level-2 heading line, with copies of both after it (each pair differs
+    only the number of blocks and their info strings would pass), all 4 blocks commented out above
+    an HTML block holding a level-2 heading line, with copies of all 4 after it (each pair differs
     only in its line), and a NUL character in the shell block, which CommonMark reads as U+FFFD
     (the pair differs only in its content);
   - FIELD: README.md as it is, read by a parser that changes one field of the first block's token
     from the pinned parser's reading, fails for each of the 5 fields compare() checks (type, depth,
     line, info string and content), so dropping any one field from compare() fails a case;
-  - REFUSED: a layout install_blocks() refuses (a third block, and the in-session block commented
-    out beside a visible replacement) fails, naming the build's refusal.
+  - REFUSED: a layout install_blocks() refuses (3 blocks, a fifth block, the 2 merged blocks that
+    each hold both routes, 4 blocks of which the first holds both routes, and the in-session block
+    commented out beside a visible replacement) fails, naming the build's refusal;
+  - COUNT: a site build changed to accept another count, read with this gate, still fails, because
+    the gate requires 4 blocks itself: a build that accepts 3 blocks, one that accepts 5 and one
+    that reads the 2 merged blocks, each on a README.md holding that many blocks, so that the
+    pinned parser agrees with the build and only the gate's own count can catch it.
 
 Then the gate itself runs: on this checkout it exits 0 with its ok line, and on a copy whose lock
 pins another markdown-it-py, or cannot be parsed, it exits 2 with 1 FAIL line and no traceback.
@@ -88,13 +94,19 @@ def main():
     failures = []
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     blocks = build_site.install_blocks(readme)
-    session, shell = (body for _, _, body in blocks)
-    session_block = f"```text\n{session}\n```\n"
-    shell_block = f"```bash\n{shell}\n```\n"
-    if readme.count(session_block) != 1 or readme.count(shell_block) != 1:
-        print("  FAIL  README.md does not hold the install blocks the build read, each once as a "
-              "```text and a ```bash block, so no case ran")
+    info = {key: fence for key, fence, _ in build_site.INSTALL_FENCES}
+    fenced = [f"```{info[key]}\n{body}\n```\n" for key, _, body in blocks]
+    if len(blocks) != 4 or any(readme.count(b) != 1 for b in fenced):
+        print("  FAIL  README.md does not hold the 4 install blocks the build read, each once as a "
+              "```text or a ```bash block, so no case ran")
         return 1
+    session, shell, shared_session, shared_shell = (body for _, _, body in blocks)
+    session_block, shell_block, shared_session_block, shared_shell_block = fenced
+    merged_session = f"```text\n{session}\n{shared_session}\n```\n"
+    merged_shell = f"```bash\n{shell}\n{shared_shell}\n```\n"
+    # The first draft of #1388: both routes in each of 2 blocks, so that 1 Copy copies both.
+    merged = (readme.replace(shared_session_block, "", 1).replace(shared_shell_block, "", 1)
+              .replace(session_block, merged_session, 1).replace(shell_block, merged_shell, 1))
     edited = shell + " --scope project"
     agree = {
         "README.md as it is": readme,
@@ -107,15 +119,15 @@ def main():
     misread = {
         "the in-session block commented out":
             (readme.replace(session_block, f"<!--\n{session_block}-->\n", 1),
-             "finds 1 code block (first line"),
+             "finds 3 code blocks (first lines"),
         "the in-session block inside an HTML block":
             (readme.replace(session_block, f"<div>\n{session_block}</div>\n", 1),
-             "finds 1 code block (first line"),
+             "finds 3 code blocks (first lines"),
         "an indented code block in the section":
-            (readme.replace(shell_block, shell_block + indented, 1), "finds 3 code blocks"),
+            (readme.replace(shell_block, shell_block + indented, 1), "finds 5 code blocks"),
         "a fence in a block quote":
             (readme.replace(shell_block, shell_block + "\n> ```text\n> /plugin install "
-                            "other@other\n> ```\n", 1), "finds 3 code blocks"),
+                            "other@other\n> ```\n", 1), "finds 5 code blocks"),
         "a setext level-2 heading before the shell block":
             (readme.replace(shell_block, "Elsewhere\n---------\n\n" + shell_block, 1),
              "finds 1 code block (first line"),
@@ -134,16 +146,19 @@ def main():
                             f"install other@other\n> ```\n", 1),
              "code block 1 is, to the pinned parser, a fence at depth 1"),
         # The build's reader ends the section at the heading line inside the HTML block and reads
-        # the 2 commented-out blocks; the parser reads the copies after it. Only the lines differ.
-        "both blocks commented out above an HTML block with a heading line, and copies after it":
+        # the 4 commented-out blocks; the parser reads the copies after it. Only the lines differ.
+        "all 4 blocks commented out above an HTML block with a heading line, and copies after it":
             (readme.replace(session_block, f"<!--\n{session_block}-->\n", 1)
-             .replace(shell_block, f"<!--\n{shell_block}-->\n\n<div>\n## Elsewhere\n</div>\n\n"
-                      f"{session_block}\n{shell_block}", 1),
+             .replace(shell_block, f"<!--\n{shell_block}-->\n", 1)
+             .replace(shared_session_block, f"<!--\n{shared_session_block}-->\n", 1)
+             .replace(shared_shell_block, f"<!--\n{shared_shell_block}-->\n\n<div>\n## Elsewhere\n"
+                      f"</div>\n\n{session_block}\n{shell_block}\n{shared_session_block}\n"
+                      f"{shared_shell_block}", 1),
              "code block 1 is, to the pinned parser, a fence at depth 0"),
         # CommonMark replaces U+0000 with U+FFFD; the build's reader keeps it. Only the content
-        # differs.
+        # differs. The NUL follows a space, so the build still reads the route's plugin name.
         "a NUL character in the shell block":
-            (readme.replace(shell_block, f"```bash\n{shell}\x00\n```\n", 1),
+            (readme.replace(shell_block, f"```bash\n{shell} \x00\n```\n", 1),
              "code block 2 is, to the pinned parser, a fence at depth 0"),
     }
     # (field, the change to the first block's token): compare() must report each on its own.
@@ -155,10 +170,13 @@ def main():
         "info string": ("info", first.info + "x"),
         "content": ("content", first.content + "x\n"),
     }
+    fifth = ("\n```bash\nclaude plugin marketplace add other/other\nclaude plugin install "
+             "other@other\n```\n")
     refused = {
-        "a third block":
-            readme.replace(shell_block, shell_block + "\n```bash\nclaude plugin install "
-                           "other@other\n```\n", 1),
+        "3 blocks": readme.replace(shared_shell_block, "", 1),
+        "a fifth block": readme.replace(shared_shell_block, shared_shell_block + fifth, 1),
+        "the 2 merged blocks that each hold both routes": merged,
+        "4 blocks, the first holding both routes": readme.replace(session_block, merged_session, 1),
         "the in-session block commented out beside a visible replacement":
             readme.replace(session_block, f"<!--\n{session_block}-->\n\n```text\n/plugin install "
                            f"wrong@wrong\n```\n", 1),
@@ -167,8 +185,8 @@ def main():
     for desc, text in agree.items():
         cases += 1
         found, got = gate.compare(text, parser)
-        if found or len(got) != 2:
-            failures.append(f"{desc}: the gate should pass with 2 blocks: {found!r}, {got!r}")
+        if found or len(got) != 4:
+            failures.append(f"{desc}: the gate should pass with 4 blocks: {found!r}, {got!r}")
     for desc, (text, reason) in misread.items():
         cases += 1
         if text == readme:
@@ -196,6 +214,48 @@ def main():
         if got or len(found) != 1 or "scripts/build-site.py refuses README.md" not in found[0]:
             failures.append(f"{desc}: the gate should report the build's refusal: {found!r}")
 
+    # COUNT: a site build changed to accept another count, on a README.md holding that many
+    # blocks. The pinned parser then agrees with the build, so only the gate's own count of 4
+    # catches it; the same compare() with that count set to the build's passes, which shows it.
+    fences, routes, reader = (build_site.INSTALL_FENCES, build_site.INSTALL_ROUTES,
+                              build_site.install_blocks)
+
+    def merged_reader(text):
+        """The 2 merged blocks of `merged`, at their lines, as a build that reads them would."""
+        lines = text.split("\n")
+        head = lines.index(build_site.INSTALL)
+        return [("project_session", lines.index("```text", head) + 1, merged_session[8:-5]),
+                ("project_shell", lines.index("```bash", head) + 1, merged_shell[8:-5])]
+
+    count = {
+        "a build that accepts 3 blocks":
+            (fences[:3], routes[:1], reader, readme.replace(shared_shell_block, "", 1)),
+        "a build that accepts 5 blocks":
+            (fences + (("extra_shell", "bash", "claude plugin "),), routes, reader,
+             readme.replace(shared_shell_block, shared_shell_block + fifth, 1)),
+        "a build that reads the 2 merged blocks": (fences, routes, merged_reader, merged),
+    }
+    for desc, (lenient, pairs, read, text) in count.items():
+        cases += 1
+        build_site.INSTALL_FENCES, build_site.INSTALL_ROUTES = lenient, pairs
+        build_site.install_blocks = read
+        try:
+            accepted = len(read(text))
+            found, _ = gate.compare(text, parser)
+            gate.BLOCKS = accepted
+            unchecked, _ = gate.compare(text, parser)
+        except build_site.SourceError as exc:
+            failures.append(f"{desc}: the changed build refused the case's README.md: {exc}")
+            continue
+        finally:
+            build_site.INSTALL_FENCES, build_site.INSTALL_ROUTES = fences, routes
+            build_site.install_blocks, gate.BLOCKS = reader, 4
+        if accepted == 4 or unchecked:
+            failures.append(f"{desc}: the case does not give a build and a parser that agree on "
+                            f"{accepted} blocks: {unchecked!r}")
+        if len(found) != 1 or "must hold exactly 4" not in found[0]:
+            failures.append(f"{desc}: the gate should require 4 blocks itself: {found!r}")
+
     rc, out = run_copy((ROOT / "tools" / "requirements-gates.txt").read_text(encoding="utf-8"))
     cases += 1
     if rc != 0 or not out.startswith("  ok    ") or "FAIL" in out:
@@ -218,7 +278,8 @@ def main():
     print(f"  ok    {cases} cases for the install-section gate: {len(agree)} layouts both readers "
           f"agree on, {len(misread)} the site build's reader misreads and the gate catches, "
           f"{len(field)} fields of a block each caught on its own, {len(refused)} the build "
-          f"refuses, and the gate run on this checkout, on a lock pinning another version and on "
+          f"refuses, {len(count)} builds accepting another count that the gate's own count of 4 "
+          f"catches, and the gate run on this checkout, on a lock pinning another version and on "
           f"a lock it cannot parse")
     return 0
 

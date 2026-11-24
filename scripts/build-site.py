@@ -33,13 +33,18 @@ and dark switch as the last child of the top bar, after its `nav`, and loads sch
 The install commands have 1 source, README.md's "Install in Claude Code" section, so
 site-src/content.json carries none of them. The build reads that section with install_blocks()
 below, a small standard-library fence reader, not a Markdown parser. The section must hold exactly
-2 fenced blocks, each opened at the start of a line and closed by a fence of the same character
-and length: first the in-session block, info string `text`, every line starting `/plugin `; then
-the shell block, info string `bash`, every line starting `claude plugin `. Anything else is
-refused (exit 2), and so is a README with no such section or more than 1. The reader does not
-know HTML comments, indented code blocks, lists or block quotes, so tools/check_install_blocks.py,
-a CI gate, reads the same section with the pinned CommonMark parser and fails unless the parser
-finds exactly the 2 blocks this reader extracted, at the same lines, with the same content.
+4 fenced blocks, each opened at the start of a line and closed by a fence of the same character
+and length, and each holding 1 route, so that each block's Copy button copies 1 route: this
+repository's marketplace as an in-session block, info string `text`, every line starting
+`/plugin `, then as a shell block, info string `bash`, every line starting `claude plugin `; then
+the shared catalogue's marketplace in the same 2 forms. A route is 2 lines, `marketplace add`
+and then `install`, and the 2 blocks of a route add the same marketplace and install the same
+plugin, while the 2 routes add different marketplaces. Any other count, a block holding both
+routes and anything else is refused (exit 2), and so is a README with no such section or more
+than 1. The reader does not know HTML comments, indented code blocks, lists or block quotes, so
+tools/check_install_blocks.py, a CI gate, reads the same section with the pinned CommonMark
+parser and fails unless the parser finds exactly the 4 blocks this reader extracted, at the same
+lines, with the same content.
 
 The build refuses to write, and `--check` fails, when a page would contain a dash character
 (U+2010 to U+2015, U+2212), an inline style or `style=` attribute, a `<script>` without `src` or
@@ -103,9 +108,20 @@ README = Path("README.md")
 VERSIONED = Path("tools") / "version_basis_guides.txt"
 QUALITY_TSV = Path("tools") / "guide_quality.tsv"
 # The README section that is the only source of the install commands on the For AI assistants
-# page, and its 2 fenced blocks in order: (key, info string, the start of every line).
+# page, and its 4 fenced blocks in order: (key, info string, the start of every line). Each block
+# is 1 route in 1 form, so that its Copy button copies 1 route: this repository's marketplace in a
+# session and in a shell, then the shared catalogue's in the same 2 forms. The key names the
+# block's entry in site-src/content.json (the sentence before it) and its copy block id.
 INSTALL = "## Install in Claude Code"
-INSTALL_FENCES = (("session", "text", "/plugin "), ("shell", "bash", "claude plugin "))
+INSTALL_FENCES = (("project_session", "text", "/plugin "), ("project_shell", "bash", "claude plugin "),
+                  ("shared_session", "text", "/plugin "), ("shared_shell", "bash", "claude plugin "))
+# The 2 routes, each as the positions in INSTALL_FENCES of its in-session and its shell block.
+INSTALL_ROUTES = ((0, 1), (2, 3))
+# The label the For AI assistants page sets above each block.
+INSTALL_LABELS = {"project_session": "This repository, in a session",
+                  "project_shell": "This repository, in a shell",
+                  "shared_session": "Shared catalogue, in a session",
+                  "shared_shell": "Shared catalogue, in a shell"}
 COPIED = "assets/baseline/"  # the copied template files, which this build does not write
 SITE_CSS = "assets/site.css"  # the optional per-site constants file (baseline README), hand-written
 # The files the root holds beside the pages and the copied template files; a root --check refuses
@@ -221,7 +237,8 @@ CONTENT_SCHEMA = {
     "for_ai": {"description": TEXT, "h1": TEXT, "meta": TEXT, "note": TEXT,
                "rule_edits?": [{"rule": int, "old": str, "new": str}], "fetch": TEXT,
                "pattern": str, "files": TEXT,
-               "install": {key: TEXT for key in ("h2", "lead", "session", "shell", "copy",
+               "install": {key: TEXT for key in ("h2", "lead",
+                                                 *(fence[0] for fence in INSTALL_FENCES), "copy",
                                                  "always")},
                "next": NEXT},
     "for_humans": {"description": TEXT, "meta": TEXT,
@@ -332,7 +349,12 @@ def install_blocks(text):
     tildes. The first later line made only of that character, at least as long, with any spaces or
     tabs around it, ends the fence, and the build refuses it unless it is the opening run exactly,
     at the start of the line. A fence
-    never closed, and a fence indented by spaces or tabs in the section, are refused. It does not
+    never closed, and a fence indented by spaces or tabs in the section, are refused. The section
+    must hold exactly len(INSTALL_FENCES) blocks, each of the shape INSTALL_FENCES gives and each
+    exactly 1 route: a `marketplace add` line, then an `install` line, so that a block holding
+    both routes is refused. The 2 blocks of each pair in INSTALL_ROUTES must add the same
+    marketplace and install the same plugin, and the 2 routes must add different marketplaces.
+    It does not
     know HTML comments, indented code blocks, setext headings, lists or block quotes, so it can read
     a block that CommonMark hides or miss one that CommonMark shows: tools/check_install_blocks.py
     reads the same section with the pinned parser in CI and fails unless both readings agree."""
@@ -376,7 +398,35 @@ def install_blocks(text):
             raise SourceError(f"{where}: fenced block {n} (line {line}) does not have info string "
                               f"{need!r} and every line starting {prefix!r}; the build needs {want}")
         blocks.append((key, line, body))
+    # Each block is 1 route, so that its Copy button never copies both: exactly a `marketplace
+    # add <source>` line, then an `install <plugin>` line, each with its argument.
+    routes = []
+    for n, ((key, line, body), (_, _, prefix)) in enumerate(zip(blocks, INSTALL_FENCES), 1):
+        add, get = prefix + "marketplace add ", prefix + "install "
+        rows = body.split("\n")
+        if (len(rows) != 2 or not rows[0].startswith(add) or not rows[1].startswith(get)
+                or not rows[0][len(add):].split() or not rows[1][len(get):].split()):
+            raise SourceError(f"{where}: fenced block {n} (line {line}) is not 1 route, a "
+                              f"{add.strip()!r} line and then a {get.strip()!r} line; each block "
+                              f"holds 1 route, so that its Copy button copies 1, and the build "
+                              f"needs {want}")
+        routes.append((line, rows[0][len(add):].split()[0], rows[1][len(get):].split()[0]))
+    for first, second in INSTALL_ROUTES:
+        if routes[first][1:] != routes[second][1:]:
+            raise SourceError(f"{where}: fenced blocks {first + 1} (line {routes[first][0]}) and "
+                              f"{second + 1} (line {routes[second][0]}) are 1 route in 2 forms, but "
+                              f"they add or install different things: {routes[first][1:]} and "
+                              f"{routes[second][1:]}")
+    sources = [routes[pair[0]][1] for pair in INSTALL_ROUTES]
+    if len(set(sources)) != len(sources):
+        raise SourceError(f"{where}: the {len(sources)} routes add the marketplaces {sources}; each "
+                          f"route adds its own marketplace")
     return blocks
+
+
+def install_id(key):
+    """The id of the copy block that carries the README block INSTALL_FENCES names by key."""
+    return "install-" + key.replace("_", "-")
 
 
 def esc(text):
@@ -747,14 +797,13 @@ class Builder:
         inst = a["install"]
         body += ['<p class="lbl sec">Install</p>',
                  f'<h2 id="install">{esc(inst["h2"]["text"])}</h2>',
-                 f'<p>{self.inline(inst["lead"]["text"])}</p>',
-                 f'<p>{self.inline(inst["session"]["text"])}</p>',
-                 '<p class="lbl blk">In a session</p>',
-                 self.copyblock("install-session", self.install["session"]),
-                 f'<p>{self.inline(inst["shell"]["text"])}</p>',
-                 '<p class="lbl blk">In a shell</p>',
-                 self.copyblock("install-shell", self.install["shell"]),
-                 f'<p>{self.inline(inst["copy"]["text"])}</p>',
+                 f'<p>{self.inline(inst["lead"]["text"])}</p>']
+        # 1 copy block per README block, so that each Copy button copies 1 route in 1 form.
+        for key, _, _ in INSTALL_FENCES:
+            body += [f'<p>{self.inline(inst[key]["text"])}</p>',
+                     f'<p class="lbl blk">{esc(INSTALL_LABELS[key])}</p>',
+                     self.copyblock(install_id(key), self.install[key])]
+        body += [f'<p>{self.inline(inst["copy"]["text"])}</p>',
                  f'<p>{self.inline(inst["always"]["text"])}</p>', self.next_block(a["next"])]
         return self.page("For AI assistants", "for-ai/",
                          self.doc("For AI assistants", a["h1"]["text"], self.rail(), body),
