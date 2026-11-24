@@ -52,7 +52,9 @@ If raw.githubusercontent.com is unreachable, use https://secureconfig.ai/llms-fu
 
 ## Install in Claude Code
 
-This repository is a Claude Code plugin marketplace: [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json) at its root lists one plugin, `secureconfig`, whose source is [plugin/](plugin/) ([plugin marketplaces](https://code.claude.com/docs/en/plugin-marketplaces)). The plugin has no Claude Code manifest of its own, so Claude Code loads its standard layout, the [secureconfig](plugin/skills/secureconfig/SKILL.md) skill under `plugin/skills/`, and takes the name from the marketplace entry ([plugin manifest](https://code.claude.com/docs/en/plugins/manifest-reference)). In a Claude Code session, add the marketplace and install the plugin ([installing plugins](https://code.claude.com/docs/en/plugins/install)):
+This repository is a Claude Code plugin marketplace: [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json) at its root lists one plugin, `secureconfig`, whose source is [plugin/](plugin/) ([plugin marketplaces](https://code.claude.com/docs/en/plugin-marketplaces)). The plugin has no Claude Code manifest of its own, so Claude Code loads its standard layout, the [secureconfig](plugin/skills/secureconfig/SKILL.md) skill under `plugin/skills/`, and takes the name from the marketplace entry ([plugin manifest](https://code.claude.com/docs/en/plugins/manifest-reference)). The shared catalogue `jposluns/plugins`, a marketplace named `jposluns`, lists the plugin too. The shared catalogue's entry is updated separately from this repository, so the version it installs can lag behind the one this repository's marketplace serves. Each route below adds one of these two marketplaces and installs the plugin from it ([installing plugins](https://code.claude.com/docs/en/plugins/install)). Use one route, not both, so that the plugin is installed once.
+
+From this repository's marketplace, in a Claude Code session:
 
 ```text
 /plugin marketplace add jposluns/secureconfig
@@ -64,6 +66,20 @@ The same from a shell:
 ```bash
 claude plugin marketplace add jposluns/secureconfig
 claude plugin install secureconfig@secureconfig
+```
+
+Or from the shared catalogue, in a Claude Code session:
+
+```text
+/plugin marketplace add jposluns/plugins
+/plugin install secureconfig@jposluns
+```
+
+The same from a shell:
+
+```bash
+claude plugin marketplace add jposluns/plugins
+claude plugin install secureconfig@jposluns
 ```
 
 Without a marketplace, copy the skill's folder, [plugin/skills/secureconfig/](plugin/skills/secureconfig/), to `~/.claude/skills/secureconfig/` for all your projects or to `.claude/skills/secureconfig/` in one project ([skills](https://code.claude.com/docs/en/skills)). Refresh a copied folder by copying it again: its `scripts/update-guides.sh` reads the `plugin.json` two folders above it, which a copied skill folder does not carry, and stops without changing anything.

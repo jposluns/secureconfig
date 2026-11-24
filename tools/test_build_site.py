@@ -22,18 +22,29 @@ child of the top bar after its nav, and loads scheme.js once, right after the to
 before the first stylesheet, with data-cfasync="false" before src and no defer or async.
 The landing page carries the About line of baseline 1.7.0 (SPECIFICATION 7.24) exactly once, with
 1 ordinary space after each dot span and none before it.
-The For AI assistants page carries the Claude Code install commands once each, in a copy block,
-read from README.md's install section only (site-src/content.json carries none) by the build's
-standard-library reader, install_blocks(). A README whose shell block is edited, or edited and
-fenced with tildes, or whose in-session block is edited, puts that block on the page, and the
+The For AI assistants page carries the Claude Code install commands of README.md's install
+section as 4 copy blocks, 1 route in 1 form each (this repository's marketplace in a session and
+in a shell, then the shared catalogue's), read from that section only (site-src/content.json
+carries none) by the build's standard-library reader, install_blocks(). A README whose shell
+block is edited, or edited and fenced with tildes, or whose in-session block or either shared
+catalogue block is edited (each edit naming the block's marketplace by its GitHub URL), or whose
+shared shell block names its marketplace in upper case, puts that block on the page, and the
 reader reads the same blocks at the same lines with CRLF or CR line endings. The build refuses a
-section with the in-session block commented out beside a visible replacement (which it reads as a
-third block), mismatched fence lengths on either block (an opening fence longer than its closing
-one, or shorter), a third block, the blocks swapped, the shell block holding the in-session
-commands, an empty in-session block, an indented fence, and a README with no install section or a
-second one. None of these cases needs a Markdown parser. What the reader cannot see, such as a
-block hidden in an HTML comment, is for tools/check_install_blocks.py to catch, with its cases in
-tools/test_install_blocks.py.
+section of 3 blocks, of 5 blocks and of 2 blocks that each hold both routes (the merged
+layout), and 4 blocks of which 1 holds both routes. It also refuses a section with the
+in-session block commented out beside a visible
+replacement (which it reads as a fifth block), mismatched fence lengths on either block (an
+opening fence longer than its closing one, or shorter), the blocks swapped, the shell block
+holding the in-session commands, a route's shell block adding the other route's marketplace, both
+routes adding the same marketplace, an empty in-session block, an indented fence, and a README
+with no install section or a second one. It refuses an install line that installs from another
+marketplace than the 1 its block's add line registers (either route), another plugin, or no
+marketplace; a marketplace whose name the build does not know; both routes adding 1 marketplace
+named in another case or by its GitHub URL; and an extra argument on an add or an install line.
+The marketplace name and plugin the build expects for this repository's route are those of
+.claude-plugin/marketplace.json. None of these cases needs a Markdown parser. What the
+reader cannot see, such as a block hidden in an HTML comment, is for tools/check_install_blocks.py
+to catch, with its cases in tools/test_install_blocks.py.
 --check must report a one-byte change, an extra page (.html or .htm in any case) and a missing
 page at any base; a stray file outside assets/baseline/ other than assets/site.css is refused at
 both bases, except at the root a published file (PUBLISHED, such as llms.txt) beside the pages.
@@ -767,12 +778,16 @@ def main():
                         "(1 space after each dot span, none before it) exactly once")
 
     # The Claude Code install commands have 1 source, the README's install section: the For AI
-    # assistants page carries each of its 2 fenced blocks once, in a copy block, content.json
-    # carries no commands, an edited README block is what the page shows, and a section that is not
-    # exactly the in-session block then the shell block is refused.
+    # assistants page carries each of its 4 fenced blocks once, each in its own copy block and each
+    # 1 route, content.json carries no commands, an edited README block is what the page shows, and
+    # a section that is not exactly the 4 blocks, 1 route each, is refused.
     for_ai = pages["for-ai/index.html"]
     install = builder.c["for_ai"]["install"]
-    pids = {"session": "install-session", "shell": "install-shell"}
+    keys = [key for key, _, _ in build_site.INSTALL_FENCES]
+    pids = {key: build_site.install_id(key) for key in keys}
+    if len(keys) != 4 or sorted(builder.install) != sorted(keys):
+        failures.append(f"the build reads the install blocks {sorted(builder.install)!r}, where "
+                        f"the page needs exactly 4, 1 route in 1 form each")
     for key, pid in pids.items():
         if "commands" in install[key]:
             failures.append(f"site-src/content.json for_ai.install.{key} carries commands; they "
@@ -780,25 +795,79 @@ def main():
         if for_ai.count(builder.copyblock(pid, builder.install[key])) != 1:
             failures.append(f"for-ai/index.html does not carry the {key} install commands once "
                             f"in the copy block {pid}")
+        if builder.install[key].count("marketplace add ") != 1:
+            failures.append(f"for-ai/index.html: the copy block {pid} does not hold exactly 1 route")
+    copies = for_ai.count('<pre id="install-')
+    if copies != 4:
+        failures.append(f"for-ai/index.html carries {copies} install copy blocks, not 4")
     if for_ai.count('<h2 id="install">Install in Claude Code</h2>') != 1:
         failures.append("for-ai/index.html does not carry the install heading once")
+    # The name the build expects this repository's install line to end with, and the plugin it
+    # installs, are those of .claude-plugin/marketplace.json.
+    catalogue = json.loads((ROOT / ".claude-plugin" / "marketplace.json")
+                           .read_text(encoding="utf-8"))
+    names = getattr(build_site, "INSTALL_MARKETPLACES", {})
+    if (names.get("jposluns/secureconfig") != catalogue["name"]
+            or getattr(build_site, "INSTALL_PLUGIN", None)
+            not in [p["name"] for p in catalogue["plugins"]]):
+        failures.append(f"INSTALL_MARKETPLACES and INSTALL_PLUGIN do not give the marketplace name "
+                        f"{catalogue['name']!r} and a plugin of .claude-plugin/marketplace.json")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    session, shell = builder.install["session"], builder.install["shell"]
-    session_block = f"```text\n{session}\n```\n"
-    shell_block = f"```bash\n{shell}\n```\n"
+    info = {key: fence for key, fence, _ in build_site.INSTALL_FENCES}
+    text = {key: builder.install.get(key, "") for key in keys}
+    block = {key: f"```{info[key]}\n{text[key]}\n```\n" for key in keys}
+    session, shell = text["project_session"], text["project_shell"]
+    session_block, shell_block = block["project_session"], block["project_shell"]
+    shared_session_block, shared_shell_block = block["shared_session"], block["shared_shell"]
     install_cases = 0
-    if readme.count(session_block) != 1 or readme.count(shell_block) != 1:
-        failures.append("README.md does not hold the install blocks the build read, each once as a "
-                        "```text and a ```bash block, so the install cases were not run")
+    if any(readme.count(b) != 1 for b in block.values()):
+        failures.append("README.md does not hold the 4 install blocks the build read, each once as "
+                        "a ```text or a ```bash block, so the install cases were not run")
     else:
-        edited_shell = shell + " --scope project"
+        # An edit that keeps the block 1 route: its add line names the same marketplace by its
+        # GitHub URL. Each line takes exactly 1 argument, so an appended option is refused.
+        def by_url(commands):
+            return commands.replace("marketplace add ", "marketplace add https://github.com/", 1)
+
+        edited_shell = by_url(shell)
         wrong = "/plugin install wrong@wrong"
+        shared_add = text["shared_session"].split("\n")[0].split()[-1]
+
+        def shared_as(source, plugin):
+            """README.md with both of the shared catalogue's blocks adding source and installing
+            plugin, so that the route's 2 forms still agree."""
+            out = readme
+            for key in ("shared_session", "shared_shell"):
+                prefix = "/plugin " if key == "shared_session" else "claude plugin "
+                out = out.replace(block[key], f"```{info[key]}\n{prefix}marketplace add {source}\n"
+                                  f"{prefix}install {plugin}\n```\n", 1)
+            return out
+        # The layout of the first draft of #1388: both routes in each of 2 blocks, so that 1 Copy
+        # copies both routes and pasting a block installs the plugin twice.
+        merged_session = f"```text\n{session}\n{text['shared_session']}\n```\n"
+        merged_shell = f"```bash\n{shell}\n{text['shared_shell']}\n```\n"
+        merged = (readme.replace(shared_session_block, "", 1).replace(shared_shell_block, "", 1)
+                  .replace(session_block, merged_session, 1).replace(shell_block, merged_shell, 1))
         # (README text, the part of the refusal that names its reason)
         refused_cases = {
+            "3 blocks, the shared catalogue's shell block removed":
+                (readme.replace(shared_shell_block, "", 1), "holds 3 fenced blocks"),
+            "5 blocks, a fifth block added":
+                (readme.replace(shared_shell_block, shared_shell_block + "\n```bash\nclaude plugin "
+                                "install other@other\n```\n", 1), "holds 5 fenced blocks"),
+            "the merged layout, both routes in each of 2 blocks":
+                (merged, "holds 2 fenced blocks"),
+            "4 blocks, the first holding both routes":
+                (readme.replace(session_block, merged_session, 1), "is not 1 route"),
+            "a route's shell block adding the other route's marketplace":
+                (readme.replace(shell_block, shared_shell_block, 1), "1 route in 2 forms"),
+            "both routes adding the same marketplace":
+                (readme.replace(shared_session_block, session_block, 1)
+                 .replace(shared_shell_block, shell_block, 1), "each route adds its own"),
             "the in-session block commented out beside a visible replacement":
                 (readme.replace(session_block,
                                 f"<!--\n{session_block}-->\n\n```text\n{wrong}\n```\n", 1),
-                 "holds 3 fenced blocks"),
+                 "holds 5 fenced blocks"),
             "mismatched fence lengths on the in-session block":
                 (readme.replace(session_block, f"````text\n{session}\n```\n", 1),
                  "is not closed"),
@@ -809,12 +878,11 @@ def main():
                  "is not closed"),
             "an empty in-session block":
                 (readme.replace(session_block, "```text\n```\n", 1), "fenced block 1"),
+            "the in-session block holding 1 install line only":
+                (readme.replace(session_block, f"```text\n{wrong}\n```\n", 1), "is not 1 route"),
             "the shell block indented in a list item":
                 (readme.replace(shell_block, "- From a shell:\n\n  " + shell_block.replace(
                     "\n", "\n  ").rstrip(" ") + "\n", 1), "is an indented fence"),
-            "a third block":
-                (readme.replace(shell_block, shell_block + "\n```bash\nclaude plugin install "
-                                "other@other\n```\n", 1), "holds 3 fenced blocks"),
             "the blocks swapped":
                 (readme.replace(session_block, "\0", 1).replace(shell_block, session_block, 1)
                  .replace("\0", shell_block, 1), "fenced block 1"),
@@ -825,18 +893,56 @@ def main():
             "a second install section":
                 (readme + f"\n{build_site.INSTALL}\n\n{session_block}\n{shell_block}",
                  "has 2 lines"),
+            # QA round 1 of #1388: each install line installs the plugin from the marketplace
+            # its own add line registers, each line takes 1 argument, and 2 routes naming 1
+            # marketplace in another case or by its GitHub URL add the same marketplace.
+            "the shared route installing from this repository's marketplace":
+                (shared_as(shared_add, "secureconfig@secureconfig"),
+                 "its add line registers 'jposluns/plugins', the marketplace named 'jposluns'"),
+            "this repository's route installing from the shared catalogue":
+                (readme.replace(session_block, session_block.replace(
+                    "@secureconfig", "@jposluns", 1), 1).replace(shell_block, shell_block.replace(
+                        "@secureconfig", "@jposluns", 1), 1),
+                 "the marketplace named 'secureconfig'"),
+            "an install line naming another plugin":
+                (shared_as(shared_add, "other@jposluns"), "installs the entry 'other'"),
+            "an install line with no marketplace":
+                (shared_as(shared_add, "secureconfig"), "its add line registers"),
+            "a marketplace whose name the build does not know":
+                (shared_as("other/plugins", "secureconfig@other"),
+                 "whose name the build does not know"),
+            "both routes adding this repository's marketplace, the second in another case":
+                (shared_as("JPosluns/SecureConfig", "secureconfig@secureconfig"),
+                 "each route adds its own"),
+            "both routes adding this repository's marketplace, the second by its GitHub URL":
+                (shared_as("https://github.com/jposluns/secureconfig.git",
+                           "secureconfig@secureconfig"), "each route adds its own"),
+            "an extra argument after the add line's argument":
+                (readme.replace(shared_shell_block, shared_shell_block.replace(
+                    f"add {shared_add}", f"add {shared_add} extra", 1), 1),
+                 "has an extra argument"),
+            "an extra argument after the install line's argument":
+                (readme.replace(shared_session_block, shared_session_block.replace(
+                    "@jposluns", "@jposluns extra", 1), 1), "has an extra argument"),
         }
         # (README text, key, the commands the page must then carry for that key)
         followed_cases = {
             "the shell block edited":
-                (readme.replace(shell_block, f"```bash\n{edited_shell}\n```\n", 1), "shell",
+                (readme.replace(shell_block, f"```bash\n{edited_shell}\n```\n", 1), "project_shell",
                  edited_shell),
             "the shell block edited and fenced with tildes":
-                (readme.replace(shell_block, f"~~~bash\n{edited_shell}\n~~~\n", 1), "shell",
+                (readme.replace(shell_block, f"~~~bash\n{edited_shell}\n~~~\n", 1), "project_shell",
                  edited_shell),
-            "the in-session block edited":
-                (readme.replace(session_block, f"```text\n{wrong}\n```\n", 1), "session", wrong),
         }
+        for key in ("project_session", "shared_session", "shared_shell"):
+            edited = by_url(text[key])
+            followed_cases[f"the {key.replace('_', ' ')} block edited"] = (
+                readme.replace(block[key], f"```{info[key]}\n{edited}\n```\n", 1), key, edited)
+        # Marketplaces are compared without case, so the 2 forms of a route still agree.
+        edited = text["shared_shell"].replace(f"add {shared_add}", f"add {shared_add.upper()}", 1)
+        followed_cases["the shared shell block adding its marketplace in upper case"] = (
+            readme.replace(block["shared_shell"], f"```bash\n{edited}\n```\n", 1), "shared_shell",
+            edited)
         # The build reads README.md with universal newlines, so the reader itself is given each
         # line ending CommonMark knows: it must read the same blocks, at the same lines.
         for ending in ("\r\n", "\r"):
@@ -1204,8 +1310,10 @@ def main():
           f"previews at their full values and canonicals, none on a staged build, the light and dark "
           f"switch and scheme.js on every page at both bases, the landing page's About line, the "
           f"install commands read from README.md only, with {install_cases} install-section cases "
-          f"(mismatched fence lengths, an indented fence, a third block, the blocks swapped, the "
-          f"shell block edited, CRLF and CR line endings and more), and "
+          f"(3 and 5 blocks, the merged layout, a block holding both routes, mismatched fence "
+          f"lengths, an indented fence, the blocks swapped, the shell block edited, an install "
+          f"line naming another route's marketplace, an extra argument, CRLF and CR line endings "
+          f"and more), and "
           f"--check on a changed, an extra "
           f".html and .HTM page, a missing page, a root-base published file and strays, a staged "
           f"tree under the root's draft/, and the staged strays; the advisory at its dated name "
