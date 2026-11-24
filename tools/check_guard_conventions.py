@@ -148,9 +148,11 @@ SCOPE
   Shell-parser blind spots below also apply. No C1 or C2 check applies to
   inline spans; diagnostics use the span opener's guide:line. When the pinned
   parser is absent or mismatched (a ParserUnavailable from
-  check_verify_marking.gate_parser, raised itself or as the cause of a
-  ValueError from version_basis), the scan stops with one line naming that
-  cause, not one C3-INLINE-MARKDOWN finding per enrolled guide (row 3.114).
+  check_verify_marking.gate_parser, raised itself or found as the cause or
+  context anywhere in the chain of a ValueError from version_basis), the
+  scan stops with one line naming that cause, with the ParserUnavailable's
+  own message, not one C3-INLINE-MARKDOWN finding per enrolled guide (row
+  3.114).
 
   An inline exception uses this visible standalone code span on the physical
   line immediately before the command span's line:
@@ -2532,16 +2534,25 @@ def _scan_inline(path, text, findings, stats, opts):
 
 
 def parser_unavailable(exc):
-    """Return the ParserUnavailable that is exc or caused it, or None.
+    """Return the ParserUnavailable that is exc or is in its chain, or None.
 
-    tools/version_basis.py re-raises ParserUnavailable as a plain ValueError
-    chained with `from`, so only the cause chain tells a missing or mismatched
-    parser apart from metadata that is really invalid (row 3.114).
+    tools/version_basis.py re-raises ParserUnavailable as a plain ValueError,
+    so only the exception chain tells a missing or mismatched parser apart
+    from metadata that is really invalid (row 3.114). Both links are walked:
+    __cause__, which `raise ... from exc` sets, and __context__, which Python
+    sets for any exception raised while another is handled and keeps even
+    under `raise ... from None`, so dropping the explicit cause there cannot
+    turn a parser problem back into a finding.
     """
-    while exc is not None:
+    pending, seen = [exc], set()
+    while pending:
+        exc = pending.pop(0)
+        if exc is None or id(exc) in seen:
+            continue
         if isinstance(exc, ParserUnavailable):
             return exc
-        exc = exc.__cause__
+        seen.add(id(exc))
+        pending.extend((exc.__cause__, exc.__context__))
     return None
 
 
@@ -2603,11 +2614,13 @@ def run_scan(opts):
             scan_text(path, text, findings, stats, opts,
                       inline=Path(path).name in enrolled)
         except ValueError as exc:
-            if not parser_unavailable(exc):
+            cause = parser_unavailable(exc)
+            if cause is None:
                 raise
             # One line for the whole run: every enrolled guide would fail
-            # the same way, and no finding here would be about a guide.
-            print("%s: parser unavailable: %s" % (path, exc))
+            # the same way, and no finding here would be about a guide. It
+            # names the ParserUnavailable itself, not version_basis's wrapper.
+            print("%s: parser unavailable: %s" % (path, cause))
             print("GATE %s: FAIL -- the pinned parser is unavailable; this "
                   "is a host problem, not a code finding" % GATE)
             return 1
@@ -4657,9 +4670,8 @@ def run_self_test():
               % ("PASS" if ok else "FAIL", name, exp, got))
         if not ok:
             failures += 1
-    if not _parser_unavailable_case():
-        failures += 1
-    total = len(SELF_TEST_CASES) + 1
+    failures += _parser_unavailable_cases()
+    total = len(SELF_TEST_CASES) + len(_PARSER_UNAVAILABLE_CASES)
     if failures:
         print("GATE %s-selftest: FAIL -- %d of %d case(s)"
               % (GATE, failures, total))
@@ -4668,17 +4680,52 @@ def run_self_test():
     return 0
 
 
-def _parser_unavailable_case():
-    """Row 3.114: simulate an absent or mismatched parser on one enrolled
-    guide. The scan must name the cause in one line and fail, never report
-    C3-INLINE-MARKDOWN ("invalid front matter") for the guide."""
+# Row 3.114 fixtures: fixed text, never a live guide, so a guide's top block
+# moving cannot change these cases. Each is an enrolled-layout guide with an
+# EOF AI section whose JSON is {}. In "intro" that section has no "<", so
+# version_basis first needs the parser in intro_end(), for the intro
+# paragraph before the top block. In "html" the section's prose holds an HTML
+# tag, so it first needs the parser in has_raw_html(), from ai_json().
+_PARSER_UNAVAILABLE_AI = (
+    "<!-- version-basis:start -->\n"
+    "## About the AI assistant section below\n\n"
+    "%s\n"
+    "````json\n{}\n````\n"
+    "<!-- version-basis:end -->\n")
+_PARSER_UNAVAILABLE_FIXTURES = {
+    "intro": ("intro_end",
+              "# Fixture guide\n\nOne intro paragraph.\n\n## Verify\n\n"
+              "`mysql --version`\n\n"
+              + _PARSER_UNAVAILABLE_AI % "Plain prose."),
+    "html": ("has_raw_html",
+             "# Fixture guide\n\n## Verify\n\n`mysql --version`\n\n"
+             + _PARSER_UNAVAILABLE_AI % "Prose with <b>a tag</b>."),
+}
+# (case name, fixture, whether version_basis's wrapper keeps its `from exc`)
+_PARSER_UNAVAILABLE_CASES = [
+    ("parser-unavailable-" + fixture + suffix, fixture, chained)
+    for fixture in _PARSER_UNAVAILABLE_FIXTURES
+    for suffix, chained in (("", True), ("-from-none", False))]
+
+
+def _parser_unavailable_cases():
+    """Row 3.114: simulate an absent or mismatched parser on a fixed fixture
+    with an enrolled guide's file name. The scan must print exactly one cause
+    line, holding the ParserUnavailable's own message, and fail, never
+    reporting C3-INLINE-MARKDOWN ("invalid front matter") for the guide.
+
+    The -from-none cases re-raise version_basis's wrapping ValueError as
+    `raise ValueError(message) from None` inside the handler for the
+    ParserUnavailable, the exact exception a `from None` at that site would
+    give, so that the cause is reachable only through __context__. Returns
+    the number of failed cases."""
     import contextlib
     import io
+    import tempfile
     import check_verify_marking
-    tools = Path(__file__).resolve().parent
-    names = sorted((tools / "version_basis_guides.txt").read_text(
-        encoding="utf-8").splitlines())
-    guide = str(tools.parent / names[0])
+    import version_basis
+    names = sorted(Path(__file__).with_name("version_basis_guides.txt")
+                   .read_text(encoding="utf-8").splitlines())
     cause = ("markdown-it-py installed 0.0.0, pinned 9.9.9; "
              "install tools/requirements-gates.txt")
 
@@ -4687,26 +4734,59 @@ def _parser_unavailable_case():
             raise ParserUnavailable(cause)
         return None
 
-    saved, out = check_verify_marking.gate_parser, io.StringIO()
-    check_verify_marking.gate_parser = unavailable
-    try:
-        with contextlib.redirect_stdout(out):
-            rc = run_scan(parse_args([guide]))
-    except Exception as exc:  # noqa: BLE001  a crash fails the case
-        rc = "%s: %s" % (type(exc).__name__, exc)
-    finally:
-        check_verify_marking.gate_parser = saved
-    lines = out.getvalue().splitlines()
-    ok = (rc == 1 and len(lines) == 2
-          and lines[0].startswith(guide + ": parser unavailable: ")
-          and lines[0].endswith(cause)
-          and lines[1].startswith("GATE %s: FAIL -- the pinned parser is "
-                                  "unavailable" % GATE)
-          and "C3-INLINE-MARKDOWN" not in out.getvalue())
-    print("%s %-48s expect=%s got=%s"
-          % ("PASS" if ok else "FAIL", "parser-unavailable",
-             "one cause line", lines[:1] or [rc]))
-    return ok
+    def site_spy(original, seen, chained):
+        # Record that the fixture reached its site; for a -from-none case,
+        # replace the site's `from exc` chaining with `from None`.
+        def wrapped(*args, **kwargs):
+            try:
+                return original(*args, **kwargs)
+            except ValueError as exc:
+                if not isinstance(exc.__cause__, ParserUnavailable):
+                    raise
+                seen.append(str(exc))
+                if chained:
+                    raise
+                inner, message = exc.__cause__, str(exc)
+            try:
+                raise inner
+            except ParserUnavailable:
+                raise ValueError(message) from None
+        return wrapped
+
+    failures = 0
+    for name, fixture, chained in _PARSER_UNAVAILABLE_CASES:
+        site, text = _PARSER_UNAVAILABLE_FIXTURES[fixture]
+        saved_parser = check_verify_marking.gate_parser
+        saved_site = getattr(version_basis, site)
+        seen, out = [], io.StringIO()
+        with tempfile.TemporaryDirectory() as tmp:
+            guide = os.path.join(tmp, names[0])
+            with open(guide, "w", encoding="utf-8", newline="\n") as fh:
+                fh.write(text)
+            check_verify_marking.gate_parser = unavailable
+            setattr(version_basis, site, site_spy(saved_site, seen, chained))
+            try:
+                with contextlib.redirect_stdout(out):
+                    rc = run_scan(parse_args([guide]))
+            except Exception as exc:  # noqa: BLE001  a crash fails the case
+                rc = "%s: %s" % (type(exc).__name__, exc)
+            finally:
+                check_verify_marking.gate_parser = saved_parser
+                setattr(version_basis, site, saved_site)
+        lines = out.getvalue().splitlines()
+        ok = (rc == 1 and len(lines) == 2
+              and lines[0] == guide + ": parser unavailable: " + cause
+              and lines[1].startswith("GATE %s: FAIL -- the pinned parser is "
+                                      "unavailable" % GATE)
+              and "C3-INLINE-MARKDOWN" not in out.getvalue()
+              # The case proves nothing unless its own site raised.
+              and bool(seen))
+        got = [line.replace(guide, "<fixture>") for line in lines[:1]] or [rc]
+        print("%s %-48s expect=%s got=%s"
+              % ("PASS" if ok else "FAIL", name, "one cause line", got))
+        if not ok:
+            failures += 1
+    return failures
 
 
 def parse_args(argv):
