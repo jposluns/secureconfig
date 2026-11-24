@@ -17,6 +17,40 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-23 on squash subjects after the newest merge commit, closing TODO row 3.128 (#1387).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 22:47Z. The
+  record of the ruling given to this pull request gives the question, the label and description of each of the
+  three options offered, and the choice. The question, the labels and the descriptions are quoted exactly.
+  The quotation renders the record's PR-number markers as code spans, because the repository's placeholder gate refuses them otherwise: each code span `(#N)` stands for the same marker in single quotes, and in 'Merge pull request `#N`' the record's single quotes are kept and only the marker is the code span `#N`; no other character differs from the record.
+  The question read, quoted one sentence at a time:
+  "Row 3.128 (secureconfig changelog-coverage gate, tools/check_changelog_prs.py)."
+  "After the squash-only switch, every PR lands as one squash commit whose subject should end `(#N)`."
+  "The gate quietly skips a squash commit whose subject lacks `(#N)`, so that PR's CHANGELOG entry goes unchecked."
+  "Two complications: the gate can't read repository settings, so it doesn't know when the switch happened; and CI checks out a temporary merge commit with no `(#N)`, which any rule must skip."
+  "How should the gate handle this?"
+  One option was "Record a switch commit", whose description read:
+  "Prediction. A small file in the repository names the first squash-landed commit. From that commit on, every first-parent commit on main must end in `(#N)`, or the gate fails. CI's temporary merge commit is skipped. A direct commit to main after the switch would fail it."
+  Another was "Infer from history", whose description read:
+  "My recommendation: no file to keep in sync. Every first-parent commit after the newest 'Merge pull request `#N`' commit on main is treated as squash-landed and must end in `(#N)`. CI's temporary merge commit is skipped. Merge commits can't land after the switch, so the boundary is exact."
+  The remaining option was "Leave it, document only", whose description read:
+  "Go-wild option. Keep the gate as it is, and rely on GitHub's default squash subject, which already ends `(#N)`. CONTRIBUTING says never to edit it away. Row 3.128 closes as accepted."
+  The maintainer chose "Infer from history". No reasoning was recorded beyond the choice.
+  - Effect. By the chosen option's description, every first-parent commit after the newest merge commit on `main`
+    is treated as squash-landed and must end in `(#N)`, and CI's temporary merge commit is skipped. What follows in
+    this bullet is this pull request's reading, not the description's. In that reading, #1387 carries the ruling
+    out in `tools/check_changelog_prs.py`, which fails naming each such commit whose subject does not end in
+    `(#N)`. The newest merge commit is the newest first-parent commit whose subject begins
+    `Merge pull request #N from `, the pattern the gate already reads, and if there is none every first-parent
+    commit is treated as squash-landed. The gate takes `main` to be `refs/remotes/origin/main`, or
+    `refs/heads/main` when that ref does not exist, and fails if neither exists. A commit is on `main` when
+    `git rev-list --first-parent` from that ref lists it, and only those commits that HEAD's history also holds
+    are checked, so CI's temporary merge commit at HEAD and a branch's own commits are skipped and a local run on
+    a pull request's branch does not fail on them. A direct commit to `main` after the switch whose subject does
+    not end in `(#N)` fails the gate. Commits at or before the newest merge commit are read as before. Seven new
+    cases in `tools/test_changelog_prs.py` check this, and row 3.128 is in `DONE.md`.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
+    own `CHANGELOG.md` entry, and records the new ruling here.
 - **Maintainer ruling of 2026-11-21 on moving to squash-only landing (#1384).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 19:50Z. The
   record of the ruling given to this pull request, which the orchestrator checked against the session transcript,

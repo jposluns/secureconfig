@@ -35,10 +35,14 @@ def build(repo, subjects, changelog):
     (repo / "tools" / GATE.name).write_text(GATE.read_text(encoding="utf-8"), encoding="utf-8")
     (repo / "CHANGELOG.md").write_text(changelog, encoding="utf-8")
     for subject in subjects:
-        (repo / "f.txt").write_text(subject, encoding="utf-8")
-        git(repo, "add", "-A")
-        git(repo, "commit", "-q", "-m", subject)
+        commit(repo, subject)
     return repo
+
+
+def commit(repo, subject, name="f.txt"):
+    (repo / name).write_text(subject, encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", subject)
 
 
 def run_gate(repo):
@@ -247,6 +251,106 @@ case(
 )
 
 
+# Row 3.128, by the maintainer's ruling of 2026-11-23, "Infer from history": every
+# first-parent commit of main after the newest `Merge pull request #N from ` commit is
+# squash-landed and must end in `(#N)`. Each case below builds main from its subjects and
+# then runs its shape, which may move HEAD off main. Every one of them fails on the gate
+# before that change: the first because that gate passes over the commit, and the others
+# because that gate never checks first-parent subjects, so the text they expect is absent.
+SHAPED = []
+
+
+def shaped(name, subjects, shape, changelog, expect_fail, expect_text):
+    SHAPED.append((name, subjects, shape, changelog, expect_fail, expect_text))
+
+
+# Branch commits write their own file, so merging main into the branch cannot conflict.
+BRANCH_FILE = "branch.txt"
+
+
+def on_main(repo):
+    """HEAD is main's tip, as on a scheduled run."""
+
+
+def temporary_merge(repo):
+    """CI's pull_request checkout: a two-parent merge of the branch into main, detached."""
+    git(repo, "checkout", "-q", "-b", "o/d")
+    commit(repo, "work in progress, no number yet", BRANCH_FILE)
+    git(repo, "checkout", "-q", "--detach", "main")
+    git(repo, "merge", "-q", "--no-ff", "-m", "Merge 0123abc into 4567def", "o/d")
+
+
+def branch_commit(repo):
+    """A local run on a pull request's branch, one commit ahead of main."""
+    git(repo, "checkout", "-q", "-b", "o/d")
+    commit(repo, "work in progress, no number yet", BRANCH_FILE)
+
+
+def main_merged_into_branch(subject):
+    """A branch that merged main in after main gained `subject`."""
+    def shape(repo):
+        git(repo, "checkout", "-q", "-b", "o/d")
+        commit(repo, "work in progress, no number yet", BRANCH_FILE)
+        git(repo, "checkout", "-q", "main")
+        commit(repo, subject)
+        git(repo, "checkout", "-q", "o/d")
+        git(repo, "merge", "-q", "--no-ff", "-m", "Merge branch 'main' into o/d", "main")
+        commit(repo, "more work, still no number", BRANCH_FILE)
+    return shape
+
+
+MERGED = "# Changelog\n\n- A (#10). B (#11). C (#12).\n"
+
+shaped(
+    "a squash commit without (#N) after the newest merge commit fails, naming it",
+    ["A (#10)", "Merge pull request #11 from o/b", "C landed without its number"],
+    on_main, MERGED, True,
+    "its subject does not end in (#N): C landed without its number",
+)
+shaped(
+    "a squash commit with (#N) after the newest merge commit passes",
+    ["A (#10)", "Merge pull request #11 from o/b", "C (#12)"],
+    on_main, MERGED, False,
+    "1 first-parent commit of refs/heads/main after 'Merge pull request #11 from o/b' ends in (#N)",
+)
+# A naive walk from HEAD would read CI's merge subject, which has no `(#N)`, and fail.
+shaped(
+    "a temporary merge commit at HEAD is skipped",
+    ["A (#10)", "Merge pull request #11 from o/b", "C (#12)"],
+    temporary_merge, MERGED, False,
+    "is a temporary merge commit not on refs/heads/main, skipped",
+)
+# A naive walk from HEAD would read the branch's own commit, which has no `(#N)`, and fail.
+shaped(
+    "a branch commit on top of main is skipped",
+    ["A (#10)", "Merge pull request #11 from o/b", "C (#12)"],
+    branch_commit, MERGED, False,
+    "is not on refs/heads/main, so commits not on it are skipped",
+)
+# The walk is main's, not HEAD's: a branch that merged main in still has main's later
+# commits checked, though HEAD's own first-parent walk never reaches them.
+shaped(
+    "main's commits are still checked on a branch that merged main in",
+    ["A (#10)", "Merge pull request #11 from o/b"],
+    main_merged_into_branch("C (#12)"), MERGED, False,
+    "1 first-parent commit of refs/heads/main after 'Merge pull request #11 from o/b' ends in (#N)",
+)
+shaped(
+    "a bad squash subject on main fails on a branch that merged main in",
+    ["A (#10)", "Merge pull request #11 from o/b"],
+    main_merged_into_branch("C landed without its number"), MERGED, True,
+    "its subject does not end in (#N): C landed without its number",
+)
+# Behaviour before the boundary is unchanged: a commit at or before the newest merge
+# commit need not end in (#N).
+shaped(
+    "a commit before the newest merge commit need not end in (#N)",
+    ["an early commit with no number", "Merge pull request #11 from o/b", "C (#12)"],
+    on_main, MERGED, False,
+    "1 first-parent commit of refs/heads/main after 'Merge pull request #11 from o/b' ends in (#N)",
+)
+
+
 @isolated_git_environment()
 def main():
     failures = 0
@@ -265,6 +369,22 @@ def main():
             if expect_text and expect_text not in out:
                 print(f"  FAIL  {name}: expected text {expect_text!r} not in output")
                 print(f"        output: {out.strip()[:200]}")
+                failures += 1
+
+        for i, (name, subjects, shape, changelog, expect_fail, expect_text) in enumerate(SHAPED):
+            repo = build(Path(tmp) / f"shaped{i}", subjects, changelog)
+            shape(repo)
+            code, out = run_gate(repo)
+            run += 1
+            failed = code != 0
+            if failed != expect_fail:
+                print(f"  FAIL  {name}: expected {'failure' if expect_fail else 'pass'}, got exit {code}")
+                print(f"        output: {out.strip()[:300]}")
+                failures += 1
+                continue
+            if expect_text not in out:
+                print(f"  FAIL  {name}: expected text {expect_text!r} not in output")
+                print(f"        output: {out.strip()[:300]}")
                 failures += 1
 
         # A shallow clone must fail rather than skip.
