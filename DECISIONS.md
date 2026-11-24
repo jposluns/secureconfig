@@ -17,6 +17,34 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-24 ratifying the proxy decision on one copy block per install route (#1389).**
+  The maintainer gave this ruling through AskUserQuestion in an attended session on 2026-11-24, answered between
+  16:28Z and 16:33Z. The record of the ruling given to this pull request gives the question, the label and
+  description of each of the three options offered, and the choice. The question, the labels and the descriptions
+  are quoted exactly.
+  The question read, quoted one sentence at a time:
+  "Mode is now attended, so here are the decisions made while you were away, one at a time."
+  "1 of 2: the fleet vote on the install page."
+  "#1388 adds the shared plugin catalogue (jposluns/plugins) as a second install route next to this repository's own."
+  "lab_infra, guardrails and grc voted unanimously for option A: four copy boxes (each route gets one box for in-session slash commands and one for shell commands)."
+  "Conditions: the build refuses any count but 4; each box holds exactly one route (one marketplace add plus its matching install)."
+  "#1388 does this, both QA families found it ready, and its gates check is running now."
+  "Do you ratify A?"
+  One option was "Ratify A (Recommended)", whose description read:
+  "Keep four boxes, one route each, as built. #1388 merges when its gates check passes at its head."
+  Another was "Two boxes instead", whose description read:
+  "One box per route holding both forms. That means reworking #1388 and another QA round before it merges."
+  The remaining option was "Hold #1388", whose description read:
+  "Don't merge yet; I'll say what to change."
+  The maintainer chose "Ratify A (Recommended)". No reasoning was recorded beyond the choice.
+  - Effect. This ruling confirms "Proxy decision of 2026-11-24 on one copy block per install route, for the
+    maintainer's later review (#1388)", below, which stays listed under "Proxy decisions awaiting maintainer review"
+    as the record of the vote. Option A, which #1388 applies, stands: README.md's install section holds four fenced
+    blocks, one route in one form each, and the checks #1388 added stay.
+  - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
+    that follows it and changes the install section and the checks #1388 added. That pull request keeps every
+    existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its own `CHANGELOG.md` entry, and records the new
+    ruling here.
 - **Maintainer ruling of 2026-11-23 on squash subjects after the newest merge commit, closing TODO row 3.128 (#1387).**
   The maintainer gave this ruling through AskUserQuestion in an attended session, answered at about 22:47Z. The
   record of the ruling given to this pull request gives the question, the label and description of each of the
@@ -1918,11 +1946,12 @@ maintainer would decide: one each from lab_infra and guardrails, given the conte
 orchestrator's own. Each such decision is recorded with its question, the three predictions and its outcome, for the
 maintainer's later review. In the predictions quoted below, words in square brackets replace a pronoun in the quoted
 reasoning. The two proxy decisions of 2026-11-11 near the end of this section were taken under a later rule, the
-unattended decision rule of 2026-10-31, which the first of them states. The proxy decision of 2026-11-20 after them,
-the last entry, was taken unattended by a unanimous vote of lab_infra, guardrails and grc. An entry that a ruling
-above confirms stays listed here for the record, under its heading as entered, and that ruling's entry records the
-outcome. Such an entry, like the proxy decision of 2026-11-20, which the maintainer confirmed the same day, no longer
-awaits the review that the heading of this section names.
+unattended decision rule of 2026-10-31, which the first of them states. The proxy decision of 2026-11-20 after them
+was taken unattended by a unanimous vote of lab_infra, guardrails and grc, and the proxy decisions of 2026-11-21 and
+2026-11-24 after it by votes of the same three. An entry that a ruling above confirms stays listed here for the
+record, under its heading as entered, and that ruling's entry records the outcome. Such an entry, like each of the
+proxy decisions of 2026-11-20, 2026-11-21 and 2026-11-24, which the maintainer confirmed on the day it was taken, no
+longer awaits the review that the heading of this section names.
 
 - **Proxy decision of 2026-10-27 on TODO 1.383 closure, for the maintainer's later review (#1002).** Decided at
   2026-10-27T23:11:19Z under that directive. The outcome, as the record reads:
@@ -2146,13 +2175,15 @@ awaits the review that the heading of this section names.
   decision. This entry stays here as the record of the vote, and that ruling's entry records the outcome and its
   revert path.
 - **Proxy decision of 2026-11-24 on one copy block per install route, for the maintainer's later review (#1388).**
-  Decided on 2026-11-24 by a unanimous vote of lab_infra, guardrails and grc, which the record of the vote calls a
-  D-1096 vote. The question was how README.md's install section and the For AI assistants page carry the
-  shared catalogue's route beside this repository's, after the first draft of this pull request added the shared
-  catalogue's commands to the two existing blocks, so that one Copy copied both routes. The record gives the votes and
-  their conditions but not the question's text or its other options; it letters the outcome A, "give each install
-  route its own copy block", and this entry letters it A, as the record does. The votes were all for option A, each
-  with a condition, quoted here as the record has them. The grc condition was "the build check pins exactly 4 blocks
+  Decided by a unanimous vote of lab_infra, guardrails and grc, which the record of the vote calls a D-1096 vote. The
+  full record of the decision, given to this pull request with the ruling, times the votes on 2026-11-24 UTC: grc
+  voted at 11:04:45Z, guardrails at 11:04:46Z and lab_infra at 11:05:15Z. The record
+  states no question: before its conditions it reads, in full, "D-1096 vote (unanimous A): give each install route
+  its own copy block." So it gives the outcome and the conditions but not the question's text or the other options;
+  it letters the outcome A, and this entry letters it A, as the record does. The vote followed the first draft of
+  this pull request, which had added the shared catalogue's commands to the two existing blocks, so that one Copy
+  copied both routes; that is this pull request's history, not the record's words. The votes were all for option A,
+  each with a condition, quoted here as the record has them. The grc condition was "the build check pins exactly 4 blocks
   so a fifth or merged block fails". The guardrails condition was "build-site tests cover 4 blocks and refuse any
   other count". The lab_infra condition was "the build test asserts each install block holds exactly one route (one
   marketplace add plus its install)". Its effect, applied in this change: the install section holds four fenced
@@ -2160,10 +2191,10 @@ awaits the review that the heading of this section names.
   route. A fix in this pull request also has it refuse an install line that does not install the plugin from the
   marketplace its own add line registers, and an extra argument on either line. `tools/check_install_blocks.py`
   requires four blocks itself, and `tools/test_build_site.py` and `tools/test_install_blocks.py` add cases for three
-  blocks, five blocks and merged blocks, which fail. This decision is recorded for the maintainer's review and is not
-  a maintainer ruling until a ruling above confirms it. It covers the install section and its checks only, not the
-  merge of this pull request, which a vote never covers. The revert path is the maintainer's review: a different
-  ruling changes the install section and the checks this change adds.
+  blocks, five blocks and merged blocks, which fail. The vote covered the install section and its checks only, not
+  the merge of this pull request, which a vote never covers. The maintainer's ruling of 2026-11-24 ratifying the proxy
+  decision on one copy block per install route (#1389), above, confirms this decision. This entry stays here as the
+  record of the vote, and that ruling's entry records the outcome and its revert path.
 
 ## Profile: predicting these rulings
 
