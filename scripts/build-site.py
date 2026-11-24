@@ -41,7 +41,9 @@ the shared catalogue's marketplace in the same 2 forms. A route is 2 lines, `mar
 and then `install`, each with exactly 1 argument. The install line's argument is the plugin's
 name, `@`, and the name of the marketplace that the block's add line registers
 (INSTALL_MARKETPLACES), and the 2 blocks of a route add the same marketplace and install the same
-plugin, while the 2 routes add different marketplaces. Marketplaces are compared without case,
+plugin, while the 2 routes add different marketplaces. The first 2 blocks must add
+jposluns/secureconfig and the last 2 jposluns/plugins (INSTALL_ROUTES), so 2 routes swapped are
+refused. Marketplaces are compared without case,
 and an owner/repo and its GitHub URL are the same marketplace. Any other count, a block holding
 both routes and anything else is refused (exit 2), and so is a README with no such section or
 more than 1. The reader does not know HTML comments, indented code blocks, lists or block
@@ -118,8 +120,11 @@ QUALITY_TSV = Path("tools") / "guide_quality.tsv"
 INSTALL = "## Install in Claude Code"
 INSTALL_FENCES = (("project_session", "text", "/plugin "), ("project_shell", "bash", "claude plugin "),
                   ("shared_session", "text", "/plugin "), ("shared_shell", "bash", "claude plugin "))
-# The 2 routes, each as the positions in INSTALL_FENCES of its in-session and its shell block.
-INSTALL_ROUTES = ((0, 1), (2, 3))
+# The 2 routes, each as the positions in INSTALL_FENCES of its in-session and its shell block,
+# and the marketplace, as install_marketplace() gives it, that the route in those positions must
+# add, so that the page's fixed labels (INSTALL_LABELS) sit over that route's own commands and 2
+# routes swapped are refused.
+INSTALL_ROUTES = ((0, 1, "jposluns/secureconfig"), (2, 3, "jposluns/plugins"))
 # The plugin every route installs, and the name of the marketplace each `marketplace add` source
 # registers, keyed by its owner/repo in lower case (install_marketplace()): the install line's
 # argument must be that plugin, `@`, and that name. This repository's name is the `name` field of
@@ -369,8 +374,9 @@ def install_blocks(text):
     INSTALL_PLUGIN, `@`, and the name of the marketplace the block's add line registers
     (INSTALL_MARKETPLACES), and a source the build knows no name for is refused. The 2 blocks of
     each pair in INSTALL_ROUTES must add the same marketplace and install the same plugin, and the
-    2 routes must add different marketplaces, compared as install_marketplace() gives them. It
-    does not
+    2 routes must add different marketplaces, compared as install_marketplace() gives them. Each
+    route must add the marketplace INSTALL_ROUTES gives for its positions, so 2 routes swapped
+    are refused. It does not
     know HTML comments, indented code blocks, setext headings, lists or block quotes, so it can read
     a block that CommonMark hides or miss one that CommonMark shows: tools/check_install_blocks.py
     reads the same section with the pinned parser in CI and fails unless both readings agree."""
@@ -449,7 +455,7 @@ def install_blocks(text):
                               f"{name!r}, so its install line must be "
                               f"{get + INSTALL_PLUGIN + '@' + name!r}")
         routes.append((line, market, plugin))
-    for first, second in INSTALL_ROUTES:
+    for first, second, _ in INSTALL_ROUTES:
         if routes[first][1:] != routes[second][1:]:
             raise SourceError(f"{where}: fenced blocks {first + 1} (line {routes[first][0]}) and "
                               f"{second + 1} (line {routes[second][0]}) are 1 route in 2 forms, but "
@@ -459,6 +465,15 @@ def install_blocks(text):
     if len(set(sources)) != len(sources):
         raise SourceError(f"{where}: the {len(sources)} routes add the marketplaces {sources}; each "
                           f"route adds its own marketplace")
+    # Each route is tied to its positions, so 2 routes swapped, each still consistent with itself,
+    # are refused: the page's labels would otherwise sit over the other route's commands.
+    for first, second, market in INSTALL_ROUTES:
+        if routes[first][1] != market:
+            raise SourceError(f"{where}: fenced blocks {first + 1} (line {routes[first][0]}) and "
+                              f"{second + 1} (line {routes[second][0]}) add {routes[first][1]!r}, "
+                              f"but the route in those positions must add {market!r} "
+                              f"(INSTALL_ROUTES), so that each label on the page sits over its "
+                              f"own route")
     return blocks
 
 

@@ -40,7 +40,9 @@ routes adding the same marketplace, an empty in-session block, an indented fence
 with no install section or a second one. It refuses an install line that installs from another
 marketplace than the 1 its block's add line registers (either route), another plugin, or no
 marketplace; a marketplace whose name the build does not know; both routes adding 1 marketplace
-named in another case or by its GitHub URL; and an extra argument on an add or an install line.
+named in another case or by its GitHub URL; an extra argument on an add or an install line; and
+the 2 routes swapped, since the first 2 blocks must add jposluns/secureconfig and the last 2
+jposluns/plugins.
 The marketplace name and plugin the build expects for this repository's route are those of
 .claude-plugin/marketplace.json. None of these cases needs a Markdown parser. What the
 reader cannot see, such as a block hidden in an HTML comment, is for tools/check_install_blocks.py
@@ -924,6 +926,15 @@ def main():
             "an extra argument after the install line's argument":
                 (readme.replace(shared_session_block, shared_session_block.replace(
                     "@jposluns", "@jposluns extra", 1), 1), "has an extra argument"),
+            # QA round 2 of #1388: each route is tied to its positions, so the 2 routes swapped,
+            # each still consistent with itself, are refused rather than put under the other
+            # route's labels.
+            "the 2 routes swapped":
+                (readme.replace(session_block, "\0", 1).replace(shell_block, "\1", 1)
+                 .replace(shared_session_block, session_block, 1)
+                 .replace(shared_shell_block, shell_block, 1)
+                 .replace("\0", shared_session_block, 1).replace("\1", shared_shell_block, 1),
+                 "must add 'jposluns/secureconfig'"),
         }
         # (README text, key, the commands the page must then carry for that key)
         followed_cases = {
@@ -1312,7 +1323,8 @@ def main():
           f"install commands read from README.md only, with {install_cases} install-section cases "
           f"(3 and 5 blocks, the merged layout, a block holding both routes, mismatched fence "
           f"lengths, an indented fence, the blocks swapped, the shell block edited, an install "
-          f"line naming another route's marketplace, an extra argument, CRLF and CR line endings "
+          f"line naming another route's marketplace, an extra argument, the 2 routes swapped, CRLF "
+          f"and CR line endings "
           f"and more), and "
           f"--check on a changed, an extra "
           f".html and .HTM page, a missing page, a root-base published file and strays, a staged "

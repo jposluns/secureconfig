@@ -95,8 +95,15 @@ THE CASES (numbered as in the implementation plan, which is not in this reposito
       TMPDIR, each with its file and bytes: folders named for a live driver or keeper, another
       boot ID, another namespace, with another name, or for this live process with a leading zero
       in its PIDs or start times, and a symbolic link and a file named as the stale folder is; a
-      stale folder that a stand-in rm cannot remove stays, and nothing of rm's message is printed
-      (row 3.117).
+      stale folder that a stand-in rm cannot remove stays, and nothing of rm's message is printed;
+      a later parallel run, once the real rm can remove it, tries again and removes it, and keeps
+      every other entry (row 3.117).
+  T25 the sweep's functions and the keeper's 2 lines that call them, cut from the suite with /proc
+      changed to a stand-in folder: a recorded PID whose /proc entry exists but whose stat cannot
+      be read or gives no start time counts as running, so its folder is kept in either position
+      (the check fails closed); a PID with no entry, a zombie or another start time has ended;
+      when /proc/self is not the keeper's entry, par_tag_of returns 1 with par_tag empty, and the
+      keeper sweeps nothing and names its folder secureconfig-suite.XXXXXXXXXX (row 3.117).
 
 NOT HERE (run by hand, see main's --differential and --inject, because each runs the real suite
 and so doubles its cost, which no gate pays): T11, the output identity of the real suite in both
@@ -1650,12 +1657,168 @@ def t23_stale_folder():
               rc == 0 and out == plain and after == sorted(want) and intact
               and (not match or (tmp / plain_file).read_text(encoding="utf-8") == "a file\n"),
               f"exit {rc}, TMPDIR holds {after!r}, wanted {sorted(want)!r}, contents intact {intact}: {out!r}")
+        if match:
+            # The stand-in rm goes, so the real rm can now remove the folder it could not; a later
+            # parallel run must try again and remove it, and keep every other entry as before.
+            (t.d / "bin" / "rm").unlink()
+            del kept[f"secureconfig-suite.{boot}.{ns}.{dpid}.{dstart}.{kpid}.{kstart}.Stuck00001"]
+            rc, out = t.run((), "4")
+            after = sorted(x.name for x in tmp.iterdir())
+            intact = all((tmp / name / "kept").exists()
+                         and (tmp / name / "kept").read_text(encoding="utf-8") == body
+                         for name, body in kept.items())
+            want = sorted([*kept, plain_file])
+            check(failures, "T23 a later parallel run tries rm again and removes the folder rm could not",
+                  rc == 0 and out == plain and after == want and intact
+                  and (tmp / plain_file).read_text(encoding="utf-8") == "a file\n",
+                  f"exit {rc}, TMPDIR holds {after!r}, wanted {want!r}, contents intact {intact}: {out!r}")
     finally:
         t.close()
     return failures
 
 
 CASES += (t23_stale_folder,)
+
+# The sweep's functions, cut from the suite's text: from par_start_of to the end of par_sweep.
+SWEEP_FUNCTIONS = re.compile(r"(?ms)^par_start_of\(\) \{\n.*?^par_sweep\(\) \{\n.*?^\}\n")
+# The keeper's 2 lines that sweep and make its folder.
+KEEPER_LINES = re.compile(r'(?m)^ *! par_tag_of "\$\$" "\$BASHPID" \|\| par_sweep\n *par_keep_dir=\$\(mktemp [^\n]*\)\n')
+FAKE_BOOT = "0123abcd-0000-4000-8000-0123456789ab"
+FAKE_NS = "4026531836"
+
+
+def fake_stat(pid, state, start):
+    """A /proc/PID/stat line whose state is state and whose field 22, the start time, is start."""
+    return f"{pid} (bash) {state} " + " ".join(["1"] * 18) + f" {start} 0 0\n"
+
+
+def t25_sweep_proc():
+    """T25 (row 3.117): the committed sweep functions (par_start_of to par_sweep) and the keeper's
+    2 lines that call them, cut from the suite's text with every /proc in them changed to a
+    stand-in /proc folder, sourced in bash under set -uo pipefail and run against that folder.
+    The checks are these. A recorded PID whose /proc entry exists but whose stat is missing, is a
+    dangling link, gives a start time that is not a number or gives too few fields makes
+    par_start_of return 2 and par_ended return 1, so par_sweep keeps a folder that records it in
+    either position, the branch that fails closed. A PID with no entry, a zombie (Z or X) or
+    another start time has ended, so a folder whose 2 processes have both ended goes, and one
+    that records a running process stays. par_tag_of returns 0 with the full tag when /proc/self is
+    /proc/$2, and returns 1 with par_tag empty when /proc/self is another live process's entry,
+    with the boot ID and namespace still readable. The keeper's lines, with $$ and $BASHPID
+    changed to 2 stand-in PIDs, then sweep a stale folder and name their own with the tag when
+    /proc/self is the keeper's entry, and otherwise keep it and name their own
+    secureconfig-suite.XXXXXXXXXX. This proves what the committed code does with a /proc that
+    shows these states; it does not prove that a real /proc shows them, which T23 checks for the
+    states a real run gives."""
+    failures = []
+    text = SUITE.read_text(encoding="utf-8")
+    funcs = SWEEP_FUNCTIONS.search(text)
+    keeper = KEEPER_LINES.search(text)
+    if not funcs or not keeper:
+        return [f"T25 the suite's sweep functions or keeper lines were not found in {SUITE}"]
+    d = Path(tempfile.mkdtemp())
+    try:
+        proc = d / "proc"
+        (proc / "sys" / "kernel" / "random").mkdir(parents=True)
+        (proc / "sys" / "kernel" / "random" / "boot_id").write_text(f"{FAKE_BOOT}\n", encoding="utf-8")
+        # 100 and 200: the stand-in driver and keeper, both running, each with a PID namespace.
+        # 300: no entry, ended. 400 to 403: an entry whose stat cannot tell. 404 and 407: a zombie
+        # and a dead process. 405: running with another start time. 406: running.
+        for pid, state, start in ((100, "S", 5000), (200, "S", 6000), (402, "S", "abc"),
+                                  (404, "Z", 7000), (405, "S", 7100), (406, "S", 7200),
+                                  (407, "X", 7300)):
+            (proc / str(pid)).mkdir()
+            (proc / str(pid) / "stat").write_text(fake_stat(pid, state, start), encoding="utf-8")
+        for pid in (100, 200):
+            (proc / str(pid) / "ns").mkdir()
+            (proc / str(pid) / "ns" / "pid").symlink_to(f"pid:[{FAKE_NS}]")
+        (proc / "400").mkdir()
+        (proc / "401").mkdir()
+        (proc / "401" / "stat").symlink_to(d / "nowhere")
+        (proc / "403").mkdir()
+        (proc / "403" / "stat").write_text("403 (bash) S 1 1\n", encoding="utf-8")
+        (proc / "self").symlink_to("200")
+        # Each case's script sources sweep.sh, the functions with /proc changed; the keeper cases
+        # then source keeper.sh, the keeper's lines with $$ and $BASHPID changed.
+        uses = len(re.findall(r'/proc/(?:\$1/stat|\$1"|sys/kernel/random/boot_id|self/ns/pid|self -ef|\$2")',
+                              funcs.group(0)))
+        check(failures, "T25 the cut functions read the 6 /proc paths this case changes", uses == 6,
+              f"{uses} found in {funcs.group(0)!r}")
+        (d / "sweep.sh").write_text(funcs.group(0).replace("/proc", str(proc)), encoding="utf-8")
+        (d / "keeper.sh").write_text(keeper.group(0).replace('"$$" "$BASHPID"', '"$STANDIN_DRIVER" "$STANDIN_KEEPER"'),
+                                     encoding="utf-8")
+
+        def shell(body, tmp):
+            env = dict(os.environ, TMPDIR=str(tmp), STANDIN_DRIVER="100", STANDIN_KEEPER="200")
+            p = subprocess.run(["bash", "-c", f'set -uo pipefail\n. "$0"\n{body}', str(d / "sweep.sh")],
+                               env=env, capture_output=True, text=True, timeout=30 * SCALE)
+            return p.returncode, p.stdout, p.stderr
+
+        def folder(tmp, tag, a, sa, b, sb):
+            name = f"secureconfig-suite.{FAKE_BOOT}.{FAKE_NS}.{a}.{sa}.{b}.{sb}.{tag}"
+            (tmp / name).mkdir()
+            (tmp / name / "kept").write_text(f"{name}\n", encoding="utf-8")
+            return name
+
+        pids = ("400 1", "401 1", "402 1", "403 1", "300 10", "404 7000", "405 7101", "406 7200", "407 1")
+        body = "".join(f'par_start_of {p.split()[0]}; a=$?; par_ended {p}; printf "%s %s\\n" "$a" "$?"\n'
+                       for p in pids)
+        rc, out, err = shell(body, d)
+        want = "2 1\n2 1\n2 1\n2 1\n1 0\n1 0\n0 0\n0 1\n1 0\n"
+        check(failures, "T25 par_start_of and par_ended for each stand-in /proc entry",
+              rc == 0 and out == want and not err, f"exit {rc}, statuses {out!r}, wanted {want!r}: {err!r}")
+
+        tmp = d / "tmp-sweep"
+        tmp.mkdir()
+        stay = []
+        for tag, a, sa, b, sb, removed in (("Gone000001", 300, 10, 300, 11, True),
+                                          ("Zombie0001", 300, 10, 404, 7000, True),
+                                          ("Dead000001", 407, 1, 300, 10, True),
+                                          ("Reused0001", 300, 10, 405, 7101, True),
+                                          ("Running001", 300, 10, 406, 7200, False),
+                                          ("NoStat0001", 300, 10, 400, 1, False),
+                                          ("NoStat0002", 400, 1, 300, 10, False),
+                                          ("BadLink001", 300, 10, 401, 1, False),
+                                          ("NotNum0001", 300, 10, 402, 1, False),
+                                          ("Short00001", 300, 10, 403, 1, False)):
+            name = folder(tmp, tag, a, sa, b, sb)
+            if not removed:
+                stay.append(name)
+        rc, out, err = shell(f'par_boot={FAKE_BOOT}\npar_ns={FAKE_NS}\npar_sweep\n', tmp)
+        after = sorted(x.name for x in tmp.iterdir())
+        intact = all((tmp / name / "kept").exists()
+                     and (tmp / name / "kept").read_text(encoding="utf-8") == f"{name}\n" for name in stay)
+        check(failures, "T25 par_sweep removes the folders of ended processes and keeps those /proc cannot tell",
+              rc == 0 and not out and not err and after == sorted(stay) and intact,
+              f"exit {rc}, TMPDIR holds {after!r}, wanted {sorted(stay)!r}, intact {intact}: {out!r} {err!r}")
+
+        tag_body = 'par_tag_of 100 200; printf "%s %s\\n" "$?" "$par_tag"\n'
+        keeper_body = f'. "{d / "keeper.sh"}"\nprintf "%s\\n" "$par_keep_dir"\n'
+        for self_pid, ok in (("200", True), ("100", False)):
+            (proc / "self").unlink()
+            (proc / "self").symlink_to(self_pid)
+            rc, out, err = shell(tag_body, d)
+            want = f"0 {FAKE_BOOT}.{FAKE_NS}.100.5000.200.6000.\n" if ok else "1 \n"
+            check(failures, f"T25 par_tag_of with /proc/self the entry of {self_pid}",
+                  rc == 0 and out == want and not err, f"exit {rc}, {out!r}, wanted {want!r}: {err!r}")
+            tmp = d / f"tmp-keeper-{self_pid}"
+            tmp.mkdir()
+            stale = folder(tmp, "Stale00001", 300, 10, 300, 11)
+            rc, out, err = shell(keeper_body, tmp)
+            made = Path(out.rstrip("\n"))
+            shape = (rf"secureconfig-suite\.{re.escape(FAKE_BOOT)}\.{FAKE_NS}\.100\.5000\.200\.6000\.[A-Za-z0-9]{{10}}"
+                     if ok else r"secureconfig-suite\.[A-Za-z0-9]{10}")
+            after = sorted(x.name for x in tmp.iterdir())
+            want = sorted([made.name] + ([] if ok else [stale]))
+            check(failures, f"T25 the keeper's lines with /proc/self the entry of {self_pid}",
+                  rc == 0 and not err and made.parent == tmp and re.fullmatch(shape, made.name)
+                  and after == want and (ok or (tmp / stale / "kept").read_text(encoding="utf-8") == f"{stale}\n"),
+                  f"exit {rc}, made {out!r}, TMPDIR holds {after!r}, wanted {want!r}: {err!r}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    return failures
+
+
+CASES += (t25_sweep_proc,)
 
 
 def normalise(output):
@@ -1786,7 +1949,8 @@ def main():
               f"abort and signal death of a section, HUP, INT and TERM to the driver including between "
               f"a launch and the record of its PID, no temp folder after the driver's death by USR1, "
               f"an early TERM or, unless a SKIP line says otherwise, a failed fork, the folder a "
-              f"killed keeper left removed by the next run, merged streams, "
+              f"killed keeper left removed by the next run, or by a later one once rm can remove it, "
+              f"the sweep's liveness and /proc/self checks against a stand-in /proc, merged streams, "
               f"the file's shape, SECURECONFIG_SUITE_TIMES, a TMPDIR holding a newline or a "
               f"backslash escape, a failed or incomplete cut of the sections, a section's script "
               f"that cannot be built, a HUP, INT or TERM to the driver or its process group during "

@@ -324,6 +324,23 @@ def pull_request_clone(repo):
     return clone
 
 
+def local_main_ahead(subject):
+    """A clone of `repo` that has both refs/remotes/origin/main and refs/heads/main, where
+    local main is one unpushed commit, `subject`, ahead of origin/main and HEAD is local
+    main, as in a developer's clone after a local commit."""
+    def shape(repo):
+        clone = repo.parent / f"{repo.name}-clone"
+        subprocess.run(
+            ["git", "clone", "-q", f"file://{repo}", str(clone)],
+            check=True, capture_output=True, text=True, timeout=60,
+        )
+        git(clone, "config", "user.email", "t@example.com")
+        git(clone, "config", "user.name", "t")
+        commit(clone, subject)
+        return clone
+    return shape
+
+
 def no_main_ref(repo):
     """A repository whose branch is `trunk`, with no origin, so neither ref names main."""
     git(repo, "branch", "-q", "-m", "main", "trunk")
@@ -409,6 +426,27 @@ shaped(
     "a bad squash subject on refs/remotes/origin/main fails in CI's pull_request checkout",
     ["A (#10)", "Merge pull request #11 from o/b", "C landed without its number"],
     pull_request_clone, MERGED, True,
+    ("FAIL  refs/remotes/origin/main: ",
+     "its subject does not end in (#N): C landed without its number"),
+)
+# Both refs exist and differ, as in a developer's clone with an unpushed commit on local
+# main: the gate must take refs/remotes/origin/main, the first of MAIN_REFS, so the unpushed
+# commit is skipped. Every case above has only one of the two refs, so a gate that tried
+# refs/heads/main first passed them all; here it would check the unpushed commit and fail.
+shaped(
+    "with both refs, refs/remotes/origin/main is checked and an unpushed local commit skipped",
+    ["A (#10)", "Merge pull request #11 from o/b", "C (#12)"],
+    local_main_ahead("D committed locally without its number"), MERGED, False,
+    ("1 first-parent commit of refs/remotes/origin/main after 'Merge pull request #11 from o/b' "
+     "ends in (#N)",
+     "is not on refs/remotes/origin/main, so commits not on it are skipped"),
+)
+# Its partner: the check still runs on refs/remotes/origin/main when local main is ahead, and
+# the finding names that ref; a gate that tried refs/heads/main first names refs/heads/main.
+shaped(
+    "with both refs, a bad squash subject on refs/remotes/origin/main fails, naming that ref",
+    ["A (#10)", "Merge pull request #11 from o/b", "C landed without its number"],
+    local_main_ahead("D (#13)"), MERGED, True,
     ("FAIL  refs/remotes/origin/main: ",
      "its subject does not end in (#N): C landed without its number"),
 )
