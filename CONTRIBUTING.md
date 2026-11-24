@@ -428,7 +428,10 @@ both shapes. A squash commit whose subject does not end in `(#N)` records no pul
 the changelog gate does not count it and the release check refuses it as a target. By the
 ruling of 2026-11-23 in `DECISIONS.md`, the changelog gate also fails naming such a commit when
 it is a first-parent commit of `main` after the newest `Merge pull request #N from ` commit;
-CI's temporary merge commit and a branch's own commits are not on `main` and are skipped. Inside a
+CI's temporary merge commit and a branch's own commits are not on `main` and are skipped. The
+gate takes `main` to be `refs/remotes/origin/main` when that ref exists, so a local run checks
+`origin/main`, and a direct commit on local `main` that has not been pushed is not checked
+locally; the gate checks it once it reaches `origin/main`. Inside a
 release's range the release check skips such a commit silently, with no finding: the release
 body's list of the pull requests merged in that range leaves it out, no `CHANGELOG.md` entry is
 required for it, and it does not count as a later merge on its UTC date.

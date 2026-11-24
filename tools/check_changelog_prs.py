@@ -48,7 +48,10 @@ the ref's first-parent walk does not list, such as a pull request branch's own c
 merge of `main` into that branch, or CI's temporary merge commit at HEAD (two parents, made
 by `actions/checkout` on a `pull_request` run), is not on `main` and is skipped. So a local
 run on a branch does not fail on the branch's own commits, while a direct commit to `main`
-after the switch whose subject does not end in `(#N)` fails.
+after the switch whose subject does not end in `(#N)` fails. A local run in a clone that has
+`refs/remotes/origin/main` therefore checks `origin/main`, not the local `main` branch: a
+direct commit on local `main` that has not been pushed is not on that ref, so a local run
+skips it, and the rule checks it only once it reaches `origin/main`.
 
 THE ONE EXEMPTION: the highest-numbered merged pull request, even when a lower-numbered
 one merged after it. A pull request cannot reference its own number until it is opened,
