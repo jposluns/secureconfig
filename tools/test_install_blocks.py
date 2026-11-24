@@ -18,14 +18,14 @@ parser:
     blocks to each reader with the same info strings in the same order, which a gate comparing
     only the number of blocks and their info strings would pass), all 4 blocks commented out above
     an HTML block holding a level-2 heading line, with copies of all 4 after it (each pair differs
-    only in its line), and a NUL character in the shell block, which CommonMark reads as U+FFFD
-    (the pair differs only in its content);
+    only in its line);
   - FIELD: README.md as it is, read by a parser that changes one field of the first block's token
     from the pinned parser's reading, fails for each of the 5 fields compare() checks (type, depth,
     line, info string and content), so dropping any one field from compare() fails a case;
   - REFUSED: a layout install_blocks() refuses (3 blocks, a fifth block, the 2 merged blocks that
-    each hold both routes, 4 blocks of which the first holds both routes, and the in-session block
-    commented out beside a visible replacement) fails, naming the build's refusal;
+    each hold both routes, 4 blocks of which the first holds both routes, the in-session block
+    commented out beside a visible replacement, and a NUL character after a space in the shell
+    block, which the build reads as an extra argument) fails, naming the build's refusal;
   - COUNT: a site build changed to accept another count, read with this gate, still fails, because
     the gate requires 4 blocks itself: a build that accepts 3 blocks, one that accepts 5 and one
     that reads the 2 merged blocks, each on a README.md holding that many blocks, so that the
@@ -107,7 +107,9 @@ def main():
     # The first draft of #1388: both routes in each of 2 blocks, so that 1 Copy copies both.
     merged = (readme.replace(shared_session_block, "", 1).replace(shared_shell_block, "", 1)
               .replace(session_block, merged_session, 1).replace(shell_block, merged_shell, 1))
-    edited = shell + " --scope project"
+    # The edit keeps the block 1 route, its marketplace named by its GitHub URL: each line takes
+    # exactly 1 argument, so the build refuses an appended option.
+    edited = shell.replace("marketplace add ", "marketplace add https://github.com/", 1)
     agree = {
         "README.md as it is": readme,
         "the shell block edited": readme.replace(shell_block, f"```bash\n{edited}\n```\n", 1),
@@ -155,11 +157,6 @@ def main():
                       f"</div>\n\n{session_block}\n{shell_block}\n{shared_session_block}\n"
                       f"{shared_shell_block}", 1),
              "code block 1 is, to the pinned parser, a fence at depth 0"),
-        # CommonMark replaces U+0000 with U+FFFD; the build's reader keeps it. Only the content
-        # differs. The NUL follows a space, so the build still reads the route's plugin name.
-        "a NUL character in the shell block":
-            (readme.replace(shell_block, f"```bash\n{shell} \x00\n```\n", 1),
-             "code block 2 is, to the pinned parser, a fence at depth 0"),
     }
     # (field, the change to the first block's token): compare() must report each on its own.
     first = next(t for t in parser.parse(readme) if t.type == "fence")
@@ -170,8 +167,11 @@ def main():
         "info string": ("info", first.info + "x"),
         "content": ("content", first.content + "x\n"),
     }
-    fifth = ("\n```bash\nclaude plugin marketplace add other/other\nclaude plugin install "
-             "other@other\n```\n")
+    # A fifth block that is 1 whole route: it adds the shared catalogue by its GitHub URL, a
+    # marketplace the build knows (INSTALL_MARKETPLACES), and installs the plugin from it, so that
+    # the build refuses it for the count alone and a build changed to accept 5 blocks accepts it.
+    fifth = ("\n```bash\nclaude plugin marketplace add https://github.com/jposluns/plugins\n"
+             "claude plugin install secureconfig@jposluns\n```\n")
     refused = {
         "3 blocks": readme.replace(shared_shell_block, "", 1),
         "a fifth block": readme.replace(shared_shell_block, shared_shell_block + fifth, 1),
@@ -180,6 +180,10 @@ def main():
         "the in-session block commented out beside a visible replacement":
             readme.replace(session_block, f"<!--\n{session_block}-->\n\n```text\n/plugin install "
                            f"wrong@wrong\n```\n", 1),
+        # A NUL after a space is a second argument on the install line, which the build refuses
+        # since #1388's QA round 1, so this is no longer a layout only the gate catches.
+        "a NUL character in the shell block":
+            readme.replace(shell_block, f"```bash\n{shell} \x00\n```\n", 1),
     }
     cases = 0
     for desc, text in agree.items():

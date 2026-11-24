@@ -38,13 +38,16 @@ and length, and each holding 1 route, so that each block's Copy button copies 1 
 repository's marketplace as an in-session block, info string `text`, every line starting
 `/plugin `, then as a shell block, info string `bash`, every line starting `claude plugin `; then
 the shared catalogue's marketplace in the same 2 forms. A route is 2 lines, `marketplace add`
-and then `install`, and the 2 blocks of a route add the same marketplace and install the same
-plugin, while the 2 routes add different marketplaces. Any other count, a block holding both
-routes and anything else is refused (exit 2), and so is a README with no such section or more
-than 1. The reader does not know HTML comments, indented code blocks, lists or block quotes, so
-tools/check_install_blocks.py, a CI gate, reads the same section with the pinned CommonMark
-parser and fails unless the parser finds exactly the 4 blocks this reader extracted, at the same
-lines, with the same content.
+and then `install`, each with exactly 1 argument. The install line's argument is the plugin's
+name, `@`, and the name of the marketplace that the block's add line registers
+(INSTALL_MARKETPLACES), and the 2 blocks of a route add the same marketplace and install the same
+plugin, while the 2 routes add different marketplaces. Marketplaces are compared without case,
+and an owner/repo and its GitHub URL are the same marketplace. Any other count, a block holding
+both routes and anything else is refused (exit 2), and so is a README with no such section or
+more than 1. The reader does not know HTML comments, indented code blocks, lists or block
+quotes, so tools/check_install_blocks.py, a CI gate, reads the same section with the pinned
+CommonMark parser and fails unless the parser finds exactly the 4 blocks this reader extracted,
+at the same lines, with the same content.
 
 The build refuses to write, and `--check` fails, when a page would contain a dash character
 (U+2010 to U+2015, U+2212), an inline style or `style=` attribute, a `<script>` without `src` or
@@ -117,6 +120,16 @@ INSTALL_FENCES = (("project_session", "text", "/plugin "), ("project_shell", "ba
                   ("shared_session", "text", "/plugin "), ("shared_shell", "bash", "claude plugin "))
 # The 2 routes, each as the positions in INSTALL_FENCES of its in-session and its shell block.
 INSTALL_ROUTES = ((0, 1), (2, 3))
+# The plugin every route installs, and the name of the marketplace each `marketplace add` source
+# registers, keyed by its owner/repo in lower case (install_marketplace()): the install line's
+# argument must be that plugin, `@`, and that name. This repository's name is the `name` field of
+# .claude-plugin/marketplace.json, and the shared catalogue's is the `name` field of the
+# marketplace.json of jposluns/plugins, as supplied for #1388; a source not listed is refused.
+INSTALL_PLUGIN = "secureconfig"
+INSTALL_MARKETPLACES = {"jposluns/secureconfig": "secureconfig", "jposluns/plugins": "jposluns"}
+# An owner/repo, or its GitHub URL, as a `marketplace add` argument.
+GITHUB_REPO = re.compile(r"(?:https?://(?:www\.)?github\.com/)?([\w.-]+)/([\w.-]+?)(?:\.git)?/?",
+                         re.ASCII | re.IGNORECASE)
 # The label the For AI assistants page sets above each block.
 INSTALL_LABELS = {"project_session": "This repository, in a session",
                   "project_shell": "This repository, in a shell",
@@ -351,10 +364,13 @@ def install_blocks(text):
     at the start of the line. A fence
     never closed, and a fence indented by spaces or tabs in the section, are refused. The section
     must hold exactly len(INSTALL_FENCES) blocks, each of the shape INSTALL_FENCES gives and each
-    exactly 1 route: a `marketplace add` line, then an `install` line, so that a block holding
-    both routes is refused. The 2 blocks of each pair in INSTALL_ROUTES must add the same
-    marketplace and install the same plugin, and the 2 routes must add different marketplaces.
-    It does not
+    exactly 1 route: a `marketplace add` line, then an `install` line, each with exactly 1
+    argument, so that a block holding both routes is refused. The install line's argument must be
+    INSTALL_PLUGIN, `@`, and the name of the marketplace the block's add line registers
+    (INSTALL_MARKETPLACES), and a source the build knows no name for is refused. The 2 blocks of
+    each pair in INSTALL_ROUTES must add the same marketplace and install the same plugin, and the
+    2 routes must add different marketplaces, compared as install_marketplace() gives them. It
+    does not
     know HTML comments, indented code blocks, setext headings, lists or block quotes, so it can read
     a block that CommonMark hides or miss one that CommonMark shows: tools/check_install_blocks.py
     reads the same section with the pinned parser in CI and fails unless both readings agree."""
@@ -399,7 +415,8 @@ def install_blocks(text):
                               f"{need!r} and every line starting {prefix!r}; the build needs {want}")
         blocks.append((key, line, body))
     # Each block is 1 route, so that its Copy button never copies both: exactly a `marketplace
-    # add <source>` line, then an `install <plugin>` line, each with its argument.
+    # add <source>` line, then an `install <plugin>@<marketplace>` line, each with its 1 argument,
+    # and the install line installs the plugin from the marketplace the add line registers.
     routes = []
     for n, ((key, line, body), (_, _, prefix)) in enumerate(zip(blocks, INSTALL_FENCES), 1):
         add, get = prefix + "marketplace add ", prefix + "install "
@@ -410,7 +427,28 @@ def install_blocks(text):
                               f"{add.strip()!r} line and then a {get.strip()!r} line; each block "
                               f"holds 1 route, so that its Copy button copies 1, and the build "
                               f"needs {want}")
-        routes.append((line, rows[0][len(add):].split()[0], rows[1][len(get):].split()[0]))
+        args = rows[0][len(add):].split(), rows[1][len(get):].split()
+        if len(args[0]) != 1 or len(args[1]) != 1:
+            raise SourceError(f"{where}: fenced block {n} (line {line}) has an extra argument: "
+                              f"{args[0]!r} after {add.strip()!r} and {args[1]!r} after "
+                              f"{get.strip()!r}, where each line takes exactly 1")
+        source, plugin = args[0][0], args[1][0]
+        market = install_marketplace(source)
+        name = INSTALL_MARKETPLACES.get(market)
+        if name is None:
+            raise SourceError(f"{where}: fenced block {n} (line {line}) adds the marketplace "
+                              f"{source!r}, whose name the build does not know; it knows "
+                              f"{sorted(INSTALL_MARKETPLACES)} (INSTALL_MARKETPLACES)")
+        entry, _, target = plugin.partition("@")
+        if entry != INSTALL_PLUGIN:
+            raise SourceError(f"{where}: fenced block {n} (line {line}) installs the entry "
+                              f"{entry!r}, not the plugin {INSTALL_PLUGIN!r}")
+        if target != name:
+            raise SourceError(f"{where}: fenced block {n} (line {line}) installs {plugin!r}, but "
+                              f"its add line registers {source!r}, the marketplace named "
+                              f"{name!r}, so its install line must be "
+                              f"{get + INSTALL_PLUGIN + '@' + name!r}")
+        routes.append((line, market, plugin))
     for first, second in INSTALL_ROUTES:
         if routes[first][1:] != routes[second][1:]:
             raise SourceError(f"{where}: fenced blocks {first + 1} (line {routes[first][0]}) and "
@@ -422,6 +460,14 @@ def install_blocks(text):
         raise SourceError(f"{where}: the {len(sources)} routes add the marketplaces {sources}; each "
                           f"route adds its own marketplace")
     return blocks
+
+
+def install_marketplace(source):
+    """The marketplace a `marketplace add` argument names, as install_blocks() compares it: in
+    lower case, with a GitHub URL (https or http, with or without `www.`, `.git` or a final `/`)
+    read as its owner/repo."""
+    repo = GITHUB_REPO.fullmatch(source)
+    return f"{repo[1]}/{repo[2]}".lower() if repo else source.lower()
 
 
 def install_id(key):

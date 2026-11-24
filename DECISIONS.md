@@ -2145,6 +2145,25 @@ awaits the review that the heading of this section names.
   maintainer's ruling of 2026-11-21 confirming the proxy decision on TODO row 3.104 (#1381), above, confirms this
   decision. This entry stays here as the record of the vote, and that ruling's entry records the outcome and its
   revert path.
+- **Proxy decision of 2026-11-24 on one copy block per install route, for the maintainer's later review (#1388).**
+  Decided on 2026-11-24 by a unanimous vote of lab_infra, guardrails and grc, which the record of the vote calls a
+  D-1096 vote. The question was how README.md's install section and the For AI assistants page carry the
+  shared catalogue's route beside this repository's, after the first draft of this pull request added the shared
+  catalogue's commands to the two existing blocks, so that one Copy copied both routes. The record gives the votes and
+  their conditions but not the question's text or its other options; it letters the outcome A, "give each install
+  route its own copy block", and this entry letters it A, as the record does. The votes were all for option A, each
+  with a condition, quoted here as the record has them. The grc condition was "the build check pins exactly 4 blocks
+  so a fifth or merged block fails". The guardrails condition was "build-site tests cover 4 blocks and refuse any
+  other count". The lab_infra condition was "the build test asserts each install block holds exactly one route (one
+  marketplace add plus its install)". Its effect, applied in this change: the install section holds four fenced
+  blocks, one route in one form each, and `scripts/build-site.py` refuses any other count and a block that is not one
+  route. A fix in this pull request also has it refuse an install line that does not install the plugin from the
+  marketplace its own add line registers, and an extra argument on either line. `tools/check_install_blocks.py`
+  requires four blocks itself, and `tools/test_build_site.py` and `tools/test_install_blocks.py` add cases for three
+  blocks, five blocks and merged blocks, which fail. This decision is recorded for the maintainer's review and is not
+  a maintainer ruling until a ruling above confirms it. It covers the install section and its checks only, not the
+  merge of this pull request, which a vote never covers. The revert path is the maintainer's review: a different
+  ruling changes the install section and the checks this change adds.
 
 ## Profile: predicting these rulings
 
