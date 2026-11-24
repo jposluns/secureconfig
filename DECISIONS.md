@@ -18,9 +18,25 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 ## Rulings
 
 - **Maintainer ruling of 2026-11-24 ratifying the proxy decision on one copy block per install route (#1389).**
-  The maintainer gave this ruling in an attended session on 2026-11-24. The record of the ruling given to this pull
-  request gives the answer only: the maintainer chose "Ratify A (Recommended)". It does not give the question's text,
-  the time or any other option, and no reasoning was recorded beyond the choice.
+  The maintainer gave this ruling through AskUserQuestion in an attended session on 2026-11-24, answered between
+  16:28Z and 16:33Z. The record of the ruling given to this pull request gives the question, the label and
+  description of each of the three options offered, and the choice. The question, the labels and the descriptions
+  are quoted exactly.
+  The question read, quoted one sentence at a time:
+  "Mode is now attended, so here are the decisions made while you were away, one at a time."
+  "1 of 2: the fleet vote on the install page."
+  "#1388 adds the shared plugin catalogue (jposluns/plugins) as a second install route next to this repository's own."
+  "lab_infra, guardrails and grc voted unanimously for option A: four copy boxes (each route gets one box for in-session slash commands and one for shell commands)."
+  "Conditions: the build refuses any count but 4; each box holds exactly one route (one marketplace add plus its matching install)."
+  "#1388 does this, both QA families found it ready, and its gates check is running now."
+  "Do you ratify A?"
+  One option was "Ratify A (Recommended)", whose description read:
+  "Keep four boxes, one route each, as built. #1388 merges when its gates check passes at its head."
+  Another was "Two boxes instead", whose description read:
+  "One box per route holding both forms. That means reworking #1388 and another QA round before it merges."
+  The remaining option was "Hold #1388", whose description read:
+  "Don't merge yet; I'll say what to change."
+  The maintainer chose "Ratify A (Recommended)". No reasoning was recorded beyond the choice.
   - Effect. This ruling confirms "Proxy decision of 2026-11-24 on one copy block per install route, for the
     maintainer's later review (#1388)", below, which stays listed under "Proxy decisions awaiting maintainer review"
     as the record of the vote. Option A, which #1388 applies, stands: README.md's install section holds four fenced
@@ -2160,7 +2176,8 @@ longer awaits the review that the heading of this section names.
   revert path.
 - **Proxy decision of 2026-11-24 on one copy block per install route, for the maintainer's later review (#1388).**
   Decided by a unanimous vote of lab_infra, guardrails and grc, which the record of the vote calls a D-1096 vote. The
-  record gives no date; 2026-11-24 in the heading is the date under which `CHANGELOG.md` lists #1388. The record
+  full record of the decision, given to this pull request with the ruling, times the votes on 2026-11-24 UTC: grc
+  voted at 11:04:45Z, guardrails at 11:04:46Z and lab_infra at 11:05:15Z. The record
   states no question: before its conditions it reads, in full, "D-1096 vote (unanimous A): give each install route
   its own copy block." So it gives the outcome and the conditions but not the question's text or the other options;
   it letters the outcome A, and this entry letters it A, as the record does. The vote followed the first draft of
