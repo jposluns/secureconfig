@@ -46,7 +46,7 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     `git rev-list --first-parent` from that ref lists it, and only those commits that HEAD's history also holds
     are checked, so CI's temporary merge commit at HEAD and a branch's own commits are skipped and a local run on
     a pull request's branch does not fail on them. A direct commit to `main` after the switch whose subject does
-    not end in `(#N)` fails the gate. Commits at or before the newest merge commit are read as before. Seven new
+    not end in `(#N)` fails the gate. Commits at or before the newest merge commit are read as before. Twelve new
     cases in `tools/test_changelog_prs.py` check this, and row 3.128 is in `DONE.md`.
   - Revert. The revert path is a later maintainer ruling that withdraws or replaces this one, then a pull request
     that follows it. That pull request keeps every existing entry in `CHANGELOG.md` and `DECISIONS.md`, adds its
