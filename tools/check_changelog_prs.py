@@ -53,6 +53,15 @@ after the switch whose subject does not end in `(#N)` fails. A local run in a cl
 direct commit on local `main` that has not been pushed is not on that ref, so a local run
 skips it, and the rule checks it only once it reaches `origin/main`.
 
+A CLONE OF A FORK: `origin` is whatever remote the clone names so, and the gate does not
+ask which repository that is. In a clone made from a fork, `refs/remotes/origin/main` is
+the fork's `main` as last fetched, and the gate checks that ref, not this repository's
+`main`. A commit on this repository's `main` that the fork has not yet taken in is then
+not checked, and a commit on the fork's `main` that never reached this repository is. A
+fork's own `main` is not this repository's history, so a finding or a pass there says
+nothing about this repository; run the gate where `origin` is this repository, as CI's
+checkout of it is, to check this repository's `main`.
+
 THE ONE EXEMPTION: the highest-numbered merged pull request, even when a lower-numbered
 one merged after it. A pull request cannot reference its own number until it is opened,
 so the highest-numbered one may be missing its entry. That is a tolerance, not a
