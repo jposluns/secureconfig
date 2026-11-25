@@ -16,6 +16,7 @@ else, admit the site's own .baseline/site-card.toml only as a regular file, and 
 Dancing Script woff2 left behind unpinned.
 """
 import hashlib
+import importlib.util
 import os
 import shutil
 import subprocess
@@ -32,6 +33,17 @@ OVERFLOW_CHECK = Path(".baseline") / "check_overflow.js"
 CARD_BUILDER = Path(".baseline") / "build_card.js"
 CARD_FONTS = Path(".baseline") / "card-fonts"
 SITE_CARD = Path(".baseline") / "site-card.toml"
+
+
+def copy_script():
+    """scripts/copy-baseline.py, imported for the VERSION and digests the pin must carry."""
+    spec = importlib.util.spec_from_file_location("copy_baseline", ROOT / "scripts" / "copy-baseline.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+COPY = copy_script()
 
 
 def run(mutate=None):
@@ -56,6 +68,16 @@ def edit_pin(old, new):
             raise AssertionError(f"pin mutation {old!r} no longer matches")
         (d / PIN).write_text(text.replace(old, new, 1), encoding="utf-8")
     return mutate
+
+
+def other_digest(digest):
+    """digest with its first character changed: still a SHA-256 hex digest, and never digest."""
+    return ("1" if digest[0] == "0" else "0") + digest[1:]
+
+
+def edit_digest(key, digest):
+    """Replace the pin's line key = digest, as the copy script writes it, with another digest."""
+    return edit_pin(f'{key} = "{digest}"', f'{key} = "{other_digest(digest)}"')
 
 
 def flip(relative):
@@ -173,8 +195,16 @@ CASES = [
                 edit_pin("/baseline/1.15.1/", "/baseline/1.3.1/")(d)), 1, "copy-baseline.py copies 1.15.1"),
     ("an upstream URL for another version", edit_pin("/baseline/1.15.1/", "/baseline/1.3.1/"), 1,
      "is not the URL of version 1.15.1"),
-    ("another archive digest", edit_pin('archive_sha256 = "3', 'archive_sha256 = "0'), 1,
-     "archive_sha256 is"),
+    # QA of #1303 (F2 and F3): each provenance digest is read from the copy script and replaced
+    # with one that differs, so a new baseline needs no edit here.
+    (f"another archive digest than baseline {COPY.VERSION}'s",
+     edit_digest("archive_sha256", COPY.ARCHIVE_SHA256), 1,
+     f"archive_sha256 is {other_digest(COPY.ARCHIVE_SHA256)!r}; scripts/copy-baseline.py records "
+     f"{COPY.ARCHIVE_SHA256}"),
+    (f"another SHA256SUMS digest than baseline {COPY.VERSION}'s",
+     edit_digest("sha256sums_sha256", COPY.SUMS_SHA256), 1,
+     f"sha256sums_sha256 is {other_digest(COPY.SUMS_SHA256)!r}; scripts/copy-baseline.py records "
+     f"{COPY.SUMS_SHA256}"),
     ("a copied, pinned file outside the copy script's list",
      pinned("extra.js", b"(function(){})();\n"), 1, "not in scripts/copy-baseline.py's RUNTIME list"),
     ("a copied, pinned reference page", pinned("reference/landing.html", b"<!doctype html>\n"), 1,
