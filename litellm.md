@@ -481,6 +481,8 @@ The checks below remain REASONED from the cited LiteLLM documentation and pinned
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - LiteLLM proxy virtual keys (master_key, /key/generate, header name): https://docs.litellm.ai/docs/proxy/virtual_keys
 - LiteLLM proxy CLI (`--host` default `0.0.0.0`, `--port` default `4000`): https://docs.litellm.ai/docs/proxy/cli
 - LiteLLM admin UI (`UI_USERNAME`/`UI_PASSWORD`, master-key fallback, `DISABLE_ADMIN_UI`): https://docs.litellm.ai/docs/proxy/ui
@@ -594,7 +596,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "769276432646a9365f357cc4e98154837e86c1851b249a1dd2642aae228dd849",
+  "body_sha256": "6cda551661000ac9781b7d5c4a611a26b5d173c0e2d09fc9101ac3d4eb3d69c1",
   "components": {
     "sso": {
       "name": "LiteLLM SSO allowance",

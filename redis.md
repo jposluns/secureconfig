@@ -939,6 +939,8 @@ The upstream Redis HA controls and source-derived limitations in sections 9-15 h
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 The tagged configuration files below pin syntax and historical behaviour; they are not recommendations to install those patch releases.
 
 - Redis security model, authentication, and deprecated command renaming: https://redis.io/docs/latest/operate/oss_and_stack/management/security/
@@ -1089,7 +1091,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fa2cae058289856b567209194eda26b4e7b97d426b3f84f8c113132b92e5d0f3",
+  "body_sha256": "d4e35ac5ce680db4fecafd1a47a98aed09e91943ac69fc7c0ff3a5ee4916356b",
   "components": {
     "r60": {
       "name": "Redis configuration",

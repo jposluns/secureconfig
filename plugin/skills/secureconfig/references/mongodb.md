@@ -745,6 +745,8 @@ QE requires a new encrypted collection created with an `encryptedFields` definit
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Official MongoDB Docker images (7.0, 8.0 and 8.3; pinned commit 0a29f3374c7fa7c38cfe280363b754f898e0a5eb): the Linux entrypoint turns arguments starting with `-` into `mongod`. That pinned Linux entrypoint, for `mongod`, reads both `MONGO_INITDB_ROOT_*` credentials with `file_env` (so `_FILE` works), adds `--auth` when both are set and exits when only one is, and adds `--bind_ip_all` when neither the arguments nor a file named by `--config` (not `-f`) sets `bindIp` or a true `bindIpAll`. Those pinned images' commands are the Linux `CMD ["mongod"]` and the Windows images' `CMD ["mongod", "--bind_ip_all"]`. Official MongoDB Docker images `docker-entrypoint.sh` sources (1 of 3): https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L4-L6 and https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L71-L87. Official MongoDB Docker images `docker-entrypoint.sh` sources (2 of 3): https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L247-L270 and https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L186. Official MongoDB Docker images `docker-entrypoint.sh` sources (3 of 3): https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L402-L413. Official MongoDB Docker images `Dockerfile` sources: https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/Dockerfile#L122-L125 and https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/windows/windowsservercore-ltsc2022/Dockerfile#L67
 - `--bind_ip_all` sets `net.bindIp` to `*`, which binds `0.0.0.0`, and `::` as well only when `net.ipv6` is true (by `--ipv6` or a configuration file) (pinned tag r8.0.32; the same code in r7.0.43, r8.2.12 and r8.3.11). The `--bind_ip_all` sources (pinned tag r8.0.32): https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_base.cpp#L125-L132 and https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_server_helpers.cpp#L404-L410
 - MongoDB security checklist and Community authentication support: https://www.mongodb.com/docs/manual/administration/security-checklist/
@@ -913,7 +915,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "ba8fff13b2120f6cb4100043081603a90e741b4fa1d18452aa038c3d4cef1360",
+  "body_sha256": "9f94e39edb256e8359ceb54fe891cf2ce658b9da83a3d7d9c2679da97e398702",
   "components": {
     "bind": {
       "name": "MongoDB bind source",

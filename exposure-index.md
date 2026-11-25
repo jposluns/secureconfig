@@ -391,6 +391,8 @@ an endpoint no guide here knows the name of.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - `ss` manual, including that it reports sockets within a network namespace:
   https://man7.org/linux/man-pages/man8/ss.8.html
 - sudo SUDO_1_9_16p2 sudoers manual, secure_path (checked October 2026):

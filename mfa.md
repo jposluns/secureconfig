@@ -88,6 +88,8 @@ In this guide's assessment, unattended machine connections (service-to-service d
 
 ## Standards and sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - TOTP: https://www.rfc-editor.org/info/rfc6238/ ; HOTP: https://www.rfc-editor.org/info/rfc4226/
 - `otpauth://` key URI format: https://github.com/google/google-authenticator/wiki/Key-Uri-Format
 - WebAuthn: https://www.w3.org/TR/webauthn-2/
@@ -258,7 +260,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "bac1bf62e7639167fa222996b6f207cddd47b7e52a35a30260af1b0d9b23c5a0",
+  "body_sha256": "9f18cf389b2cb6ea64854d8320047a831ee77eb8bfe15ce007cd69eda76e9352",
   "components": {
     "totp": {
       "name": "TOTP standard",

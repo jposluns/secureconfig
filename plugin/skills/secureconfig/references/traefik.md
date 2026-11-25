@@ -336,6 +336,8 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Traefik documentation (rolling documentation, checked September 2026): https://doc.traefik.io/traefik/ (HTTPS/ACME, routers, and basicAuth middleware sections)
 - Docker provider (`exposedByDefault`, socket endpoint): https://doc.traefik.io/traefik/reference/install-configuration/providers/docker/
 - Swarm provider (`providers.swarm.exposedByDefault`): https://doc.traefik.io/traefik/reference/install-configuration/providers/swarm/
@@ -427,7 +429,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-08",
   "documentation_checked": "2026-09",
-  "body_sha256": "89a96f8706a6e33822fac81892bf0592e94745a585b0283d0f47ed0f5cb7c781",
+  "body_sha256": "68a57a292487e7116343504444c6caffc8b1193012efc01bfa56fdbe78e9e283",
   "components": {
     "traefik-v3": {
       "name": "Traefik v3 documentation",

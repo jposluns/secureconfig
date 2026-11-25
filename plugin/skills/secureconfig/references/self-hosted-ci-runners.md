@@ -465,6 +465,8 @@ REASONED: following block; the reachability comparison follows the cited GitLab 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Version boundary: GitHub.com documentation checked 18 September 2026, with REST examples pinned to API version `2026-03-10`; GitLab documentation is rolling, checked that date. GitLab Runner source for the `pid_mode` key is pinned to tag v19.5.0, checked October 2026. The legacy GitLab registration token was disabled by default in GitLab 17.0 and is currently scheduled for removal in GitLab 20.0, and the Instance and Docker Autoscaler executors became generally available in Runner 17.1; run a currently supported patched release. No live product-version compatibility matrix was exercised.
 
 - GitHub Actions security hardening and secure use: https://docs.github.com/en/actions/reference/security/secure-use
@@ -558,7 +560,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "2cc98970efba9b419c804f38bf722b88e7fb41263ab7677c3c260e6734512247",
+  "body_sha256": "deda59ac3b648ae7b8bbf54b35fad7df2fa97113090411461090b3490e288256",
   "components": {
     "github": {
       "name": "GitHub Actions documentation",

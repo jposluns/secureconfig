@@ -350,6 +350,8 @@ Consider `launch(run_history=False)`. In 6.31.0 its default is `None`, resolving
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - [Gradio Blocks.launch() parameters (rolling documentation, checked September 2026)](https://gradio.app/docs/gradio/blocks): auth, auth_message, ssl_certfile, ssl_keyfile, ssl_keyfile_password, ssl_verify, server_name, and share; also auth_dependency, root_path, queue/launch limits, footer_links, run_history, and analytics.
 - [Gradio file access (rolling documentation, checked September 2026)](https://gradio.app/guides/file-access): the `/gradio_api/file=` route; the default set is `set_static_paths`, `allowed_paths`, and the cache; eligible returned paths in `allowed_paths`, the working directory, or the temp directory; working-directory dotfile exclusion; `blocked_paths` precedence; cache sharing across users; and `GRADIO_TEMP_DIR`.
 - Gradio security advisories: [the `/file` traversal and SSRF fixed in 4.11.0](https://github.com/gradio-app/gradio/security/advisories/GHSA-6qm2-wpxq-7qh2) and [the case-handling blocklist bypass](https://github.com/gradio-app/gradio/security/advisories/GHSA-j2jg-fq62-7c3h). Historical evidence for keeping a current release and minimizing the process filesystem and additional allowed paths; no precise fix version is assigned here to the case-handling advisory.
@@ -452,7 +454,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-09",
-  "body_sha256": "4bd2c804fb80557e8eed3f354e79162d50336ee412556181db6ce81f7eb82fde",
+  "body_sha256": "bec410f284144a3442417675c3044b0b78c257c0540c3dce048c062de015dd39",
   "components": {
     "gradio": {
       "name": "Gradio",

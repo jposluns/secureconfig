@@ -885,6 +885,8 @@ from your own account's view of the process.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - node_exporter v1.12.1 README (port 9100, `--web.config.file`): https://github.com/prometheus/node_exporter/blob/v1.12.1/README.md
 - node_exporter v1.12.1 source (`:9100` default, `net/http/pprof` import): https://github.com/prometheus/node_exporter/blob/v1.12.1/node_exporter.go
 - Exporter toolkit v0.17.1 web configuration (`tls_server_config`, `client_auth_type`, `basic_auth_users`, experimental status): https://github.com/prometheus/exporter-toolkit/blob/v0.17.1/docs/web-configuration.md
@@ -1453,7 +1455,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "9dce261efb106d26f5d7e81ddd5d6fb9911c2b158adf9ec9f19c2431fd37c4d3",
+  "body_sha256": "32e14f1a79d27336795cf4b6f82bf674e7591e2364b8b08677159a5b7d49603d",
   "components": {
     "node": {
       "name": "node_exporter",

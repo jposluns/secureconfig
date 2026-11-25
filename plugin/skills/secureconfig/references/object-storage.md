@@ -654,6 +654,8 @@ REASONED: Historical evidence boundary; no original authoring receipts, authoriz
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - S3 Block Public Access (four settings, defaults, meaning of "public", IAM Access Analyzer): https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html and https://docs.aws.amazon.com/AmazonS3/latest/userguide/configuring-block-public-access-bucket.html
 - S3 Object Ownership (Bucket owner enforced default, ACLs disabled): https://docs.aws.amazon.com/AmazonS3/latest/userguide/about-object-ownership.html
 - AWS CLI `s3 presign` (`--expires-in` default and maximum): https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html
@@ -783,7 +785,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "139bbd5d2de5d6cc80a68540c09848087e17cb4f633455a6f0c0d41641bdd015",
+  "body_sha256": "1505c140826055bf8234124e8c77da067611e1eb22c1ae357593eb3442af534d",
   "components": {
     "s3": {
       "name": "Amazon S3 documentation",

@@ -263,6 +263,8 @@ REASONED: following block; isolation comparison, listener and external-reachabil
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - AnythingLLM security and access documentation: https://docs.anythingllm.com/features/security-and-access
 - LobeHub environment variables (KEY_VAULTS_SECRET; pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/basic.mdx#L22-L32
 - LobeHub authentication service environment variables (Better Auth; rolling documentation, checked September 2026): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth
@@ -354,7 +356,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "da77f1c2ed52eca4ba010260e2fecfc66b28f979654b5a47ca65240a6d8c1907",
+  "body_sha256": "db19a9fa53c158dd4129ba274cc72219ae742497b4a8bf7b2e86bafd274777ad",
   "components": {
     "anything": {
       "name": "AnythingLLM documentation",

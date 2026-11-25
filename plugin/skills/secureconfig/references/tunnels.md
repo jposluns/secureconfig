@@ -237,6 +237,8 @@ REASONED: following block; the ssh -R check follows the cited OpenSSH sshd_confi
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - frp documentation (setup, server reference) (rolling documentation, checked November 2026): https://gofrp.org/en/docs/
 - OpenSSH `sshd_config` (`GatewayPorts` default `no`, `yes` binds all interfaces, `clientspecified`): https://man.openbsd.org/sshd_config#GatewayPorts
 - OpenSSH `ssh` (`-R [bind_address:]port:host:hostport` remote forwarding): https://man.openbsd.org/ssh#R
@@ -353,7 +355,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "df2c728c85d67a3709fe2b895c9da27749d87123d80f314e054cf2a5f69d2b43",
+  "body_sha256": "f7fbd5b0e0f50a8ecb4c1ebe9a9dc2ca9cc280d381e21632adfdf1a45f5dfa74",
   "components": {
     "frps": {
       "name": "frps source",

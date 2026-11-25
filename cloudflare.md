@@ -296,6 +296,8 @@ REASONED: following block; port-80 HTTP virtual-host route probe; local marking 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Cloudflare Zero Trust documentation: https://developers.cloudflare.com/cloudflare-one/
 - Create a remotely-managed tunnel: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/
 - cloudflared releases: https://github.com/cloudflare/cloudflared
@@ -384,7 +386,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "7fabeae5da790a54a9b2525d15eff5932457af49e60d95ccc105968dae1adb6d",
+  "body_sha256": "a9c4a96a2e689a7e34f57f7d4e28dc8464964b85bf7e6699398cbdc27a844b62",
   "components": {
     "token-file": {
       "name": "cloudflared token-file minimum",

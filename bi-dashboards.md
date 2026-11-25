@@ -154,6 +154,8 @@ connection string or the tool's own login is not enough.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Metabase documentation home: https://www.metabase.com/docs/latest/
 - Metabase setting up Metabase (first account is admin): https://www.metabase.com/docs/latest/configuring-metabase/setting-up-metabase
 - Metabase public links and embeds: https://www.metabase.com/docs/latest/embedding/public-links
@@ -226,7 +228,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "bf579abc5c372f97e8d147027a58a00ba73b68a686c1b5fa224a1ce22cd0b62b",
+  "body_sha256": "6fbcd859de2bad7897ff9b19e5c9f37bd09ab9044f62e5c68d12b99dd3b17b71",
   "components": {
     "metabase": {
       "name": "Metabase",

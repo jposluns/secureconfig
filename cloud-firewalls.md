@@ -181,6 +181,8 @@ REASONED: cloud-rule inventory and external reachability checks; no exposed/fixe
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - AWS Session Manager SSH tunnel (rolling) (checked October 2026): https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-enable-ssh-connections.html#session-manager-getting-started-enable-ssh-connections
 - AWS Session Manager managed-node outbound HTTPS prerequisites (rolling) (checked October 2026): https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-prerequisites.html#session-manager-prerequisites
 - Google Cloud IAP TCP forwarding firewall source and SSH port (rolling) (checked October 2026): https://docs.cloud.google.com/iap/docs/using-tcp-forwarding#create-firewall-rule
@@ -249,7 +251,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "a3fb65779a75d02a5a0af8bc077cce1cc0bf9d5dce42fc92e7530518eba7e395",
+  "body_sha256": "b5586019268dc09e3da2e45fc7f5950c3c59e50629baa99f2a3b70c14943a8c8",
   "components": {
     "aws": {
       "name": "AWS security groups and CLI",

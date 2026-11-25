@@ -603,6 +603,8 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Python HMAC calculation and binary stdin: https://docs.python.org/3/library/hmac.html and https://docs.python.org/3/library/sys.html#sys.stdin
 - [curl curl-8_14_1 custom headers (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 - curl curl-8_14_1 (checked October 2026): [--data-binary posts data exactly as specified, with newlines and carriage returns preserved and @- reading stdin (4-32)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data-binary.md#L4-L32); [--data sends a POST request and strips carriage returns and newlines from @file input (4-49)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data.md#L4-L49).
@@ -862,7 +864,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "82e44ffd30a1c327b04ded346c7c71a386915afa0ba2354043bc58cbf52d3fbe",
+  "body_sha256": "5e8a98d918faca0573564cea4c1ea4ccdffdd531653a2b6fc7a641afcd03a7f4",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",

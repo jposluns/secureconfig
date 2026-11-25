@@ -547,6 +547,8 @@ If the deployment trusts identity headers from a proxy, follow the direct-origin
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 The service facts come from the maintainer's vendor-source verification record dated 2026-09-13. This authoring environment had no network; the pages were not reopened here. Docker and probe syntax also follow the cited sources already recorded in the repository's existing guides.
 
 **Citation pinning:** the LangServe README, Mem0 server, Onyx Compose and Onyx data-model citations below use commit pins, and each commit was opened and confirmed to contain the fact it is cited for. The Onyx v4.5.0, v4.9.2 and v4.9.4 source citations are pinned to the commits those tags resolved to (`055b0c5`, `df49072` and `4cfda3c`) and the Onyx v5.0.0-beta.3 pre-release citations to `55df913`, while the Onyx v4.3.13 and v4.4.0 citations and the Onyx v4.5.0 and v5.0.0 release notes use tags, which are not commit pins, and the Onyx release list is not pinned.
@@ -744,7 +746,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "b84a2f89263762162f1107da1188e16398936985d705a41591d16d079c2b00ff",
+  "body_sha256": "2abe580a8c2758cb8b58fc64242180ef241765689e1c7b8ef51964a3db3cd72b",
   "components": {
     "searx": {
       "name": "SearxNG documentation",

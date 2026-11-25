@@ -222,6 +222,8 @@ REASONED: following block; the cited ALB, IAP and Azure authentication/header do
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - AWS, Authenticate users using an Application Load Balancer: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html
 - Google Cloud IAP overview: https://docs.cloud.google.com/iap/docs/concepts-overview
 - Google Cloud IAP, securing your app with signed headers: https://docs.cloud.google.com/iap/docs/signed-headers-howto
@@ -325,7 +327,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "b580ee91ca04aa2c8f3771088c275422b350f01c6f43e683192ae74833576c97",
+  "body_sha256": "b4c7dfd4099c0cbe0d4c35bbc41a40a0e7590a878c5b3203e66008319ec9ca78",
   "components": {
     "aws": {
       "name": "AWS ALB",

@@ -155,6 +155,8 @@ Self-signed certificates have no revocation and no third-party accountability, a
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - OpenSSL documentation (rolling documentation, checked September 2026): https://docs.openssl.org/ ; `openssl s_client` (`-servername`, `-verify_return_error`): https://docs.openssl.org/master/man1/openssl-s_client/ ; verification options (`-verify_hostname`): https://docs.openssl.org/master/man1/openssl-verification-options/
 - mkcert: https://github.com/FiloSottile/mkcert
 - Requests v2.32.3 CA-bundle environment variables (checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239
@@ -278,7 +280,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "4ae79b82954e778c01185c8ddd7c0a0a4a4cf17268441a590d5e6a961a71a26d",
+  "body_sha256": "d307c5ca800ee69648af5c81ad474b5575d07ab4949575fac57b7ba88c654555",
   "components": {
     "openssl": {
       "name": "OpenSSL documentation (rolling)",

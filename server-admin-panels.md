@@ -343,6 +343,8 @@ give the server's public address. A "connected" on a port you did not mean to ex
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Cockpit 368 socket unit: https://github.com/cockpit-project/cockpit/blob/368/src/systemd/cockpit.socket.in
 - Cockpit 368 listening address and port: https://github.com/cockpit-project/cockpit/blob/368/doc/modules/guide/pages/listen.adoc
 - Cockpit 368 HTTPS and certificates: https://github.com/cockpit-project/cockpit/blob/368/doc/modules/guide/pages/https.adoc
@@ -446,7 +448,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "6b401a44b03e5a51ee4951f89b2239e285e5cf8837dc889b86415ba2650db180",
+  "body_sha256": "bac493718a70fb97fcc2700e9b036adff9dd79c8632a4f386b22f18b53730855",
   "components": {
     "cockpit": {
       "name": "Cockpit",

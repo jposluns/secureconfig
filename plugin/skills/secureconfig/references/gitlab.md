@@ -392,6 +392,8 @@ REASONED: No GitLab instance runs here. A data backup under `gitlab-backup creat
 
 ## Sources (checked November 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Repository sources are the GitLab monorepo at tag `v19.5.3-ee` (commit `b9b17a44ffb72a85fca47c5416a40a643c42996f`) and omnibus-gitlab at tag `19.5.3+ce.0` (commit `dbd814101106e4b386c68ca0761603e4ad693a11`); line numbers in the prose above are at those tags. GitLab CE is the FOSS-licensed subset of the `gitlab-org/gitlab` monorepo, and every file cited here is in that core subset, not the `ee/` tree; the clean FOSS mirror `gitlabhq/gitlabhq` lags the `-ee` tag, so the citations use `gitlab-org/gitlab` at `v19.5.3-ee`. Documentation pages under `https://docs.gitlab.com/` are the rolling, reader-facing administrator docs for the same product.
 
 - GitLab root-account production seed, forced random password and console output (v19.5.3-ee): https://gitlab.com/gitlab-org/gitlab/-/blob/v19.5.3-ee/db/fixtures/production/003_admin.rb
@@ -532,7 +534,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-10",
   "documentation_checked": "2026-11",
-  "body_sha256": "33847a992ac1079e1b78c026357603136dd1e2afd074ae038d543102b1d79a10",
+  "body_sha256": "f940bf02cb67cf71f64e70b7a8817e588782471d9c8dbca75ba6b1f726e5bae0",
   "components": {
     "gitlab": {
       "name": "GitLab",

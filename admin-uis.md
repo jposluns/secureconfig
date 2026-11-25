@@ -139,6 +139,8 @@ REASONED: following block; panel sources below support the anonymous front-page/
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - mongo-express README (defaults and variables): https://github.com/mongo-express/mongo-express
 - Grafana configuration and HTTPS: https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/ and https://grafana.com/docs/grafana/latest/setup-grafana/set-up-https/
 - Prometheus basic auth and TLS guides: https://prometheus.io/docs/guides/basic-auth/ and https://prometheus.io/docs/guides/tls-encryption/
@@ -223,7 +225,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "4a84e7b5f356170bac399b59c31e37fbd93efdb385202f9dcbb1d4d9fb32ea68",
+  "body_sha256": "543ed661a8e72188040c7ce6f0654229360fe02c1c4efb14eb76b81bcdab96f7",
   "components": {
     "phpmyadmin": {
       "name": "phpMyAdmin",

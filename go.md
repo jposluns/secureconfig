@@ -282,6 +282,8 @@ REASONED: the missing-`ss` and missing-`curl` handling in the block above, per C
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - net/http (Server, ListenAndServeTLS, Cookie, SameSite, Redirect, Transport.TLSClientConfig): https://pkg.go.dev/net/http
 - net/http Request.Host (Go 1.27.0, supplied by the client): https://pkg.go.dev/net/http@go1.27.0#Request
 - crypto/tls (Config.MinVersion, InsecureSkipVerify, RootCAs): https://pkg.go.dev/crypto/tls
@@ -380,7 +382,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "27254cf29e129dbd4e9064e104fc8d26a855dbef8f98a4d0568a88e438120347",
+  "body_sha256": "5ffb1ddec5c312938a016f49a9da2ece8253c207dbe4af151e25fd525ff07d5c",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",

@@ -229,6 +229,8 @@ REASONED: following block; DNS publication, submission TLS and plaintext AUTH re
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), obsoletes RFC 7489, removes `pct`, adds `np`, DNS tree walk: https://www.rfc-editor.org/rfc/rfc9989.html
 - RFC 9990: DMARC Aggregate Reporting (`rua`): https://www.rfc-editor.org/rfc/rfc9990.html
 - RFC 9991: DMARC Failure Reporting (`ruf`, privacy): https://www.rfc-editor.org/rfc/rfc9991.html
@@ -326,7 +328,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "39c7721ec89613ef2831c0c0980bf6d193b4fdbba9ba2b3dafb722c50f5ce303",
+  "body_sha256": "2230e4600b8369158733e620f7beb98257aa5c3460b75d476a84ffcc450f68da",
   "components": {
     "spf": {
       "name": "SPF",

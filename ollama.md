@@ -866,6 +866,8 @@ These commands validate configuration acceptance; they do not prove authenticati
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Ollama v0.40.14 release (checked November 2026): https://github.com/ollama/ollama/releases/tag/v0.40.14
 - Ollama release commit (checked November 2026): https://github.com/ollama/ollama/commit/9a3e8177767245acc62b735eba7d5d8a553606d0
 - Ollama repository at the reviewed tag, its file list (checked November 2026): https://github.com/ollama/ollama/tree/v0.40.14
@@ -1275,7 +1277,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "d4001588908bdf2723fb2ae68911a612a4680bb06f230088e472c8ff48efbc36",
+  "body_sha256": "f8ec3b79013bcc954292b960b176b94e11b0a50c857ee5d92ea4d75860fc7d59",
   "components": {
     "ollama": {
       "name": "Ollama",

@@ -169,6 +169,8 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Render: https://render.com/docs ; Fly.io: https://docs.fly.io/ ; Vercel: https://vercel.com/docs (each documents managed TLS and environment configuration; consult your platform's pages for the exact toggles)
 - Vercel Deployment Protection: https://vercel.com/docs/deployment-protection
 - Vercel changelog, protect production deployments for free on every plan (9 September 2026): https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan
@@ -301,7 +303,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "5b0fc4ed5bb18605f69c902c083fa747e56418cf911b0629456ac6556539c951",
+  "body_sha256": "c51cade0532e3d6c2f841858d27173b414b9592abf77016a769af61cc4e00907",
   "components": {
     "render": {
       "name": "Render documentation",

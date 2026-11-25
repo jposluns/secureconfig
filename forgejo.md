@@ -366,6 +366,8 @@ REASONED: No Forgejo instance runs here. Forgejo serves `/user/sign_up` with `20
 
 ## Sources (checked November 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Repository sources are the Forgejo repository at tag `v17.0.1` (commit `363f3dc30beef902b187af5a5244ff7af44901e6`); line numbers in the prose above are at that tag, and its upstream home is codeberg.org, not GitHub. Documentation pages under `https://forgejo.org/docs/` are the rolling, reader-facing administrator docs for the same product.
 
 - Forgejo install-lock default and `HasInstallLock` (v17.0.1): https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/modules/setting/setting.go
@@ -447,7 +449,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-10",
   "documentation_checked": "2026-11",
-  "body_sha256": "af053bd6acf0fa7a84f1d8fb958379dd6c1651ef0c6f9d2f02b012c0daf78b5a",
+  "body_sha256": "5da010ea6fda3a22d4548e954eeff192a8aa5fbffe11dfe67d26c129855b056f",
   "components": {
     "forgejo": {
       "name": "Forgejo",

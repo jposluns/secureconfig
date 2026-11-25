@@ -229,6 +229,8 @@ REASONED: following block; this guide's test design for the Vast.ai portal's pat
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - RunPod expose ports (proxy HTTPS, TCP forwarding): https://docs.runpod.io/pods/configuration/expose-ports
 - Vast.ai networking and ports (default ports, port mapping): https://docs.vast.ai/guides/instances/connect/networking
 - Vast.ai Instance Portal (PORTAL_CONFIG, Caddy reverse proxy, secure-token links): https://docs.vast.ai/guides/instances/connect/instance-portal
@@ -383,7 +385,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "987e395d78900fcb8f247ee334e70cf832f1d272bbd202d0f2200133369a4335",
+  "body_sha256": "dc56f7e2920fb41074b67339002a5d6ce91050c2ad499a84500d9c78c1717ea1",
   "components": {
     "runpod": {
       "name": "RunPod documentation",

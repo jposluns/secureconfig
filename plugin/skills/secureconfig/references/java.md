@@ -514,6 +514,8 @@ The small upload must reach and succeed at the intended handler. With a delibera
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Spring Boot how-to, embedded web servers (Configure SSL, forward headers, Tomcat proxy settings): https://docs.spring.io/spring-boot/how-to/webserver.html
 - Spring Boot SSL bundles: https://docs.spring.io/spring-boot/reference/features/ssl.html ; REST clients (applying a bundle): https://docs.spring.io/spring-boot/reference/io/rest-client.html
 - Spring Boot javadoc, Ssl (rolling documentation, checked September 2026): https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/web/server/Ssl.html
@@ -651,7 +653,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "48f596a614667a2f4284f778f9ce929ff800155978d0bfec39ad85686d335fcc",
+  "body_sha256": "be5f7b23df8da2dbc94aeb5ba211fca31f76c6bc9ebf1e00d8907d5e760ff883",
   "components": {
     "boot41": {
       "name": "Spring Boot",

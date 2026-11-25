@@ -280,6 +280,8 @@ REASONED: identity, filesystem, runtime security context and segmentation checks
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Docker Dockerfile reference (`USER`): https://docs.docker.com/reference/dockerfile/
 - Docker Compose file reference (`user`, `read_only`, `cap_add`, `cap_drop`, `security_opt`): https://docs.docker.com/reference/compose-file/
 - Docker run security options (`--security-opt no-new-privileges` and its engine behaviour): https://docs.docker.com/reference/cli/docker/container/run/
@@ -377,7 +379,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "1aebec7da57b179cd121a6e4a50acab780d17b39af6f7438353687adf082b3c0",
+  "body_sha256": "3c3a2b0513e478f19b2145f53946ebf15d926f0b03fccd9949c36d107091d609",
   "components": {
     "docker": {
       "name": "Docker documentation",

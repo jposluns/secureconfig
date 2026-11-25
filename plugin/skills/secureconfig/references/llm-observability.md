@@ -516,6 +516,8 @@ that accepts spans with no credential at all.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Langfuse, authentication and SSO (signup default, `AUTH_DISABLE_SIGNUP`, `AUTH_DISABLE_USERNAME_PASSWORD`,
   SSO providers, `AUTH_SESSION_MAX_AGE`, `NEXTAUTH_URL`): https://langfuse.com/self-hosting/security/authentication-and-sso
 - Langfuse, public API authentication (Basic Auth with project public/secret key): https://langfuse.com/docs/api-and-data-platform/features/public-api
@@ -671,7 +673,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-09",
-  "body_sha256": "fedfe69f91436b52bb1b513ae54fb4099e5dd17eed91691b4f6f6bea16ebe19b",
+  "body_sha256": "a963eae348f96d30654b8f4c826c4dea252de0a7f37dd4c8d4ee301d85f79f56",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",

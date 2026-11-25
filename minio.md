@@ -786,6 +786,8 @@ REASONED from the cited AIStor documentation: OIDC role-policy and claim-policy 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - AIStor root credential files and file-variable precedence: https://docs.min.io/aistor/reference/aistor-server/settings/root-credentials/ and https://docs.min.io/aistor/reference/aistor-server/settings/#file-based-environment-variables
 - MinIO network encryption (certs directory, public.crt/private.key, --certs-dir): https://docs.min.io/aistor/installation/linux/network-encryption/
 - MinIO: https://www.min.io/
@@ -908,7 +910,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "85740b262253dedbe64449ab7f401420e3f298980c920d0f573476995316c498",
+  "body_sha256": "2f5fc3e63f39ec70555fd333301f2abbbedededf9175b666d8b9f182222b13dc",
   "components": {
     "aistor": {
       "name": "AIStor documentation",

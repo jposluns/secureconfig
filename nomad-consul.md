@@ -379,6 +379,8 @@ give the host's public address. A "connected" on a port you did not mean to expo
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`): https://github.com/hashicorp/nomad/blob/v2.0.7/command/agent/config.go
 - Nomad 2.0.7 UI default: https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/config/ui.go
 - Nomad 2.0.7 TLS settings: https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/config/tls.go
@@ -466,7 +468,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ae1c84224571043cfac59f7ef6afdcacb0c70a0d70bb3f909794310bbefc136c",
+  "body_sha256": "ec230a90516875800d256e40cfd43387dac3fb28fd1329b7407849e01d212729",
   "components": {
     "nomad": {
       "name": "Nomad Community Edition",

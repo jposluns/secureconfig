@@ -242,6 +242,8 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Node.js HTTPS module: https://nodejs.org/api/https.html
 - Express behind proxies: https://expressjs.com/en/guide/behind-proxies/
 - express-session (MemoryStore warning, cookie.maxAge, compatible stores): https://expressjs.com/en/resources/middleware/session/
@@ -354,7 +356,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "17fec69060642068d12bbd2ac60e6644cd1036768933bf67aac4b84c898a6624",
+  "body_sha256": "9d37abf4eabf577590aaad5d005fcbd4717f5f9e9bf657b862dc327d77dc5a07",
   "components": {
     "node-v26": {
       "name": "Node.js API documentation",

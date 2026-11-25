@@ -90,6 +90,8 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Docker image history command (image history and creation-command output), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118
 - OAuth 2.0 client credentials grant (RFC 6749 section 4.4): https://datatracker.ietf.org/doc/html/rfc6749#section-4.4
 - OAuth 2.0 bearer token usage, TLS and URL rules (RFC 6750 sections 5.2 and 5.3): https://www.rfc-editor.org/info/rfc6750/
@@ -250,7 +252,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "6a24abc10fe1b9b6d87d73822faa2e92dc51935b99b58b9d4e79b45552abf14e",
+  "body_sha256": "72f4488bdf4f1c9b0deec0c98b3f1f75a9c27b551fa2958ce7eaa0b8a2736b1c",
   "components": {
     "oauth": {
       "name": "OAuth client credentials",

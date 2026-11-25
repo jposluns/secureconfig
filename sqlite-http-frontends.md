@@ -291,6 +291,8 @@ DEMONSTRATED: local guard limits on 2026-10-05 in private /dev/shm scratch with 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Applicability checked on 2026-09-18: Datasette stable documentation lists 0.65.5; the container-generator discussion here is scoped to commit `caf238aac86ebe370959b25384d6e05f6a1e2359`, not a tagged release or the separately pinned Cloud Run implementation. The sqlite-web source was inspected on moving `master`, identifying itself as 0.8.1; the released 0.8.1 package matched it for the flags and routes the loopback runs exercised. Runtime confirmation used Datasette 0.65.5, datasette-auth-passwords 1.1.1, datasette-write 0.4 and sqlite-web 0.8.1 from PyPI.
 
 Every URL listed below was fetched during authoring, except the sqlite-web 0.8.1 tag entries, which were checked against the locally extracted tag snapshot in October 2026, and the sudo sudoers manual entry, which was checked against the file at its tag on 2026-10-31. This list also records the source-fetch review.
@@ -444,7 +446,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f32f2d8ab5237bf48e3a0dbb55bc212b9cf5e903bd7165f3324c1758aad3cc47",
+  "body_sha256": "893ec79c96bcba70cf469276c4c2b7e151ab05a12c9bbd1e510dd6a7c013e747",
   "components": {
     "ds-container": {
       "name": "Datasette container generator",

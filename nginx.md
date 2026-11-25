@@ -322,6 +322,8 @@ Mind the client address these headers carry. At a direct internet edge the block
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Configuring HTTPS servers: https://nginx.org/en/docs/http/configuring_https_servers.html
 - Core module (`client_max_body_size`): https://nginx.org/en/docs/http/ngx_http_core_module.html
 - Request rate limiting (`limit_req_zone`, `limit_req`, `burst`, `nodelay`): https://nginx.org/en/docs/http/ngx_http_limit_req_module.html
@@ -423,7 +425,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "8a4ab478aaaa2f58804b00b20a1d83e38acc7de0be9fdb5c2a6d95cdf256af1c",
+  "body_sha256": "98c7cf3714a278a36e2ca907ae530a4242bbe8b91e91b258ebf007abd09d8e11",
   "components": {
     "nginx-source": {
       "name": "nginx source",

@@ -112,6 +112,8 @@ REASONED: logout, browser history and response-header inspection, per the guide'
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - MDN HTTP headers reference (Strict-Transport-Security, Content-Security-Policy, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, X-Frame-Options): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers
 - MDN Cache-Control (`no-store` forbids any cache including the browser; `private` still permits the browser's local cache): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control
 - MDN Clear-Site-Data (the `cache` directive clears the browser cache and, depending on the browser, the back/forward cache; the logout example): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Clear-Site-Data
@@ -206,7 +208,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "24c0a2fa4585cd65d568589c492c001e7e7ccbca346b115b01b57c0ee5f6648e",
+  "body_sha256": "2b3c5c04eb2f9bccd35253e993ec4d67d19462b61c4760561157cdafbc1ee266",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",

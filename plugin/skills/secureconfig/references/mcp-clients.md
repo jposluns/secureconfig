@@ -178,6 +178,8 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - MCP Authorization, 2026-07-28 (`iss` validation timing, access-token query-string prohibition, `resource` parameter, refresh-token scope guidance): https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
 - MCP Authorization Security Considerations, 2026-07-28 (PKCE MUSTs, HTTPS endpoints and redirect URIs): https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/security-considerations
 - MCP Authorization Server Discovery, 2026-07-28 (`issuer` identity requirement): https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/authorization-server-discovery
@@ -259,7 +261,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "fd628f4d9d0620375027743388242ab66b7d71d75e121bbccfd53055af5704d3",
+  "body_sha256": "76aa9e145ccd0264af74434f2441a6ddcb902c8a5b6a6b76fcd7d84f6b12dd2b",
   "components": {
     "mcp": {
       "name": "MCP",

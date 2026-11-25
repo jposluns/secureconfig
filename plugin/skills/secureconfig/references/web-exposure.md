@@ -388,6 +388,8 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - nginx core module (`location`, `^~` modifier, matching order): https://nginx.org/en/docs/http/ngx_http_core_module.html
 - nginx access module (`allow`, `deny`): https://nginx.org/en/docs/http/ngx_http_access_module.html
 - Apache mod_authz_core (`Require all denied`): https://httpd.apache.org/docs/2.4/mod/mod_authz_core.html
@@ -481,7 +483,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "0dee44da4ad5c68f6cc07b9c50b74bda93cfe86c4eff4e04232d88d83dd1a428",
+  "body_sha256": "d986fd30ab3dd83def744dac305fb33c33ab6dd8d312f321793331a3afe12ed6",
   "components": {
     "nginx": {
       "name": "nginx documentation",

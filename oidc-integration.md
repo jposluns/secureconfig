@@ -178,6 +178,8 @@ REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - RFC 9700, OAuth 2.0 Security Best Current Practice: https://www.rfc-editor.org/info/rfc9700/
 - RFC 6749, OAuth 2.0 client credential confidentiality (section 10.1) (checked October 2026): https://www.rfc-editor.org/rfc/rfc6749.html#section-10.1
 - OpenID Connect Core 1.0 (ID token validation 3.1.3.7, claim stability 5.7): https://openid.net/specs/openid-connect-core-1_0.html ; Discovery 1.0: https://openid.net/specs/openid-connect-discovery-1_0.html ; RP-Initiated Logout 1.0: https://openid.net/specs/openid-connect-rpinitiated-1_0.html
@@ -302,7 +304,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "6333a88ccbfb517faafea9d5e52afb55889b80c72c36be40705e0e4a3cf17427",
+  "body_sha256": "7fc54417bb0bbef8447597333cbde653bbbcccfe784d0701d89d64892c2f0547",
   "components": {
     "core": {
       "name": "OpenID Connect Core",

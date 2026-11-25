@@ -313,6 +313,8 @@ missing files, authentication failures, connection failures, and timeouts are in
 
 ## Sources (checked October 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Chromium 154.0.8037.57 browser loopback factories and approval-mode port fallback: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L69-L158
 - Chromium 154.0.8037.57 browser branding/profile and policy checks; approval-mode startup, with the `kDefaultDevToolsPort` 9222 fallback. Chromium 154.0.8037.57 sources: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L160-L282 and https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.h#L26
 - Browser command-line pipe/port startup and precedence over approval mode (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L325-L417
@@ -415,7 +417,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "e3ec106629244441687d5c36d3d27d69ea54f519f8bcf8df6fb8a559c89382b5",
+  "body_sha256": "4b38f7220e6c2a0e7aa8a9ee9ecfe22912b8ec638b341ac21341a5e87a13675d",
   "components": {
     "chromium": {
       "name": "Chromium",

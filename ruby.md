@@ -206,6 +206,8 @@ REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Puma README (binding): https://github.com/puma/puma/blob/aef89221e4d729c3133c723844382331ba3bbbd9/README.md
 - Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/d70de8b4e926f1f5fa0269dc46cdfadf52562628/lib/puma/dsl.rb
 - Puma default TCP port `9292` (`tcp_port: 9292`, L174) and default bind host (L369-L384): `::` when a non-loopback IPv6 interface exists, else `0.0.0.0` (pinned tag v8.0.2): https://github.com/puma/puma/blob/v8.0.2/lib/puma/configuration.rb#L369-L384 and https://github.com/puma/puma/blob/v8.0.2/lib/puma/configuration.rb#L174
@@ -284,7 +286,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "5abe45766cdb5cb3239379744dc7afee97dda1f3115d12d146a5a59e1672ca5c",
+  "body_sha256": "2463e8ae935fb0c1c9f0225697e7053ffe29b47e4f534547ac98e2a9823bfa33",
   "components": {
     "rails": {
       "name": "Rails documentation",

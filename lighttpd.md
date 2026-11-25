@@ -182,6 +182,8 @@ REASONED: configuration, redirect, authentication, listener inventory and altern
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - lighttpd 1.4.75 NEWS, 1.4.56 release heading (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L1660-L1660
 - lighttpd 1.4.75 NEWS, 1.4.56 mod_openssl protocol default (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L1927-L1927
 - lighttpd 1.4.75 NEWS, 1.4.53 release heading (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L2465-L2465
@@ -280,7 +282,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "b408b44fee9507e7328eb4a7d86dc8f89df051aa27999d49be595a175d7c2be0",
+  "body_sha256": "e1d75f558f3c35eb8bb4dbf76932635f11cc2479cc86c634b16495213cc21f72",
   "components": {
     "tls": {
       "name": "lighttpd TLS minimum",

@@ -1360,6 +1360,8 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Vault dev server (in-memory, insecure, not for production): https://developer.hashicorp.com/vault/docs/concepts/dev-server
 - Vault TCP listener (address defaults, tls_disable, cluster_address): https://developer.hashicorp.com/vault/docs/configuration/listener/tcp
 - Vault Integrated Storage (Raft) backend (path, node_id, cluster_addr): https://developer.hashicorp.com/vault/docs/configuration/storage/raft
@@ -1482,7 +1484,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "022349ca91831b2529cafa503eb58de4b7a08164ad52413b60e1c236738edbc9",
+  "body_sha256": "7f83cac927c8195eb871f571af24533b70fcf72ce65f5fb0351d24a48c5d84b6",
   "components": {
     "run": {
       "name": "Vault loopback run",

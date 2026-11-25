@@ -688,6 +688,8 @@ SHOW CREATE TABLE system.session_log;
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Listen address settings: https://clickhouse.com/docs/reference/settings/server-settings/settings/listen#listen_host
 - Base server configuration with commented-out listener examples: https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml
 - Separately pinned upstream default-user configuration: https://raw.githubusercontent.com/ClickHouse/ClickHouse/b40982f9416bb4bc2d423d7e75ec384e79494b99/programs/server/users.xml
@@ -833,7 +835,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "11efeeda48aaebe6d2002d69242d23aad7332a230d5b6f8084da586e72bb0a47",
+  "body_sha256": "83fecc799d51102d2701636eb18bae81c88a0dde7ca0338e826cb99bd7f87ca9",
   "components": {
     "docs": {
       "name": "ClickHouse documentation",

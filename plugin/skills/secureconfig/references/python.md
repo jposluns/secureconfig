@@ -189,6 +189,8 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Python `http.server` (binds all interfaces by default, serves the current directory, follows symlinks, not for production) (Python 3.14.4): https://docs.python.org/3/library/http.server.html
 - Gunicorn documentation (settings reference: bind, certfile, keyfile, ca_certs): https://gunicorn.org/reference/settings/
 - Uvicorn settings reference: https://github.com/Kludex/uvicorn/blob/5ac6265a01ff6dcadb0e4250152c3deaf8a168a9/docs/settings.md
@@ -360,7 +362,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "32048bf47a61a7c8b01bac34c0340deac63450b4ec8c9ec1af63b2a43d00b065",
+  "body_sha256": "f245f70292dc45a27a68f660be052322d7d15889101e77d866267345684f63bf",
   "components": {
     "django": {
       "name": "Django documentation",

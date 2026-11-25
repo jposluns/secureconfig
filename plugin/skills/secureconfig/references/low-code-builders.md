@@ -834,6 +834,8 @@ REASONED: following block; the CORS check for the NocoDB section, reasoned from 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - NocoDB 2026.09.0 port default, JWT secret generation and proxy-trust reset: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/Noco.ts
 - NocoDB 2026.09.0 proxy trust default (`NC_TRUST_PROXY`): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/utils/trustProxy.ts
 - NocoDB 2026.09.0 lockfile (pins Express 4.21.2 and proxy-addr 2.0.7 for `packages/nocodb`, and resolves cors only as 2.8.5; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/pnpm-lock.yaml
@@ -1100,7 +1102,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "78ae595544610edfc9335b41fd52f12c701ec395550ebdc36a2840cf91562879",
+  "body_sha256": "98bc6e5354c0b3ec4047075bc1d6df1f31a5fcd254d5e74f4db9951bb157dec7",
   "components": {
     "nocodb": {
       "name": "NocoDB",

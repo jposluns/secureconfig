@@ -385,6 +385,8 @@ REASONED: following block; reading a failed probe and running the positive contr
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - AWS EC2 instance metadata service configuration (IMDSv2, hop limit, the `[fd00:ec2::254]` IPv6 endpoint): https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html
 - AWS instance metadata options (hop-limit defaults incl. `ImdsSupport: v2.0`, IPv6): https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-options.html
 - AWS VPC Flow Logs limitations (metadata `169.254.169.254` traffic is not logged): https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs-limitations.html
@@ -470,7 +472,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "a57fad00a152a13dc92f3ae4b35ab36434878f88ea76a082bf8dcd3426d10cf7",
+  "body_sha256": "33cbfff3d905ab77d308a004ce15eb023141916a896e0719c0df1d977199a1b8",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",

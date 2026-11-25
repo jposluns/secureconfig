@@ -1128,6 +1128,8 @@ service result or deployed-bundle scan is claimed.
 
 ## Sources (checked November 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 The November 2026 date in this heading is the guide-wide documentation check, which covers every rolling documentation item: the 9 Appwrite rolling documentation items were rechecked as served on 2026-11-04 and the 5 PocketBase pages as served on 2026-11-05. Items pinned to a release or commit carry no check date, except those marked "checked October 2026" or "checked November 2026", which were checked individually, and some pinned items were first cited in October or November 2026.
 
 The PocketBase source items cite its author's forge at the v0.41.1 tag, as `rev=refs/tags/v0.41.1`, because PocketBase moved its source and releases off GitHub at v0.41.0. The cited files and line ranges were read in the v0.41.1 Go module from proxy.golang.org, whose recorded origin is the forge's v0.41.1 tag at commit f70b24e186df98df2e7ebc703f103cb94dc3ca63, and whose zip and `go.mod` match their sum.golang.org h1 hashes, recomputed on 2026-11-06. Each of the 16 cited files in that module is byte-identical to the copy the forge's API served for `refs/tags/v0.41.1` on 2026-11-06. As corroboration of the tag's commit, a commit list the forge's API returned that day starts with f70b24e1, but its request was not recorded, so that the API names f70b24e1 as the tag's newest commit is this guide's inference. The forge's app script loads a file page's text in the browser from that API, passing on the `rev` value that its router decodes from the page's query. That the router passes `refs/tags/v0.41.1` on unchanged is this guide's inference, because the router script was not read. On 2026-11-06 the API answered a request for `pocketbase.go` at `rev=v0.41.1` with HTTP 400, "Invalid or missing revision.", and served it at `rev=refs/tags/v0.41.1`, encoded or not, with the module copy's size, so the links use that form. That each page shows its file's text is this guide's inference: no page in this form was requested or viewed in a browser, and the page's own requests to the API were not made. The forge's line-anchor format is not established, so line ranges stay in the link text: the file view marks its code for Prism's linkable line numbers, but the Prism script that reads an anchor was not read. The v0.41.0 release notes were read in the forge's public releases collection, in record `7vo1mkjw049veng` with tag v0.41.0. The release-notes link below already names the release by its tag, in the form the forge's releases page builds as each release's own link. That the page lists the repository's releases matching its decoded `expr` value, here `tag="v0.41.0"`, is this guide's inference, because the router script that decodes the query was not read. That it shows those notes is this guide's inference too: the page was not viewed in a browser, and that the record's release channel belongs to this repository was not established.
@@ -1440,7 +1442,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-11",
-  "body_sha256": "39607da0b6b9a68e6d527fa6371f05299ba4f5de63f9c4ddd08fcf3e92d083ac",
+  "body_sha256": "1eb4512c01f9bbbea12f6a70840509097048484520aa0c133e9040b4e92d0866",
   "components": {
     "pb": {
       "name": "PocketBase",

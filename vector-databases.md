@@ -402,6 +402,8 @@ REASONED: tenant isolation and bypass positive control. A live PostgreSQL with p
 
 ## Sources (checked October 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 The October 2026 date records the guide-wide documentation check. Items, or parts of items, pinned to a release or commit carry no check date unless the pinned part itself is marked "checked October 2026", and some of those items were first cited in October 2026.
 
 - Milvus Compose configuration and credentials (pinned tag v3.0.5, checked November 2026): image paths, the image's runtime user (`USER ${MILVUS_RUNTIME_USER}`, default `milvus:milvus`), the one-shot `milvus-volume-init` service, file precedence and `MILVUSCONF`, environment formatter, authentication/TLS keys, the bundled MinIO service and storage defaults. Milvus Compose configuration and credentials sources (pinned tag v3.0.5): https://github.com/milvus-io/milvus/blob/v3.0.5/deployments/docker/standalone/docker-compose.yml#L47-L58, https://github.com/milvus-io/milvus/blob/v3.0.5/deployments/docker/standalone/docker-compose.yml#L6-L28, https://github.com/milvus-io/milvus/blob/v3.0.5/build/docker/milvus/ubuntu22.04/Dockerfile#L39. Milvus Compose configuration and credentials sources (pinned tag v3.0.5), continued: https://github.com/milvus-io/milvus/blob/v3.0.5/build/docker/milvus/ubuntu22.04/Dockerfile#L58-L59, https://github.com/milvus-io/milvus/blob/v3.0.5/build/docker/milvus/ubuntu22.04/Dockerfile#L16, https://github.com/milvus-io/milvus/blob/v3.0.5/pkg/util/paramtable/base_table.go#L69-L72. Milvus Compose configuration and credentials sources (pinned tag v3.0.5), continued: https://github.com/milvus-io/milvus/blob/v3.0.5/pkg/util/paramtable/base_table.go#L145-L153, https://github.com/milvus-io/milvus/blob/v3.0.5/pkg/util/paramtable/base_table.go#L256-L272, https://github.com/milvus-io/milvus/blob/v3.0.5/pkg/util/paramtable/component_param.go#L1056-L1061. Milvus Compose configuration and credentials sources (pinned tag v3.0.5), continued: https://github.com/milvus-io/milvus/blob/v3.0.5/pkg/util/paramtable/grpc_param.go#L144-L175 and https://github.com/milvus-io/milvus/blob/v3.0.5/pkg/util/paramtable/service_param.go#L1902-L1930
@@ -603,7 +605,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-10",
-  "body_sha256": "04d1e9bf9356da7fe59f9e13c5de39812ac94cccb41efb77ac84d82b6f8e40ab",
+  "body_sha256": "05b31845e5800e942df0b9a0c96535584ce589f2fb96cda7fc48ff702e834ca8",
   "components": {
     "q": {
       "name": "Qdrant source",

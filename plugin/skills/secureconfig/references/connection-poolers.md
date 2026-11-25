@@ -527,6 +527,8 @@ Put the human paths to the host behind MFA per [mfa.md](mfa.md).
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - PgBouncer configuration, including the ini comment rule, `listen_addr`, `listen_port`, `client_tls_sslmode`, `server_tls_sslmode`, `auth_type`, `auth_file`, `auth_query`, `admin_users`, `stats_users`, `application_name_add_host`, and the `[databases]` `user` key (rolling documentation, checked September 2026): https://www.pgbouncer.org/config.html
 - PgBouncer `listen_addr` default `""`, and the socket-activation path that ignores it (pinned tag pgbouncer_1_26_0). PgBouncer `listen_addr` default and socket-activation path sources: https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/main.c#L292-L294 and https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/pooler.c#L495-L498. PgBouncer builds without systemd support define `sd_listen_fds()` as `(0)`. PgBouncer `sd_listen_fds()` definition source: https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/include/bouncer.h#L54-L62
 - PgBouncer usage, the admin console and its `SHOW` commands, including who `auth_type=any` admits and the passwordless Unix-socket login: https://www.pgbouncer.org/usage.html
@@ -638,7 +640,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "d8331d53ffa0efedcdc7f3e28b77816137fcb59d5c4a6257408e19213547adb7",
+  "body_sha256": "232f8f3ab303f153671ba3111e3f3d3b7e5f76f312b50be2649ce6634f475f8b",
   "components": {
     "pgb-bind": {
       "name": "PgBouncer listener source",

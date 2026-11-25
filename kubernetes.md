@@ -598,6 +598,8 @@ allowed ranges out of the provider's own configuration rather than inferring the
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Ingress NGINX: Statement from the Kubernetes Steering and Security Response Committees (retirement, detection command): https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/ . Kubernetes sources: Kubernetes docs, Gateway API (migration guide from Ingress): https://kubernetes.io/docs/concepts/services-networking/gateway/ ; Kubernetes docs, Ingress (the project recommends Gateway; the Ingress API is frozen): https://kubernetes.io/docs/concepts/services-networking/ingress/
 - Gateway API getting started (CRD install): https://gateway-api.sigs.k8s.io/guides/getting-started/introduction/ ; TLS: https://gateway-api.sigs.k8s.io/guides/user-guides/tls/ ; HTTP routing: https://gateway-api.sigs.k8s.io/guides/user-guides/http-routing/ ; redirects: https://gateway-api.sigs.k8s.io/guides/user-guides/http-redirect-rewrite/
 - Envoy Gateway (rolling documentation, checked September 2026): https://gateway.envoyproxy.io/ ; Helm install: https://gateway.envoyproxy.io/v1.9/install/install-helm/ ; quickstart: https://gateway.envoyproxy.io/v1.9/tasks/quickstart/
@@ -717,7 +719,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "7b937fe7cf1b7fecaebe34745152c780e93ea43e74fae0a979d45910f1e69002",
+  "body_sha256": "bf36aa1e93a06600f0936c65e9a8a9e9787b11d97e9effec5b671b3183fad6f8",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
