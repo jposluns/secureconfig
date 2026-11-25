@@ -48,7 +48,7 @@ kubernetes.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	7b937fe7cf1b7fecaebe34745152c780e93ea4
 lighttpd.md	S	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	b408b44fee9507e7328eb4a7d86dc8f89df051aa27999d49be595a175d7c2be0	2026-11-10	tool	current
 litellm.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	769276432646a9365f357cc4e98154837e86c1851b249a1dd2642aae228dd849	2026-11-10	tool	current
 llm-observability.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	fedfe69f91436b52bb1b513ae54fb4099e5dd17eed91691b4f6f6bea16ebe19b	2026-11-10	tool	current
-low-code-builders.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	63b577ff63d5fa4ebdaa434eb7c7bc37c6ad8966f956a054ba8b4ff9ef103796	2026-11-10	tool	current
+low-code-builders.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	78ae595544610edfc9335b41fd52f12c701ec395550ebdc36a2840cf91562879	2026-11-10	tool	current
 machine-auth.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	6a24abc10fe1b9b6d87d73822faa2e92dc51935b99b58b9d4e79b45552abf14e	2026-11-10	tool	current
 mcp-clients.md	C	P	?	?	?	PARTIAL(D3)	?	PARTIAL(F1)	?	?	?	SOLID	fd628f4d9d0620375027743388242ab66b7d71d75e121bbccfd53055af5704d3	2026-11-10	tool	current
 mcp-servers.md	S	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	581d8af4352565f05f8821de257a81cf4df59b44433db76859b2c67bb70a729b	2026-11-10	tool	current
