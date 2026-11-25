@@ -425,7 +425,9 @@ def build(rebuild=False):
     ledger_extras = [] if rebuild else load_ledger_extras(LEDGER)
     rows, ledger = [], []
     for guide in sorted(enrolled):
-        text = (ROOT / guide).read_text(encoding="utf-8")
+        # Bytes decoded as they are, so a CR reaches d3() and a near-miss line ending stays one;
+        # F1 and G1 split with splitlines(), which ends a line at CR, LF or CRLF either way.
+        text = (ROOT / guide).read_bytes().decode("utf-8")
         fresh_cells, facts = cells_for(guide, text)
         old = existing.get(guide)
         merged = merge_cells(fresh_cells, old["cells"] if old else None)

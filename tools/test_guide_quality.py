@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Cases for check_guide_quality.py, run on in-memory fixtures (no live corpus, no network).
+"""Cases for check_guide_quality.py, run on in-memory fixtures and one temporary tree (no live
+corpus, no network).
 
 Two kinds of case. compute_verdict() is exercised against the five verdicts and both NEEDS-WORK
 paths (a HIGH-class GAP and three GAPs). validate() is driven with a small fixture matrix and one
@@ -9,6 +10,8 @@ EXEMPLARY-while-stale row, and the field-shape refusals, plus a clean pass and t
 stale-but-not-exemplary row.
 """
 import sys
+import tempfile
+from pathlib import Path
 
 sys.path.insert(0, "tools")
 import _markdown  # noqa: E402
@@ -253,6 +256,32 @@ def main():
                  + later_item) == ("PARTIAL(D3)", 0, 1))
     check("the sentence with no Sources heading is n/a",
           gen.d3("# G\n\n" + conv + "\n\n" + later_item) == ("n/a", 0, 0))
+
+    # The same rule through build(), from a guide file in a temporary tree: a CR at the end of the
+    # sentence line must reach d3(). The CRLF case FAILS on the code before this check, whose
+    # read_text() turned CRLF into LF and so scored that guide P.
+    def built_d_cell(guide_bytes):
+        saved = gen.ROOT, c.enrolled_guides, c.recorded_digest
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for path in gen.BASELINES:
+                (root / path).parent.mkdir(parents=True, exist_ok=True)
+                (root / path).write_bytes(b"")
+            (root / "g.md").write_bytes(guide_bytes)
+            gen.ROOT = root
+            c.enrolled_guides = lambda: ["g.md"]
+            c.recorded_digest = lambda guide: "0" * 64
+            try:
+                tsv, _ledger = gen.build(rebuild=True)
+            finally:
+                gen.ROOT, c.enrolled_guides, c.recorded_digest = saved
+        fields = tsv.splitlines()[2].split("\t")
+        return fields[2 + c.GROUPS.index("D")]
+
+    check("a guide file whose sentence line ends in CRLF builds to PARTIAL(D3)",
+          built_d_cell((head + conv + "\r\n\n" + later_item).encode("utf-8")) == "PARTIAL(D3)")
+    check("the same guide file with LF builds to P on D",
+          built_d_cell((head + conv + "\n\n" + later_item).encode("utf-8")) == "P")
 
     # A structural n/a from the tree wins over any recorded cell.
     check("a tree n/a wins over a recorded judgment cell",
