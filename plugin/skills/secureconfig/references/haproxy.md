@@ -371,6 +371,8 @@ every line after the first for your shell to run.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - HAProxy 3.0 Configuration Manual (`bind ssl crt`/`verify`, `ssl-default-bind-options`/`-ciphers`/`-ciphersuites`, `maxconn`, `req.body_size`, `http-request deny deny_status`, `http-after-response`, `timeout http-request`, `stats enable`/`auth`/`admin`, `user`/`group`/`chroot`) (http-after-response: HAProxy 2.2+): https://docs.haproxy.org/3.0/configuration.html
 - HAProxy 3.0 Management Guide (runtime API over the `stats socket`, command levels, reload): https://docs.haproxy.org/3.0/management.html
 - HAProxy supported releases: https://www.haproxy.org/
@@ -440,7 +442,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "4bfde41dbf431bd9f1e54c261e8ced0bc6aa192d56e627d782396ebe3ad204dd",
+  "body_sha256": "f2a3166a2210025bfc798afa2771130aab7be6dd4763267ee0e284daa0c6c0d7",
   "components": {
     "haproxy": {
       "name": "HAProxy",

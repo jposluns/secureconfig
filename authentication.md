@@ -63,6 +63,8 @@ TLS without authentication leaves a service open to the whole internet over an e
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - fail2ban default disabled setting (checked October 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/config/jail.conf#L152-L167
 - fail2ban sshd jail configuration (checked October 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/config/jail.conf#L271-L279
 - fail2ban sshd filter (checked October 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/config/filter.d/sshd.conf#L104-L111
@@ -309,7 +311,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "a2513ee36418f8ce4396ccfc1dddc56469cfc4e405483835b4ef80372a1cadbe",
+  "body_sha256": "315670499b62740c9557d7d1540bba69ce97a1be38124110a763c26a21b001af",
   "components": {
     "owasp": {
       "name": "OWASP authentication and password storage",

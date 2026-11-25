@@ -664,6 +664,8 @@ WHERE error IS NOT NULL OR NOT applied;
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Official PostgreSQL Docker images (14 through 19, Debian and Alpine; shown for 19/bookworm; pinned commit d588a44673ea9d123c1acb1a6924de10a27fc315). The cited Docker image files cover the build's `listen_addresses = '*'` edit to postgresql.conf.sample, `CMD ["postgres"]`, the entrypoint's initdb call with no authentication method beyond `POSTGRES_INITDB_ARGS`, the init-only password check (`POSTGRES_PASSWORD` read with `file_env`), and the appended `host all all all` line defaulting to `password_encryption`. Official PostgreSQL Docker image sources: https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/Dockerfile#L183-L184 and https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/Dockerfile#L223-L224. More official PostgreSQL Docker image sources: https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L92 and https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L105-L138. More official PostgreSQL Docker image sources: https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L235 and https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L268-L286. One more official PostgreSQL Docker image source: https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L347-L355
 - initdb's default authentication method `trust` when none is given, and the sample `pg_hba.conf` loopback rules that take it (pinned tag REL_17_11; the same default in REL_14_24, REL_15_19, REL_16_15, REL_18_6 and REL_19_BETA4). PostgreSQL initdb and `pg_hba.conf` sources: https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L2550-L2557, https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L3434-L3435 and https://github.com/postgres/postgres/blob/REL_17_11/src/backend/libpq/pg_hba.conf.sample#L113-L117
 - Secure TCP/IP connections with SSL and TLS file reload behaviour: https://www.postgresql.org/docs/current/ssl-tcp.html
@@ -794,7 +796,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "2d0c54ebff936e9948ab2c81c6efb7c191221fe4acb3d7ba78d1f362fdbdf5df",
+  "body_sha256": "0f2e8bc4994aaf6cba548b3aa7d6ca988d0b977a0b5cef33c0bd2cf188413901",
   "components": {
     "init": {
       "name": "PostgreSQL initdb source",

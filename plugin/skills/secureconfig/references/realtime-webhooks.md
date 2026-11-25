@@ -229,6 +229,8 @@ REASONED: following block; origin reachability follows the cited curl documentat
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Scope and revisions: browser behavior follows RFC 6455 and the HTML and Fetch living standards retrieved on 2026-09-18; SDK-specific tolerance behavior was checked against stripe-node v18.5.0 and stripe-python v12.5.0; the Verify diagnostics require curl 7.75.0 or newer; Traefik timeout syntax was checked against v3.5. Other linked live documentation was retrieved on 2026-09-18 without an available immutable revision, and these source checks do not demonstrate deployment behavior.
 
 - MDN: WebSocket API, `WebSocket()` constructor (no header support, `protocols` argument): https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
@@ -337,7 +339,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "406f7ed9f7e018166c3259cb973b83d2b3daae8c16008540473cd3e0d52a0b1d",
+  "body_sha256": "feab3fa06fff6821c8fd0aa2c3a0e71546d33de73e5924f3380afc1df72347c8",
   "components": {
     "websocket": {
       "name": "WebSocket protocol",

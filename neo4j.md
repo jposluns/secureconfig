@@ -843,6 +843,8 @@ REASONED: a scope summary for this Verify section, per the guide's cited Configu
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Configure network connectors (Neo4j 5): https://neo4j.com/docs/operations-manual/5/configuration/connectors/
 - Ports: https://neo4j.com/docs/operations-manual/current/configuration/ports/
 - Set an initial password: https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/
@@ -1022,7 +1024,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a5bae35dce475f51d51a0897f48af22dc879fa254260e5b604de23c48c7051ce",
+  "body_sha256": "446a520ff8d76c52cfb4709d083178cd4b2aecb0b096f7c045c8286c117cd56f",
   "components": {
     "cluster": {
       "name": "Neo4j Enterprise",

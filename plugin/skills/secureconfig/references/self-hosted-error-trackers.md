@@ -159,6 +159,8 @@ Point that block, with `web`, at Sentry's `http://tracker.example.com:9000/`: th
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Sentry self-hosted Docker Compose (`SENTRY_BIND`, the bundled nginx publication): https://github.com/getsentry/self-hosted/blob/26.10.1/docker-compose.yml
 - Sentry self-hosted `.env` (`SENTRY_BIND=9000` default): https://github.com/getsentry/self-hosted/blob/26.10.1/.env
 - Sentry `auth.allow-registration` default `False`: https://github.com/getsentry/sentry/blob/26.10.1/src/sentry/options/defaults.py
@@ -226,7 +228,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "44db64de9642a0f626974f6c1896e099069200efe0abd67eb0479e6effaab848",
+  "body_sha256": "edbd055603171ef8b79e7910a038b4cff42d0f23f69870988b33241afe6e30cb",
   "components": {
     "sentry": {
       "name": "Sentry and self-hosted distribution",

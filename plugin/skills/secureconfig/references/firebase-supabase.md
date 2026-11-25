@@ -895,6 +895,8 @@ REASONED: tool-version provenance for the historical local runs above; the [Shel
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Firebase security rules: https://firebase.google.com/docs/rules
 - Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings): https://supabase.com/docs/guides/getting-started/api-keys
 - Supabase row level security: https://supabase.com/docs/guides/database/postgres/row-level-security
@@ -1075,7 +1077,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "57dd06cbc616f73313795aa2cbdc8d13107409791da3fc46435daa85b69b419b",
+  "body_sha256": "be9b0fbebde497b68f19c476b05c9fb00f73296a9afcbe2a56a427ad3258c80d",
   "components": {
     "firebase": {
       "name": "Firebase documentation",

@@ -342,6 +342,8 @@ REASONED: following block; fatal hostname and CA verification with `openssl s_cl
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - LiveKit ports and firewall reference (`7880`, `7881`, UDP media range, single-port mux): https://docs.livekit.io/transport/self-hosting/ports-firewall/
 - LiveKit key validation (`ValidateKeys()` errors on an empty key map and on a key file readable by others; the sub-32-character secret log): https://raw.githubusercontent.com/livekit/livekit/v1.13.7/pkg/config/config.go
 - LiveKit development-mode `devkey`/`secret` injection and conditional loopback bind: https://raw.githubusercontent.com/livekit/livekit/v1.13.7/cmd/server/main.go
@@ -469,7 +471,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "bde07d579828c59c9edc80c1b1e35e994b92dfdeac4e9548cb13bc7ab132db4e",
+  "body_sha256": "92fa5a1c8ef7eff295dc6aff0031e3e3ee78d880cc046aaf18de262196be58fd",
   "components": {
     "livekit": {
       "name": "LiveKit",

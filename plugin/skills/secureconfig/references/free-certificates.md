@@ -266,6 +266,8 @@ REASONED: following block; the CAA check for the CAA records section above, per 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Let's Encrypt documentation (rolling documentation, checked September 2026): https://letsencrypt.org/docs/
 - Certbot instructions (rolling documentation, checked September 2026): https://certbot.eff.org/
 - Certbot reconfigure (2.3.0 and later; v2.3.0 user guide): https://raw.githubusercontent.com/certbot/certbot/v2.3.0/certbot/docs/using.rst
@@ -394,7 +396,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "b6b3602573dfa47ca4cf97a71ed90192057d15d83a44931bf16b416b5c0d7b12",
+  "body_sha256": "90e3fb3884e8b2f149f4c07daabcc878e0e7bce557fb19da53790904db2b3f00",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",

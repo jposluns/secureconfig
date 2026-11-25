@@ -305,6 +305,8 @@ REASONED: preceding block; external TCP reachability follows the cited MLflow ho
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - MLflow CSRF-key file input: [global `--env-file` option and existing-environment precedence](https://mlflow.org/docs/latest/api_reference/cli.html#mlflow), [v3.16.1 auth factory](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/auth/__init__.py#L6008-L6021), and [v3.16.1 worker environment](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L401-L402).
 - MLflow authentication with username and password (`--app-name basic-auth`, default admin credentials, `basic_auth.ini` keys, `MLFLOW_AUTH_CONFIG_PATH`, `MLFLOW_FLASK_SERVER_SECRET_KEY`, client variables, 403 on missing permission): https://mlflow.org/docs/latest/self-hosting/security/basic-http-auth/
 - MLflow authentication REST API (`2.0/mlflow/users/update-password` request fields): https://mlflow.org/docs/latest/api_reference/auth/rest-api.html
@@ -396,7 +398,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "229b7fe148bd06baf56a819e4b39abd955e9bea96468ff4d6aea73f8b076b04d",
+  "body_sha256": "955c235f0af3f28eb2b388886d814e71dc6cd8003a1df1632ced686a179c524f",
   "components": {
     "source": {
       "name": "MLflow pinned source",

@@ -233,6 +233,8 @@ REASONED: the historical external-vantage and wildcard limitations; per five of 
 
 ## Sources (checked October 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at the time of writing; `server.address` defaults to unset (all interfaces) and `server.port` to `8501`, and the explicit loopback setting above is required for the fronting-proxy pattern. `st.login()` has been available since the 1.42.0 series.
 
 - Streamlit config.toml reference, server.address, server.sslCertFile, server.sslKeyFile and the production warning (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
@@ -338,7 +340,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-10",
-  "body_sha256": "0b49ec359ddfa611e974e64a14d8c9a03ce8acdeb15d5c93ea8487ed739702aa",
+  "body_sha256": "dc977979704ff4660fa4728ac8d96de75d4ecdb4ddfe6487d338e4084512c53d",
   "components": {
     "streamlit": {
       "name": "Streamlit",

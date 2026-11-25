@@ -227,6 +227,8 @@ REASONED: the listener-inventory block, the third above, was run in its current 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - SvelteKit adapter-node origin configuration and proxy header variables (pinned tag @sveltejs/adapter-node@5.5.7; checked October 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L17-L24
 - SvelteKit adapter-node request origin passed to getRequest (pinned tag @sveltejs/adapter-node@5.5.7; checked October 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L95-L105
 - SvelteKit adapter-node protocol, Host and port header fallback (pinned tag @sveltejs/adapter-node@5.5.7; checked October 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L209-L239
@@ -370,7 +372,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-25",
   "documentation_checked": "2026-09",
-  "body_sha256": "d6761b841f00fc2f2afe75fab08d3617eb2eb4da4987fab7e7af01a2d38a6bb1",
+  "body_sha256": "2345eca53f04ae34f5cb5879fc90b3075e91c8e424a1c678812d14aeaac7c08b",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",

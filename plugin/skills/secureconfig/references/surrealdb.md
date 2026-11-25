@@ -418,6 +418,8 @@ shell to run.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - SurrealDB CLI, `surreal db start` (start credentials define a new root user with the `OWNER` role) (checked November 2026): https://surrealdb.com/docs/reference/cli/db/commands/start
 - Surreal CLI launcher: `surreal <component> <command>` passes everything after the component name on unchanged, and the install script installs `surreal` with the database as a pinned component (checked November 2026): https://surrealdb.com/docs/explore/cli
 - Surreal CLI components: a name that is not a component runs a `surreal-<name>` from `PATH`, and `SURREAL_*` variables other than `SURREAL_CLI_*` belong to the database (checked November 2026): https://surrealdb.com/docs/explore/cli/components
@@ -573,7 +575,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "3deb6bdd099c2d6a0d817901e21eb7d800d8d68aa2f0365ad01c4fb1fdb652f8",
+  "body_sha256": "5c0f72010815d1ab578ade07942eb8f4467623763041fe979edae8ac99f25ffe",
   "components": {
     "pinned": {
       "name": "SurrealDB server and image",

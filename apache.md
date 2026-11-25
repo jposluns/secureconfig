@@ -250,6 +250,8 @@ choose does not serve the protected `DocumentRoot`.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Apache SSL/TLS how-to: https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html
 - Apache authentication how-to: https://httpd.apache.org/docs/2.4/howto/auth.html
 - Apache name-based virtual hosts, for which vhost answers an unmatched Host header: https://httpd.apache.org/docs/2.4/vhosts/name-based.html
@@ -329,7 +331,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "4fc847dae3fcde93596591c447ffe745048433b4cbf149aa2527c49ae90709a2",
+  "body_sha256": "32f82d7036ec1a9ab82cc001980cd02969722aaac1981ef6a9ce7021f06b4d0e",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",

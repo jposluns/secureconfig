@@ -628,6 +628,8 @@ Self-service signup lets users choose their own usernames, which GHSA-93gc-h923-
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Jupyter Server public server guide and password/TLS setup (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/latest/operators/public-server.html
 - Jupyter Server security and token/password authentication (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/latest/operators/security.html
 - Jupyter Server API base handler, protected API responses, and metrics enforcement (v2.21.1, checked November 2026): https://github.com/jupyter-server/jupyter_server/blob/v2.21.1/jupyter_server/base/handlers.py
@@ -798,7 +800,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "8326a339802f8dfc1f8b7b3f6c4db04c6388de9419ed5f6473700a9872d1e283",
+  "body_sha256": "8bd756b08cd17b92e88c5b8e5265fece1b77bd290808d6b9a91e81caa617ace6",
   "components": {
     "server": {
       "name": "Jupyter Server",

@@ -261,6 +261,8 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
 
 ## Sources (checked October 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - n8n deployment environment variables (N8N_LISTEN_ADDRESS, N8N_PROTOCOL, N8N_SSL_KEY, N8N_SSL_CERT, defaults): https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/deployment
 - n8n security policies (MFA enforcement 2.18.0+, licensing, SSO exception): https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/manage-security-policies
 - n8n SSL setup: https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/set-up-ssl
@@ -556,7 +558,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-10",
-  "body_sha256": "f6e7899bd9c60ae3e0c59c9202223a7fcb58592b6f43a745b7325bfdaf77130e",
+  "body_sha256": "5aaeb55ae9ca2c68e819f417bf159219ccddbf4cdba0456d48f9160a94dab27c",
   "components": {
     "server": {
       "name": "n8n listener source",

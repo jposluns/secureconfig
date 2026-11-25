@@ -410,6 +410,8 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Open WebUI environment configuration reference (rolling documentation, checked September 2026): https://docs.openwebui.com/reference/env-configuration/
 - Open WebUI FAQ (the first account created becomes the administrator): https://docs.openwebui.com/faq/
 - Open WebUI repository (the Docker Quick Start `-v open-webui:/app/backend/data` data volume): https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/README.md
@@ -525,7 +527,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "e51d97b1051005da6ba4d083b5949d60a91a1cb1e0910407c333aad9e2c6b281",
+  "body_sha256": "084863ff8532b20bcfb32f428e44761ca92c5558e4a8967c40feee5a065a81a3",
   "components": {
     "webui": {
       "name": "Open WebUI",

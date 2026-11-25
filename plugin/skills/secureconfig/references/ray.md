@@ -361,6 +361,8 @@ REASONED: following block; direct-agent anonymous/token request preparation and 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Ray security guidelines (arbitrary code execution, network isolation, TLS is not a replacement, token auth from 2.52.0): https://docs.ray.io/en/latest/ray-security/index.html
 - Ray token authentication (`RAY_AUTH_MODE`, `RAY_AUTH_TOKEN`, `RAY_AUTH_TOKEN_PATH`, `ray get-auth-token`, plaintext-header caveat): https://docs.ray.io/en/latest/ray-security/token-auth.html
 - Ray 2.58.0 token input precedence and file-based job submission: https://github.com/ray-project/ray/blob/ray-2.58.0/doc/source/ray-security/token-auth.md
@@ -492,7 +494,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "20627523910cb5b9e66607932b0490ab17d6041e9c4ad3639fb8e919c294110b",
+  "body_sha256": "0d05eb7d0ab1b9b1509920bb42081eed43e3aa7a16df6cdf0b5f17e17778d016",
   "components": {
     "ray": {
       "name": "Ray pinned source",

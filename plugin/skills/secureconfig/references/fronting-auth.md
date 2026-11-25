@@ -254,6 +254,8 @@ REASONED: following block; the cited oauth2-proxy/Authelia integrations, pinned 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - oauth2-proxy configuration overview, flags, cookie-secret length and the `--trusted-proxy-ip` warning (pinned tag v7.15.6, checked November 2026): https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/v7.15.6/docs/docs/configuration/overview.md
 - oauth2-proxy nginx integration (rolling documentation, checked September 2026): https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/nginx/
 - oauth2-proxy Traefik integration (pinned tag v7.15.6, checked November 2026): https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/v7.15.6/docs/docs/configuration/integrations/traefik.md
@@ -347,7 +349,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "4f38f0bb8720d400bea95f4aa0219297743fbf1689b32372792c82bf38f82859",
+  "body_sha256": "00e8961767c7787bf8311ba1318d61670007ca963403c31e7a009c9aad1b664c",
   "components": {
     "oauth": {
       "name": "oauth2-proxy",

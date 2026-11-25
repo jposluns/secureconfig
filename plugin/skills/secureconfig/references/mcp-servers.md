@@ -387,6 +387,8 @@ REASONED: following block; the wrong-audience probe in the following block, per 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - MCP specification 2026-07-28, Transports, Streamable HTTP (POST endpoint, Origin validation, loopback binding, request headers, header/body validation, removed legacy mechanisms): https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http
 - MCP specification 2026-07-28, Base protocol (per-request `_meta`, protocol version, client capabilities and identity): https://modelcontextprotocol.io/specification/2026-07-28/basic/index
 - MCP specification 2026-07-28, Discovery, `server/discover` (server implementation requirement, optional client call, request and response shape): https://modelcontextprotocol.io/specification/2026-07-28/server/discover
@@ -476,7 +478,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "581d8af4352565f05f8821de257a81cf4df59b44433db76859b2c67bb70a729b",
+  "body_sha256": "bcc4530157fde6e1c2ac632011a7aee0edc398450755278c52399171a8e9fcd9",
   "components": {
     "mcp": {
       "name": "MCP",

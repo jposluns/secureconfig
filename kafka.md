@@ -859,6 +859,8 @@ The checks below remain REASONED from the cited Kafka documentation and pinned s
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Kafka security overview (Kafka 4.3 documentation): https://kafka.apache.org/43/security/security-overview/
 - Listener configuration (controller listener, combined-node requirement, protocol map) (Kafka 4.3 documentation): https://kafka.apache.org/43/security/listener-configuration/
 - Encryption and authentication using SSL (Kafka 4.3 documentation): https://kafka.apache.org/43/security/encryption-and-authentication-using-ssl/
@@ -969,7 +971,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "5907c6db29f85723ec9dd9c6b75d47955f878e0aff62365516161332685693ac",
+  "body_sha256": "167627b086a0840043a709f03e20c9269ed04efb59e43992afa81ae3446fb3e2",
   "components": {
     "default": {
       "name": "Kafka listener default",

@@ -413,6 +413,8 @@ REASONED: Laravel exception-route comparison. A live Laravel deployment stand-up
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - PHP FPM configuration (`listen`, `listen.allowed_clients`, `listen.owner`) (PHP 8.x): https://www.php.net/manual/en/install.fpm.configuration.php
 - PHP session runtime configuration (PHP 8.x): https://www.php.net/manual/en/session.configuration.php
 - PHP `session_regenerate_id()`: https://www.php.net/manual/en/function.session-regenerate-id.php
@@ -544,7 +546,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "68ff4db5978b00e023f86d75f52ae8a48964384416a045a2150ad4d7e7d12941",
+  "body_sha256": "a8383b357b0a8facc60ddd0c55a80258e04bc8237434244c525401a8d845ead7",
   "components": {
     "php8": {
       "name": "PHP native configuration",

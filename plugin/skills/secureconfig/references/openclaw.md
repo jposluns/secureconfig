@@ -427,6 +427,8 @@ REASONED: No OpenClaw Gateway runs here. For the origin check, a fixed non-loopb
 
 ## Sources (checked November 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Repository sources are the OpenClaw repository at annotated tag `v2026.11.2` (commit `b556fdf457b026574bf0f1e7b4914b15f3f179ce`); line numbers in the prose above are at that tag. Documentation pages under `https://docs.openclaw.ai/` are the rolling, reader-facing docs for the same product.
 
 - OpenClaw default port and config filename constants (v2026.11.2): https://github.com/openclaw/openclaw/blob/v2026.11.2/src/config/paths.ts
@@ -525,7 +527,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-09",
   "documentation_checked": "2026-11",
-  "body_sha256": "3815828c34fddbe3481c810f921965b3f1674da163f7c8be62897a3f0559c203",
+  "body_sha256": "ede9989e2c65682b198416522324be999c4969bb2fb2649f763ab779cad42c8a",
   "components": {
     "openclaw": {
       "name": "OpenClaw",

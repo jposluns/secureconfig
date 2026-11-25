@@ -134,6 +134,8 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - MDN: Cross-Origin Resource Sharing, for the protocol itself: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
 - Fetch Standard, definition of credentials: https://fetch.spec.whatwg.org/#credentials
 - Express `cors` middleware, for the `origin` and `credentials` options used above: https://expressjs.com/en/resources/middleware/cors/
@@ -179,7 +181,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "d73aa8f8476ff0c2b05e7ce37c5b21728330ddbad7ace57ab929c61a28b583eb",
+  "body_sha256": "c6a0500a972fc824695195870eca18b22423d61c291350f437f5a0bbb54dbbd2",
   "components": {
     "protocol": {
       "name": "MDN CORS documentation",

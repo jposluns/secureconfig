@@ -771,6 +771,8 @@ REASONED: following block; the CAA check for the CAA records section above, per 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Let's Encrypt documentation (rolling documentation, checked September 2026): https://letsencrypt.org/docs/
 - Certbot instructions (rolling documentation, checked September 2026): https://certbot.eff.org/
 - Certbot reconfigure (2.3.0 and later; v2.3.0 user guide): https://raw.githubusercontent.com/certbot/certbot/v2.3.0/certbot/docs/using.rst
@@ -899,7 +901,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "b6b3602573dfa47ca4cf97a71ed90192057d15d83a44931bf16b416b5c0d7b12",
+  "body_sha256": "90e3fb3884e8b2f149f4c07daabcc878e0e7bce557fb19da53790904db2b3f00",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -1248,6 +1250,8 @@ Self-signed certificates have no revocation and no third-party accountability, a
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - OpenSSL documentation (rolling documentation, checked September 2026): https://docs.openssl.org/ ; `openssl s_client` (`-servername`, `-verify_return_error`): https://docs.openssl.org/master/man1/openssl-s_client/ ; verification options (`-verify_hostname`): https://docs.openssl.org/master/man1/openssl-verification-options/
 - mkcert: https://github.com/FiloSottile/mkcert
 - Requests v2.32.3 CA-bundle environment variables (checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239
@@ -1371,7 +1375,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "4ae79b82954e778c01185c8ddd7c0a0a4a4cf17268441a590d5e6a961a71a26d",
+  "body_sha256": "d307c5ca800ee69648af5c81ad474b5575d07ab4949575fac57b7ba88c654555",
   "components": {
     "openssl": {
       "name": "OpenSSL documentation (rolling)",
@@ -1926,6 +1930,8 @@ REASONED: following block; port-80 HTTP virtual-host route probe; local marking 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Cloudflare Zero Trust documentation: https://developers.cloudflare.com/cloudflare-one/
 - Create a remotely-managed tunnel: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/
 - cloudflared releases: https://github.com/cloudflare/cloudflared
@@ -2014,7 +2020,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "7fabeae5da790a54a9b2525d15eff5932457af49e60d95ccc105968dae1adb6d",
+  "body_sha256": "a9c4a96a2e689a7e34f57f7d4e28dc8464964b85bf7e6699398cbdc27a844b62",
   "components": {
     "token-file": {
       "name": "cloudflared token-file minimum",
@@ -2243,6 +2249,8 @@ REASONED: preceding block; Serve status, allowed access, policy assertions and p
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Tailscale serve (CLI syntax changed in v1.52): https://tailscale.com/docs/reference/tailscale-cli/serve
 - Tailscale funnel: https://tailscale.com/docs/features/tailscale-funnel
 - Tailscale ACL policy examples, for the default allow-all policy (`action` accept, `src` `*`, `dst` `*:*`) and scoping access from a source to a destination: https://tailscale.com/docs/reference/examples/acls
@@ -2302,7 +2310,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "d732d5b8d86a5b322517082d8b97dc0d66bd13ba623f0841e82da4153625cf59",
+  "body_sha256": "d8961ca1c8def372370d66b0622bba8500a0537f36581e1aea8494ebf3568c11",
   "components": {
     "cli": {
       "name": "Tailscale CLI change",
@@ -2610,6 +2618,8 @@ REASONED: following block; the ssh -R check follows the cited OpenSSH sshd_confi
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - frp documentation (setup, server reference) (rolling documentation, checked November 2026): https://gofrp.org/en/docs/
 - OpenSSH `sshd_config` (`GatewayPorts` default `no`, `yes` binds all interfaces, `clientspecified`): https://man.openbsd.org/sshd_config#GatewayPorts
 - OpenSSH `ssh` (`-R [bind_address:]port:host:hostport` remote forwarding): https://man.openbsd.org/ssh#R
@@ -2726,7 +2736,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "df2c728c85d67a3709fe2b895c9da27749d87123d80f314e054cf2a5f69d2b43",
+  "body_sha256": "f7fbd5b0e0f50a8ecb4c1ebe9a9dc2ca9cc280d381e21632adfdf1a45f5dfa74",
   "components": {
     "frps": {
       "name": "frps source",
@@ -2975,6 +2985,8 @@ TLS without authentication leaves a service open to the whole internet over an e
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - fail2ban default disabled setting (checked October 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/config/jail.conf#L152-L167
 - fail2ban sshd jail configuration (checked October 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/config/jail.conf#L271-L279
 - fail2ban sshd filter (checked October 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/config/filter.d/sshd.conf#L104-L111
@@ -3221,7 +3233,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "a2513ee36418f8ce4396ccfc1dddc56469cfc4e405483835b4ef80372a1cadbe",
+  "body_sha256": "315670499b62740c9557d7d1540bba69ce97a1be38124110a763c26a21b001af",
   "components": {
     "owasp": {
       "name": "OWASP authentication and password storage",
@@ -3777,6 +3789,8 @@ In this guide's assessment, unattended machine connections (service-to-service d
 
 ## Standards and sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - TOTP: https://www.rfc-editor.org/info/rfc6238/ ; HOTP: https://www.rfc-editor.org/info/rfc4226/
 - `otpauth://` key URI format: https://github.com/google/google-authenticator/wiki/Key-Uri-Format
 - WebAuthn: https://www.w3.org/TR/webauthn-2/
@@ -3947,7 +3961,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "bac1bf62e7639167fa222996b6f207cddd47b7e52a35a30260af1b0d9b23c5a0",
+  "body_sha256": "9f18cf389b2cb6ea64854d8320047a831ee77eb8bfe15ce007cd69eda76e9352",
   "components": {
     "totp": {
       "name": "TOTP standard",
@@ -4446,6 +4460,8 @@ On every push, gitleaks (8.19.1 or later; see rule 4 for older releases) must ex
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Docker build variables (`ENV` persists in containers; build arguments may persist in metadata, provenance and history), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/variables.md#L17-L52
 - Docker build secrets (temporary mounts for build instructions), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22
 - Docker image history command (image history and creation-command output), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118
@@ -4573,7 +4589,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "a32ad41fd3452c8dcfa103aba586364472b6f5bdec4cf822173b4a6b2d8bc5d5",
+  "body_sha256": "93d96bdc29508d29835f7d8915dec7bd0859502b437d8d38a8656006d44c38b7",
   "components": {
     "git-ignore": {
       "name": "Git ignore patterns",
@@ -6196,6 +6212,8 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Vault dev server (in-memory, insecure, not for production): https://developer.hashicorp.com/vault/docs/concepts/dev-server
 - Vault TCP listener (address defaults, tls_disable, cluster_address): https://developer.hashicorp.com/vault/docs/configuration/listener/tcp
 - Vault Integrated Storage (Raft) backend (path, node_id, cluster_addr): https://developer.hashicorp.com/vault/docs/configuration/storage/raft
@@ -6318,7 +6336,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "022349ca91831b2529cafa503eb58de4b7a08164ad52413b60e1c236738edbc9",
+  "body_sha256": "7f83cac927c8195eb871f571af24533b70fcf72ce65f5fb0351d24a48c5d84b6",
   "components": {
     "run": {
       "name": "Vault loopback run",
@@ -6555,6 +6573,8 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Microsoft Entra ID pricing (Free, P1, P2, and External ID free up to the first 50,000 monthly active usages; checked October 2026): https://www.microsoft.com/en-us/security/microsoft-entra-pricing
 - Microsoft Entra External ID pricing (Basic tier, first 50,000 monthly active users at no cost; checked October 2026): https://www.microsoft.com/en-us/security/pricing/microsoft-entra-external-id/
 - Microsoft Entra External ID billing model: https://learn.microsoft.com/en-us/entra/external-id/external-identities-pricing
@@ -6735,7 +6755,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "fdbefe28b0184721aaf4417e2f3a4e851bec9dfadcae5f5c59820a69e86b5ea4",
+  "body_sha256": "ea82a301fe879fd4b0e46aaebfd95e57557d801853c551189f4ea3d471467f9c",
   "components": {
     "entra": {
       "name": "Microsoft Entra documentation",
@@ -7500,6 +7520,8 @@ REASONED: preceding block; step 7's direct port probes, step 8's bootstrap-accou
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Keycloak production configuration, including the TLS requirement and separating the admin REST API and console (checked November 2026): https://www.keycloak.org/server/configuration-production
 - Keycloak hostname options, including the production and dev profile defaults for `hostname-strict`, and the statement that `hostname-admin` does not restrict the Administration REST API (checked November 2026): https://www.keycloak.org/server/hostname
 - Keycloak reverse proxy configuration, including `proxy-headers`, `proxy-trusted-addresses`, the forwarded-header warning, and the exposed-paths table (checked November 2026): https://www.keycloak.org/server/reverseproxy
@@ -7741,7 +7763,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c37f45fdab628376916d67cd97fb1cc7ba18924d7394966f91d37965e186a492",
+  "body_sha256": "543d8a5b4557637b97fe616045836f6d407398a8cd3427420974f7b2ca51b4d0",
   "components": {
     "keycloak-admin-cli": {
       "name": "Keycloak Admin CLI",
@@ -8233,6 +8255,8 @@ REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - RFC 9700, OAuth 2.0 Security Best Current Practice: https://www.rfc-editor.org/info/rfc9700/
 - RFC 6749, OAuth 2.0 client credential confidentiality (section 10.1) (checked October 2026): https://www.rfc-editor.org/rfc/rfc6749.html#section-10.1
 - OpenID Connect Core 1.0 (ID token validation 3.1.3.7, claim stability 5.7): https://openid.net/specs/openid-connect-core-1_0.html ; Discovery 1.0: https://openid.net/specs/openid-connect-discovery-1_0.html ; RP-Initiated Logout 1.0: https://openid.net/specs/openid-connect-rpinitiated-1_0.html
@@ -8357,7 +8381,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "6333a88ccbfb517faafea9d5e52afb55889b80c72c36be40705e0e4a3cf17427",
+  "body_sha256": "7fc54417bb0bbef8447597333cbde653bbbcccfe784d0701d89d64892c2f0547",
   "components": {
     "core": {
       "name": "OpenID Connect Core",
@@ -8800,6 +8824,8 @@ REASONED: following block; the cited ALB, IAP and Azure authentication/header do
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - AWS, Authenticate users using an Application Load Balancer: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html
 - Google Cloud IAP overview: https://docs.cloud.google.com/iap/docs/concepts-overview
 - Google Cloud IAP, securing your app with signed headers: https://docs.cloud.google.com/iap/docs/signed-headers-howto
@@ -8903,7 +8929,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "b580ee91ca04aa2c8f3771088c275422b350f01c6f43e683192ae74833576c97",
+  "body_sha256": "b4c7dfd4099c0cbe0d4c35bbc41a40a0e7590a878c5b3203e66008319ec9ca78",
   "components": {
     "aws": {
       "name": "AWS ALB",
@@ -9127,6 +9153,8 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Docker image history command (image history and creation-command output), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118
 - OAuth 2.0 client credentials grant (RFC 6749 section 4.4): https://datatracker.ietf.org/doc/html/rfc6749#section-4.4
 - OAuth 2.0 bearer token usage, TLS and URL rules (RFC 6750 sections 5.2 and 5.3): https://www.rfc-editor.org/info/rfc6750/
@@ -9287,7 +9315,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "6a24abc10fe1b9b6d87d73822faa2e92dc51935b99b58b9d4e79b45552abf14e",
+  "body_sha256": "72f4488bdf4f1c9b0deec0c98b3f1f75a9c27b551fa2958ce7eaa0b8a2736b1c",
   "components": {
     "oauth": {
       "name": "OAuth client credentials",
@@ -9920,6 +9948,8 @@ REASONED: following block; the cited oauth2-proxy/Authelia integrations, pinned 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - oauth2-proxy configuration overview, flags, cookie-secret length and the `--trusted-proxy-ip` warning (pinned tag v7.15.6, checked November 2026): https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/v7.15.6/docs/docs/configuration/overview.md
 - oauth2-proxy nginx integration (rolling documentation, checked September 2026): https://oauth2-proxy.github.io/oauth2-proxy/configuration/integrations/nginx/
 - oauth2-proxy Traefik integration (pinned tag v7.15.6, checked November 2026): https://raw.githubusercontent.com/oauth2-proxy/oauth2-proxy/v7.15.6/docs/docs/configuration/integrations/traefik.md
@@ -10013,7 +10043,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "4f38f0bb8720d400bea95f4aa0219297743fbf1689b32372792c82bf38f82859",
+  "body_sha256": "00e8961767c7787bf8311ba1318d61670007ca963403c31e7a009c9aad1b664c",
   "components": {
     "oauth": {
       "name": "oauth2-proxy",
@@ -10392,6 +10422,8 @@ choose does not serve the protected `DocumentRoot`.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Apache SSL/TLS how-to: https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html
 - Apache authentication how-to: https://httpd.apache.org/docs/2.4/howto/auth.html
 - Apache name-based virtual hosts, for which vhost answers an unmatched Host header: https://httpd.apache.org/docs/2.4/vhosts/name-based.html
@@ -10471,7 +10503,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "4fc847dae3fcde93596591c447ffe745048433b4cbf149aa2527c49ae90709a2",
+  "body_sha256": "32f82d7036ec1a9ab82cc001980cd02969722aaac1981ef6a9ce7021f06b4d0e",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
@@ -10945,6 +10977,8 @@ Mind the client address these headers carry. At a direct internet edge the block
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Configuring HTTPS servers: https://nginx.org/en/docs/http/configuring_https_servers.html
 - Core module (`client_max_body_size`): https://nginx.org/en/docs/http/ngx_http_core_module.html
 - Request rate limiting (`limit_req_zone`, `limit_req`, `burst`, `nodelay`): https://nginx.org/en/docs/http/ngx_http_limit_req_module.html
@@ -11046,7 +11080,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "8a4ab478aaaa2f58804b00b20a1d83e38acc7de0be9fdb5c2a6d95cdf256af1c",
+  "body_sha256": "98c7cf3714a278a36e2ca907ae530a4242bbe8b91e91b258ebf007abd09d8e11",
   "components": {
     "nginx-source": {
       "name": "nginx source",
@@ -11375,6 +11409,8 @@ REASONED: configuration, redirect, authentication, listener inventory and altern
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - lighttpd 1.4.75 NEWS, 1.4.56 release heading (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L1660-L1660
 - lighttpd 1.4.75 NEWS, 1.4.56 mod_openssl protocol default (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L1927-L1927
 - lighttpd 1.4.75 NEWS, 1.4.53 release heading (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L2465-L2465
@@ -11473,7 +11509,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "b408b44fee9507e7328eb4a7d86dc8f89df051aa27999d49be595a175d7c2be0",
+  "body_sha256": "e1d75f558f3c35eb8bb4dbf76932635f11cc2479cc86c634b16495213cc21f72",
   "components": {
     "tls": {
       "name": "lighttpd TLS minimum",
@@ -11943,6 +11979,8 @@ Caddy can also expose a remote admin endpoint for mutual-TLS management from oth
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Official Caddy Docker images: the tag map (library file pinned commit d82ca5102fa6735be29d5e1fc6ce03af77eb091e), and at image source pinned commit fba2853501d36e8a72f946ac8cb7ff64d07e48f2 each runtime image's Caddyfile download, `EXPOSE 2019` and `CMD`. The same item also covers the default Caddyfile at caddyserver/dist pinned commit 33ae08ff08d168572df2956ed14fbc4949880d94 and the `CADDY_ADMIN` variable that sets the admin address (pinned tag v2.11.9). Sources for this item (1 of 7): https://github.com/docker-library/official-images/blob/d82ca5102fa6735be29d5e1fc6ce03af77eb091e/library/caddy#L7-L65 and https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L17. Sources for this item (2 of 7): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L59-L63 and https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L10. Sources for this item (3 of 7): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L42-L47 and https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L10. Sources for this item (4 of 7): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L42-L47 and https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L8. Sources for this item (5 of 7): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L27-L32 and https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L8. Sources for this item (6 of 7): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L27-L32 and https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/config/Caddyfile. Sources for this item (7 of 7): https://github.com/caddyserver/caddy/blob/v2.11.9/admin.go#L60-L69
 - Automatic HTTPS (rolling documentation, checked September 2026): https://caddyserver.com/docs/automatic-https
 - Caddy admin API (default `localhost:2019`, `POST /load` and `/config/` replace or edit the whole config, requires no credentials with only Host/Origin header checks, the permissioned-unix-socket warning for untrusted-workload hosts; rolling documentation, checked September 2026): https://caddyserver.com/docs/api
@@ -12037,7 +12075,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "b7ba9b6a6d3e53409c78c11b26a63fb37a27cf6295c2227248f4a11125f5a839",
+  "body_sha256": "3e330b1d1777b4a375fa39a2f3be1e857dbe6edd89ecaab3103efd0cb483c376",
   "components": {
     "admin": {
       "name": "Caddy admin source",
@@ -12571,6 +12609,8 @@ every line after the first for your shell to run.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - HAProxy 3.0 Configuration Manual (`bind ssl crt`/`verify`, `ssl-default-bind-options`/`-ciphers`/`-ciphersuites`, `maxconn`, `req.body_size`, `http-request deny deny_status`, `http-after-response`, `timeout http-request`, `stats enable`/`auth`/`admin`, `user`/`group`/`chroot`) (http-after-response: HAProxy 2.2+): https://docs.haproxy.org/3.0/configuration.html
 - HAProxy 3.0 Management Guide (runtime API over the `stats socket`, command levels, reload): https://docs.haproxy.org/3.0/management.html
 - HAProxy supported releases: https://www.haproxy.org/
@@ -12640,7 +12680,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "4bfde41dbf431bd9f1e54c261e8ced0bc6aa192d56e627d782396ebe3ad204dd",
+  "body_sha256": "f2a3166a2210025bfc798afa2771130aab7be6dd4763267ee0e284daa0c6c0d7",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -13067,6 +13107,8 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Traefik documentation (rolling documentation, checked September 2026): https://doc.traefik.io/traefik/ (HTTPS/ACME, routers, and basicAuth middleware sections)
 - Docker provider (`exposedByDefault`, socket endpoint): https://doc.traefik.io/traefik/reference/install-configuration/providers/docker/
 - Swarm provider (`providers.swarm.exposedByDefault`): https://doc.traefik.io/traefik/reference/install-configuration/providers/swarm/
@@ -13158,7 +13200,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-08",
   "documentation_checked": "2026-09",
-  "body_sha256": "89a96f8706a6e33822fac81892bf0592e94745a585b0283d0f47ed0f5cb7c781",
+  "body_sha256": "68a57a292487e7116343504444c6caffc8b1193012efc01bfa56fdbe78e9e283",
   "components": {
     "traefik-v3": {
       "name": "Traefik v3 documentation",
@@ -13536,6 +13578,8 @@ This guide also requires that the origin be unreachable around Access. Cloudflar
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Node.js HTTPS module: https://nodejs.org/api/https.html
 - Express behind proxies: https://expressjs.com/en/guide/behind-proxies/
 - express-session (MemoryStore warning, cookie.maxAge, compatible stores): https://expressjs.com/en/resources/middleware/session/
@@ -13648,7 +13692,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "17fec69060642068d12bbd2ac60e6644cd1036768933bf67aac4b84c898a6624",
+  "body_sha256": "9d37abf4eabf577590aaad5d005fcbd4717f5f9e9bf657b862dc327d77dc5a07",
   "components": {
     "node-v26": {
       "name": "Node.js API documentation",
@@ -14030,6 +14074,8 @@ Reach it through an SSH tunnel, including one that runs over your tailnet, never
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Python `http.server` (binds all interfaces by default, serves the current directory, follows symlinks, not for production) (Python 3.14.4): https://docs.python.org/3/library/http.server.html
 - Gunicorn documentation (settings reference: bind, certfile, keyfile, ca_certs): https://gunicorn.org/reference/settings/
 - Uvicorn settings reference: https://github.com/Kludex/uvicorn/blob/5ac6265a01ff6dcadb0e4250152c3deaf8a168a9/docs/settings.md
@@ -14201,7 +14247,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "32048bf47a61a7c8b01bac34c0340deac63450b4ec8c9ec1af63b2a43d00b065",
+  "body_sha256": "f245f70292dc45a27a68f660be052322d7d15889101e77d866267345684f63bf",
   "components": {
     "django": {
       "name": "Django documentation",
@@ -14672,6 +14718,8 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Docker build variables (`ENV` persists in containers; build arguments may persist in metadata, provenance and history), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/variables.md#L17-L52
 - Docker build secrets (temporary mounts for build instructions), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22
 - Docker image history command (image history and creation-command output), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118
@@ -14813,7 +14861,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "24500b6686c875b2f207d255f5d1860f293df81995b3440a341953440b08f368",
+  "body_sha256": "128c12413beacc44269da75cecdbd2c4d963031a7e496fa9745ff693ab3b6d19",
   "components": {
     "boundary": {
       "name": "Docker Engine minimum boundary",
@@ -15682,6 +15730,8 @@ allowed ranges out of the provider's own configuration rather than inferring the
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Ingress NGINX: Statement from the Kubernetes Steering and Security Response Committees (retirement, detection command): https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/ . Kubernetes sources: Kubernetes docs, Gateway API (migration guide from Ingress): https://kubernetes.io/docs/concepts/services-networking/gateway/ ; Kubernetes docs, Ingress (the project recommends Gateway; the Ingress API is frozen): https://kubernetes.io/docs/concepts/services-networking/ingress/
 - Gateway API getting started (CRD install): https://gateway-api.sigs.k8s.io/guides/getting-started/introduction/ ; TLS: https://gateway-api.sigs.k8s.io/guides/user-guides/tls/ ; HTTP routing: https://gateway-api.sigs.k8s.io/guides/user-guides/http-routing/ ; redirects: https://gateway-api.sigs.k8s.io/guides/user-guides/http-redirect-rewrite/
 - Envoy Gateway (rolling documentation, checked September 2026): https://gateway.envoyproxy.io/ ; Helm install: https://gateway.envoyproxy.io/v1.9/install/install-helm/ ; quickstart: https://gateway.envoyproxy.io/v1.9/tasks/quickstart/
@@ -15801,7 +15851,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "7b937fe7cf1b7fecaebe34745152c780e93ea43e74fae0a979d45910f1e69002",
+  "body_sha256": "bf36aa1e93a06600f0936c65e9a8a9e9787b11d97e9effec5b671b3183fad6f8",
   "components": {
     "kubelet": {
       "name": "Kubernetes kubelet/kubeadm source",
@@ -16625,6 +16675,8 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Python HMAC calculation and binary stdin: https://docs.python.org/3/library/hmac.html and https://docs.python.org/3/library/sys.html#sys.stdin
 - [curl curl-8_14_1 custom headers (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 - curl curl-8_14_1 (checked October 2026): [--data-binary posts data exactly as specified, with newlines and carriage returns preserved and @- reading stdin (4-32)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data-binary.md#L4-L32); [--data sends a POST request and strips carriage returns and newlines from @file input (4-49)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data.md#L4-L49).
@@ -16884,7 +16936,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "82e44ffd30a1c327b04ded346c7c71a386915afa0ba2354043bc58cbf52d3fbe",
+  "body_sha256": "5e8a98d918faca0573564cea4c1ea4ccdffdd531653a2b6fc7a641afcd03a7f4",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -17673,6 +17725,8 @@ REASONED: following block; the reachability comparison follows the cited GitLab 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Version boundary: GitHub.com documentation checked 18 September 2026, with REST examples pinned to API version `2026-03-10`; GitLab documentation is rolling, checked that date. GitLab Runner source for the `pid_mode` key is pinned to tag v19.5.0, checked October 2026. The legacy GitLab registration token was disabled by default in GitLab 17.0 and is currently scheduled for removal in GitLab 20.0, and the Instance and Docker Autoscaler executors became generally available in Runner 17.1; run a currently supported patched release. No live product-version compatibility matrix was exercised.
 
 - GitHub Actions security hardening and secure use: https://docs.github.com/en/actions/reference/security/secure-use
@@ -17766,7 +17820,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "2cc98970efba9b419c804f38bf722b88e7fb41263ab7677c3c260e6734512247",
+  "body_sha256": "deda59ac3b648ae7b8bbf54b35fad7df2fa97113090411461090b3490e288256",
   "components": {
     "github": {
       "name": "GitHub Actions documentation",
@@ -18109,6 +18163,8 @@ REASONED: the listener-inventory block, the third above, was run in its current 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - SvelteKit adapter-node origin configuration and proxy header variables (pinned tag @sveltejs/adapter-node@5.5.7; checked October 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L17-L24
 - SvelteKit adapter-node request origin passed to getRequest (pinned tag @sveltejs/adapter-node@5.5.7; checked October 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L95-L105
 - SvelteKit adapter-node protocol, Host and port header fallback (pinned tag @sveltejs/adapter-node@5.5.7; checked October 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L209-L239
@@ -18252,7 +18308,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-25",
   "documentation_checked": "2026-09",
-  "body_sha256": "d6761b841f00fc2f2afe75fab08d3617eb2eb4da4987fab7e7af01a2d38a6bb1",
+  "body_sha256": "2345eca53f04ae34f5cb5879fc90b3075e91c8e424a1c678812d14aeaac7c08b",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -18749,6 +18805,8 @@ REASONED: identity, filesystem, runtime security context and segmentation checks
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Docker Dockerfile reference (`USER`): https://docs.docker.com/reference/dockerfile/
 - Docker Compose file reference (`user`, `read_only`, `cap_add`, `cap_drop`, `security_opt`): https://docs.docker.com/reference/compose-file/
 - Docker run security options (`--security-opt no-new-privileges` and its engine behaviour): https://docs.docker.com/reference/cli/docker/container/run/
@@ -18846,7 +18904,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "1aebec7da57b179cd121a6e4a50acab780d17b39af6f7438353687adf082b3c0",
+  "body_sha256": "3c3a2b0513e478f19b2145f53946ebf15d926f0b03fccd9949c36d107091d609",
   "components": {
     "docker": {
       "name": "Docker documentation",
@@ -19300,6 +19358,8 @@ REASONED: following block; the listener inventory, with the anonymous route, aut
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Next.js authentication guide: https://nextjs.org/docs/app/guides/authentication ; data security guide: https://nextjs.org/docs/app/guides/data-security
 - Next.js `proxy.js`: https://nextjs.org/docs/app/api-reference/file-conventions/proxy ; `route.js`: https://nextjs.org/docs/app/api-reference/file-conventions/route ; `cookies`: https://nextjs.org/docs/app/api-reference/functions/cookies
 - Next.js environment variables: https://nextjs.org/docs/app/guides/environment-variables ; CLI (`next start` defaults): https://nextjs.org/docs/app/api-reference/cli/next ; self-hosting: https://nextjs.org/docs/app/guides/self-hosting
@@ -19382,7 +19442,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "b108993995a4c20ab2cc52ad62f6d0153d1eeb233e9f9f1367ccffead5951804",
+  "body_sha256": "820ab8251dc6cf70aaabc5d5a5bc58ab9659a931c6b8b943dfc9cec806feff72",
   "components": {
     "next-pin": {
       "name": "Next.js listener source",
@@ -19794,6 +19854,8 @@ REASONED: the missing-`ss` and missing-`curl` handling in the block above, per C
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - net/http (Server, ListenAndServeTLS, Cookie, SameSite, Redirect, Transport.TLSClientConfig): https://pkg.go.dev/net/http
 - net/http Request.Host (Go 1.27.0, supplied by the client): https://pkg.go.dev/net/http@go1.27.0#Request
 - crypto/tls (Config.MinVersion, InsecureSkipVerify, RootCAs): https://pkg.go.dev/crypto/tls
@@ -19892,7 +19954,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "27254cf29e129dbd4e9064e104fc8d26a855dbef8f98a4d0568a88e438120347",
+  "body_sha256": "5ffb1ddec5c312938a016f49a9da2ece8253c207dbe4af151e25fd525ff07d5c",
   "components": {
     "x509": {
       "name": "Go certificate-store qualification",
@@ -20596,6 +20658,8 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Enforce HTTPS (UseHttpsRedirection, UseHsts, HttpsPort) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0. Kestrel endpoints (certificate config, ListenLocalhost, SslProtocols): https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0. Proxy servers (ForwardedHeadersOptions, KnownProxies): https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0
 - Introduction to Identity (lockout, ConfigureApplicationCookie) (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0 ; PasswordHasherOptions: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions?view=aspnetcore-10.0
 - Cookie authentication without Identity (.NET 10): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0 ; CookieSecurePolicy: https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy?view=aspnetcore-10.0
@@ -20745,7 +20809,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "491cc1c3bc0a7bf2272de9ea1c5c47d04f5cd7a8202aedafa9b844145ff851f0",
+  "body_sha256": "d93c4663fcd348151476433feff5b65db1646d1133027149b6368e41fda366fb",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -21465,6 +21529,8 @@ The small upload must reach and succeed at the intended handler. With a delibera
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Spring Boot how-to, embedded web servers (Configure SSL, forward headers, Tomcat proxy settings): https://docs.spring.io/spring-boot/how-to/webserver.html
 - Spring Boot SSL bundles: https://docs.spring.io/spring-boot/reference/features/ssl.html ; REST clients (applying a bundle): https://docs.spring.io/spring-boot/reference/io/rest-client.html
 - Spring Boot javadoc, Ssl (rolling documentation, checked September 2026): https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/web/server/Ssl.html
@@ -21602,7 +21668,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "48f596a614667a2f4284f778f9ce929ff800155978d0bfec39ad85686d335fcc",
+  "body_sha256": "be5f7b23df8da2dbc94aeb5ba211fca31f76c6bc9ebf1e00d8907d5e760ff883",
   "components": {
     "boot41": {
       "name": "Spring Boot",
@@ -22219,6 +22285,8 @@ REASONED: Laravel exception-route comparison. A live Laravel deployment stand-up
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - PHP FPM configuration (`listen`, `listen.allowed_clients`, `listen.owner`) (PHP 8.x): https://www.php.net/manual/en/install.fpm.configuration.php
 - PHP session runtime configuration (PHP 8.x): https://www.php.net/manual/en/session.configuration.php
 - PHP `session_regenerate_id()`: https://www.php.net/manual/en/function.session-regenerate-id.php
@@ -22350,7 +22418,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "68ff4db5978b00e023f86d75f52ae8a48964384416a045a2150ad4d7e7d12941",
+  "body_sha256": "a8383b357b0a8facc60ddd0c55a80258e04bc8237434244c525401a8d845ead7",
   "components": {
     "php8": {
       "name": "PHP native configuration",
@@ -22718,6 +22786,8 @@ REASONED: following block; Puma binds, Rails HTTPS/cookies/login, Sidekiq denial
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Puma README (binding): https://github.com/puma/puma/blob/aef89221e4d729c3133c723844382331ba3bbbd9/README.md
 - Puma DSL (`bind`, `ssl_bind`, default bind): https://github.com/puma/puma/blob/d70de8b4e926f1f5fa0269dc46cdfadf52562628/lib/puma/dsl.rb
 - Puma default TCP port `9292` (`tcp_port: 9292`, L174) and default bind host (L369-L384): `::` when a non-loopback IPv6 interface exists, else `0.0.0.0` (pinned tag v8.0.2): https://github.com/puma/puma/blob/v8.0.2/lib/puma/configuration.rb#L369-L384 and https://github.com/puma/puma/blob/v8.0.2/lib/puma/configuration.rb#L174
@@ -22796,7 +22866,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "5abe45766cdb5cb3239379744dc7afee97dda1f3115d12d146a5a59e1672ca5c",
+  "body_sha256": "2463e8ae935fb0c1c9f0225697e7053ffe29b47e4f534547ac98e2a9823bfa33",
   "components": {
     "rails": {
       "name": "Rails documentation",
@@ -23093,6 +23163,8 @@ REASONED: preceding block; key-only login and PAM MFA comparisons follow the cit
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - OpenSSH sshd_config manual: https://man.openbsd.org/sshd_config
 - CentOS Stream 9 OpenSSH patch identifier, at 0b69a3828606595828fc3b878a7c70652303ad67 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/openssh/-/blob/0b69a3828606595828fc3b878a7c70652303ad67/openssh.spec#L135-L135
 - cloud-init 20.1 default sshd_config path, at 20.1 (checked October 2026): https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L17-L18
@@ -23232,7 +23304,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "7d838ff31ba83ca080701a908875e898cc5031ff3fa2c9682392563b6978e967",
+  "body_sha256": "0b2e7aa46f2a12d5ee917c891240b6ef461dcdc0d1a07ed90115ced035440d15",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",
@@ -23677,6 +23749,8 @@ REASONED: cloud-rule inventory and external reachability checks; no exposed/fixe
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - AWS Session Manager SSH tunnel (rolling) (checked October 2026): https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-enable-ssh-connections.html#session-manager-getting-started-enable-ssh-connections
 - AWS Session Manager managed-node outbound HTTPS prerequisites (rolling) (checked October 2026): https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-prerequisites.html#session-manager-prerequisites
 - Google Cloud IAP TCP forwarding firewall source and SSH port (rolling) (checked October 2026): https://docs.cloud.google.com/iap/docs/using-tcp-forwarding#create-firewall-rule
@@ -23745,7 +23819,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "a3fb65779a75d02a5a0af8bc077cce1cc0bf9d5dce42fc92e7530518eba7e395",
+  "body_sha256": "b5586019268dc09e3da2e45fc7f5950c3c59e50629baa99f2a3b70c14943a8c8",
   "components": {
     "aws": {
       "name": "AWS security groups and CLI",
@@ -24003,6 +24077,8 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Render: https://render.com/docs ; Fly.io: https://docs.fly.io/ ; Vercel: https://vercel.com/docs (each documents managed TLS and environment configuration; consult your platform's pages for the exact toggles)
 - Vercel Deployment Protection: https://vercel.com/docs/deployment-protection
 - Vercel changelog, protect production deployments for free on every plan (9 September 2026): https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan
@@ -24135,7 +24211,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "5b0fc4ed5bb18605f69c902c083fa747e56418cf911b0629456ac6556539c951",
+  "body_sha256": "c51cade0532e3d6c2f841858d27173b414b9592abf77016a769af61cc4e00907",
   "components": {
     "render": {
       "name": "Render documentation",
@@ -24716,6 +24792,8 @@ REASONED: following block; reading a failed probe and running the positive contr
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - AWS EC2 instance metadata service configuration (IMDSv2, hop limit, the `[fd00:ec2::254]` IPv6 endpoint): https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html
 - AWS instance metadata options (hop-limit defaults incl. `ImdsSupport: v2.0`, IPv6): https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-options.html
 - AWS VPC Flow Logs limitations (metadata `169.254.169.254` traffic is not logged): https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs-limitations.html
@@ -24801,7 +24879,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "a57fad00a152a13dc92f3ae4b35ab36434878f88ea76a082bf8dcd3426d10cf7",
+  "body_sha256": "33cbfff3d905ab77d308a004ce15eb023141916a896e0719c0df1d977199a1b8",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
@@ -25156,6 +25234,8 @@ REASONED: following block; this guide's test design for the Vast.ai portal's pat
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - RunPod expose ports (proxy HTTPS, TCP forwarding): https://docs.runpod.io/pods/configuration/expose-ports
 - Vast.ai networking and ports (default ports, port mapping): https://docs.vast.ai/guides/instances/connect/networking
 - Vast.ai Instance Portal (PORTAL_CONFIG, Caddy reverse proxy, secure-token links): https://docs.vast.ai/guides/instances/connect/instance-portal
@@ -25310,7 +25390,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "987e395d78900fcb8f247ee334e70cf832f1d272bbd202d0f2200133369a4335",
+  "body_sha256": "dc56f7e2920fb41074b67339002a5d6ce91050c2ad499a84500d9c78c1717ea1",
   "components": {
     "runpod": {
       "name": "RunPod documentation",
@@ -25784,6 +25864,8 @@ REASONED: following block; certificate expiry check, per the cited OpenSSL 3.0 d
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - nmap reference guide (port scanning syntax, and `-Pn`): https://nmap.org/book/man-briefoptions.html
 - Shodan: https://www.shodan.io/
 - Censys: https://censys.com/
@@ -25912,7 +25994,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "3cb896c908fe4f602806b275a4acebfdb38e223b3c2ca1c31c6932039d47bb60",
+  "body_sha256": "24b3729403b151be8133d29dcd0c5c8d949a2eb5d89064cdc8cbf375c5dafc0b",
   "components": {
     "nmap": {
       "name": "Nmap documentation",
@@ -26825,6 +26907,8 @@ WHERE error IS NOT NULL OR NOT applied;
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Official PostgreSQL Docker images (14 through 19, Debian and Alpine; shown for 19/bookworm; pinned commit d588a44673ea9d123c1acb1a6924de10a27fc315). The cited Docker image files cover the build's `listen_addresses = '*'` edit to postgresql.conf.sample, `CMD ["postgres"]`, the entrypoint's initdb call with no authentication method beyond `POSTGRES_INITDB_ARGS`, the init-only password check (`POSTGRES_PASSWORD` read with `file_env`), and the appended `host all all all` line defaulting to `password_encryption`. Official PostgreSQL Docker image sources: https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/Dockerfile#L183-L184 and https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/Dockerfile#L223-L224. More official PostgreSQL Docker image sources: https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L92 and https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L105-L138. More official PostgreSQL Docker image sources: https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L235 and https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L268-L286. One more official PostgreSQL Docker image source: https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L347-L355
 - initdb's default authentication method `trust` when none is given, and the sample `pg_hba.conf` loopback rules that take it (pinned tag REL_17_11; the same default in REL_14_24, REL_15_19, REL_16_15, REL_18_6 and REL_19_BETA4). PostgreSQL initdb and `pg_hba.conf` sources: https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L2550-L2557, https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L3434-L3435 and https://github.com/postgres/postgres/blob/REL_17_11/src/backend/libpq/pg_hba.conf.sample#L113-L117
 - Secure TCP/IP connections with SSL and TLS file reload behaviour: https://www.postgresql.org/docs/current/ssl-tcp.html
@@ -26955,7 +27039,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "2d0c54ebff936e9948ab2c81c6efb7c191221fe4acb3d7ba78d1f362fdbdf5df",
+  "body_sha256": "0f2e8bc4994aaf6cba548b3aa7d6ca988d0b977a0b5cef33c0bd2cf188413901",
   "components": {
     "init": {
       "name": "PostgreSQL initdb source",
@@ -27646,6 +27730,8 @@ Put the human paths to the host behind MFA per [mfa.md](https://github.com/jposl
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - PgBouncer configuration, including the ini comment rule, `listen_addr`, `listen_port`, `client_tls_sslmode`, `server_tls_sslmode`, `auth_type`, `auth_file`, `auth_query`, `admin_users`, `stats_users`, `application_name_add_host`, and the `[databases]` `user` key (rolling documentation, checked September 2026): https://www.pgbouncer.org/config.html
 - PgBouncer `listen_addr` default `""`, and the socket-activation path that ignores it (pinned tag pgbouncer_1_26_0). PgBouncer `listen_addr` default and socket-activation path sources: https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/main.c#L292-L294 and https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/src/pooler.c#L495-L498. PgBouncer builds without systemd support define `sd_listen_fds()` as `(0)`. PgBouncer `sd_listen_fds()` definition source: https://github.com/pgbouncer/pgbouncer/blob/pgbouncer_1_26_0/include/bouncer.h#L54-L62
 - PgBouncer usage, the admin console and its `SHOW` commands, including who `auth_type=any` admits and the passwordless Unix-socket login: https://www.pgbouncer.org/usage.html
@@ -27757,7 +27843,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "d8331d53ffa0efedcdc7f3e28b77816137fcb59d5c4a6257408e19213547adb7",
+  "body_sha256": "232f8f3ab303f153671ba3111e3f3d3b7e5f76f312b50be2649ce6634f475f8b",
   "components": {
     "pgb-bind": {
       "name": "PgBouncer listener source",
@@ -28595,6 +28681,8 @@ Verification scope:
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Official MySQL Docker images (8.4, 9.7 and innovation, with identical entrypoints; shown for 8.4; pinned commit 2f988f198f35d25b1454fa2504a0e4c348100549): the `mysql-community-server-minimal` install and `my.cnf` edits (socket and `!includedir /etc/mysql/conf.d/`, no bind), `EXPOSE 3306 33060` and `CMD ["mysqld"]`. The entrypoint topics of the same images (shown for 8.4; pinned commit 2f988f198f35d25b1454fa2504a0e4c348100549) are the entrypoint's `file_env` helper, which reads `<VAR>_FILE`, its password requirement, `file_env 'MYSQL_ROOT_HOST' '%'`, and the `root@'${MYSQL_ROOT_HOST}'` account with `GRANT ALL ... WITH GRANT OPTION`, created only when a new data directory is initialized. Item sources (1 of 4; shown for 8.4; pinned commit 2f988f198f35d25b1454fa2504a0e4c348100549): https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/Dockerfile.oracle#L61-L89 and https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/Dockerfile.oracle#L120-L123. Item sources (2 of 4; shown for 8.4; pinned commit 2f988f198f35d25b1454fa2504a0e4c348100549): https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L28-L43 and https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L138-L147. Item sources (3 of 4; shown for 8.4; pinned commit 2f988f198f35d25b1454fa2504a0e4c348100549): https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L223-L240 and https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L276-L285. Item sources (4 of 4; shown for 8.4; pinned commit 2f988f198f35d25b1454fa2504a0e4c348100549): https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L380-L390
 - MySQL's Docker server package `my.cnf`, which sets no bind address (pinned tag mysql-8.4.9; the same in mysql-9.7.2 and mysql-26.7.0): https://github.com/mysql/mysql-server/blob/mysql-8.4.9/packaging/rpm-docker/my.cnf.in and https://github.com/mysql/mysql-server/blob/mysql-8.4.9/packaging/rpm-docker/mysql.spec.in#L298
 - Official MariaDB Docker images (10.6 through 13.1, Ubuntu and UBI; shown for 11.8; pinned commit 1a4c8e99f7816c8d97df11eee52098522dc770cf): the Ubuntu build comments out every `bind-address` line and runs `CMD ["mariadbd"]`, and the UBI build installs the `MariaDB-server` package and copies in `docker.cnf`. The entrypoint topics of the same images (shown for 11.8; pinned commit 1a4c8e99f7816c8d97df11eee52098522dc770cf) are the entrypoint's `file_env` helper, password requirement, `MARIADB_`/`MYSQL_` variable merging, root host default `%` and `root@'${MARIADB_ROOT_HOST}'` account. Item sources (1 of 6; shown for 11.8; pinned commit 1a4c8e99f7816c8d97df11eee52098522dc770cf): https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/Dockerfile#L125-L127 and https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/Dockerfile#L141-L144. Item sources (2 of 6; shown for 11.8; pinned commit 1a4c8e99f7816c8d97df11eee52098522dc770cf): https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8-ubi/Dockerfile#L37 and https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8-ubi/Dockerfile#L96. Item sources (3 of 6; shown for 11.8; pinned commit 1a4c8e99f7816c8d97df11eee52098522dc770cf): https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/docker.cnf and https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L25-L40. Item sources (4 of 6; shown for 11.8; pinned commit 1a4c8e99f7816c8d97df11eee52098522dc770cf): https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L44-L52 and https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L168-L170. Item sources (5 of 6; shown for 11.8; pinned commit 1a4c8e99f7816c8d97df11eee52098522dc770cf): https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L269 and https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L287-L288. Item sources (6 of 6; shown for 11.8; pinned commit 1a4c8e99f7816c8d97df11eee52098522dc770cf): https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L394-L409
@@ -28759,7 +28847,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f2d816e86442c44d0bb64fc147557151ea41ddccb731d3992fb1f870244bc5ba",
+  "body_sha256": "3f6a3def7f80c236b15b35cef7058fd13c60db087602144ca7cd5802f29c314c",
   "components": {
     "mysql": {
       "name": "MySQL reference",
@@ -29718,6 +29806,8 @@ QE requires a new encrypted collection created with an `encryptedFields` definit
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Official MongoDB Docker images (7.0, 8.0 and 8.3; pinned commit 0a29f3374c7fa7c38cfe280363b754f898e0a5eb): the Linux entrypoint turns arguments starting with `-` into `mongod`. That pinned Linux entrypoint, for `mongod`, reads both `MONGO_INITDB_ROOT_*` credentials with `file_env` (so `_FILE` works), adds `--auth` when both are set and exits when only one is, and adds `--bind_ip_all` when neither the arguments nor a file named by `--config` (not `-f`) sets `bindIp` or a true `bindIpAll`. Those pinned images' commands are the Linux `CMD ["mongod"]` and the Windows images' `CMD ["mongod", "--bind_ip_all"]`. Official MongoDB Docker images `docker-entrypoint.sh` sources (1 of 3): https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L4-L6 and https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L71-L87. Official MongoDB Docker images `docker-entrypoint.sh` sources (2 of 3): https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L247-L270 and https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L186. Official MongoDB Docker images `docker-entrypoint.sh` sources (3 of 3): https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L402-L413. Official MongoDB Docker images `Dockerfile` sources: https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/Dockerfile#L122-L125 and https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/windows/windowsservercore-ltsc2022/Dockerfile#L67
 - `--bind_ip_all` sets `net.bindIp` to `*`, which binds `0.0.0.0`, and `::` as well only when `net.ipv6` is true (by `--ipv6` or a configuration file) (pinned tag r8.0.32; the same code in r7.0.43, r8.2.12 and r8.3.11). The `--bind_ip_all` sources (pinned tag r8.0.32): https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_base.cpp#L125-L132 and https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_server_helpers.cpp#L404-L410
 - MongoDB security checklist and Community authentication support: https://www.mongodb.com/docs/manual/administration/security-checklist/
@@ -29886,7 +29976,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "ba8fff13b2120f6cb4100043081603a90e741b4fa1d18452aa038c3d4cef1360",
+  "body_sha256": "9f94e39edb256e8359ceb54fe891cf2ce658b9da83a3d7d9c2679da97e398702",
   "components": {
     "bind": {
       "name": "MongoDB bind source",
@@ -31021,6 +31111,8 @@ The upstream Redis HA controls and source-derived limitations in sections 9-15 h
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 The tagged configuration files below pin syntax and historical behaviour; they are not recommendations to install those patch releases.
 
 - Redis security model, authentication, and deprecated command renaming: https://redis.io/docs/latest/operate/oss_and_stack/management/security/
@@ -31171,7 +31263,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fa2cae058289856b567209194eda26b4e7b97d426b3f84f8c113132b92e5d0f3",
+  "body_sha256": "d4e35ac5ce680db4fecafd1a47a98aed09e91943ac69fc7c0ff3a5ee4916356b",
   "components": {
     "r60": {
       "name": "Redis configuration",
@@ -32592,6 +32684,8 @@ REASONED: deployment expectations and source-audit limits recorded in this guide
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Official Elasticsearch Docker images: the tag map (library file pinned commit 8480a06d8ca03ca7da29a469fdbddb5f9f31df61). For each published branch, the Docker images item cites the bundled `elasticsearch.yml` with `network.host: 0.0.0.0` and the Dockerfile lines that copy it and `EXPOSE 9200 9300` (8.19 at pinned commit 0208be14db8ebd2e40442d328e8f79921368c5a9, 9.4 at 25fdea1109a231cedf9d1d3cf78bbb7fce488561, 9.5 at 18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a). The Docker images item also cites the entrypoint lines that pass `-E` arguments through to the server after a first argument of `eswrapper` or a path whose last component is `elasticsearch`, Elastic's Docker configuration page for environment-variable settings and bind-mounted configuration, and Elastic's networking settings reference for `0.0.0.0`. Official Elasticsearch Docker image sources: https://github.com/docker-library/official-images/blob/8480a06d8ca03ca7da29a469fdbddb5f9f31df61/library/elasticsearch#L2-L19 and https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/config/elasticsearch.yml. More official Elasticsearch Docker image sources: https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/Dockerfile#L38 and https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/Dockerfile#L123. More official Elasticsearch Docker image sources: https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/config/elasticsearch.yml and https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/Dockerfile#L57. More official Elasticsearch Docker image sources: https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/Dockerfile#L99 and https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/config/elasticsearch.yml. More official Elasticsearch Docker image sources: https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/Dockerfile#L57 and https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/Dockerfile#L99. More official Elasticsearch Docker image sources: https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/bin/docker-entrypoint.sh#L10-L22 and https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/bin/docker-entrypoint.sh#L84. More official Elasticsearch Docker image sources: https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/bin/docker-entrypoint.sh#L10-L22 and https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/bin/docker-entrypoint.sh#L84. More official Elasticsearch Docker image sources: https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/bin/docker-entrypoint.sh#L10-L22 and https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/bin/docker-entrypoint.sh#L84. Elastic Docker configuration and networking settings sources: https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-elasticsearch-docker-configure and https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings
 - Elasticsearch self-managed subscription tiers and current Platinum availability: https://www.elastic.co/subscriptions
 - Elasticsearch current subscription matrix PDF: https://www.elastic.co/pdf/subscriptions-2026-08-04.pdf
@@ -32885,7 +32979,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "d36b8532fe14a0a7ef52cf296b45b1f4a264ee95394498e63418b2087394ae5b",
+  "body_sha256": "2c60af4adbf8b9d1bce7063240887664aa51938cfb7b8c6d09b74ac0eaaa4826",
   "components": {
     "es-api": {
       "name": "Elasticsearch API",
@@ -34204,6 +34298,8 @@ REASONED from the cited AIStor documentation: OIDC role-policy and claim-policy 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - AIStor root credential files and file-variable precedence: https://docs.min.io/aistor/reference/aistor-server/settings/root-credentials/ and https://docs.min.io/aistor/reference/aistor-server/settings/#file-based-environment-variables
 - MinIO network encryption (certs directory, public.crt/private.key, --certs-dir): https://docs.min.io/aistor/installation/linux/network-encryption/
 - MinIO: https://www.min.io/
@@ -34326,7 +34422,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "85740b262253dedbe64449ab7f401420e3f298980c920d0f573476995316c498",
+  "body_sha256": "2f5fc3e63f39ec70555fd333301f2abbbedededf9175b666d8b9f182222b13dc",
   "components": {
     "aistor": {
       "name": "AIStor documentation",
@@ -35117,6 +35213,8 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - RabbitMQ access control, guest restrictions, interactive user creation, and resource permissions: https://www.rabbitmq.com/docs/access-control
 - RabbitMQ virtual hosts and logical isolation: https://www.rabbitmq.com/docs/vhosts
 - RabbitMQ CLI user, vhost, permission, and tag commands: https://www.rabbitmq.com/docs/man/rabbitmqctl.8
@@ -35230,7 +35328,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-09",
-  "body_sha256": "827e8f253c2455dc18dc845a54d8015cd0eea915fc6eb6ac13ae7ee913a06d5a",
+  "body_sha256": "3302113b933d3e62c7b2d97eed9a8bde5b170f9485c056be3d0473d7f9421de8",
   "components": {
     "source": {
       "name": "RabbitMQ source",
@@ -35939,6 +36037,8 @@ The explicit `$SYS/#` subscription should receive broker telemetry in the expose
 
 ## Sources (checked October 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Official eclipse-mosquitto Docker images: the tag-to-directory map (library file pinned commit 920b00976e6e8335bab0a3fd293b95b6b2404ce3). The image source at pinned commit 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60 covers the 2.1-alpine build's 2.1.2 release download, configuration and dashboard install and `CMD`, an entrypoint that only sets data-directory ownership, its `mosquitto.conf` (`listener 1883`, `allow_anonymous true`, `listener 9883` with `protocol http_api`), and the README's description of it. The image source at pinned commit 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60 also covers the 2.0-openssl and 1.6-openssl builds installing upstream's `mosquitto.conf`. Sources for this item (1 of 5): https://github.com/docker-library/official-images/blob/920b00976e6e8335bab0a3fd293b95b6b2404ce3/library/eclipse-mosquitto#L3-L13 and https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L30. Sources for this item (2 of 5): https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L77-L80 and https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L99-L101. Sources for this item (3 of 5): https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/mosquitto.conf (identical in the v2.1.2 release it is installed from: https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/docker/2.1-alpine/mosquitto.conf). Sources for this item (4 of 5): https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/docker-entrypoint.sh and https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/README.md#L27-L28. Sources for this item (5 of 5): https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.0-openssl/Dockerfile#L69 and https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/1.6-openssl/Dockerfile#L66
 - Mosquitto 2.1.2 MQTT listener with no address (a passive `getaddrinfo` over both families, binding each result), the HTTP API listener with no address (libmicrohttpd with `MHD_USE_DUAL_STACK`), the `http_api` endpoints, and their JSON and plain-text handlers and their access check (pinned tag v2.1.2). This item's Mosquitto 2.1.2 sources also cover a `listener` line resetting that listener's `allow_anonymous` to unset so the global value applies, anonymous success with no authentication plugin, ACL success with no ACL plugin, and the manual's `http_api` entry (pinned tag v2.1.2). Sources for this item (1 of 3): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/net.c#L815-L918, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L449-L545, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L160-L163 and https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L224. Sources for this item (2 of 3): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L251, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L336-L378, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/conf.c#L2001 and https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/listeners.c#L27-L42. Sources for this item (3 of 3): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_basic_auth.c#L56-L113, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_acl_check.c#L141-L201 and https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/man/mosquitto.conf.5.xml#L1663-L1671
 - Mosquitto 1.6.15 default listener on 1883 with no address when no listener is configured, and `allow_anonymous` defaulting to true, with upstream's `mosquitto.conf` having no active line (pinned tags v1.6.15 and v2.0.22). Sources for this item (1 of 2): https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/src/conf.c#L420-L468, https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/src/net.c#L605-L690 and https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/man/mosquitto.conf.5.xml#L167-L185. Sources for this item (2 of 2): https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/mosquitto.conf and https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/mosquitto.conf
@@ -36044,7 +36144,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "1a338374bc949536319551bfd205fe9cee9b44986c2d2bb5521ddf90c2955941",
+  "body_sha256": "2ee9badbff337d69d3a7962a63330af89e8d159424f8be5953910965d898b2ae",
   "components": {
     "v20": {
       "name": "Mosquitto",
@@ -37058,6 +37158,8 @@ The checks below remain REASONED from the cited Kafka documentation and pinned s
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Kafka security overview (Kafka 4.3 documentation): https://kafka.apache.org/43/security/security-overview/
 - Listener configuration (controller listener, combined-node requirement, protocol map) (Kafka 4.3 documentation): https://kafka.apache.org/43/security/listener-configuration/
 - Encryption and authentication using SSL (Kafka 4.3 documentation): https://kafka.apache.org/43/security/encryption-and-authentication-using-ssl/
@@ -37168,7 +37270,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "5907c6db29f85723ec9dd9c6b75d47955f878e0aff62365516161332685693ac",
+  "body_sha256": "167627b086a0840043a709f03e20c9269ed04efb59e43992afa81ae3446fb3e2",
   "components": {
     "default": {
       "name": "Kafka listener default",
@@ -37992,6 +38094,8 @@ SHOW CREATE TABLE system.session_log;
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Listen address settings: https://clickhouse.com/docs/reference/settings/server-settings/settings/listen#listen_host
 - Base server configuration with commented-out listener examples: https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml
 - Separately pinned upstream default-user configuration: https://raw.githubusercontent.com/ClickHouse/ClickHouse/b40982f9416bb4bc2d423d7e75ec384e79494b99/programs/server/users.xml
@@ -38137,7 +38241,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "11efeeda48aaebe6d2002d69242d23aad7332a230d5b6f8084da586e72bb0a47",
+  "body_sha256": "83fecc799d51102d2701636eb18bae81c88a0dde7ca0338e826cb99bd7f87ca9",
   "components": {
     "docs": {
       "name": "ClickHouse documentation",
@@ -39155,6 +39259,8 @@ REASONED: a scope summary for this Verify section, per the guide's cited Configu
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Configure network connectors (Neo4j 5): https://neo4j.com/docs/operations-manual/5/configuration/connectors/
 - Ports: https://neo4j.com/docs/operations-manual/current/configuration/ports/
 - Set an initial password: https://neo4j.com/docs/operations-manual/current/configuration/set-initial-password/
@@ -39334,7 +39440,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a5bae35dce475f51d51a0897f48af22dc879fa254260e5b604de23c48c7051ce",
+  "body_sha256": "446a520ff8d76c52cfb4709d083178cd4b2aecb0b096f7c045c8286c117cd56f",
   "components": {
     "cluster": {
       "name": "Neo4j Enterprise",
@@ -40046,6 +40152,8 @@ For a binary SASL deployment, also repeat SET, GET, FLUSH, and GET through the a
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - memcached documentation, binary protocol SASL authentication: https://docs.memcached.org/protocols/binarysasl/
 - memcached documentation, TLS: https://docs.memcached.org/features/tls/
 - OpenSSL 3.0 `s_client` verification options and `-verify_return_error` (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
@@ -40139,7 +40247,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "57ef35d716df1dc97e6a33ed6fc2d7cf7c4a2b6d0a932215eb44a778f579836e",
+  "body_sha256": "04e1d1db846e352bec655ee0cc4c00f5e5d75c0af4de1f0a62b27bc03b14d069",
   "components": {
     "stable": {
       "name": "memcached source",
@@ -40920,6 +41028,8 @@ REASONED: Historical evidence boundary; no original authoring receipts, authoriz
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - S3 Block Public Access (four settings, defaults, meaning of "public", IAM Access Analyzer): https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html and https://docs.aws.amazon.com/AmazonS3/latest/userguide/configuring-block-public-access-bucket.html
 - S3 Object Ownership (Bucket owner enforced default, ACLs disabled): https://docs.aws.amazon.com/AmazonS3/latest/userguide/about-object-ownership.html
 - AWS CLI `s3 presign` (`--expires-in` default and maximum): https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html
@@ -41049,7 +41159,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "139bbd5d2de5d6cc80a68540c09848087e17cb4f633455a6f0c0d41641bdd015",
+  "body_sha256": "1505c140826055bf8234124e8c77da067611e1eb22c1ae357593eb3442af534d",
   "components": {
     "s3": {
       "name": "Amazon S3 documentation",
@@ -42393,6 +42503,8 @@ REASONED: scope of the original authoring record and its shell-only evidence. Th
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Official `nats` Docker images: the tag-to-directory map for 2.14 and 2.15 (library file pinned commit dcd3db677d8919c3a42d369bd48a6f1c234b3ae8). Official `nats` Docker images at image source pinned commit 2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6: the bundled `nats-server.conf` (the same in every 2.14 and 2.15 directory), the scratch and Alpine configuration copy, `ENTRYPOINT` and `CMD`, the Alpine entrypoint, and the Nano Server and Windows Server Core `ENTRYPOINT` and `CMD` (cited for both 2.15 and 2.14). These lines are unchanged from commit 0e72748d (checked November 2026). Official `nats` Docker images at image source pinned commit 2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6 ("Releases v2.15.2, v2.14.9"): the server release each image carries, 2.15.2 and 2.14.9 (checked November 2026). Each Alpine and Windows Server Core build sets `NATS_SERVER` and downloads that release: `ENV NATS_SERVER 2.15.2` in the 2.15 and `ENV NATS_SERVER 2.14.9` in the 2.14 Dockerfiles. Each scratch build copies the binary from the matching Alpine image, `COPY --from=nats:2.15.2-alpine3.22 /usr/local/bin/nats-server /nats-server` and `COPY --from=nats:2.14.9-alpine3.22 /usr/local/bin/nats-server /nats-server`. Each Nano Server build copies it from the matching Windows Server Core image, `COPY --from=nats:2.15.2-windowsservercore-ltsc2022 C:\\nats-server.exe C:\\nats-server.exe` and `COPY --from=nats:2.14.9-windowsservercore-ltsc2022 C:\\nats-server.exe C:\\nats-server.exe`; each variant's lines are cited for both versions. Item sources: https://github.com/docker-library/official-images/blob/dcd3db677d8919c3a42d369bd48a6f1c234b3ae8/library/nats#L6-L50, https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/scratch/nats-server.conf and https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/alpine3.22/nats-server.conf. More item sources: https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/nanoserver-ltsc2022/nats-server.conf and https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/windowsservercore-ltsc2022/nats-server.conf. More item sources: https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/scratch/nats-server.conf, https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/alpine3.22/nats-server.conf and https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/nanoserver-ltsc2022/nats-server.conf. More item sources: https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/windowsservercore-ltsc2022/nats-server.conf, https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/scratch/Dockerfile#L5-L9 and https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/alpine3.22/Dockerfile#L38-L43. More item sources: https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/alpine3.22/docker-entrypoint.sh#L7-L9 and https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/alpine3.22/docker-entrypoint.sh#L7-L9. More item sources: https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/nanoserver-ltsc2022/Dockerfile#L5-L9 and https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/windowsservercore-ltsc2022/Dockerfile#L44-L48. More item sources: https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/windowsservercore-ltsc2022/Dockerfile#L44-L48 and https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/nanoserver-ltsc2022/Dockerfile#L5-L9. More item sources: https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/scratch/Dockerfile#L5-L9, https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/alpine3.22/Dockerfile#L38-L43 and https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/alpine3.22/Dockerfile#L3. More item sources: https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/alpine3.22/Dockerfile#L28 and https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/windowsservercore-ltsc2022/Dockerfile#L7. More item sources: https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/windowsservercore-ltsc2022/Dockerfile#L18, https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/scratch/Dockerfile#L4 and https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.15.x/nanoserver-ltsc2022/Dockerfile#L4. More item sources: https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/alpine3.22/Dockerfile#L3, https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/alpine3.22/Dockerfile#L28 and https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/windowsservercore-ltsc2022/Dockerfile#L7. More item sources: https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/windowsservercore-ltsc2022/Dockerfile#L18, https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/scratch/Dockerfile#L4 and https://github.com/nats-io/nats-docker/blob/2027d0acef4a2c603c0324dde7d4f3c4a8bf27c6/2.14.x/nanoserver-ltsc2022/Dockerfile#L4
 - NATS Server listen defaults (pinned tag v2.15.2, checked November 2026): `DEFAULT_HOST` of `0.0.0.0`, `monitor_port` read as `http_port`, the `-c` and `--config` flags, the client and monitoring host defaults, the cluster host default, and the client, monitoring and route listeners opened with Go's `tcp` listen. The cited lines have the same text at v2.15.0, the earlier pin; v2.14.9, which the 2.14 images carry, was not read. Item sources: https://github.com/nats-io/nats-server/blob/v2.15.2/server/const.go#L85-L86, https://github.com/nats-io/nats-server/blob/v2.15.2/server/opts.go#L1296, https://github.com/nats-io/nats-server/blob/v2.15.2/server/opts.go#L6316-L6317 and https://github.com/nats-io/nats-server/blob/v2.15.2/server/opts.go#L6063-L6070. More item sources: https://github.com/nats-io/nats-server/blob/v2.15.2/server/opts.go#L6093-L6096, https://github.com/nats-io/nats-server/blob/v2.15.2/server/server.go#L2901-L2907, https://github.com/nats-io/nats-server/blob/v2.15.2/server/server.go#L3159-L3165 and https://github.com/nats-io/nats-server/blob/v2.15.2/server/route.go#L2751-L2752. More item sources: https://github.com/nats-io/nats-server/blob/v2.15.2/server/util.go#L275-L283
 - Go's wildcard `tcp` listen opening one dual-stack socket where IPv4-mapped addresses are supported (pinned tag go1.26.8, the `toolchain` line of go.mod at v2.14.7 and v2.15.0; go.mod at v2.15.2 declares `go 1.26.0` and `toolchain go1.26.10`, and the v2.15.2 release notes give Go 1.27.3; this file was not read at those releases): https://github.com/golang/go/blob/go1.26.8/src/net/ipsock_posix.go#L134-L147
@@ -42553,7 +42665,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "8217295abc00cb5360d364a3ab6dac354738e90bfe89a9f22e9b9942c4428651",
+  "body_sha256": "eccdef680df5191ee96e525fb30f6a140d11de7e251e0a21bc546656339e7bf2",
   "components": {
     "server": {
       "name": "NATS Server",
@@ -43018,6 +43130,8 @@ REASONED: the tool's four outcomes are FOUND/1 (remove and rotate the credential
 
 ## Sources (checked October 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Version scope: Typesense 30.2; Meilisearch current unversioned documentation checked 2026-09-18, with v1.53.2 as the release reference. The first release containing all four default keys and their exact permissions remains to be confirmed against the deployed release, so inspect `GET /keys`. The Verify commands require Bash, curl 7.75.0 or later, OpenBSD-compatible netcat and Git; the credential scan was exercised with Bash 5.3.9 and Git 2.53.0.
 
 - Meilisearch master API keys (MEILI_MASTER_KEY, the four default API keys; rolling documentation, checked September 2026): https://www.meilisearch.com/docs/resources/self_hosting/security/master_api_keys
@@ -43110,7 +43224,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-10",
-  "body_sha256": "23e0ecb377903f45678856292ccad9bba22aa022742afb09ec92d7aa3c535760",
+  "body_sha256": "82466bf523047290a304c2e517937599d45b518058829752e8096540e769b80e",
   "components": {
     "meili": {
       "name": "Meilisearch release reference",
@@ -43593,6 +43707,8 @@ REASONED: preceding block; the Turso check above and the outcomes stated here, p
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests on SQLite 3.46.1); LiteFS HTTP behavior traced to v0.5.14; Litestream MCP documented for v0.5.0 and later; Turso rolling CLI documentation and the SQL-over-HTTP `/v2/pipeline` protocol. Installed Turso, Litestream, and LiteFS versions were not available for runtime confirmation. The Verify commands require Bash, curl, GNU-compatible grep and stat, and Git; the shell, HTTP-client and scan behaviour is cited at bash-5.3, curl-8_14_1 and v3.12 respectively (checked October 2026), without asserting a minimum version for the complete checks.
 
 - SQLite security (rolling documentation, checked September 2026): https://www.sqlite.org/security.html
@@ -43712,7 +43828,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "6e44867fed7f8eceb07674a7a4da09f72418ec7cd1a7e85f394aaffda99c829d",
+  "body_sha256": "b6ccb2a04c73a95da0d7f7cc8892f7ba61b3111f19c0b831320687be136616b5",
   "components": {
     "sqlite-rolling": {
       "name": "SQLite documentation (rolling)",
@@ -44274,6 +44390,8 @@ DEMONSTRATED: local guard limits on 2026-10-05 in private /dev/shm scratch with 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Applicability checked on 2026-09-18: Datasette stable documentation lists 0.65.5; the container-generator discussion here is scoped to commit `caf238aac86ebe370959b25384d6e05f6a1e2359`, not a tagged release or the separately pinned Cloud Run implementation. The sqlite-web source was inspected on moving `master`, identifying itself as 0.8.1; the released 0.8.1 package matched it for the flags and routes the loopback runs exercised. Runtime confirmation used Datasette 0.65.5, datasette-auth-passwords 1.1.1, datasette-write 0.4 and sqlite-web 0.8.1 from PyPI.
 
 Every URL listed below was fetched during authoring, except the sqlite-web 0.8.1 tag entries, which were checked against the locally extracted tag snapshot in October 2026, and the sudo sudoers manual entry, which was checked against the file at its tag on 2026-10-31. This list also records the source-fetch review.
@@ -44427,7 +44545,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f32f2d8ab5237bf48e3a0dbb55bc212b9cf5e903bd7165f3324c1758aad3cc47",
+  "body_sha256": "893ec79c96bcba70cf469276c4c2b7e151ab05a12c9bbd1e510dd6a7c013e747",
   "components": {
     "ds-container": {
       "name": "Datasette container generator",
@@ -45088,6 +45206,8 @@ shell to run.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - SurrealDB CLI, `surreal db start` (start credentials define a new root user with the `OWNER` role) (checked November 2026): https://surrealdb.com/docs/reference/cli/db/commands/start
 - Surreal CLI launcher: `surreal <component> <command>` passes everything after the component name on unchanged, and the install script installs `surreal` with the database as a pinned component (checked November 2026): https://surrealdb.com/docs/explore/cli
 - Surreal CLI components: a name that is not a component runs a `surreal-<name>` from `PATH`, and `SURREAL_*` variables other than `SURREAL_CLI_*` belong to the database (checked November 2026): https://surrealdb.com/docs/explore/cli/components
@@ -45243,7 +45363,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "3deb6bdd099c2d6a0d817901e21eb7d800d8d68aa2f0365ad01c4fb1fdb652f8",
+  "body_sha256": "5c0f72010815d1ab578ade07942eb8f4467623763041fe979edae8ac99f25ffe",
   "components": {
     "pinned": {
       "name": "SurrealDB server and image",
@@ -45719,6 +45839,8 @@ REASONED: the VictoriaMetrics v1.155.0 single-node endpoint-key and Basic-auth c
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - InfluxDB 2.x setup API (`GET /api/v2/setup`, the `allowed` field, `POST` onboarding): https://docs.influxdata.com/influxdb/v2/api/setup/
 - InfluxDB 2.x configuration options (`http-bind-address`, `tls-cert`, `tls-key`, `INFLUXD_CONFIG_PATH`): https://docs.influxdata.com/influxdb/v2/reference/config-options/
 - InfluxDB 1.x configuration (`[http] auth-enabled` default `false`, `bind-address` `:8086`, backup RPC `127.0.0.1:8088`): https://docs.influxdata.com/influxdb/v1/administration/config/
@@ -45826,7 +45948,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "c749c01383af1105c7ad079f301722bf9f7d8a683a24113641a18aa31aa647e3",
+  "body_sha256": "b18ec5016cf5967cefce53562caad8331513f75181adac1e3e3e69fbc59d37be",
   "components": {
     "influx2": {
       "name": "InfluxDB OSS",
@@ -46628,6 +46750,8 @@ Self-service signup lets users choose their own usernames, which GHSA-93gc-h923-
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Jupyter Server public server guide and password/TLS setup (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/latest/operators/public-server.html
 - Jupyter Server security and token/password authentication (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/latest/operators/security.html
 - Jupyter Server API base handler, protected API responses, and metrics enforcement (v2.21.1, checked November 2026): https://github.com/jupyter-server/jupyter_server/blob/v2.21.1/jupyter_server/base/handlers.py
@@ -46798,7 +46922,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "8326a339802f8dfc1f8b7b3f6c4db04c6388de9419ed5f6473700a9872d1e283",
+  "body_sha256": "8bd756b08cd17b92e88c5b8e5265fece1b77bd290808d6b9a91e81caa617ace6",
   "components": {
     "server": {
       "name": "Jupyter Server",
@@ -47887,6 +48011,8 @@ These commands validate configuration acceptance; they do not prove authenticati
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Ollama v0.40.14 release (checked November 2026): https://github.com/ollama/ollama/releases/tag/v0.40.14
 - Ollama release commit (checked November 2026): https://github.com/ollama/ollama/commit/9a3e8177767245acc62b735eba7d5d8a553606d0
 - Ollama repository at the reviewed tag, its file list (checked November 2026): https://github.com/ollama/ollama/tree/v0.40.14
@@ -48296,7 +48422,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "d4001588908bdf2723fb2ae68911a612a4680bb06f230088e472c8ff48efbc36",
+  "body_sha256": "f8ec3b79013bcc954292b960b176b94e11b0a50c857ee5d92ea4d75860fc7d59",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -49194,6 +49320,8 @@ The native password-signin limiter is **15 attempts per 180 seconds per email ad
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Open WebUI environment configuration reference (rolling documentation, checked September 2026): https://docs.openwebui.com/reference/env-configuration/
 - Open WebUI FAQ (the first account created becomes the administrator): https://docs.openwebui.com/faq/
 - Open WebUI repository (the Docker Quick Start `-v open-webui:/app/backend/data` data volume): https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/README.md
@@ -49309,7 +49437,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "e51d97b1051005da6ba4d083b5949d60a91a1cb1e0910407c333aad9e2c6b281",
+  "body_sha256": "084863ff8532b20bcfb32f428e44761ca92c5558e4a8967c40feee5a065a81a3",
   "components": {
     "webui": {
       "name": "Open WebUI",
@@ -49910,6 +50038,8 @@ The checks below remain REASONED from the cited LiteLLM documentation and pinned
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - LiteLLM proxy virtual keys (master_key, /key/generate, header name): https://docs.litellm.ai/docs/proxy/virtual_keys
 - LiteLLM proxy CLI (`--host` default `0.0.0.0`, `--port` default `4000`): https://docs.litellm.ai/docs/proxy/cli
 - LiteLLM admin UI (`UI_USERNAME`/`UI_PASSWORD`, master-key fallback, `DISABLE_ADMIN_UI`): https://docs.litellm.ai/docs/proxy/ui
@@ -50023,7 +50153,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "769276432646a9365f357cc4e98154837e86c1851b249a1dd2642aae228dd849",
+  "body_sha256": "6cda551661000ac9781b7d5c4a611a26b5d173c0e2d09fc9101ac3d4eb3d69c1",
   "components": {
     "sso": {
       "name": "LiteLLM SSO allowance",
@@ -50733,6 +50863,8 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - llama.cpp server README (defaults, `--api-key` and its `LLAMA_API_KEY` environment input, `--api-key-file` ("path to file containing API keys, one per line") and its `LLAMA_ARG_API_KEY_FILE` environment input, the `LLAMA_ARG_*` environment inputs most options carry, `LLAMA_ARG_HOST` for `--host` among them, SSL flags). Sources for this item: https://github.com/ggml-org/llama.cpp/blob/e0dff58475bc9ed68eedcb265ee998f2fcabb3b1/tools/server/README.md
 - vLLM documentation: https://docs.vllm.ai/en/latest/
 - vLLM v0.30.0 network isolation, TCPStore warning and Ray trust model: https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L3-L55, https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L109-L138 and https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L442-L538
@@ -50915,7 +51047,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "8a7a992dbf366a6cc0292e6705ab51c314a06b3d6409d0684172e805f688bdf0",
+  "body_sha256": "25df3106abde4cb18e1691ffb86857797e62e5e37dc5fbd0fc72df1b381634c1",
   "components": {
     "llama": {
       "name": "llama.cpp",
@@ -51589,6 +51721,8 @@ Consider `launch(run_history=False)`. In 6.31.0 its default is `None`, resolving
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - [Gradio Blocks.launch() parameters (rolling documentation, checked September 2026)](https://gradio.app/docs/gradio/blocks): auth, auth_message, ssl_certfile, ssl_keyfile, ssl_keyfile_password, ssl_verify, server_name, and share; also auth_dependency, root_path, queue/launch limits, footer_links, run_history, and analytics.
 - [Gradio file access (rolling documentation, checked September 2026)](https://gradio.app/guides/file-access): the `/gradio_api/file=` route; the default set is `set_static_paths`, `allowed_paths`, and the cache; eligible returned paths in `allowed_paths`, the working directory, or the temp directory; working-directory dotfile exclusion; `blocked_paths` precedence; cache sharing across users; and `GRADIO_TEMP_DIR`.
 - Gradio security advisories: [the `/file` traversal and SSRF fixed in 4.11.0](https://github.com/gradio-app/gradio/security/advisories/GHSA-6qm2-wpxq-7qh2) and [the case-handling blocklist bypass](https://github.com/gradio-app/gradio/security/advisories/GHSA-j2jg-fq62-7c3h). Historical evidence for keeping a current release and minimizing the process filesystem and additional allowed paths; no precise fix version is assigned here to the case-handling advisory.
@@ -51691,7 +51825,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-09",
-  "body_sha256": "4bd2c804fb80557e8eed3f354e79162d50336ee412556181db6ce81f7eb82fde",
+  "body_sha256": "bec410f284144a3442417675c3044b0b78c257c0540c3dce048c062de015dd39",
   "components": {
     "gradio": {
       "name": "Gradio",
@@ -52048,6 +52182,8 @@ REASONED: the historical external-vantage and wildcard limitations; per five of 
 
 ## Sources (checked October 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at the time of writing; `server.address` defaults to unset (all interfaces) and `server.port` to `8501`, and the explicit loopback setting above is required for the fronting-proxy pattern. `st.login()` has been available since the 1.42.0 series.
 
 - Streamlit config.toml reference, server.address, server.sslCertFile, server.sslKeyFile and the production warning (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/api-reference/configuration/config.toml
@@ -52153,7 +52289,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-10",
-  "body_sha256": "0b49ec359ddfa611e974e64a14d8c9a03ce8acdeb15d5c93ea8487ed739702aa",
+  "body_sha256": "dc977979704ff4660fa4728ac8d96de75d4ecdb4ddfe6487d338e4084512c53d",
   "components": {
     "streamlit": {
       "name": "Streamlit",
@@ -52578,6 +52714,8 @@ REASONED: source limits and guide advice for the API probes below; no live n8n d
 
 ## Sources (checked October 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - n8n deployment environment variables (N8N_LISTEN_ADDRESS, N8N_PROTOCOL, N8N_SSL_KEY, N8N_SSL_CERT, defaults): https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/deployment
 - n8n security policies (MFA enforcement 2.18.0+, licensing, SSO exception): https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/manage-security-policies
 - n8n SSL setup: https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/set-up-ssl
@@ -52873,7 +53011,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-10",
-  "body_sha256": "f6e7899bd9c60ae3e0c59c9202223a7fcb58592b6f43a745b7325bfdaf77130e",
+  "body_sha256": "5aaeb55ae9ca2c68e819f417bf159219ccddbf4cdba0456d48f9160a94dab27c",
   "components": {
     "server": {
       "name": "n8n listener source",
@@ -53497,6 +53635,8 @@ REASONED: preceding block; paired editor access and MFA, with the listener inven
 
 ## Sources (checked November 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - code-server v4.145.2 deployment guide (exposure, TLS and self-signed certificates, reverse proxy, `/proxy`+`/absproxy`+`--proxy-domain` routes, `--skip-auth-preflight`, Cloudflare Rocket Loader and the nonce-based CSP): https://raw.githubusercontent.com/coder/code-server/v4.145.2/docs/guide.md
 - code-server v4.145.2 FAQ (config.yaml keys map to flags, `cert: false` default, `hashed-password` precedence, config path from `--config`/`CODE_SERVER_CONFIG`/`XDG_CONFIG_HOME`, flags override the file): https://raw.githubusercontent.com/coder/code-server/v4.145.2/docs/FAQ.md
 - code-server v4.145.2 CLI (credentials, defaults, config generation, proxy flags, `--password` rejected on the CLI, `CODE_SERVER_HOST`/`PORT`/`--host`/`--port`/`--socket`/`--socket-fd` listener inputs, `CS_DISABLE_PROXY`, `--trusted-origins`, `--disable-file-cache`, `--enable-remote-storage`): https://raw.githubusercontent.com/coder/code-server/v4.145.2/src/node/cli.ts
@@ -53551,7 +53691,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-11",
-  "body_sha256": "4d4a9b2bec001d1b933c808f5d25db3bef11ea9deac9b4b4ff736c3f9f69113e",
+  "body_sha256": "a1835d6ff4a8607f5ebceb9773e8ca77095b9e12cb56a73f41411b09da8b8124",
   "components": {
     "server": {
       "name": "code-server",
@@ -53760,6 +53900,8 @@ Point that block, with `web`, at Sentry's `http://tracker.example.com:9000/`: th
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Sentry self-hosted Docker Compose (`SENTRY_BIND`, the bundled nginx publication): https://github.com/getsentry/self-hosted/blob/26.10.1/docker-compose.yml
 - Sentry self-hosted `.env` (`SENTRY_BIND=9000` default): https://github.com/getsentry/self-hosted/blob/26.10.1/.env
 - Sentry `auth.allow-registration` default `False`: https://github.com/getsentry/sentry/blob/26.10.1/src/sentry/options/defaults.py
@@ -53827,7 +53969,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "44db64de9642a0f626974f6c1896e099069200efe0abd67eb0479e6effaab848",
+  "body_sha256": "edbd055603171ef8b79e7910a038b4cff42d0f23f69870988b33241afe6e30cb",
   "components": {
     "sentry": {
       "name": "Sentry and self-hosted distribution",
@@ -54316,6 +54458,8 @@ REASONED: tenant isolation and bypass positive control. A live PostgreSQL with p
 
 ## Sources (checked October 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 The October 2026 date records the guide-wide documentation check. Items, or parts of items, pinned to a release or commit carry no check date unless the pinned part itself is marked "checked October 2026", and some of those items were first cited in October 2026.
 
 - Milvus Compose configuration and credentials (pinned tag v3.0.5, checked November 2026): image paths, the image's runtime user (`USER ${MILVUS_RUNTIME_USER}`, default `milvus:milvus`), the one-shot `milvus-volume-init` service, file precedence and `MILVUSCONF`, environment formatter, authentication/TLS keys, the bundled MinIO service and storage defaults. Milvus Compose configuration and credentials sources (pinned tag v3.0.5): https://github.com/milvus-io/milvus/blob/v3.0.5/deployments/docker/standalone/docker-compose.yml#L47-L58, https://github.com/milvus-io/milvus/blob/v3.0.5/deployments/docker/standalone/docker-compose.yml#L6-L28, https://github.com/milvus-io/milvus/blob/v3.0.5/build/docker/milvus/ubuntu22.04/Dockerfile#L39. Milvus Compose configuration and credentials sources (pinned tag v3.0.5), continued: https://github.com/milvus-io/milvus/blob/v3.0.5/build/docker/milvus/ubuntu22.04/Dockerfile#L58-L59, https://github.com/milvus-io/milvus/blob/v3.0.5/build/docker/milvus/ubuntu22.04/Dockerfile#L16, https://github.com/milvus-io/milvus/blob/v3.0.5/pkg/util/paramtable/base_table.go#L69-L72. Milvus Compose configuration and credentials sources (pinned tag v3.0.5), continued: https://github.com/milvus-io/milvus/blob/v3.0.5/pkg/util/paramtable/base_table.go#L145-L153, https://github.com/milvus-io/milvus/blob/v3.0.5/pkg/util/paramtable/base_table.go#L256-L272, https://github.com/milvus-io/milvus/blob/v3.0.5/pkg/util/paramtable/component_param.go#L1056-L1061. Milvus Compose configuration and credentials sources (pinned tag v3.0.5), continued: https://github.com/milvus-io/milvus/blob/v3.0.5/pkg/util/paramtable/grpc_param.go#L144-L175 and https://github.com/milvus-io/milvus/blob/v3.0.5/pkg/util/paramtable/service_param.go#L1902-L1930
@@ -54517,7 +54661,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-10",
-  "body_sha256": "04d1e9bf9356da7fe59f9e13c5de39812ac94cccb41efb77ac84d82b6f8e40ab",
+  "body_sha256": "05b31845e5800e942df0b9a0c96535584ce589f2fb96cda7fc48ff702e834ca8",
   "components": {
     "q": {
       "name": "Qdrant source",
@@ -55386,6 +55530,8 @@ REASONED: following block; the wrong-audience probe in the following block, per 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - MCP specification 2026-07-28, Transports, Streamable HTTP (POST endpoint, Origin validation, loopback binding, request headers, header/body validation, removed legacy mechanisms): https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http
 - MCP specification 2026-07-28, Base protocol (per-request `_meta`, protocol version, client capabilities and identity): https://modelcontextprotocol.io/specification/2026-07-28/basic/index
 - MCP specification 2026-07-28, Discovery, `server/discover` (server implementation requirement, optional client call, request and response shape): https://modelcontextprotocol.io/specification/2026-07-28/server/discover
@@ -55475,7 +55621,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "581d8af4352565f05f8821de257a81cf4df59b44433db76859b2c67bb70a729b",
+  "body_sha256": "bcc4530157fde6e1c2ac632011a7aee0edc398450755278c52399171a8e9fcd9",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -55763,6 +55909,8 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - MCP Authorization, 2026-07-28 (`iss` validation timing, access-token query-string prohibition, `resource` parameter, refresh-token scope guidance): https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
 - MCP Authorization Security Considerations, 2026-07-28 (PKCE MUSTs, HTTPS endpoints and redirect URIs): https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/security-considerations
 - MCP Authorization Server Discovery, 2026-07-28 (`issuer` identity requirement): https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/authorization-server-discovery
@@ -55844,7 +55992,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "fd628f4d9d0620375027743388242ab66b7d71d75e121bbccfd53055af5704d3",
+  "body_sha256": "76aa9e145ccd0264af74434f2441a6ddcb902c8a5b6a6b76fcd7d84f6b12dd2b",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -56317,6 +56465,8 @@ REASONED: following block; direct-agent anonymous/token request preparation and 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Ray security guidelines (arbitrary code execution, network isolation, TLS is not a replacement, token auth from 2.52.0): https://docs.ray.io/en/latest/ray-security/index.html
 - Ray token authentication (`RAY_AUTH_MODE`, `RAY_AUTH_TOKEN`, `RAY_AUTH_TOKEN_PATH`, `ray get-auth-token`, plaintext-header caveat): https://docs.ray.io/en/latest/ray-security/token-auth.html
 - Ray 2.58.0 token input precedence and file-based job submission: https://github.com/ray-project/ray/blob/ray-2.58.0/doc/source/ray-security/token-auth.md
@@ -56448,7 +56598,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "20627523910cb5b9e66607932b0490ab17d6041e9c4ad3639fb8e919c294110b",
+  "body_sha256": "0d05eb7d0ab1b9b1509920bb42081eed43e3aa7a16df6cdf0b5f17e17778d016",
   "components": {
     "ray": {
       "name": "Ray pinned source",
@@ -56986,6 +57136,8 @@ REASONED: preceding block; external TCP reachability follows the cited MLflow ho
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - MLflow CSRF-key file input: [global `--env-file` option and existing-environment precedence](https://mlflow.org/docs/latest/api_reference/cli.html#mlflow), [v3.16.1 auth factory](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/auth/__init__.py#L6008-L6021), and [v3.16.1 worker environment](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L401-L402).
 - MLflow authentication with username and password (`--app-name basic-auth`, default admin credentials, `basic_auth.ini` keys, `MLFLOW_AUTH_CONFIG_PATH`, `MLFLOW_FLASK_SERVER_SECRET_KEY`, client variables, 403 on missing permission): https://mlflow.org/docs/latest/self-hosting/security/basic-http-auth/
 - MLflow authentication REST API (`2.0/mlflow/users/update-password` request fields): https://mlflow.org/docs/latest/api_reference/auth/rest-api.html
@@ -57077,7 +57229,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "229b7fe148bd06baf56a819e4b39abd955e9bea96468ff4d6aea73f8b076b04d",
+  "body_sha256": "955c235f0af3f28eb2b388886d814e71dc6cd8003a1df1632ced686a179c524f",
   "components": {
     "source": {
       "name": "MLflow pinned source",
@@ -57560,6 +57712,8 @@ REASONED: following block; listener inventory, Dify publication and TCP reachabi
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Dify Docker Compose deployment (setup at `/install`): https://docs.dify.ai/en/self-host/deploy/quick-start/docker-compose
 - Dify environment variables (`SECRET_KEY`, `INIT_PASSWORD`, `CONSOLE_API_URL`, `CONSOLE_WEB_URL`, `APP_WEB_URL`): https://docs.dify.ai/en/self-host/deploy/configuration/environments
 - Dify `docker/.env.example` (`EXPOSE_NGINX_PORT`, `NGINX_HTTPS_ENABLED`, certificate variables): https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/docker/.env.example ; `docker-compose.yaml` (which services publish ports): https://github.com/langgenius/dify/blob/8387590ace4a094de812b7847fc6a4c3a27cd52b/docker/docker-compose.yaml
@@ -57768,7 +57922,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "ad4bf14391a7edb1b32661a6f999d7ca6ded71c2ebf139f7bf6c40b6b41d9605",
+  "body_sha256": "9661b9132169126dacbe015db3bb6decabfb25833a2a186047d17c9e2d937af6",
   "components": {
     "daemon": {
       "name": "Dify plugin daemon",
@@ -58775,6 +58929,8 @@ If the deployment trusts identity headers from a proxy, follow the direct-origin
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 The service facts come from the maintainer's vendor-source verification record dated 2026-09-13. This authoring environment had no network; the pages were not reopened here. Docker and probe syntax also follow the cited sources already recorded in the repository's existing guides.
 
 **Citation pinning:** the LangServe README, Mem0 server, Onyx Compose and Onyx data-model citations below use commit pins, and each commit was opened and confirmed to contain the fact it is cited for. The Onyx v4.5.0, v4.9.2 and v4.9.4 source citations are pinned to the commits those tags resolved to (`055b0c5`, `df49072` and `4cfda3c`) and the Onyx v5.0.0-beta.3 pre-release citations to `55df913`, while the Onyx v4.3.13 and v4.4.0 citations and the Onyx v4.5.0 and v5.0.0 release notes use tags, which are not commit pins, and the Onyx release list is not pinned.
@@ -58972,7 +59128,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "b84a2f89263762162f1107da1188e16398936985d705a41591d16d079c2b00ff",
+  "body_sha256": "2abe580a8c2758cb8b58fc64242180ef241765689e1c7b8ef51964a3db3cd72b",
   "components": {
     "searx": {
       "name": "SearxNG documentation",
@@ -59596,6 +59752,8 @@ REASONED: following block; fatal hostname and CA verification with `openssl s_cl
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - LiveKit ports and firewall reference (`7880`, `7881`, UDP media range, single-port mux): https://docs.livekit.io/transport/self-hosting/ports-firewall/
 - LiveKit key validation (`ValidateKeys()` errors on an empty key map and on a key file readable by others; the sub-32-character secret log): https://raw.githubusercontent.com/livekit/livekit/v1.13.7/pkg/config/config.go
 - LiveKit development-mode `devkey`/`secret` injection and conditional loopback bind: https://raw.githubusercontent.com/livekit/livekit/v1.13.7/cmd/server/main.go
@@ -59723,7 +59881,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "bde07d579828c59c9edc80c1b1e35e994b92dfdeac4e9548cb13bc7ab132db4e",
+  "body_sha256": "92fa5a1c8ef7eff295dc6aff0031e3e3ee78d880cc046aaf18de262196be58fd",
   "components": {
     "livekit": {
       "name": "LiveKit",
@@ -60198,6 +60356,8 @@ The listener inventory in the following fence, which refuses with status 2 when 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - ComfyUI Startup Flags, `--listen` and `--port` defaults (rolling documentation, checked September 2026): https://docs.comfy.org/development/comfyui-server/startup-flags
 - ComfyUI Registry custom node security standards, eval/exec prohibited (rolling documentation, checked September 2026): https://docs.comfy.org/registry/standards
 - ComfyUI 2025 Jan Security Update, custom node code-execution risk: https://blog.comfy.org/p/comfyui-2025-jan-security-update
@@ -60315,7 +60475,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "05cb4de963ebb344152aae0469390f7600f4b74ce2451c04cabd0cf8552b9f70",
+  "body_sha256": "93e238f067fe3aba987e3b680a1d2bc708a4b1ddc06cd83e028032d5df3e52d2",
   "components": {
     "comfy": {
       "name": "ComfyUI",
@@ -60763,6 +60923,8 @@ REASONED: following block; isolation comparison, listener and external-reachabil
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - AnythingLLM security and access documentation: https://docs.anythingllm.com/features/security-and-access
 - LobeHub environment variables (KEY_VAULTS_SECRET; pinned tag v2.2.16): https://github.com/lobehub/lobehub/blob/v2.2.16/docs/self-hosting/environment-variables/basic.mdx#L22-L32
 - LobeHub authentication service environment variables (Better Auth; rolling documentation, checked September 2026): https://lobehub.com/only-ai/markdown/docs/en/self-hosting/environment-variables/auth
@@ -60854,7 +61016,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "da77f1c2ed52eca4ba010260e2fecfc66b28f979654b5a47ca65240a6d8c1907",
+  "body_sha256": "db19a9fa53c158dd4129ba274cc72219ae742497b4a8bf7b2e86bafd274777ad",
   "components": {
     "anything": {
       "name": "AnythingLLM documentation",
@@ -61431,6 +61593,8 @@ REASONED: No OpenClaw Gateway runs here. For the origin check, a fixed non-loopb
 
 ## Sources (checked November 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Repository sources are the OpenClaw repository at annotated tag `v2026.11.2` (commit `b556fdf457b026574bf0f1e7b4914b15f3f179ce`); line numbers in the prose above are at that tag. Documentation pages under `https://docs.openclaw.ai/` are the rolling, reader-facing docs for the same product.
 
 - OpenClaw default port and config filename constants (v2026.11.2): https://github.com/openclaw/openclaw/blob/v2026.11.2/src/config/paths.ts
@@ -61529,7 +61693,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-09",
   "documentation_checked": "2026-11",
-  "body_sha256": "3815828c34fddbe3481c810f921965b3f1674da163f7c8be62897a3f0559c203",
+  "body_sha256": "ede9989e2c65682b198416522324be999c4969bb2fb2649f763ab779cad42c8a",
   "components": {
     "openclaw": {
       "name": "OpenClaw",
@@ -61992,6 +62156,8 @@ REASONED: No Forgejo instance runs here. Forgejo serves `/user/sign_up` with `20
 
 ## Sources (checked November 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Repository sources are the Forgejo repository at tag `v17.0.1` (commit `363f3dc30beef902b187af5a5244ff7af44901e6`); line numbers in the prose above are at that tag, and its upstream home is codeberg.org, not GitHub. Documentation pages under `https://forgejo.org/docs/` are the rolling, reader-facing administrator docs for the same product.
 
 - Forgejo install-lock default and `HasInstallLock` (v17.0.1): https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/modules/setting/setting.go
@@ -62073,7 +62239,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-10",
   "documentation_checked": "2026-11",
-  "body_sha256": "af053bd6acf0fa7a84f1d8fb958379dd6c1651ef0c6f9d2f02b012c0daf78b5a",
+  "body_sha256": "5da010ea6fda3a22d4548e954eeff192a8aa5fbffe11dfe67d26c129855b056f",
   "components": {
     "forgejo": {
       "name": "Forgejo",
@@ -62546,6 +62712,8 @@ REASONED: No GitLab instance runs here. A data backup under `gitlab-backup creat
 
 ## Sources (checked November 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Repository sources are the GitLab monorepo at tag `v19.5.3-ee` (commit `b9b17a44ffb72a85fca47c5416a40a643c42996f`) and omnibus-gitlab at tag `19.5.3+ce.0` (commit `dbd814101106e4b386c68ca0761603e4ad693a11`); line numbers in the prose above are at those tags. GitLab CE is the FOSS-licensed subset of the `gitlab-org/gitlab` monorepo, and every file cited here is in that core subset, not the `ee/` tree; the clean FOSS mirror `gitlabhq/gitlabhq` lags the `-ee` tag, so the citations use `gitlab-org/gitlab` at `v19.5.3-ee`. Documentation pages under `https://docs.gitlab.com/` are the rolling, reader-facing administrator docs for the same product.
 
 - GitLab root-account production seed, forced random password and console output (v19.5.3-ee): https://gitlab.com/gitlab-org/gitlab/-/blob/v19.5.3-ee/db/fixtures/production/003_admin.rb
@@ -62686,7 +62854,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-10",
   "documentation_checked": "2026-11",
-  "body_sha256": "33847a992ac1079e1b78c026357603136dd1e2afd074ae038d543102b1d79a10",
+  "body_sha256": "f940bf02cb67cf71f64e70b7a8817e588782471d9c8dbca75ba6b1f726e5bae0",
   "components": {
     "gitlab": {
       "name": "GitLab",
@@ -63352,6 +63520,8 @@ that accepts spans with no credential at all.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Langfuse, authentication and SSO (signup default, `AUTH_DISABLE_SIGNUP`, `AUTH_DISABLE_USERNAME_PASSWORD`,
   SSO providers, `AUTH_SESSION_MAX_AGE`, `NEXTAUTH_URL`): https://langfuse.com/self-hosting/security/authentication-and-sso
 - Langfuse, public API authentication (Basic Auth with project public/secret key): https://langfuse.com/docs/api-and-data-platform/features/public-api
@@ -63507,7 +63677,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-09",
-  "body_sha256": "fedfe69f91436b52bb1b513ae54fb4099e5dd17eed91691b4f6f6bea16ebe19b",
+  "body_sha256": "a963eae348f96d30654b8f4c826c4dea252de0a7f37dd4c8d4ee301d85f79f56",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -64482,6 +64652,8 @@ shares the directory.
 
 ## Sources (checked October 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases. Argo Workflows listener, authentication paths, TLS and manifest settings were checked against tags v3.7.18 (66e32e5cc367f223e2ecf4fbe852b95eaed83034) and v4.1.4 (b5b4d665e9be9b87c115f943584c3e0ae96fe073). The install manifests were traced through their build recipes and Kustomize inputs; their generated YAML files were not present in the supplied trees. SSO setup, API examples and security guidance retain the release-3.7 documentation links.
 
 - Prefect, security settings (`PREFECT_SERVER_API_AUTH_STRING`, `PREFECT_API_AUTH_STRING`, Cloud API keys
@@ -64658,7 +64830,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "3a0875a2a4d93fab899c35a08c00c67cda26f1cf94c47b48d7d6665196da2a14",
+  "body_sha256": "e4d86e8dc289b9a00a568c81b9d32b52378449a660e166f2e5c1da5dc3dc5d40",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -65148,6 +65320,8 @@ REASONED: following block; panel sources below support the anonymous front-page/
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - mongo-express README (defaults and variables): https://github.com/mongo-express/mongo-express
 - Grafana configuration and HTTPS: https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/ and https://grafana.com/docs/grafana/latest/setup-grafana/set-up-https/
 - Prometheus basic auth and TLS guides: https://prometheus.io/docs/guides/basic-auth/ and https://prometheus.io/docs/guides/tls-encryption/
@@ -65232,7 +65406,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "4a84e7b5f356170bac399b59c31e37fbd93efdb385202f9dcbb1d4d9fb32ea68",
+  "body_sha256": "543ed661a8e72188040c7ce6f0654229360fe02c1c4efb14eb76b81bcdab96f7",
   "components": {
     "phpmyadmin": {
       "name": "phpMyAdmin",
@@ -66270,6 +66444,8 @@ from your own account's view of the process.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - node_exporter v1.12.1 README (port 9100, `--web.config.file`): https://github.com/prometheus/node_exporter/blob/v1.12.1/README.md
 - node_exporter v1.12.1 source (`:9100` default, `net/http/pprof` import): https://github.com/prometheus/node_exporter/blob/v1.12.1/node_exporter.go
 - Exporter toolkit v0.17.1 web configuration (`tls_server_config`, `client_auth_type`, `basic_auth_users`, experimental status): https://github.com/prometheus/exporter-toolkit/blob/v0.17.1/docs/web-configuration.md
@@ -66838,7 +67014,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "9dce261efb106d26f5d7e81ddd5d6fb9911c2b158adf9ec9f19c2431fd37c4d3",
+  "body_sha256": "32e14f1a79d27336795cf4b6f82bf674e7591e2364b8b08677159a5b7d49603d",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -67658,6 +67834,8 @@ REASONED: preceding blocks; the listener and panel-login checks, Docker 2375 ref
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Portainer CE install on Docker (ports 9443, 9000, 8000): https://docs.portainer.io/start/install-ce/server/docker/linux
 - Portainer initial setup (setup token, first admin, 12-character password): https://docs.portainer.io/start/install-ce/server/setup
 - Portainer authentication and OAuth providers: https://docs.portainer.io/admin/settings/authentication and https://docs.portainer.io/admin/settings/authentication/oauth
@@ -67786,7 +67964,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-09",
-  "body_sha256": "9d3fc3d3fd27a2f52538bf4e3cd4b88eb9b7ee738c9656611fd4dd0e76966079",
+  "body_sha256": "a1db82ab5efeec56ed0003606344ed3c9967b535dd2ffae96fb7895a554a6850",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -68173,6 +68351,8 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - MDN: Cross-Origin Resource Sharing, for the protocol itself: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
 - Fetch Standard, definition of credentials: https://fetch.spec.whatwg.org/#credentials
 - Express `cors` middleware, for the `origin` and `credentials` options used above: https://expressjs.com/en/resources/middleware/cors/
@@ -68218,7 +68398,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "d73aa8f8476ff0c2b05e7ce37c5b21728330ddbad7ace57ab929c61a28b583eb",
+  "body_sha256": "c6a0500a972fc824695195870eca18b22423d61c291350f437f5a0bbb54dbbd2",
   "components": {
     "protocol": {
       "name": "MDN CORS documentation",
@@ -68386,6 +68566,8 @@ REASONED: logout, browser history and response-header inspection, per the guide'
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - MDN HTTP headers reference (Strict-Transport-Security, Content-Security-Policy, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, X-Frame-Options): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers
 - MDN Cache-Control (`no-store` forbids any cache including the browser; `private` still permits the browser's local cache): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control
 - MDN Clear-Site-Data (the `cache` directive clears the browser cache and, depending on the browser, the back/forward cache; the logout example): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Clear-Site-Data
@@ -68480,7 +68662,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "24c0a2fa4585cd65d568589c492c001e7e7ccbca346b115b01b57c0ee5f6648e",
+  "body_sha256": "2b3c5c04eb2f9bccd35253e993ec4d67d19462b61c4760561157cdafbc1ee266",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",
@@ -69505,6 +69687,8 @@ REASONED: tool-version provenance for the historical local runs above; the [Shel
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Firebase security rules: https://firebase.google.com/docs/rules
 - Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings): https://supabase.com/docs/guides/getting-started/api-keys
 - Supabase row level security: https://supabase.com/docs/guides/database/postgres/row-level-security
@@ -69685,7 +69869,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "57dd06cbc616f73313795aa2cbdc8d13107409791da3fc46435daa85b69b419b",
+  "body_sha256": "be9b0fbebde497b68f19c476b05c9fb00f73296a9afcbe2a56a427ad3258c80d",
   "components": {
     "firebase": {
       "name": "Firebase documentation",
@@ -70092,6 +70276,8 @@ fails authentication once the password is regenerated.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 The guide's `self-hosted/v0.8.1` version basis cites Compose at e693f206f5050b0004a86e12e533bb75ba2a9c76 (Envoy v1.39.1, Auth v2.196.0). The `.env.example` defaults, corresponding Compose wiring, and optional Kong configuration cited below come from eabe06be5b36cf57f2b158bd5093b396606bf801; its Compose file pins Envoy v1.39.0 and Auth v2.189.0. Compare your installed release and every Compose override before applying these defaults.
 
 - Supabase self-hosting with Docker (Envoy gateway, secure your services, changing the database password): https://supabase.com/docs/guides/self-hosting/docker
@@ -70177,7 +70363,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "0c545d74d9a13649e6c555301f1d76d47d9b2b9d08a8d6e075a26d133508b2d7",
+  "body_sha256": "1b0e7a4d049475d9b6fb4aec351af2367b39d70beb5e626220b86799fffa0bdf",
   "components": {
     "docs": {
       "name": "Supabase documentation",
@@ -70669,6 +70855,8 @@ return 403 or 404 without that body. A failed plant or curl transfer is inconclu
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - nginx core module (`location`, `^~` modifier, matching order): https://nginx.org/en/docs/http/ngx_http_core_module.html
 - nginx access module (`allow`, `deny`): https://nginx.org/en/docs/http/ngx_http_access_module.html
 - Apache mod_authz_core (`Require all denied`): https://httpd.apache.org/docs/2.4/mod/mod_authz_core.html
@@ -70762,7 +70950,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "0dee44da4ad5c68f6cc07b9c50b74bda93cfe86c4eff4e04232d88d83dd1a428",
+  "body_sha256": "d986fd30ab3dd83def744dac305fb33c33ab6dd8d312f321793331a3afe12ed6",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -71150,6 +71338,8 @@ REASONED: following block; origin reachability follows the cited curl documentat
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Scope and revisions: browser behavior follows RFC 6455 and the HTML and Fetch living standards retrieved on 2026-09-18; SDK-specific tolerance behavior was checked against stripe-node v18.5.0 and stripe-python v12.5.0; the Verify diagnostics require curl 7.75.0 or newer; Traefik timeout syntax was checked against v3.5. Other linked live documentation was retrieved on 2026-09-18 without an available immutable revision, and these source checks do not demonstrate deployment behavior.
 
 - MDN: WebSocket API, `WebSocket()` constructor (no header support, `protocols` argument): https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
@@ -71258,7 +71448,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "406f7ed9f7e018166c3259cb973b83d2b3daae8c16008540473cd3e0d52a0b1d",
+  "body_sha256": "feab3fa06fff6821c8fd0aa2c3a0e71546d33de73e5924f3380afc1df72347c8",
   "components": {
     "websocket": {
       "name": "WebSocket protocol",
@@ -71673,6 +71863,8 @@ REASONED: following block; DNS publication, submission TLS and plaintext AUTH re
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), obsoletes RFC 7489, removes `pct`, adds `np`, DNS tree walk: https://www.rfc-editor.org/rfc/rfc9989.html
 - RFC 9990: DMARC Aggregate Reporting (`rua`): https://www.rfc-editor.org/rfc/rfc9990.html
 - RFC 9991: DMARC Failure Reporting (`ruf`, privacy): https://www.rfc-editor.org/rfc/rfc9991.html
@@ -71770,7 +71962,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "39c7721ec89613ef2831c0c0980bf6d193b4fdbba9ba2b3dafb722c50f5ce303",
+  "body_sha256": "2230e4600b8369158733e620f7beb98257aa5c3460b75d476a84ffcc450f68da",
   "components": {
     "spf": {
       "name": "SPF",
@@ -72097,6 +72289,8 @@ connection string or the tool's own login is not enough.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Metabase documentation home: https://www.metabase.com/docs/latest/
 - Metabase setting up Metabase (first account is admin): https://www.metabase.com/docs/latest/configuring-metabase/setting-up-metabase
 - Metabase public links and embeds: https://www.metabase.com/docs/latest/embedding/public-links
@@ -72169,7 +72363,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "bf579abc5c372f97e8d147027a58a00ba73b68a686c1b5fa224a1ce22cd0b62b",
+  "body_sha256": "6fbcd859de2bad7897ff9b19e5c9f37bd09ab9044f62e5c68d12b99dd3b17b71",
   "components": {
     "metabase": {
       "name": "Metabase",
@@ -73126,6 +73320,8 @@ REASONED: following block; the CORS check for the NocoDB section, reasoned from 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - NocoDB 2026.09.0 port default, JWT secret generation and proxy-trust reset: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/Noco.ts
 - NocoDB 2026.09.0 proxy trust default (`NC_TRUST_PROXY`): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/utils/trustProxy.ts
 - NocoDB 2026.09.0 lockfile (pins Express 4.21.2 and proxy-addr 2.0.7 for `packages/nocodb`, and resolves cors only as 2.8.5; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/pnpm-lock.yaml
@@ -73392,7 +73588,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "78ae595544610edfc9335b41fd52f12c701ec395550ebdc36a2840cf91562879",
+  "body_sha256": "98bc6e5354c0b3ec4047075bc1d6df1f31a5fcd254d5e74f4db9951bb157dec7",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -74122,6 +74318,8 @@ give the server's public address. A "connected" on a port you did not mean to ex
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Cockpit 368 socket unit: https://github.com/cockpit-project/cockpit/blob/368/src/systemd/cockpit.socket.in
 - Cockpit 368 listening address and port: https://github.com/cockpit-project/cockpit/blob/368/doc/modules/guide/pages/listen.adoc
 - Cockpit 368 HTTPS and certificates: https://github.com/cockpit-project/cockpit/blob/368/doc/modules/guide/pages/https.adoc
@@ -74225,7 +74423,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "6b401a44b03e5a51ee4951f89b2239e285e5cf8837dc889b86415ba2650db180",
+  "body_sha256": "bac493718a70fb97fcc2700e9b036adff9dd79c8632a4f386b22f18b53730855",
   "components": {
     "cockpit": {
       "name": "Cockpit",
@@ -74745,6 +74943,8 @@ give the host's public address. A "connected" on a port you did not mean to expo
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`): https://github.com/hashicorp/nomad/blob/v2.0.7/command/agent/config.go
 - Nomad 2.0.7 UI default: https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/config/ui.go
 - Nomad 2.0.7 TLS settings: https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/config/tls.go
@@ -74832,7 +75032,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ae1c84224571043cfac59f7ef6afdcacb0c70a0d70bb3f909794310bbefc136c",
+  "body_sha256": "ec230a90516875800d256e40cfd43387dac3fb28fd1329b7407849e01d212729",
   "components": {
     "nomad": {
       "name": "Nomad Community Edition",
@@ -76050,6 +76250,8 @@ service result or deployed-bundle scan is claimed.
 
 ## Sources (checked November 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 The November 2026 date in this heading is the guide-wide documentation check, which covers every rolling documentation item: the 9 Appwrite rolling documentation items were rechecked as served on 2026-11-04 and the 5 PocketBase pages as served on 2026-11-05. Items pinned to a release or commit carry no check date, except those marked "checked October 2026" or "checked November 2026", which were checked individually, and some pinned items were first cited in October or November 2026.
 
 The PocketBase source items cite its author's forge at the v0.41.1 tag, as `rev=refs/tags/v0.41.1`, because PocketBase moved its source and releases off GitHub at v0.41.0. The cited files and line ranges were read in the v0.41.1 Go module from proxy.golang.org, whose recorded origin is the forge's v0.41.1 tag at commit f70b24e186df98df2e7ebc703f103cb94dc3ca63, and whose zip and `go.mod` match their sum.golang.org h1 hashes, recomputed on 2026-11-06. Each of the 16 cited files in that module is byte-identical to the copy the forge's API served for `refs/tags/v0.41.1` on 2026-11-06. As corroboration of the tag's commit, a commit list the forge's API returned that day starts with f70b24e1, but its request was not recorded, so that the API names f70b24e1 as the tag's newest commit is this guide's inference. The forge's app script loads a file page's text in the browser from that API, passing on the `rev` value that its router decodes from the page's query. That the router passes `refs/tags/v0.41.1` on unchanged is this guide's inference, because the router script was not read. On 2026-11-06 the API answered a request for `pocketbase.go` at `rev=v0.41.1` with HTTP 400, "Invalid or missing revision.", and served it at `rev=refs/tags/v0.41.1`, encoded or not, with the module copy's size, so the links use that form. That each page shows its file's text is this guide's inference: no page in this form was requested or viewed in a browser, and the page's own requests to the API were not made. The forge's line-anchor format is not established, so line ranges stay in the link text: the file view marks its code for Prism's linkable line numbers, but the Prism script that reads an anchor was not read. The v0.41.0 release notes were read in the forge's public releases collection, in record `7vo1mkjw049veng` with tag v0.41.0. The release-notes link below already names the release by its tag, in the form the forge's releases page builds as each release's own link. That the page lists the repository's releases matching its decoded `expr` value, here `tag="v0.41.0"`, is this guide's inference, because the router script that decodes the query was not read. That it shows those notes is this guide's inference too: the page was not viewed in a browser, and that the record's release channel belongs to this repository was not established.
@@ -76362,7 +76564,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-11",
-  "body_sha256": "39607da0b6b9a68e6d527fa6371f05299ba4f5de63f9c4ddd08fcf3e92d083ac",
+  "body_sha256": "1eb4512c01f9bbbea12f6a70840509097048484520aa0c133e9040b4e92d0866",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -76984,6 +77186,8 @@ missing files, authentication failures, connection failures, and timeouts are in
 
 ## Sources (checked October 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Chromium 154.0.8037.57 browser loopback factories and approval-mode port fallback: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L69-L158
 - Chromium 154.0.8037.57 browser branding/profile and policy checks; approval-mode startup, with the `kDefaultDevToolsPort` 9222 fallback. Chromium 154.0.8037.57 sources: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L160-L282 and https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.h#L26
 - Browser command-line pipe/port startup and precedence over approval mode (Chromium 154.0.8037.57): https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L325-L417
@@ -77086,7 +77290,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "e3ec106629244441687d5c36d3d27d69ea54f519f8bcf8df6fb8a559c89382b5",
+  "body_sha256": "4b38f7220e6c2a0e7aa8a9ee9ecfe22912b8ec638b341ac21341a5e87a13675d",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -77603,6 +77807,8 @@ REASONED: following block; direct-origin isolation probe needs exposed and fixed
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Version boundary at the time of writing: Strapi 5 documentation; current Directus documentation (its quickstart uses 12.0.2); Hasura GraphQL Engine v2.x (the quickstart Compose names 2.46.0, and the authentication-status option requires Community Edition 2.48.0); PostgREST documentation identifying itself as version 16. These documentation URLs are rolling references unless a release is named; this guide's assessment is that Strapi v5.58.0 source establishes the initial sign-up value only when advanced settings are absent, while existing projects and other releases require separate verification.
 
 - Strapi Users and Permissions, public role and sign-up (rolling documentation, checked September 2026): https://docs.strapi.io/cms/features/users-permissions
@@ -77731,7 +77937,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "40dc71019a2532d9db2e5914c87ccc768be1250027d632513b18cedcd00bc3a6",
+  "body_sha256": "9ce3ff0e8005057c062c0377dcddec222eb3b33d39b7da5cfbc4352b29df1ae3",
   "components": {
     "strapi-signup-source": {
       "name": "Strapi Users and Permissions source",
@@ -78301,6 +78507,8 @@ unauthorized user. A deployment can satisfy all four conditions above and still 
 an endpoint no guide here knows the name of.
 
 ## Sources (checked September 2026)
+
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
 
 - `ss` manual, including that it reports sockets within a network namespace:
   https://man7.org/linux/man-pages/man8/ss.8.html

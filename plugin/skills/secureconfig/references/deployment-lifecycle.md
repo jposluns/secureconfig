@@ -261,6 +261,8 @@ REASONED: following block; certificate expiry check, per the cited OpenSSL 3.0 d
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - nmap reference guide (port scanning syntax, and `-Pn`): https://nmap.org/book/man-briefoptions.html
 - Shodan: https://www.shodan.io/
 - Censys: https://censys.com/
@@ -389,7 +391,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "3cb896c908fe4f602806b275a4acebfdb38e223b3c2ca1c31c6932039d47bb60",
+  "body_sha256": "24b3729403b151be8133d29dcd0c5c8d949a2eb5d89064cdc8cbf375c5dafc0b",
   "components": {
     "nmap": {
       "name": "Nmap documentation",

@@ -115,6 +115,8 @@ REASONED: preceding block; Serve status, allowed access, policy assertions and p
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Tailscale serve (CLI syntax changed in v1.52): https://tailscale.com/docs/reference/tailscale-cli/serve
 - Tailscale funnel: https://tailscale.com/docs/features/tailscale-funnel
 - Tailscale ACL policy examples, for the default allow-all policy (`action` accept, `src` `*`, `dst` `*:*`) and scoping access from a source to a destination: https://tailscale.com/docs/reference/examples/acls
@@ -174,7 +176,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "d732d5b8d86a5b322517082d8b97dc0d66bd13ba623f0841e82da4153625cf59",
+  "body_sha256": "d8961ca1c8def372370d66b0622bba8500a0537f36581e1aea8494ebf3568c11",
   "components": {
     "cli": {
       "name": "Tailscale CLI change",

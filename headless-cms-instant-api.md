@@ -356,6 +356,8 @@ REASONED: following block; direct-origin isolation probe needs exposed and fixed
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Version boundary at the time of writing: Strapi 5 documentation; current Directus documentation (its quickstart uses 12.0.2); Hasura GraphQL Engine v2.x (the quickstart Compose names 2.46.0, and the authentication-status option requires Community Edition 2.48.0); PostgREST documentation identifying itself as version 16. These documentation URLs are rolling references unless a release is named; this guide's assessment is that Strapi v5.58.0 source establishes the initial sign-up value only when advanced settings are absent, while existing projects and other releases require separate verification.
 
 - Strapi Users and Permissions, public role and sign-up (rolling documentation, checked September 2026): https://docs.strapi.io/cms/features/users-permissions
@@ -484,7 +486,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "40dc71019a2532d9db2e5914c87ccc768be1250027d632513b18cedcd00bc3a6",
+  "body_sha256": "9ce3ff0e8005057c062c0377dcddec222eb3b33d39b7da5cfbc4352b29df1ae3",
   "components": {
     "strapi-signup-source": {
       "name": "Strapi Users and Permissions source",

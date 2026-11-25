@@ -306,6 +306,8 @@ REASONED: following block; the listener inventory, with the anonymous route, aut
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Next.js authentication guide: https://nextjs.org/docs/app/guides/authentication ; data security guide: https://nextjs.org/docs/app/guides/data-security
 - Next.js `proxy.js`: https://nextjs.org/docs/app/api-reference/file-conventions/proxy ; `route.js`: https://nextjs.org/docs/app/api-reference/file-conventions/route ; `cookies`: https://nextjs.org/docs/app/api-reference/functions/cookies
 - Next.js environment variables: https://nextjs.org/docs/app/guides/environment-variables ; CLI (`next start` defaults): https://nextjs.org/docs/app/api-reference/cli/next ; self-hosting: https://nextjs.org/docs/app/guides/self-hosting
@@ -388,7 +390,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "b108993995a4c20ab2cc52ad62f6d0153d1eeb233e9f9f1367ccffead5951804",
+  "body_sha256": "820ab8251dc6cf70aaabc5d5a5bc58ab9659a931c6b8b943dfc9cec806feff72",
   "components": {
     "next-pin": {
       "name": "Next.js listener source",

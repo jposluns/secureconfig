@@ -658,6 +658,8 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - RabbitMQ access control, guest restrictions, interactive user creation, and resource permissions: https://www.rabbitmq.com/docs/access-control
 - RabbitMQ virtual hosts and logical isolation: https://www.rabbitmq.com/docs/vhosts
 - RabbitMQ CLI user, vhost, permission, and tag commands: https://www.rabbitmq.com/docs/man/rabbitmqctl.8
@@ -771,7 +773,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-09",
-  "body_sha256": "827e8f253c2455dc18dc845a54d8015cd0eea915fc6eb6ac13ae7ee913a06d5a",
+  "body_sha256": "3302113b933d3e62c7b2d97eed9a8bde5b170f9485c056be3d0473d7f9421de8",
   "components": {
     "source": {
       "name": "RabbitMQ source",

@@ -173,6 +173,8 @@ REASONED: preceding block; paired editor access and MFA, with the listener inven
 
 ## Sources (checked November 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - code-server v4.145.2 deployment guide (exposure, TLS and self-signed certificates, reverse proxy, `/proxy`+`/absproxy`+`--proxy-domain` routes, `--skip-auth-preflight`, Cloudflare Rocket Loader and the nonce-based CSP): https://raw.githubusercontent.com/coder/code-server/v4.145.2/docs/guide.md
 - code-server v4.145.2 FAQ (config.yaml keys map to flags, `cert: false` default, `hashed-password` precedence, config path from `--config`/`CODE_SERVER_CONFIG`/`XDG_CONFIG_HOME`, flags override the file): https://raw.githubusercontent.com/coder/code-server/v4.145.2/docs/FAQ.md
 - code-server v4.145.2 CLI (credentials, defaults, config generation, proxy flags, `--password` rejected on the CLI, `CODE_SERVER_HOST`/`PORT`/`--host`/`--port`/`--socket`/`--socket-fd` listener inputs, `CS_DISABLE_PROXY`, `--trusted-origins`, `--disable-file-cache`, `--enable-remote-storage`): https://raw.githubusercontent.com/coder/code-server/v4.145.2/src/node/cli.ts
@@ -227,7 +229,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-07",
   "documentation_checked": "2026-11",
-  "body_sha256": "4d4a9b2bec001d1b933c808f5d25db3bef11ea9deac9b4b4ff736c3f9f69113e",
+  "body_sha256": "a1835d6ff4a8607f5ebceb9773e8ca77095b9e12cb56a73f41411b09da8b8124",
   "components": {
     "server": {
       "name": "code-server",

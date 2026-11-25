@@ -235,6 +235,8 @@ REASONED: preceding blocks; the listener and panel-login checks, Docker 2375 ref
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Portainer CE install on Docker (ports 9443, 9000, 8000): https://docs.portainer.io/start/install-ce/server/docker/linux
 - Portainer initial setup (setup token, first admin, 12-character password): https://docs.portainer.io/start/install-ce/server/setup
 - Portainer authentication and OAuth providers: https://docs.portainer.io/admin/settings/authentication and https://docs.portainer.io/admin/settings/authentication/oauth
@@ -363,7 +365,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-04",
   "documentation_checked": "2026-09",
-  "body_sha256": "9d3fc3d3fd27a2f52538bf4e3cd4b88eb9b7ee738c9656611fd4dd0e76966079",
+  "body_sha256": "a1db82ab5efeec56ed0003606344ed3c9967b535dd2ffae96fb7895a554a6850",
   "components": {
     "portainer": {
       "name": "Portainer",

@@ -433,6 +433,8 @@ REASONED: preceding block; step 7's direct port probes, step 8's bootstrap-accou
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Keycloak production configuration, including the TLS requirement and separating the admin REST API and console (checked November 2026): https://www.keycloak.org/server/configuration-production
 - Keycloak hostname options, including the production and dev profile defaults for `hostname-strict`, and the statement that `hostname-admin` does not restrict the Administration REST API (checked November 2026): https://www.keycloak.org/server/hostname
 - Keycloak reverse proxy configuration, including `proxy-headers`, `proxy-trusted-addresses`, the forwarded-header warning, and the exposed-paths table (checked November 2026): https://www.keycloak.org/server/reverseproxy
@@ -674,7 +676,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c37f45fdab628376916d67cd97fb1cc7ba18924d7394966f91d37965e186a492",
+  "body_sha256": "543d8a5b4557637b97fe616045836f6d407398a8cd3427420974f7b2ca51b4d0",
   "components": {
     "keycloak-admin-cli": {
       "name": "Keycloak Admin CLI",

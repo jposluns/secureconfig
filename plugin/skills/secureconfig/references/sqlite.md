@@ -346,6 +346,8 @@ REASONED: preceding block; the Turso check above and the outcomes stated here, p
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests on SQLite 3.46.1); LiteFS HTTP behavior traced to v0.5.14; Litestream MCP documented for v0.5.0 and later; Turso rolling CLI documentation and the SQL-over-HTTP `/v2/pipeline` protocol. Installed Turso, Litestream, and LiteFS versions were not available for runtime confirmation. The Verify commands require Bash, curl, GNU-compatible grep and stat, and Git; the shell, HTTP-client and scan behaviour is cited at bash-5.3, curl-8_14_1 and v3.12 respectively (checked October 2026), without asserting a minimum version for the complete checks.
 
 - SQLite security (rolling documentation, checked September 2026): https://www.sqlite.org/security.html
@@ -465,7 +467,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "6e44867fed7f8eceb07674a7a4da09f72418ec7cd1a7e85f394aaffda99c829d",
+  "body_sha256": "b6ccb2a04c73a95da0d7f7cc8892f7ba61b3111f19c0b831320687be136616b5",
   "components": {
     "sqlite-rolling": {
       "name": "SQLite documentation (rolling)",

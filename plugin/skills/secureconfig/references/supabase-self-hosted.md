@@ -208,6 +208,8 @@ fails authentication once the password is regenerated.
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 The guide's `self-hosted/v0.8.1` version basis cites Compose at e693f206f5050b0004a86e12e533bb75ba2a9c76 (Envoy v1.39.1, Auth v2.196.0). The `.env.example` defaults, corresponding Compose wiring, and optional Kong configuration cited below come from eabe06be5b36cf57f2b158bd5093b396606bf801; its Compose file pins Envoy v1.39.0 and Auth v2.189.0. Compare your installed release and every Compose override before applying these defaults.
 
 - Supabase self-hosting with Docker (Envoy gateway, secure your services, changing the database password): https://supabase.com/docs/guides/self-hosting/docker
@@ -293,7 +295,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "0c545d74d9a13649e6c555301f1d76d47d9b2b9d08a8d6e075a26d133508b2d7",
+  "body_sha256": "1b0e7a4d049475d9b6fb4aec351af2367b39d70beb5e626220b86799fffa0bdf",
   "components": {
     "docs": {
       "name": "Supabase documentation",

@@ -429,6 +429,8 @@ For a binary SASL deployment, also repeat SET, GET, FLUSH, and GET through the a
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - memcached documentation, binary protocol SASL authentication: https://docs.memcached.org/protocols/binarysasl/
 - memcached documentation, TLS: https://docs.memcached.org/features/tls/
 - OpenSSL 3.0 `s_client` verification options and `-verify_return_error` (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
@@ -522,7 +524,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "57ef35d716df1dc97e6a33ed6fc2d7cf7c4a2b6d0a932215eb44a778f579836e",
+  "body_sha256": "04e1d1db846e352bec655ee0cc4c00f5e5d75c0af4de1f0a62b27bc03b14d069",
   "components": {
     "stable": {
       "name": "memcached source",

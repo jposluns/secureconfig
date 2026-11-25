@@ -260,6 +260,8 @@ REASONED: the VictoriaMetrics v1.155.0 single-node endpoint-key and Basic-auth c
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - InfluxDB 2.x setup API (`GET /api/v2/setup`, the `allowed` field, `POST` onboarding): https://docs.influxdata.com/influxdb/v2/api/setup/
 - InfluxDB 2.x configuration options (`http-bind-address`, `tls-cert`, `tls-key`, `INFLUXD_CONFIG_PATH`): https://docs.influxdata.com/influxdb/v2/reference/config-options/
 - InfluxDB 1.x configuration (`[http] auth-enabled` default `false`, `bind-address` `:8086`, backup RPC `127.0.0.1:8088`): https://docs.influxdata.com/influxdb/v1/administration/config/
@@ -367,7 +369,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "c749c01383af1105c7ad079f301722bf9f7d8a683a24113641a18aa31aa647e3",
+  "body_sha256": "b18ec5016cf5967cefce53562caad8331513f75181adac1e3e3e69fbc59d37be",
   "components": {
     "influx2": {
       "name": "InfluxDB OSS",

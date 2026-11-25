@@ -583,6 +583,8 @@ For cross-node endpoints in an intentionally exposed test deployment, the outsid
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - llama.cpp server README (defaults, `--api-key` and its `LLAMA_API_KEY` environment input, `--api-key-file` ("path to file containing API keys, one per line") and its `LLAMA_ARG_API_KEY_FILE` environment input, the `LLAMA_ARG_*` environment inputs most options carry, `LLAMA_ARG_HOST` for `--host` among them, SSL flags). Sources for this item: https://github.com/ggml-org/llama.cpp/blob/e0dff58475bc9ed68eedcb265ee998f2fcabb3b1/tools/server/README.md
 - vLLM documentation: https://docs.vllm.ai/en/latest/
 - vLLM v0.30.0 network isolation, TCPStore warning and Ray trust model: https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L3-L55, https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L109-L138 and https://github.com/vllm-project/vllm/blob/v0.30.0/docs/usage/security.md#L442-L538
@@ -765,7 +767,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "8a7a992dbf366a6cc0292e6705ab51c314a06b3d6409d0684172e805f688bdf0",
+  "body_sha256": "25df3106abde4cb18e1691ffb86857797e62e5e37dc5fbd0fc72df1b381634c1",
   "components": {
     "llama": {
       "name": "llama.cpp",

@@ -172,6 +172,8 @@ REASONED: preceding block; key-only login and PAM MFA comparisons follow the cit
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - OpenSSH sshd_config manual: https://man.openbsd.org/sshd_config
 - CentOS Stream 9 OpenSSH patch identifier, at 0b69a3828606595828fc3b878a7c70652303ad67 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/openssh/-/blob/0b69a3828606595828fc3b878a7c70652303ad67/openssh.spec#L135-L135
 - cloud-init 20.1 default sshd_config path, at 20.1 (checked October 2026): https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L17-L18
@@ -311,7 +313,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "7d838ff31ba83ca080701a908875e898cc5031ff3fa2c9682392563b6978e967",
+  "body_sha256": "0b2e7aa46f2a12d5ee917c891240b6ef461dcdc0d1a07ed90115ced035440d15",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",

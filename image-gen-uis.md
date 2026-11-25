@@ -304,6 +304,8 @@ The listener inventory in the following fence, which refuses with status 2 when 
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - ComfyUI Startup Flags, `--listen` and `--port` defaults (rolling documentation, checked September 2026): https://docs.comfy.org/development/comfyui-server/startup-flags
 - ComfyUI Registry custom node security standards, eval/exec prohibited (rolling documentation, checked September 2026): https://docs.comfy.org/registry/standards
 - ComfyUI 2025 Jan Security Update, custom node code-execution risk: https://blog.comfy.org/p/comfyui-2025-jan-security-update
@@ -421,7 +423,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "05cb4de963ebb344152aae0469390f7600f4b74ce2451c04cabd0cf8552b9f70",
+  "body_sha256": "93e238f067fe3aba987e3b680a1d2bc708a4b1ddc06cd83e028032d5df3e52d2",
   "components": {
     "comfy": {
       "name": "ComfyUI",

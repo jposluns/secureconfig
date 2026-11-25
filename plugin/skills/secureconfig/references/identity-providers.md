@@ -89,6 +89,8 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Microsoft Entra ID pricing (Free, P1, P2, and External ID free up to the first 50,000 monthly active usages; checked October 2026): https://www.microsoft.com/en-us/security/microsoft-entra-pricing
 - Microsoft Entra External ID pricing (Basic tier, first 50,000 monthly active users at no cost; checked October 2026): https://www.microsoft.com/en-us/security/pricing/microsoft-entra-external-id/
 - Microsoft Entra External ID billing model: https://learn.microsoft.com/en-us/entra/external-id/external-identities-pricing
@@ -269,7 +271,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-06",
   "documentation_checked": "2026-09",
-  "body_sha256": "fdbefe28b0184721aaf4417e2f3a4e851bec9dfadcae5f5c59820a69e86b5ea4",
+  "body_sha256": "ea82a301fe879fd4b0e46aaebfd95e57557d801853c551189f4ea3d471467f9c",
   "components": {
     "entra": {
       "name": "Microsoft Entra documentation",

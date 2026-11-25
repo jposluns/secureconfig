@@ -303,6 +303,8 @@ Caddy can also expose a remote admin endpoint for mutual-TLS management from oth
 
 ## Sources (checked September 2026)
 
+The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
+
 - Official Caddy Docker images: the tag map (library file pinned commit d82ca5102fa6735be29d5e1fc6ce03af77eb091e), and at image source pinned commit fba2853501d36e8a72f946ac8cb7ff64d07e48f2 each runtime image's Caddyfile download, `EXPOSE 2019` and `CMD`. The same item also covers the default Caddyfile at caddyserver/dist pinned commit 33ae08ff08d168572df2956ed14fbc4949880d94 and the `CADDY_ADMIN` variable that sets the admin address (pinned tag v2.11.9). Sources for this item (1 of 7): https://github.com/docker-library/official-images/blob/d82ca5102fa6735be29d5e1fc6ce03af77eb091e/library/caddy#L7-L65 and https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L17. Sources for this item (2 of 7): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L59-L63 and https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L10. Sources for this item (3 of 7): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L42-L47 and https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L10. Sources for this item (4 of 7): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L42-L47 and https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L8. Sources for this item (5 of 7): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L27-L32 and https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L8. Sources for this item (6 of 7): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L27-L32 and https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/config/Caddyfile. Sources for this item (7 of 7): https://github.com/caddyserver/caddy/blob/v2.11.9/admin.go#L60-L69
 - Automatic HTTPS (rolling documentation, checked September 2026): https://caddyserver.com/docs/automatic-https
 - Caddy admin API (default `localhost:2019`, `POST /load` and `/config/` replace or edit the whole config, requires no credentials with only Host/Origin header checks, the permissioned-unix-socket warning for untrusted-workload hosts; rolling documentation, checked September 2026): https://caddyserver.com/docs/api
@@ -397,7 +399,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "b7ba9b6a6d3e53409c78c11b26a63fb37a27cf6295c2227248f4a11125f5a839",
+  "body_sha256": "3e330b1d1777b4a375fa39a2f3be1e857dbe6edd89ecaab3103efd0cb483c376",
   "components": {
     "admin": {
       "name": "Caddy admin source",
