@@ -31,12 +31,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEST = Path("site") / "assets" / "baseline"
 PIN = Path(".baseline") / "pin.toml"
-VERSION = "1.15.0"
+VERSION = "1.15.1"
 UPSTREAM = f"https://posluns.ca/baseline/{VERSION}/"
 # The archive's digest in https://posluns.ca/baseline/SHA256SUMS, and the digest of the version's
-# SHA256SUMS in https://posluns.dev/hashes.txt (its "baseline 1.15.0" row, verified 2026-11-16).
-ARCHIVE_SHA256 = "35903e39834ed8065441fda1f2c64798712812172d8e698500dfbd4f1f1cca9e"
-SUMS_SHA256 = "59be8a07f67e9c7de3eea8697a2a972252bb727a2a3ec9ba826a08a0d2b1474f"
+# SHA256SUMS in https://posluns.dev/hashes.txt (its "baseline 1.15.1" row, verified 2026-11-24).
+ARCHIVE_SHA256 = "324f447129e3ef6e1b5259f6ed88aaabdcf046ddf834c2178485511fc06837ed"
+SUMS_SHA256 = "defdc14415ae607b989fdf8307eb75d4df3a1104dbd0d803717d5f7d5fe282e7"
 # The published archive is about 1.5 MB; verify_archive reads at most this many bytes plus one (the
 # extra byte detects an over-size file).
 MAX_ARCHIVE_BYTES = 64 * 1024 * 1024

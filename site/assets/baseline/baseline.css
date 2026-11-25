@@ -1,4 +1,4 @@
-/* baseline.css 1.15.0: the shared stylesheet of the sites that use this template (the Atrium direction).
+/* baseline.css 1.15.1: the shared stylesheet of the sites that use this template (the Atrium direction).
    Newsreader for text and headings, Public Sans for labels and navigation, JetBrains Mono for code,
    Dancing Script for the signature; the fonts are declared in fonts.css.
    Scale: perfect fourth (1.333) on a 1.1875rem base. No rules except the table header hairline.
@@ -696,7 +696,9 @@ dl.record.cols div { break-inside: avoid; }
 /* Stage B (1.0.0 to 1.10.0: names kept at scaled sizes from 1040 to 1399 px) is removed in 1.11.0: 7 names clip at
    every scaled size below 1493 px of content width. From 1.11.1 the bar is compact (2.75rem tiles, so every target stays
    44 px tall; 1.9rem logos; 0.85rem names) and stage A starts at 1160 px, which a 1280 px window gives even with a
-   scroll bar (owner, 2026-11-06: names on desktop screens from 1280 px). In stage A the 3 marks sit close together
+   scroll bar (owner, 2026-11-06: names on desktop screens from 1280 px). From 1.15.1 (D-174) the 3 marks are
+   var(--mark) at every stage (measured for 1.15.1: the names fit from a 1125 px footer, 34 px to spare at the
+   1159 px threshold). In stage A the 3 marks sit close together
    beside the signature under 1 band that fades from the last project card's colour to grey, and the signature drops
    "A" and "Project" until 1240 px; in stage C they share the width equally with the project tiles, as in 1.11.0.
    Stage A is written as (width > 1159px), the exact complement of stage C's (max-width: 1159px), so that a fractional
@@ -708,7 +710,6 @@ dl.record.cols div { break-inside: avoid; }
   .family .tail .card { width: auto; padding: 0.2rem 0.15rem; }
   .family .tail .tile-1 .card { padding-left: 0.4rem; }
   .family .tail .tile-3 .card { padding-right: 0.3rem; }
-  .family .tail .card img { width: 1.35rem; height: 1.35rem; }
   .family .sig .pre, .family .sig .post { display: none; }
 }
 @container footer (min-width: 1240px) { .family .sig .pre, .family .sig .post { display: inline; } }

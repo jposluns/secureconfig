@@ -18,6 +18,6 @@ The 4 files in this folder are trademarks of their owners. They are included una
 
 - Source: https://orcid.org/assets/vectors/orcid.logo.icon.svg (retrieved 2026-11-02).
 - Terms: ORCID's brand guidelines state that logos and iD icons must be used as provided and not altered; the display guidelines recommend the SVG, at 24 px or larger, and the green colourway in most cases (as read on 2026-11-02).
-- Applied: a link to the owner's ORCID record; the green icon, unaltered, at 32 px in the footer (24 px at the smallest stage).
+- Applied: a link to the owner's ORCID record; the green icon, unaltered, at 1.5rem (24 px at the default 16 px text size) at every footer stage.
 
 If a mark's owner changes its terms or asks for its removal, remove the file and its tile; the footer's markup allows a tail of 1 to 3 tiles.
