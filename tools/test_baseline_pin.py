@@ -186,15 +186,15 @@ CASES = [
      edit_pin('"assets/baseline/copy.js" = "', '"assets/baseline/copy.js" = "x'), 1, "not a SHA-256"),
     ("a pin key outside assets/baseline/", edit_pin('"assets/baseline/copy.js" =', '"copy.js" ='), 1,
      "is not under assets/baseline/"),
-    ("a pin with no version", edit_pin('version = "1.15.0"', 'release = "1.15.0"'), 1,
+    ("a pin with no version", edit_pin('version = "1.15.1"', 'release = "1.15.1"'), 1,
      "no version"),
     ("a pin that is not TOML", edit_pin("[files]", "[files"), 1, "not valid TOML"),
     # QA round 1 of #1182: the pin must be the copy script's, and excluded material stays out.
     ("a pin at another version than the copy script's",
-     lambda d: (edit_pin('version = "1.15.0"', 'version = "1.3.1"')(d),
-                edit_pin("/baseline/1.15.0/", "/baseline/1.3.1/")(d)), 1, "copy-baseline.py copies 1.15.0"),
-    ("an upstream URL for another version", edit_pin("/baseline/1.15.0/", "/baseline/1.3.1/"), 1,
-     "is not the URL of version 1.15.0"),
+     lambda d: (edit_pin('version = "1.15.1"', 'version = "1.3.1"')(d),
+                edit_pin("/baseline/1.15.1/", "/baseline/1.3.1/")(d)), 1, "copy-baseline.py copies 1.15.1"),
+    ("an upstream URL for another version", edit_pin("/baseline/1.15.1/", "/baseline/1.3.1/"), 1,
+     "is not the URL of version 1.15.1"),
     # QA of #1303 (F2 and F3): each provenance digest is read from the copy script and replaced
     # with one that differs, so a new baseline needs no edit here.
     (f"another archive digest than baseline {COPY.VERSION}'s",
@@ -272,7 +272,7 @@ CASES = [
     ("the template's card example copied into .baseline/",
      baseline_extra("site-card.example.toml", b'site = "secureconfig"\n'), 1,
      ".baseline/site-card.example.toml is not"),
-    ("no .baseline/site-card.toml", lambda d: (d / SITE_CARD).unlink(), 0, "match baseline 1.15.0"),
+    ("no .baseline/site-card.toml", lambda d: (d / SITE_CARD).unlink(), 0, "match baseline 1.15.1"),
     (".baseline/site-card.toml replaced by a symbolic link", site_card_link, 1,
      ".baseline/site-card.toml is not a regular file"),
     (".baseline/site-card.toml replaced by a directory", site_card_dir, 1,
@@ -280,7 +280,7 @@ CASES = [
     ("the 1.11.3 Dancing Script woff2 left behind unpinned",
      lambda d: (d / DEST / "fonts" / "dancing-script-latin-wght-normal.woff2").write_bytes(b"wOF2"), 1,
      "fonts/dancing-script-latin-wght-normal.woff2 is not pinned"),
-    ("the pristine copy", None, 0, "match baseline 1.15.0"),
+    ("the pristine copy", None, 0, "match baseline 1.15.1"),
 ]
 
 
