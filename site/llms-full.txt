@@ -72292,7 +72292,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against NocoDB 2026.09.0, Baserow 2.3.4, Appsmith v2.4.1, Budibase v3.50.0 and v3.46.0, Windmill v1.864.1, Docker CLI v27.2.0 and v27.1.2, Node.js v22.22.1, and CouchDB 3.5.2, plus 1 more recorded basis; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 71 claims: 3 demonstrated by a check that ran; 68 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
+Written against NocoDB 2026.09.0, Baserow 2.3.4, Appsmith v2.4.1, Budibase v3.50.0 and v3.46.0, Windmill v1.864.1, Docker CLI v27.2.0 and v27.1.2, Node.js v22.22.1, and CouchDB 3.5.2, plus 3 more recorded bases; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 74 claims: 3 demonstrated by a check that ran; 71 reasoned from cited sources and any earlier-form run (not a live demonstration of the shipped form).
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -72352,7 +72352,34 @@ Two secrets need your attention:
   value (`569a1821-0a93-45e8-87ab-eb857f20a010`), so everyone who copies that example signs sessions
   with the same key. Generate your own.
 
-The [entry file](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/run/dockerEntry.ts) allows every CORS origin. It also enables Express's `trust proxy`, but startup then
+At 2026.09.0, [`rspack.timely.config.js`](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/rspack.timely.config.js) builds `docker/main.js`, which the [start script](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/docker/start.sh) runs, from [`src/run/timely.ts`](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/run/timely.ts). That file and the other [entry file](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/run/dockerEntry.ts), `src/run/dockerEntry.ts`, both call `cors()` with no options before any NocoDB route, and the [cors middleware](https://github.com/expressjs/cors/blob/v2.8.5/lib/index.js) then defaults to the origin `*`. So every response that passes through the cors middleware, preflights included, carries `Access-Control-Allow-Origin: *` and no `Access-Control-Allow-Credentials`, whatever `Origin` the request sends; NocoDB's lockfile resolves cors only as 2.8.5. The pinned tree has no Dockerfile, so which script the published image runs was not verified.
+
+NocoDB's [global guard](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/guards/global/global.guard.ts#L21) authenticates a request by the `xc-auth` header or the `nc_token` cookie, which the [cookie helper](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/services/users/helpers.ts#L34-L58) sets as `httpOnly` and `SameSite=Lax`, for the path `/api`. API tokens arrive in the `xc-token` or `Authorization: Bearer` header ([token strategy](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/strategies/authtoken.strategy/authtoken.strategy.ts#L17-L18)). Because the `*` comes without `Access-Control-Allow-Credentials`, browsers do not let a page on another site read a response to a request sent with credentials, as [cors.md](https://github.com/jposluns/secureconfig/blob/main/cors.md) explains, and such a page does not know a user's `xc-auth` or `xc-token` value to send (this guide's reading). What remains, by this guide's reading, is that a page on another site that a user visits can read, through that user's browser, NocoDB responses that need no credentials, which can include an instance on an internal network if that browser can reach it and lets the request through. Which other routes answer an unauthenticated guest, and whether cross-site requests that change data succeed, which is a CSRF question rather than a CORS one, are not traced here.
+
+Since [cors.md](https://github.com/jposluns/secureconfig/blob/main/cors.md) keeps a wildcard for public, unauthenticated, read-only resources only, remove the header at the reverse proxy in front of NocoDB, and check the result with the NocoDB CORS block under Verify. NocoDB serves its own GUI from the same server ([`timely.ts`](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/run/timely.ts) mounts it with `express.static`), so that GUI needs no CORS header (this guide's reading). In nginx, `proxy_hide_header` "sets additional fields that will not be passed" from the proxied server's response to the client ([proxy module](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)); put it in the `location` that holds `proxy_pass`, as in [nginx.md](https://github.com/jposluns/secureconfig/blob/main/nginx.md):
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:8080;               # NocoDB's port, published on loopback only
+    proxy_hide_header Access-Control-Allow-Origin;  # drop NocoDB's "*" before the response reaches browsers
+}
+```
+
+Put the `proxy_hide_header` line in every `location` that proxies to NocoDB, because the Verify block probes only the one path you give it.
+
+In Caddy, the `reverse_proxy` subdirective `header_down` "deletes (with the `-` prefix)" a field "in a response header coming downstream from the backend" ([reverse_proxy directive](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy)), in a site block like those in [caddy.md](https://github.com/jposluns/secureconfig/blob/main/caddy.md):
+
+```caddyfile
+nocodb.example.com {
+    reverse_proxy 127.0.0.1:8080 {
+        header_down -Access-Control-Allow-Origin   # drop NocoDB's "*"
+    }
+}
+```
+
+If one browser app on another origin must read NocoDB, keep the `proxy_hide_header` line and add `add_header Access-Control-Allow-Origin "https://app.example.com" always;` to that `location`, because `add_header` "Adds the specified field" rather than replacing NocoDB's. In Caddy, replace the deletion with `header_down Access-Control-Allow-Origin "https://app.example.com"`, which sets it. Nginx inherits `add_header` directives from the previous level "if and only if there are no `add_header` directives defined on the current level" ([headers module](https://nginx.org/en/docs/http/ngx_http_headers_module.html)), so repeat the server's own `add_header` lines, such as the HSTS line in [nginx.md](https://github.com/jposluns/secureconfig/blob/main/nginx.md), in that `location`. With `always`, the field "will be added regardless of the response code", per the same page.
+
+Both entry files also enable Express's `trust proxy`, but startup then
 resets that from [`NC_TRUST_PROXY`](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/utils/trustProxy.ts), which trusts no proxy unless you set it; once a proxy is in front,
 set it to that proxy's hop count or subnet, and never to `true` on a server clients can reach directly. The 2026.09.0 tag's README says binaries are only for quick local testing ([README, line 95](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L95)).
 The GitHub release API record listed no assets when checked in October 2026 ([release record](https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0)); this guide assesses that record as showing no 2026.09.0 GitHub release binary assets, without establishing what other download services provide. The tag carries NocoDB package version `0.301.3` ([package manifest](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3)); `2026.09.0` is the tag name, not that package version. The README documents the `nocodb/nocodb:latest` Docker image ([Docker examples](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L56-L75)) and calls Auto-upstall a server production installation that generates Docker Compose ([Auto-upstall section](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L77-L90)). For production, use the container image or the vendor's install script (this guide's advice based on those README paths). The README's Auto-upstall command fetches the script over plain `http://` and runs it with Bash ([README command](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L82)); its source link points to the `develop` branch ([README source link](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L90)). This guide advises fetching the script over HTTPS from a pinned, reviewed source and reading it before running it, rather than running the plain-HTTP response directly with Bash.
@@ -73032,14 +73059,80 @@ REASONED: following block; this check reads NocoDB's proxy-trust setting from th
 )
 ```
 
+REASONED: following block; the CORS check for the NocoDB section, reasoned from the guide's cited NocoDB 2026.09.0 Docker bundle entry (`timely.ts`), which calls `cors()` with no options, and the guide's cited expressjs/cors v2.8.5 `lib/index.js`, whose default origin `*` sets `Access-Control-Allow-Origin: *` on every response and preflight it handles, without `Access-Control-Allow-Credentials`. No NocoDB deployment and no fronting nginx or Caddy were available to this review (the authoring host has no container runtime, and opening network listeners on it is not permitted), so the block has not been run against a deployment, and nobody has yet observed its exposed or fixed outcome. On 2026-11-25 the block passed bash -n in bash 5.3.9 and ShellCheck 0.11.0, and 34 local runs with a stub curl that replayed header fixtures, without network access, ended with statuses 0, 1, 2 and 3 as stated below, 34 of 34 matching. Run it from a host that reaches NocoDB through its proxy, the way a user's browser does: it sends one GET with the header `Origin: https://evil.example`, a deliberately foreign origin under the reserved `.example` top-level domain, and prints each status line, each `Access-Control-Allow-Origin` line and curl's result line. The block judges only the final response, the last header block curl prints: the lines of an interim 1xx response, such as 100 Continue, are printed but not judged. Exposed, a line of the final response gives `*` or the probe origin, whatever the status and even after a failed transfer, and the block exits 1; that includes a proxy that adds your origin with nginx `add_header` without hiding NocoDB's `*`, since the answer then carries both. Fixed, on a 2xx answer, the header is absent, or appears once with exactly the allowed origin you give, and the block exits 0. A failed request or a missing status line, a non-2xx answer, which may come from the proxy rather than NocoDB (such as a 502 or a login redirect), the header more than once, any other value, or your origin when you gave `none` exits 3, and a missing curl or awk or a refused `set --` value exits 2. Give NocoDB's address with the path `/api/v1/health`: the guide's cited NocoDB 2026.09.0 health route declares no route guard and no `@Acl`, and its handler returns `message: 'OK'` with a timestamp and uptime. The only global guard, `ExtractIdsMiddleware` registered as `APP_GUARD`, returns true from `canActivate` once its `use()` step has run, and `GlobalGuard`, which authenticates, is attached with `@UseGuards` to other routes, not to this one. So by these sources a GET there without a login answers 2xx; that has not been run, and if it answers otherwise, give another NocoDB URL that answers 2xx. Behind a fronting login, which this guide advises, the request gets the login's answer, so the block exits 3 unless that path is reachable without logging in. A 2xx from a URL that does not reach NocoDB also passes, so give the address users reach NocoDB at; the block probes GET only, so a proxy rule limited to some methods is not tested, and a header line folded across lines is not parsed. Substitute, inside the single quotes, the NocoDB URL and your one allowed origin (scheme, host and any port, with no path) or `none`, then paste the whole block into a fresh shell.
+
+```bash
+(
+  set +e                                # errexit off here, so curl's and awk's statuses are recorded below instead of ending the block
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_NOCODB_URL' 'REPLACE_WITH_ALLOWED_ORIGIN_OR_none'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit 2; }
+  case "$1" in
+    *REPLACE_WITH_*|""|-*|*[[:space:][:cntrl:]]*) echo "substitute the NocoDB URL on the set -- line above; not probing"; exit 2 ;;
+    http://?*|https://?*) ;;
+    *) echo "the NocoDB URL must start with http:// or https://; not probing"; exit 2 ;;
+  esac
+  case "$2" in
+    none) ;;
+    *REPLACE_WITH_*|""|*[[:space:][:cntrl:]]*|https://evil.example) echo "substitute your own allowed origin, or none, on the set -- line above; not probing"; exit 2 ;;
+    http://?*/*|https://?*/*) echo "an origin has no path: give its scheme, host and any port, or none, on the set -- line above; not probing"; exit 2 ;;
+    http://?*|https://?*) ;;
+    *) echo "the allowed origin must be none or start with http:// or https://; not probing"; exit 2 ;;
+  esac
+  { command -v curl && command -v awk; } >/dev/null || { echo "curl and awk must both be installed here; not probing"; exit 2; }
+  # The probe origin https://evil.example is deliberately foreign; keep it as written.
+  set -- "$1" "$2" "$(if curl -q -g -s -D - -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 15 -H 'Origin: https://evil.example' \
+                        -w 'curl: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "${3##*$'\n'}" "${3%$'\n'*}"   # the URL, the allowed origin, curl's exit status, then the response headers and curl's result line
+  set -- "$1" "$2" "$3" "$(if printf '%s\n' "$4" | awk '{ sub(/\r$/, "") } /^curl: http=/ || tolower($0) ~ /^http\/|^access-control-allow-origin:/ { print } /^HTTP\// { c = $2; n = 0; b = 0; v = "" } tolower(substr($0, 1, 28)) == "access-control-allow-origin:" { v = substr($0, 29); gsub(/^( |\t)+|( |\t)+$/, "", v); n++; if (v == "*" || v == "https://evil.example") b = 1 } END { printf "\n%s|%d|%d|%s", c, n, b, v }'; then printf '\n0'; else printf '\n%s' "$?"; fi)"
+  set -- "$1" "$2" "$3" "${4##*$'\n'}" "${4%$'\n'*}"   # the URL, the allowed origin, curl's exit status, awk's exit status, then awk's output
+  printf '%s' "${5%$'\n'*}"             # each status line, each Access-Control-Allow-Origin line and curl's result line
+  set -- "$1" "$2" "$3" "$4" "${5##*$'\n'}"           # then awk's summary: status code|header count|1 if * or the probe origin|last value
+  set -- "$1" "$2" "$3" "$4" "${5%%|*}" "${5#*|}"
+  set -- "$1" "$2" "$3" "$4" "$5" "${6%%|*}" "${6#*|}"
+  set -- "$1" "$2" "$3" "$4" "$5" "$6" "${7%%|*}" "${7#*|}"   # the URL, the allowed origin, curl's and awk's statuses, the HTTP status code, the header count, the bad flag, the last value
+  [ "$4" = 0 ] || { echo "awk could not read the response headers; inconclusive"; exit 3; }
+  [ "$7" != 1 ] || { echo "FINDING: Access-Control-Allow-Origin is * or echoes the probe origin https://evil.example; remove it at the proxy in front of NocoDB"; exit 1; }
+  { [ "$3" = 0 ] && [ -n "$5" ]; } || { echo "curl exit $3: the request failed or printed no status line (see curl's result line above); inconclusive, not a pass"; exit 3; }
+  case "$5" in 2??) ;; *) echo "HTTP $5 is not a 2xx answer, so it may not have come from NocoDB; give a URL NocoDB answers with 2xx through the proxy; inconclusive"; exit 3 ;; esac
+  [ "$6" != 0 ] || { echo "no Access-Control-Allow-Origin for a foreign origin: pages on other sites cannot read this response"; exit 0; }
+  { [ "$6" = 1 ] && [ "$2" != none ] && [ "$8" = "$2" ]; } && { echo "Access-Control-Allow-Origin names only your allowed origin $2"; exit 0; }
+  echo "Access-Control-Allow-Origin lines: $6, last value: $8; neither absent nor exactly your allowed origin once; inconclusive: read the lines above"; exit 3
+)
+```
+
 ## Sources (checked September 2026)
 
 - NocoDB 2026.09.0 port default, JWT secret generation and proxy-trust reset: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/Noco.ts
 - NocoDB 2026.09.0 proxy trust default (`NC_TRUST_PROXY`): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/utils/trustProxy.ts
-- NocoDB 2026.09.0 lockfile (pins Express 4.21.2 and proxy-addr 2.0.7 for `packages/nocodb`; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/pnpm-lock.yaml
+- NocoDB 2026.09.0 lockfile (pins Express 4.21.2 and proxy-addr 2.0.7 for `packages/nocodb`, and resolves cors only as 2.8.5; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/pnpm-lock.yaml
 - proxy-addr 2.0.7 `index.js` as pinned by NocoDB 2026.09.0's lockfile (range parsing and hop trust): https://github.com/jshttp/proxy-addr/blob/v2.0.7/index.js
 - Express 4.21.2 `lib/utils.js` as pinned by NocoDB 2026.09.0's lockfile (`compileTrust` for a number and a comma string): https://github.com/expressjs/express/blob/4.21.2/lib/utils.js
 - NocoDB 2026.09.0 entry point (listen with no host, CORS): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/run/dockerEntry.ts
+- NocoDB 2026.09.0 Docker bundle build (`rspack.timely.config.js`: entry `src/run/timely.ts`, output `docker/main.js`; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/rspack.timely.config.js
+- NocoDB 2026.09.0 Docker bundle entry (`timely.ts`: `trust proxy`, `cors()` with no options, GUI mount; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/run/timely.ts
+- NocoDB 2026.09.0 global guard (`xc-auth` header or `nc_token` cookie; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/guards/global/global.guard.ts#L21
+- NocoDB 2026.09.0 auth cookies (`refresh_token` and `nc_token`, `httpOnly`, `SameSite=Lax`; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/services/users/helpers.ts#L34-L58
+- NocoDB 2026.09.0 API token strategy (`xc-token` or `Authorization: Bearer`; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/strategies/authtoken.strategy/authtoken.strategy.ts#L17-L18
+- NocoDB 2026.09.0 health route (`/api/v1/health`, no route guard; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/controllers/utils.controller.ts#L179-L182
+- NocoDB 2026.09.0 global guard registration (`ExtractIdsMiddleware` as the only `APP_GUARD`; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/app.module.ts#L45-L48
+- NocoDB 2026.09.0 global guard check (`ExtractIdsMiddleware.canActivate` runs `use()` and returns `true`; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/middlewares/extract-ids/extract-ids.middleware.ts#L473-L479
+- NocoDB 2026.09.0 health handler (`appHealth` returns `message: 'OK'`, a timestamp and uptime; checked November 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/services/utils.service.ts#L131-L137
+- expressjs/cors v2.8.5 `lib/index.js` (default origin `*`; Allow-Credentials only when `credentials` is `true`; checked November 2026): https://github.com/expressjs/cors/blob/v2.8.5/lib/index.js
+- nginx proxy module (`proxy_hide_header`; rolling documentation, checked November 2026): https://nginx.org/en/docs/http/ngx_http_proxy_module.html
+- nginx headers module (`add_header`, `always` and inheritance; rolling documentation, checked November 2026): https://nginx.org/en/docs/http/ngx_http_headers_module.html
+- Caddy `reverse_proxy` directive (`header_down`; rolling documentation, checked November 2026): https://caddyserver.com/docs/caddyfile/directives/reverse_proxy
+- [curl curl-8_14_1 write-out fields and version requirements (checked November 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
+- [curl curl-8_14_1 request headers (checked November 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
+- [curl curl-8_14_1 `dump-header` option (checked November 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/dump-header.md).
+- [curl curl-8_14_1 `noproxy` option (checked November 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/noproxy.md).
+- [curl curl-8_14_1 `globoff` option (checked November 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/globoff.md).
+- [curl curl-8_14_1 `disable` option (checked November 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/disable.md).
+- [curl curl-8_14_1 `silent` option (checked November 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/silent.md).
+- [curl curl-8_14_1 `output` option (checked November 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/output.md).
+- [curl curl-8_14_1 `max-time` option (checked November 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/max-time.md).
+- [curl curl-8_14_1 `connect-timeout` option (checked November 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/connect-timeout.md).
 - NocoDB 2026.09.0 first user, signup and its refusal message: https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/services/users/users.service.ts
 - NocoDB 2026.09.0 app settings (`invite_only_signup`): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/interface/AppSettings.ts
 - NocoDB 2026.09.0 admin from environment (`NC_ADMIN_EMAIL`, `NC_ADMIN_PASSWORD`): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/helpers/initAdminFromEnv.ts
@@ -73183,6 +73276,9 @@ Components (recorded basis):
 - litellm: LiteLLM authentication source (6ef7b86748118ceecd95271727c2fa167ce55fec)
 - nginx-docs: nginx docs (unknown)
 - fail2ban: fail2ban (1.1.1)
+- cors: expressjs/cors (v2.8.5)
+- curl: curl (curl-8_14_1)
+- caddy-docs: Caddy docs (unknown)
 
 Claims (full source mapping in the JSON block below):
 
@@ -73192,7 +73288,9 @@ Claims (full source mapping in the JSON block below):
 - nocodb-signup (REASONED; nocodb): invite_only_signup defaults false; enable to stop later self-signups.
 - nocodb-encryption (REASONED; nocodb): Unset NC_CONNECTION_ENCRYPT_KEY stores external DB credentials unchanged; set before adding sources, or startup encrypts existing sources when added later.
 - nocodb-jwt (REASONED; nocodb): Unset NC_AUTH_JWT_SECRET generates/stores a UUID as nc_auth_jwt_secret; replace README sample 569a1821-0a93-45e8-87ab-eb857f20a010.
-- nocodb-cors (REASONED; nocodb): Entry file allows every CORS origin.
+- nocodb-cors (REASONED; nocodb, cors): At 2026.09.0, rspack.timely.config.js builds docker/main.js, which docker/start.sh runs, from timely.ts; it and dockerEntry.ts call cors() with no options, and cors 2.8.5, the lockfile's only cors, then sends Access-Control-Allow-Origin: * on every response and preflight passing through it, with no Allow-Credentials. No Dockerfile at the tag, so the image's script is unverified.
+- nocodb-cors-risk (REASONED; nocodb, cors): Auth is the xc-auth header or the nc_token cookie (httpOnly, SameSite=Lax, path /api), or an xc-token or Bearer API token. With * and no Allow-Credentials, browsers expose no credentialed response cross-origin; the residual risk is pages on other sites reading, through a visitor's browser, responses that need no credentials (guide inference).
+- nocodb-cors-proxy (REASONED; nginx-docs, caddy-docs): Remove the header at the proxy: nginx proxy_hide_header in every location proxying to NocoDB, or Caddy reverse_proxy header_down -Access-Control-Allow-Origin. For one exact origin, nginx also adds it with add_header (repeat inherited add_header lines such as HSTS there) and Caddy sets it with header_down (guide advice).
 - nocodb-proxy (REASONED; nocodb): Startup resets trust proxy from NC_TRUST_PROXY, default no trust; restrict hops/subnets, never true with direct client access.
 - nocodb-packaging (REASONED; nocodb): README marks binaries for quick local testing and documents Docker image and Auto-upstall paths; the October 2026 release API record lists no assets; the 2026.09.0 tag carries package version 0.301.3. Use the image or vendor install script for production (guide advice).
 - nocodb-upstall-fetch (REASONED; nocodb): The README's Auto-upstall command fetches the script over plain HTTP and executes it with Bash; its source link points to develop. Fetch over HTTPS from a pinned, reviewed source and read before running (guide advice).
@@ -73257,13 +73355,14 @@ Claims (full source mapping in the JSON block below):
 - verify-tcp-inputs (REASONED; baserow, budibase, windmill): Recorded guard tests of an earlier form, whose guard, control and result arms ended with status 0, rejected named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 passed, and the invalid hex values tested failed at the control. The current form was not re-run.
 - verify-windmill-debugger (REASONED; windmill): File: NUL, UTF-16 BOM, lone CR, NEL, LS or PS exits 3; a line setting REQUIRE_SIGNED_DEBUG_REQUESTS to exactly false exits 1. A backslash, !, or $ line not a comment or plain K=${X} or K: ${X:-d}, or a $ with env_file, extends, include or project_directory anywhere in the file, exits 3, as does a naming line not true or 1; else 0. Loaded files and outside values go unread. Not run on a deployment.
 - verify-nocodb-trust-proxy (REASONED; nocodb, docker): docker exec reads NC_TRUST_PROXY in the container's configured environment: true (any case) or a zero range such as /0 (proxy-addr 2.0.7 rejects it) is the finding (exit 1); unset, empty, false or all zeros exits 0 (no proxy trusted); anything else, such as a hop count or range, exits 3, expected behind a proxy, as the block cannot see if clients reach NocoDB directly. No real container run.
+- verify-nocodb-cors (REASONED; nocodb, cors, curl): GET a NocoDB URL through the proxy with Origin: https://evil.example: Allow-Origin * or that origin in the final response's headers is the finding (exit 1), interim 1xx headers not judged; on a 2xx, no Allow-Origin or exactly the allowed origin once passes (0); anything else is inconclusive (3); a missing curl or awk or a refused value exits 2. Not run against a deployment.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "0d1a90ccd5c4b2987256481eb2dd140c0940cfe49e7279a5b30874fafee418c8",
+  "body_sha256": "63b577ff63d5fa4ebdaa434eb7c7bc37c6ad8966f956a054ba8b4ff9ef103796",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -73294,7 +73393,16 @@ Claims (full source mapping in the JSON block below):
         "s659b1179d0e5": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/strategies/local.strategy.ts#L18-L39",
         "se352e8e45038": "https://github.com/nocodb/nocodb/blob/2026.09.0/pnpm-lock.yaml",
         "s1174c56ebb50": "https://github.com/jshttp/proxy-addr/blob/v2.0.7/index.js",
-        "s3af21c2530b7": "https://github.com/expressjs/express/blob/4.21.2/lib/utils.js"
+        "s3af21c2530b7": "https://github.com/expressjs/express/blob/4.21.2/lib/utils.js",
+        "sfa0f1d7f1be6": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/run/timely.ts",
+        "sf6a63339341e": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/rspack.timely.config.js",
+        "s512cac75f9fb": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/guards/global/global.guard.ts#L21",
+        "s6af8fddcbdc7": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/services/users/helpers.ts#L34-L58",
+        "se879dae3d563": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/strategies/authtoken.strategy/authtoken.strategy.ts#L17-L18",
+        "s03a119ab46e6": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/controllers/utils.controller.ts#L179-L182",
+        "s565f51c5c143": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/app.module.ts#L45-L48",
+        "s52f6258ded32": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/middlewares/extract-ids/extract-ids.middleware.ts#L473-L479",
+        "s7fc234b5a058": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/services/utils.service.ts#L131-L137"
       }
     },
     "baserow": {
@@ -73485,7 +73593,9 @@ Claims (full source mapping in the JSON block below):
       "name": "nginx docs",
       "basis": "unknown",
       "sources": {
-        "sb3bee9429629": "https://nginx.org/en/docs/http/ngx_http_limit_req_module.html"
+        "sb3bee9429629": "https://nginx.org/en/docs/http/ngx_http_limit_req_module.html",
+        "sf3430c5a0b22": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html",
+        "sb3ce35ba8f3d": "https://nginx.org/en/docs/http/ngx_http_headers_module.html"
       }
     },
     "fail2ban": {
@@ -73513,6 +73623,36 @@ Claims (full source mapping in the JSON block below):
         "sccaa39ad1045": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/protocol.py#L109",
         "s0fa658a17fef": "https://github.com/fail2ban/fail2ban/blob/1.1.1/fail2ban/protocol.py#L141"
       }
+    },
+    "cors": {
+      "name": "expressjs/cors",
+      "basis": "v2.8.5",
+      "sources": {
+        "s45d81d86a562": "https://github.com/expressjs/cors/blob/v2.8.5/lib/index.js"
+      }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s5e1383feef7d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79",
+        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md",
+        "s343269d1c01c": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/dump-header.md",
+        "s809185b389c5": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/noproxy.md",
+        "s1222d47e1017": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/globoff.md",
+        "sdd1aa884c51d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/disable.md",
+        "s40cfe8ffa885": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/silent.md",
+        "s820e85aa0636": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/output.md",
+        "sc2e8fc82d74a": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/max-time.md",
+        "sc103df7ca615": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/connect-timeout.md"
+      }
+    },
+    "caddy-docs": {
+      "name": "Caddy docs",
+      "basis": "unknown",
+      "sources": {
+        "s3865a73ccda3": "https://caddyserver.com/docs/caddyfile/directives/reverse_proxy"
+      }
     }
   },
   "claims": {
@@ -73522,8 +73662,10 @@ Claims (full source mapping in the JSON block below):
     "nocodb-signup": {"text": "invite_only_signup defaults false; enable to stop later self-signups.", "components": ["nocodb"], "sources": ["nocodb:s5ea55dc5f0d9", "nocodb:sd0e9f451673f"], "status": "REASONED"},
     "nocodb-encryption": {"text": "Unset NC_CONNECTION_ENCRYPT_KEY stores external DB credentials unchanged; set before adding sources, or startup encrypts existing sources when added later.", "components": ["nocodb"], "sources": ["nocodb:sca40040b40cc", "nocodb:saf056bb4ff37"], "status": "REASONED"},
     "nocodb-jwt": {"text": "Unset NC_AUTH_JWT_SECRET generates/stores a UUID as nc_auth_jwt_secret; replace README sample 569a1821-0a93-45e8-87ab-eb857f20a010.", "components": ["nocodb"], "sources": ["nocodb:sa19c6557b712", "nocodb:s536899ecd4a5"], "status": "REASONED"},
-    "nocodb-cors": {"text": "Entry file allows every CORS origin.", "components": ["nocodb"], "sources": ["nocodb:sd74ca4df55b0"], "status": "REASONED"},
-    "nocodb-proxy": {"text": "Startup resets trust proxy from NC_TRUST_PROXY, default no trust; restrict hops/subnets, never true with direct client access.", "components": ["nocodb"], "sources": ["nocodb:sa19c6557b712", "nocodb:s635b35ce4689", "nocodb:sd74ca4df55b0"], "status": "REASONED"},
+    "nocodb-cors": {"text": "At 2026.09.0, rspack.timely.config.js builds docker/main.js, which docker/start.sh runs, from timely.ts; it and dockerEntry.ts call cors() with no options, and cors 2.8.5, the lockfile's only cors, then sends Access-Control-Allow-Origin: * on every response and preflight passing through it, with no Allow-Credentials. No Dockerfile at the tag, so the image's script is unverified.", "components": ["nocodb", "cors"], "sources": ["nocodb:sf6a63339341e", "nocodb:sbfbf630008e1", "nocodb:sfa0f1d7f1be6", "nocodb:sd74ca4df55b0", "nocodb:se352e8e45038", "cors:s45d81d86a562"], "status": "REASONED"},
+    "nocodb-cors-risk": {"text": "Auth is the xc-auth header or the nc_token cookie (httpOnly, SameSite=Lax, path /api), or an xc-token or Bearer API token. With * and no Allow-Credentials, browsers expose no credentialed response cross-origin; the residual risk is pages on other sites reading, through a visitor's browser, responses that need no credentials (guide inference).", "components": ["nocodb", "cors"], "sources": ["nocodb:s512cac75f9fb", "nocodb:s6af8fddcbdc7", "nocodb:se879dae3d563", "cors:s45d81d86a562"], "status": "REASONED"},
+    "nocodb-cors-proxy": {"text": "Remove the header at the proxy: nginx proxy_hide_header in every location proxying to NocoDB, or Caddy reverse_proxy header_down -Access-Control-Allow-Origin. For one exact origin, nginx also adds it with add_header (repeat inherited add_header lines such as HSTS there) and Caddy sets it with header_down (guide advice).", "components": ["nginx-docs", "caddy-docs"], "sources": ["nginx-docs:sf3430c5a0b22", "nginx-docs:sb3ce35ba8f3d", "caddy-docs:s3865a73ccda3"], "status": "REASONED"},
+    "nocodb-proxy": {"text": "Startup resets trust proxy from NC_TRUST_PROXY, default no trust; restrict hops/subnets, never true with direct client access.", "components": ["nocodb"], "sources": ["nocodb:sa19c6557b712", "nocodb:s635b35ce4689", "nocodb:sd74ca4df55b0", "nocodb:sfa0f1d7f1be6"], "status": "REASONED"},
     "nocodb-packaging": {"text": "README marks binaries for quick local testing and documents Docker image and Auto-upstall paths; the October 2026 release API record lists no assets; the 2026.09.0 tag carries package version 0.301.3. Use the image or vendor install script for production (guide advice).", "components": ["nocodb"], "sources": ["nocodb:s536899ecd4a5", "nocodb:sca0c9c0ecf24", "nocodb:sb4d5b659f7b8", "nocodb:s118384fa1d9f", "nocodb:s9bee4adc612e", "nocodb:s3f296c702bc5"], "status": "REASONED"},
     "nocodb-upstall-fetch": {"text": "The README's Auto-upstall command fetches the script over plain HTTP and executes it with Bash; its source link points to develop. Fetch over HTTPS from a pinned, reviewed source and read before running (guide advice).", "components": ["nocodb"], "sources": ["nocodb:s2769b9054778", "nocodb:s2b16e2c93606"], "status": "REASONED"},
     "baserow-bind": {"text": "Caddy publishes 80/443 on HOST_PUBLISH_IP default 0.0.0.0; set it or publish loopback. Docker wildcard publication bypasses UFW.", "components": ["baserow"], "sources": ["baserow:s1b31314982f4", "baserow:s3f61036aca03"], "status": "REASONED"},
@@ -73586,7 +73728,8 @@ Claims (full source mapping in the JSON block below):
     "verify-tcp-outcomes": {"text": "Recorded loopback runs of an earlier form, whose control and result arms ended with status 0, observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated. The current form was not re-run.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:sb79f4a0be2f7", "windmill:s6a7eeac413b7"], "status": "REASONED", "verify": [6]},
     "verify-tcp-inputs": {"text": "Recorded guard tests of an earlier form, whose guard, control and result arms ended with status 0, rejected named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 passed, and the invalid hex values tested failed at the control. The current form was not re-run.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:sb79f4a0be2f7", "windmill:s6a7eeac413b7"], "status": "REASONED", "verify": [6]},
     "verify-windmill-debugger": {"text": "File: NUL, UTF-16 BOM, lone CR, NEL, LS or PS exits 3; a line setting REQUIRE_SIGNED_DEBUG_REQUESTS to exactly false exits 1. A backslash, !, or $ line not a comment or plain K=${X} or K: ${X:-d}, or a $ with env_file, extends, include or project_directory anywhere in the file, exits 3, as does a naming line not true or 1; else 0. Loaded files and outside values go unread. Not run on a deployment.", "components": ["windmill"], "sources": ["windmill:s6a7eeac413b7", "windmill:s50609ebb7768", "windmill:s05c898fe1013"], "status": "REASONED", "verify": [9]},
-    "verify-nocodb-trust-proxy": {"text": "docker exec reads NC_TRUST_PROXY in the container's configured environment: true (any case) or a zero range such as /0 (proxy-addr 2.0.7 rejects it) is the finding (exit 1); unset, empty, false or all zeros exits 0 (no proxy trusted); anything else, such as a hop count or range, exits 3, expected behind a proxy, as the block cannot see if clients reach NocoDB directly. No real container run.", "components": ["nocodb", "docker"], "sources": ["nocodb:s635b35ce4689", "nocodb:sa19c6557b712", "nocodb:se352e8e45038", "nocodb:s1174c56ebb50", "nocodb:s3af21c2530b7", "docker:sd34e76a09f6c"], "status": "REASONED", "verify": [10]}
+    "verify-nocodb-trust-proxy": {"text": "docker exec reads NC_TRUST_PROXY in the container's configured environment: true (any case) or a zero range such as /0 (proxy-addr 2.0.7 rejects it) is the finding (exit 1); unset, empty, false or all zeros exits 0 (no proxy trusted); anything else, such as a hop count or range, exits 3, expected behind a proxy, as the block cannot see if clients reach NocoDB directly. No real container run.", "components": ["nocodb", "docker"], "sources": ["nocodb:s635b35ce4689", "nocodb:sa19c6557b712", "nocodb:se352e8e45038", "nocodb:s1174c56ebb50", "nocodb:s3af21c2530b7", "docker:sd34e76a09f6c"], "status": "REASONED", "verify": [10]},
+    "verify-nocodb-cors": {"text": "GET a NocoDB URL through the proxy with Origin: https://evil.example: Allow-Origin * or that origin in the final response's headers is the finding (exit 1), interim 1xx headers not judged; on a 2xx, no Allow-Origin or exactly the allowed origin once passes (0); anything else is inconclusive (3); a missing curl or awk or a refused value exits 2. Not run against a deployment.", "components": ["nocodb", "cors", "curl"], "sources": ["nocodb:s03a119ab46e6", "nocodb:s565f51c5c143", "nocodb:s52f6258ded32", "nocodb:s7fc234b5a058", "cors:s45d81d86a562", "curl:s3db522258e44", "curl:s5e1383feef7d", "curl:s343269d1c01c", "curl:s809185b389c5", "curl:s1222d47e1017", "curl:sdd1aa884c51d", "curl:s40cfe8ffa885", "curl:s820e85aa0636", "curl:sc2e8fc82d74a", "curl:sc103df7ca615"], "status": "REASONED", "verify": [11]}
   }
 }
 ````
