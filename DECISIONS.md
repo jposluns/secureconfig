@@ -936,8 +936,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     preamble clause and of CONTRIBUTING.md step 9, and check 1's docstring must then drop "so every CHANGELOG
     date section falls wholly in one release". A revert after that release must not bring that clause back
     either, because it is false for 2026-11-13, a date section split across releases: v1.0.1295 covers it up
-    to the merge of #1295 and v1.0.1317 covers the rest. Run `tools/test_release.py` and the whole gate suite
-    after the revert.
+    to the merge of #1295 and v1.0.1317 covers the rest, and 2026-11-18 is split the same way at the target
+    of v1.0.1351. Run `tools/test_release.py` and the whole gate suite after the revert.
 - **Maintainer ruling of 2026-11-12 on the REASONED definition (#1290).** The maintainer gave it through
   AskUserQuestion in an attended session at about 14:09Z. No reasoning was recorded beyond the terms below. It
   confirms the 2026-11-11 REASONED proxy decision that "Proxy decisions awaiting maintainer review" below records.
