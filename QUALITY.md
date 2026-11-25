@@ -221,6 +221,9 @@ plus the last release of the previous major where the two differ (ruling of 2026
 The Sources heading month equals the JSON `documentation_checked` month and names the month of the
 whole-guide documentation pass; a per-item "(checked <Month Year>)" marks a later item-level
 recheck only; no item month is earlier than the heading month.
+The statement is corpus rule O3's convention sentence, word for word, on its own line directly
+under the Sources heading with a blank line before and after; any other wording or place does not
+count, and `tools/gen_guide_quality.py` holds it as `SOURCES_CONVENTION`.
 - PASS: coherent under this rule.
 - PARTIAL: later item months present with no statement of what the heading month means.
 - GAP: an item dated earlier than the heading, or a heading month later than any documentation read.
