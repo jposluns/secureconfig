@@ -27,7 +27,7 @@ exposure-index.md	K	PARTIAL(M1)	n/a	?	n/a	n/a	n/a	?	?	n/a	?	SOLID	08d9815c33d05a
 firebase-supabase.md	C	PARTIAL(M1)	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	57dd06cbc616f73313795aa2cbdc8d13107409791da3fc46435daa85b69b419b	2026-11-10	tool	current
 forgejo.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	af053bd6acf0fa7a84f1d8fb958379dd6c1651ef0c6f9d2f02b012c0daf78b5a	2026-11-10	tool	current
 free-certificates.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	b6b3602573dfa47ca4cf97a71ed90192057d15d83a44931bf16b416b5c0d7b12	2026-11-10	tool	current
-frontend-frameworks.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	bff1148814fb78fed5bc3a2ca17d12e1f06e61d54cdca375ced0c4d2b5bc3ba6	2026-11-10	tool	current
+frontend-frameworks.md	C	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	d6761b841f00fc2f2afe75fab08d3617eb2eb4da4987fab7e7af01a2d38a6bb1	2026-11-10	tool	current
 fronting-auth.md	X	P	?	?	?	PARTIAL(D3)	?	?	?	?	?	SOLID	4f38f0bb8720d400bea95f4aa0219297743fbf1689b32372792c82bf38f82859	2026-11-10	tool	current
 gitlab.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	33847a992ac1079e1b78c026357603136dd1e2afd074ae038d543102b1d79a10	2026-11-10	tool	current
 gitops-controllers.md	C	P	?	?	?	PARTIAL(D3)	?	?	PARTIAL(G1)	?	?	SOLID	82e44ffd30a1c327b04ded346c7c71a386915afa0ba2354043bc58cbf52d3fbe	2026-11-10	tool	current
