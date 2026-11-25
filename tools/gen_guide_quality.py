@@ -29,6 +29,8 @@ The four mechanical leads (QUALITY.md 3.6):
           exposure gate loads it, once per distinct guide and port; zero is P, else PARTIAL(M1).
   D (D3): the Sources heading month against each item month; an earlier item is GAP(D3), a later
           one with no stated meaning is PARTIAL(D3), otherwise P (n/a when there is no Sources).
+          The meaning is stated only by SOURCES_CONVENTION on its own line directly under the
+          heading (corpus rule O3); any other wording or place does not count.
   F (F1): PARTIAL(F1) when a Verify H2 carries its declaration, else `?` (the rest is judgment).
   G (G1): PARTIAL(G1) when a sentence of 80+ characters repeats more than twice, else `?`.
 
@@ -199,6 +201,22 @@ def month_key(name, year):
     return int(year) * 12 + MONTHS[name]
 
 
+# Corpus rule O3 (maintainer rulings of 2026-11-25): the one sentence that states what the Sources
+# heading month means (QUALITY.md D3), matched exactly, so a near-miss does not count.
+SOURCES_CONVENTION = (
+    "The month in this heading is the month of the whole-guide documentation pass, and an item "
+    "that carries its own later \"checked\" month was rechecked individually after that pass, so "
+    "the later month applies to that item only.")
+
+
+def states_meaning(sources):
+    """Whether the Sources section, from the heading's closing parenthesis on, opens with the
+    convention sentence: the heading line ends there, then one blank line, SOURCES_CONVENTION
+    exactly on a line of its own, then a blank line. Any other wording, spacing, case or line
+    ending, or the sentence anywhere else, is no statement of the meaning."""
+    return sources.split("\n")[:4] == ["", "", SOURCES_CONVENTION, ""]
+
+
 def d3(text):
     m = re.search(r"^## Sources \(checked ([A-Z][a-z]+) (\d{4})\)", text, re.M)
     if not m:
@@ -218,7 +236,7 @@ def d3(text):
             later += 1
     if earlier:
         return "GAP(D3)", earlier, later
-    if later:
+    if later and not states_meaning(sources):
         return "PARTIAL(D3)", earlier, later
     return "P", 0, 0
 
@@ -393,10 +411,12 @@ LEDGER_FINDING = {
 }
 LEDGER_FIX = {
     "M1": "finish the deferred work and remove its entry, or give each waiver its reason",
-    "D3": "settle the Sources heading-month wording in the corpus D3 sweep",
+    "D3": "add the Sources convention sentence on its own line directly under the heading",
     "F1": "move the declaration to the Verify H2's first paragraph or its H3 children",
     "G1": "state the shared limitation once at the top of Verify and reference it",
 }
+# A D3 GAP is an item dated earlier than the heading, which the convention sentence cannot settle.
+LEDGER_FIX_D3_GAP = "date no Sources item earlier than the heading month"
 
 
 def build(rebuild=False):
@@ -431,8 +451,9 @@ def build(rebuild=False):
             else:
                 detail = LEDGER_FINDING[crit]
             high = "yes" if crit in c.HIGH and level == "GAP" else "no"
+            fix = LEDGER_FIX_D3_GAP if crit == "D3" and level == "GAP" else LEDGER_FIX[crit]
             ledger.append("\t".join([guide, crit, level, high, "", detail,
-                                     LEDGER_FIX[crit], "", SCORED_ON, "", "computed"]))
+                                     fix, "", SCORED_ON, "", "computed"]))
     tsv = "\n".join([c.HEADER1, c.HEADER2, *rows]) + "\n"
     ledger_header = ("# gqs\t1.0 ledger (advisory)\n# columns: guide\tcriterion\tlevel\t"
                      "high_class\tlines\tfinding\tfix\ttodo_row\topened\tclosed_by_pr\tbasis")

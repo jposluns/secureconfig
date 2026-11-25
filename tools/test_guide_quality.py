@@ -204,6 +204,56 @@ def main():
         check(f"serialize round-trips {text!r} in {group}",
               gen.serialize_cell(gen.cell_levels(text, group), group) == text)
 
+    # D3 and corpus rule O3 (maintainer rulings of 2026-11-25): the convention sentence on its own
+    # line directly under the Sources heading states the heading month's meaning, so later item
+    # months are P; earlier ones stay GAP. The P cases FAIL on the code before O3, which scored
+    # every later item month PARTIAL(D3) whatever the section said.
+    conv = gen.SOURCES_CONVENTION
+    head = "# G\n\nBody.\n\n## Sources (checked October 2026)\n\n"
+    later_item = "- Item (checked November 2026): https://example.com/a\n"
+    earlier_item = "- Item (checked September 2026): https://example.com/b\n"
+    tail = "\n## Next\n\nchecked December 2026 outside Sources.\n"
+    check("the convention sentence is wording B of the 2026-11-25 ruling, at most 400 characters",
+          conv.startswith("The month in this heading is the month of the whole-guide")
+          and conv.endswith("so the later month applies to that item only.") and len(conv) <= 400)
+    check("the convention sentence itself carries no item month",
+          gen.d3(head + conv + "\n\n- Item: https://example.com/c\n") == ("P", 0, 0))
+    check("the sentence under the heading with later item months is P",
+          gen.d3(head + conv + "\n\n" + later_item + tail) == ("P", 0, 0))
+    check("the sentence under the heading with an earlier item month is still GAP(D3)",
+          gen.d3(head + conv + "\n\n" + earlier_item + later_item)
+          == ("GAP(D3)", 1, 1))
+    check("later item months with no sentence are PARTIAL(D3)",
+          gen.d3(head + later_item + tail) == ("PARTIAL(D3)", 0, 1))
+    for label, near in [
+            ("a changed word", conv.replace("whole-guide", "guide-wide")),
+            ("a dropped final full stop", conv[:-1]),
+            ("straight quotes made curly", conv.replace('"checked"', "\u201cchecked\u201d")),
+            ("a trailing space", conv + " "),
+            ("a carriage return", conv + "\r"),
+            ("a leading list marker", "- " + conv),
+            ("lowercase", conv.lower()),
+            ("a line break inside it", conv.replace(", and an item", ",\nand an item")),
+            ("a following sentence on its line", conv + " Items are pinned.")]:
+        check(f"a near-miss sentence ({label}) with later item months is PARTIAL(D3)",
+              gen.d3(head + near + "\n\n" + later_item) == ("PARTIAL(D3)", 0, 1))
+    check("the sentence after the first item, not directly under the heading, is PARTIAL(D3)",
+          gen.d3(head + later_item + "\n" + conv + "\n") == ("PARTIAL(D3)", 0, 1))
+    check("the sentence with no blank line before it is PARTIAL(D3)",
+          gen.d3(head[:-1] + conv + "\n\n" + later_item) == ("PARTIAL(D3)", 0, 1))
+    check("the sentence with no blank line after it is PARTIAL(D3)",
+          gen.d3(head + conv + "\n" + later_item) == ("PARTIAL(D3)", 0, 1))
+    check("the sentence outside the Sources section is PARTIAL(D3)",
+          gen.d3("# G\n\n" + conv + "\n\n## Sources (checked October 2026)\n\n" + later_item)
+          == ("PARTIAL(D3)", 0, 1))
+    check("the sentence under another heading after Sources is PARTIAL(D3)",
+          gen.d3(head + later_item + "\n## Notes\n\n" + conv + "\n") == ("PARTIAL(D3)", 0, 1))
+    check("a bespoke meaning sentence, as vector-databases.md words its own, is PARTIAL(D3)",
+          gen.d3(head + "The October 2026 date records the guide-wide documentation check.\n\n"
+                 + later_item) == ("PARTIAL(D3)", 0, 1))
+    check("the sentence with no Sources heading is n/a",
+          gen.d3("# G\n\n" + conv + "\n\n" + later_item) == ("n/a", 0, 0))
+
     # A structural n/a from the tree wins over any recorded cell.
     check("a tree n/a wins over a recorded judgment cell",
           gen.merge_group("A", "n/a", "GAP(A2)") == "n/a")
