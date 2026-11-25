@@ -26,8 +26,8 @@ elasticsearch.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	2c60af4adbf8b9d1bce7063240887664aa5
 exposure-index.md	K	PARTIAL(M1)	n/a	?	n/a	n/a	n/a	?	?	n/a	?	SOLID	fc349a850673721a26cba080af4cf06e4233e0237b66ebf0dc2a2fdd3ace12ca	2026-11-10	tool	current
 firebase-supabase.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	be9b0fbebde497b68f19c476b05c9fb00f73296a9afcbe2a56a427ad3258c80d	2026-11-10	tool	current
 forgejo.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	5da010ea6fda3a22d4548e954eeff192a8aa5fbffe11dfe67d26c129855b056f	2026-11-10	tool	current
-free-certificates.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	90e3fb3884e8b2f149f4c07daabcc878e0e7bce557fb19da53790904db2b3f00	2026-11-10	tool	current
-frontend-frameworks.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	2345eca53f04ae34f5cb5879fc90b3075e91c8e424a1c678812d14aeaac7c08b	2026-11-10	tool	current
+free-certificates.md	X	P	PARTIAL(A2,A4)	PARTIAL(B2,B3) ?(B1)	PARTIAL(C2,C4) ?(C3)	?(D2)	PARTIAL(E1,E2)	PARTIAL(F2) ?(F1)	PARTIAL(G2,G3) ?(G1)	P	?	SOLID	90e3fb3884e8b2f149f4c07daabcc878e0e7bce557fb19da53790904db2b3f00	2026-11-25	claude+agy-reconciled	current
+frontend-frameworks.md	C	P	PARTIAL(A1,A3,A4)	PARTIAL(B3,B4) ?(B1)	PARTIAL(C1,C4)	PARTIAL(D1) ?(D2)	PARTIAL(E1,E2)	PARTIAL(F2) ?(F1)	PARTIAL(G2) ?(G1)	PARTIAL(H2)	?	SOLID	2345eca53f04ae34f5cb5879fc90b3075e91c8e424a1c678812d14aeaac7c08b	2026-11-25	claude+agy-reconciled	current
 fronting-auth.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	00e8961767c7787bf8311ba1318d61670007ca963403c31e7a009c9aad1b664c	2026-11-10	tool	current
 gitlab.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f940bf02cb67cf71f64e70b7a8817e588782471d9c8dbca75ba6b1f726e5bae0	2026-11-10	tool	current
 gitops-controllers.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	5e8a98d918faca0573564cea4c1ea4ccdffdd531653a2b6fc7a641afcd03a7f4	2026-11-10	tool	current
@@ -48,7 +48,7 @@ kubernetes.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	bf36aa1e93a06600f0936c65e9a8a9e9787b11
 lighttpd.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	e1d75f558f3c35eb8bb4dbf76932635f11cc2479cc86c634b16495213cc21f72	2026-11-10	tool	current
 litellm.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	6cda551661000ac9781b7d5c4a611a26b5d173c0e2d09fc9101ac3d4eb3d69c1	2026-11-10	tool	current
 llm-observability.md	C	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	a963eae348f96d30654b8f4c826c4dea252de0a7f37dd4c8d4ee301d85f79f56	2026-11-10	tool	current
-low-code-builders.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	98bc6e5354c0b3ec4047075bc1d6df1f31a5fcd254d5e74f4db9951bb157dec7	2026-11-10	tool	current
+low-code-builders.md	C	P	GAP(A3) PARTIAL(A1)	?(B1,B3)	PARTIAL(C1,C3,C4)	?(D2)	PARTIAL(E1,E2)	PARTIAL(F2) ?(F1)	PARTIAL(G1,G2,G3)	P	?	MINOR-GAPS	98bc6e5354c0b3ec4047075bc1d6df1f31a5fcd254d5e74f4db9951bb157dec7	2026-11-25	claude+agy-reconciled	current
 machine-auth.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	72f4488bdf4f1c9b0deec0c98b3f1f75a9c27b551fa2958ce7eaa0b8a2736b1c	2026-11-10	tool	current
 mcp-clients.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	76aa9e145ccd0264af74434f2441a6ddcb902c8a5b6a6b76fcd7d84f6b12dd2b	2026-11-10	tool	current
 mcp-servers.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	bcc4530157fde6e1c2ac632011a7aee0edc398450755278c52399171a8e9fcd9	2026-11-10	tool	current
