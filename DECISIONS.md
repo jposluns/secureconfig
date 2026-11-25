@@ -17,6 +17,21 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-25 re-marking `windmill-loopback` and `windmill-sandbox-run` REASONED (#1399).**
+  The maintainer gave this ruling, attended, through AskUserQuestion, 2026-11-25 about 13:36Z, choosing the option
+  "Re-mark REASONED (Recommended)". No reasoning was recorded beyond the choice. The ruling
+  settles the conflict between the O5 entry below, whose effect says these two claims "stay DEMONSTRATED", and
+  CONTRIBUTING.md's definition that "DEMONSTRATED means the stated check ran against both the exposed and fixed
+  states": each records only a configured-state run of the v1.817.0 release binary on loopback.
+  - Effect. Pull request #1399 applies it to `low-code-builders.md`, following the precedent of
+    `windmill-default-login`: both claims become REASONED as recorded earlier-form runs of Windmill v1.817.0 (the
+    basis is v1.864.1), lose their `evidence` fields, and say that no exposed-state run was made and that neither was
+    re-run on v1.864.1. The Windmill section and the Verify introduction say the same, and `verify-sample-tokens`
+    is the guide's only DEMONSTRATED claim. The O5 entry stays as written, as the record of what #1282 did.
+  - Revert. The revert path is a later maintainer ruling that replaces this one. A unit re-marked under it becomes
+    DEMONSTRATED again only after a run of the v1.864.1 binary, or of a later basis, records both the exposed and the
+    fixed state, with what each observed and the binary version.
+
 - **Maintainer ruling of 2026-11-24 ratifying the proxy decision on one copy block per install route (#1389).**
   The maintainer gave this ruling through AskUserQuestion in an attended session on 2026-11-24, answered between
   16:28Z and 16:33Z. The record of the ruling given to this pull request gives the question, the label and
