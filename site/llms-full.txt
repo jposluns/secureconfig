@@ -77216,7 +77216,7 @@ REASONED: following block; external discovery/authentication probes and local po
 )
 ```
 
-REASONED: preceding block; the external DevTools, Selenium Grid Router and Node, browserless and Playwright probes and their local positive controls, per the guide's cited Chromium 154.0.8037.57 host check, JSON discovery, approval-mode 404 and browser WebSocket URL entry, Selenium Grid CLI options, browserless 2.56.7 TOKEN initialization and HTTP and WebSocket authentication rejection entries. The same REASONED marking also rests on the guide's cited browserless pressure API entry, Playwright Docker entry, Playwright BrowserType.launchServer and connect entry, Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2) entry, and curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1) entry. No container runtime or isolated network namespace was available, so no service ran. During marking review (October 2026) the guard branches ran with a stub curl as recorded above, and the token configuration pattern, run as an author-built block following this paragraph's instructions (the guide prints no such block) with a stub curl and a dummy token holding a double quote and a backslash, kept the token out of argv and sent the escaped url line on stdin. The guard-branch stub runs covered the guarded block in an earlier form, which took one value, ended with curl's own status and whose guard refusals left the subshell with status 0; none was re-run on the previous form, which had no `curl` guard and passed bash -n and ShellCheck 0.11.0 in the repository's gate suite. The current form adds a `command -v curl` guard, which refuses with status 2 and no curl call when curl is not installed; this guide records no run of the `curl`-guarded form. The expected exposed and fixed results are those stated here. **REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
+REASONED: preceding block; the external DevTools, Selenium Grid Router and Node, browserless and Playwright probes and their local positive controls, per the guide's cited Chromium 154.0.8037.57 host check, JSON discovery, approval-mode 404 and browser WebSocket URL entry, Selenium Grid CLI options, browserless 2.56.7 TOKEN initialization and HTTP and WebSocket authentication rejection entries. The same REASONED marking also rests on the guide's cited browserless 2.56.7 open-source GET /pressure route and its 200 load JSON response entry, browserless /pressure API page entry (cited for the request and response example only), Playwright Docker entry and Playwright BrowserType.launchServer and connect entry. The REASONED marking further rests on the guide's cited Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2) entry, and curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1) entry. No container runtime or isolated network namespace was available, so no service ran. During marking review (October 2026) the guard branches ran with a stub curl as recorded above, and the token configuration pattern, run as an author-built block following this paragraph's instructions (the guide prints no such block) with a stub curl and a dummy token holding a double quote and a backslash, kept the token out of argv and sent the escaped url line on stdin. The guard-branch stub runs covered the guarded block in an earlier form, which took one value, ended with curl's own status and whose guard refusals left the subshell with status 0; none was re-run on the previous form, which had no `curl` guard and passed bash -n and ShellCheck 0.11.0 in the repository's gate suite. The current form adds a `command -v curl` guard, which refuses with status 2 and no curl call when curl is not installed; this guide records no run of the `curl`-guarded form. The expected exposed and fixed results are those stated here. **REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
 a `200` JSON body containing `webSocketDebuggerUrl`. Fixed, the external request cannot reach that
 endpoint while the local positive control still returns it. A `404` from approval mode is not a pass.
 A connection refused or a timeout that happened during the connect is consistent with
@@ -77236,8 +77236,10 @@ the port is still reachable, which is not the fixed state. The open-source brows
 `3000/pressure` instruction is: with `TOKEN` unset or empty, expect `200` with load JSON; with a
 nonempty `TOKEN`, expect `401` for both the tokenless request and a deliberately wrong `?token=`
 value, then confirm the correct token returns the load JSON.
-These are REASONED expectations from the cited configuration, API documentation and HTTP rejection
-handler, not live observations; this authoring environment has no container runtime and cannot
+These are REASONED expectations from the cited browserless 2.56.7 TOKEN initialization and HTTP
+and WebSocket authentication rejection entries and, for the load JSON, the pinned v2.56.7
+open-source GET /pressure route entry, not live observations; this authoring environment has no
+container runtime and cannot
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
 deployment must also deny the external path while an authorized internal control still succeeds.
 Pass the correct token through curl's stdin configuration, as a `url = "...?token=..."` line fed to
@@ -77378,7 +77380,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "5457e03492755fd51bc1eaa45a198fdfb9d345eb6bc1159ae87ca38d6427b479",
+  "body_sha256": "e5cdb668a2e97cda2214b8e37a89ff41a08c99c9307e0a7938f1c3305b74d56d",
   "components": {
     "chromium": {
       "name": "Chromium",
