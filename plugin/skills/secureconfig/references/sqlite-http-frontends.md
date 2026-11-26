@@ -30,7 +30,7 @@ Use [sqlite.md](sqlite.md) for the files at rest and [web-exposure.md](web-expos
 
 ## Datasette
 
-The stable changelog, rechecked on 2026-11-26, lists 0.65.6 (2026-11-15), which "Fixed a security issue where a database registered using `add_database(db, name=..., route=...)` with a route that differs from its name could be downloaded from `/<route>.db` by actors who were denied access to it." Before it, 0.65.5 fixed a table-permission bypass. This guide's advice: deploy 0.65.6 or later, check whether any database is registered with a route that differs from its name, and check the changelog when deploying.
+The stable changelog, rechecked on 2026-11-26, lists 0.65.6 (2026-11-15), which "Fixed a security issue where a database registered using `add_database(db, name=..., route=...)` with a route that differs from its name could be downloaded from `/<route>.db` by actors who were denied access to it." The entry adds that a `permission_allowed()` plugin hook that matched `view-database-download` against the route "will now be passed the database name instead." Before it, 0.65.5 fixed a table-permission bypass. This guide's advice: on the 0.65.x line, deploy 0.65.6 or a later 0.65.x release, check whether any database is registered with a route that differs from its name, check any such plugin hook after upgrading, and check the changelog when deploying. The stable changelog does not say whether any 1.0 alpha carries this fix, so on a 1.0 alpha, check that release's own changelog for it.
 
 **Bind privately and inspect the deployment path.** Bare `datasette` invokes `serve`, whose defaults are `127.0.0.1:8001`; `-h/--host` and `-p/--port` override them. The following baseline serves an unchanging snapshot on loopback, disables arbitrary SQL by default, and disables whole-file downloads. The pathname is an example. See the CLI reference and settings reference.
 
@@ -385,7 +385,7 @@ Components (recorded basis):
 
 Claims (full source mapping in the JSON block below):
 
-- release (REASONED; datasette-docs): The stable Datasette changelog, rechecked 2026-11-26, lists 0.65.6 (2026-11-15), fixing downloads, by actors denied access, of a database that add_database registered with a route differing from its name; 0.65.5 fixed a table-permission bypass. Guide advice: deploy 0.65.6 or later and check for such routes.
+- release (REASONED; datasette-docs): The stable Datasette changelog, rechecked 2026-11-26, lists 0.65.6 (2026-11-15), fixing downloads, by actors denied access, of a database that add_database registered with a route differing from its name; 0.65.5 fixed a table-permission bypass. Guide advice: on 0.65.x deploy 0.65.6 or later 0.65.x, check such routes and permission_allowed() hooks matching them; on a 1.0 alpha check its changelog.
 - datasette-bind (DEMONSTRATED; datasette-docs): Bare datasette serve without host or port flags listened on 127.0.0.1:8001 in the recorded unprivileged local ss inventory.
 - immutable (REASONED; sqlite, datasette-docs): Use --immutable only for an unchanged snapshot; SQLite skips locking/change detection, so changing it can yield incorrect results or corruption errors.
 - datasette-docker (REASONED; datasette-docs): Documented Docker launch binds 0.0.0.0:8001 and publishes 8001:8001; container bind and host publication are separate.
@@ -446,7 +446,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "8abf3c9497567d1ac8dfb4f8174ee9cf903d0f8fe216a20c19e54a0004351063",
+  "body_sha256": "8734d65a4ef88bab6df5ebccf5119204abb6d3948ddc607833cbe65919afc999",
   "components": {
     "ds-container": {
       "name": "Datasette container generator",
@@ -623,7 +623,7 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "release": {"text": "The stable Datasette changelog, rechecked 2026-11-26, lists 0.65.6 (2026-11-15), fixing downloads, by actors denied access, of a database that add_database registered with a route differing from its name; 0.65.5 fixed a table-permission bypass. Guide advice: deploy 0.65.6 or later and check for such routes.", "components": ["datasette-docs"], "sources": ["datasette-docs:s3e64933fe2e9"], "status": "REASONED"},
+    "release": {"text": "The stable Datasette changelog, rechecked 2026-11-26, lists 0.65.6 (2026-11-15), fixing downloads, by actors denied access, of a database that add_database registered with a route differing from its name; 0.65.5 fixed a table-permission bypass. Guide advice: on 0.65.x deploy 0.65.6 or later 0.65.x, check such routes and permission_allowed() hooks matching them; on a 1.0 alpha check its changelog.", "components": ["datasette-docs"], "sources": ["datasette-docs:s3e64933fe2e9"], "status": "REASONED"},
     "datasette-bind": {"text": "Bare datasette serve without host or port flags listened on 127.0.0.1:8001 in the recorded unprivileged local ss inventory.", "components": ["datasette-docs"], "sources": ["datasette-docs:sb0aae2446988"], "status": "DEMONSTRATED", "evidence": "bare `datasette serve` with no host or port flag listened on `127.0.0.1:8001`"},
     "immutable": {"text": "Use --immutable only for an unchanged snapshot; SQLite skips locking/change detection, so changing it can yield incorrect results or corruption errors.", "components": ["sqlite", "datasette-docs"], "sources": ["datasette-docs:sca59b58c5c84", "sqlite:s4e4e320abf5b"], "status": "REASONED"},
     "datasette-docker": {"text": "Documented Docker launch binds 0.0.0.0:8001 and publishes 8001:8001; container bind and host publication are separate.", "components": ["datasette-docs"], "sources": ["datasette-docs:s8f2fe7a13b3f"], "status": "REASONED"},
