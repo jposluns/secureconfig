@@ -93,7 +93,7 @@ self-signed.md	X	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	d307c5ca800ee69648af5c81ad4
 server-admin-panels.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	bac493718a70fb97fcc2700e9b036adff9dd79c8632a4f386b22f18b53730855	2026-11-10	tool	current
 sqlite-http-frontends.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	893ec79c96bcba70cf469276c4c2b7e151ab05a12c9bbd1e510dd6a7c013e747	2026-11-10	tool	current
 sqlite.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	b6ccb2a04c73a95da0d7f7cc8892f7ba61b3111f19c0b831320687be136616b5	2026-11-10	tool	current
-streamlit.md	S	PARTIAL(M1)	?	?	?	GAP(D3)	?	?	PARTIAL(G1)	?	?	MINOR-GAPS	dc977979704ff4660fa4728ac8d96de75d4ecdb4ddfe6487d338e4084512c53d	2026-11-10	tool	current
+streamlit.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	f3b65c177f8892684734c69feaf72c8113dc4a8bb90223cf2c9e266474502deb	2026-11-10	tool	current
 supabase-self-hosted.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	1b0e7a4d049475d9b6fb4aec351af2367b39d70beb5e626220b86799fffa0bdf	2026-11-10	tool	current
 surrealdb.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	5c0f72010815d1ab578ade07942eb8f4467623763041fe979edae8ac99f25ffe	2026-11-10	tool	current
 tailscale.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	d8961ca1c8def372370d66b0622bba8500a0537f36581e1aea8494ebf3568c11	2026-11-10	tool	current
