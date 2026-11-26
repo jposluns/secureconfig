@@ -21,7 +21,6 @@ firebase-supabase.md	G1	PARTIAL	no		7 sentence(s) repeated, max 10 times	state t
 gitops-controllers.md	G1	PARTIAL	no		1 sentence(s) repeated, max 3 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 go.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
 gradio.md	G1	PARTIAL	no		1 sentence(s) repeated, max 3 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
-headless-browser-services.md	D3	GAP	no		2 item(s) dated earlier than the heading	date no Sources item earlier than the heading month		2026-11-10		computed
 headless-cms-instant-api.md	G1	PARTIAL	no		6 sentence(s) repeated, max 11 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 host.md	M1	PARTIAL	no		4 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
 identity-providers.md	M1	PARTIAL	no		5 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
@@ -54,7 +53,6 @@ oidc-integration.md	M1	PARTIAL	no		2 deferred-work entries and waivers without a
 open-webui.md	G1	PARTIAL	no		1 sentence(s) repeated, max 14 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 paas.md	M1	PARTIAL	no		2 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
 php.md	G1	PARTIAL	no		5 sentence(s) repeated, max 6 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
-pocketbase.md	D3	GAP	no		4 item(s) dated earlier than the heading	date no Sources item earlier than the heading month		2026-11-10		computed
 pocketbase.md	G1	PARTIAL	no		7 sentence(s) repeated, max 8 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 python.md	M1	PARTIAL	no		1 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
 python.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
@@ -63,8 +61,7 @@ ray.md	M1	PARTIAL	no		1 deferred-work entries and waivers without a reason acros
 realtime-voice-infra.md	G1	PARTIAL	no		6 sentence(s) repeated, max 11 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 redis.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
 search-engines.md	M1	PARTIAL	no		2 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
-search-engines.md	D3	GAP	no		8 item(s) dated earlier than the heading	date no Sources item earlier than the heading month		2026-11-10		computed
-search-engines.md	G1	PARTIAL	no		8 sentence(s) repeated, max 7 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+search-engines.md	G1	PARTIAL	no		9 sentence(s) repeated, max 5 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 secrets.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
 self-hosted-error-trackers.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
 self-hosted-idp.md	M1	PARTIAL	no		6 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
@@ -74,8 +71,7 @@ server-admin-panels.md	G1	PARTIAL	no		7 sentence(s) repeated, max 7 times	state 
 sqlite-http-frontends.md	M1	PARTIAL	no		1 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
 sqlite-http-frontends.md	G1	PARTIAL	no		3 sentence(s) repeated, max 6 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 sqlite.md	G1	PARTIAL	no		3 sentence(s) repeated, max 5 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
-streamlit.md	M1	PARTIAL	no		35 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
-streamlit.md	D3	GAP	no		11 item(s) dated earlier than the heading	date no Sources item earlier than the heading month		2026-11-10		computed
+streamlit.md	M1	PARTIAL	no		34 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
 streamlit.md	G1	PARTIAL	no		9 sentence(s) repeated, max 4 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 traefik.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
 tunnels.md	M1	PARTIAL	no		1 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed

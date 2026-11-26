@@ -36,7 +36,7 @@ gpu-clouds.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	dc56f7e2920fb41074b67339002a5d6ce91050
 gradio.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	bec410f284144a3442417675c3044b0b78c257c0540c3dce048c062de015dd39	2026-11-10	tool	current
 haproxy.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f2a3166a2210025bfc798afa2771130aab7be6dd4763267ee0e284daa0c6c0d7	2026-11-10	tool	current
 headers.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	2b3c5c04eb2f9bccd35253e993ec4d67d19462b61c4760561157cdafbc1ee266	2026-11-10	tool	current
-headless-browser-services.md	C	P	?	?	?	GAP(D3)	?	?	?	?	?	MINOR-GAPS	4b38f7220e6c2a0e7aa8a9ee9ecfe22912b8ec638b341ac21341a5e87a13675d	2026-11-10	tool	current
+headless-browser-services.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	e5cdb668a2e97cda2214b8e37a89ff41a08c99c9307e0a7938f1c3305b74d56d	2026-11-10	tool	current
 headless-cms-instant-api.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	9ce3ff0e8005057c062c0377dcddec222eb3b33d39b7da5cfbc4352b29df1ae3	2026-11-10	tool	current
 host.md	X	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	0b2e7aa46f2a12d5ee917c891240b6ef461dcdc0d1a07ed90115ced035440d15	2026-11-10	tool	current
 identity-providers.md	C	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	ea82a301fe879fd4b0e46aaebfd95e57557d801853c551189f4ea3d471467f9c	2026-11-10	tool	current
@@ -75,7 +75,7 @@ open-webui.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	084863ff8532b20bcfb32f428e44
 openclaw.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	ede9989e2c65682b198416522324be999c4969bb2fb2649f763ab779cad42c8a	2026-11-10	tool	current
 paas.md	C	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	c51cade0532e3d6c2f841858d27173b414b9592abf77016a769af61cc4e00907	2026-11-10	tool	current
 php.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	a8383b357b0a8facc60ddd0c55a80258e04bc8237434244c525401a8d845ead7	2026-11-10	tool	current
-pocketbase.md	C	P	?	?	?	GAP(D3)	?	?	PARTIAL(G1)	?	?	MINOR-GAPS	1eb4512c01f9bbbea12f6a70840509097048484520aa0c133e9040b4e92d0866	2026-11-10	tool	current
+pocketbase.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	107d244c62af66bd63dbcde4e6a790ba50f6e26a296e730ee2a661785bdb68c4	2026-11-10	tool	current
 postgresql.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	0f2e8bc4994aaf6cba548b3aa7d6ca988d0b977a0b5cef33c0bd2cf188413901	2026-11-10	tool	current
 python.md	S	PARTIAL(M1)	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	f245f70292dc45a27a68f660be052322d7d15889101e77d866267345684f63bf	2026-11-10	tool	current
 rabbitmq.md	S	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	3302113b933d3e62c7b2d97eed9a8bde5b170f9485c056be3d0473d7f9421de8	2026-11-10	tool	current
@@ -84,7 +84,7 @@ realtime-voice-infra.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	92fa5a1c8ef7eff295
 realtime-webhooks.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	feab3fa06fff6821c8fd0aa2c3a0e71546d33de73e5924f3380afc1df72347c8	2026-11-10	tool	current
 redis.md	S	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	d4e35ac5ce680db4fecafd1a47a98aed09e91943ac69fc7c0ff3a5ee4916356b	2026-11-10	tool	current
 ruby.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	2463e8ae935fb0c1c9f0225697e7053ffe29b47e4f534547ac98e2a9823bfa33	2026-11-10	tool	current
-search-engines.md	C	PARTIAL(M1)	?	?	?	GAP(D3)	?	?	PARTIAL(G1)	?	?	MINOR-GAPS	82466bf523047290a304c2e517937599d45b518058829752e8096540e769b80e	2026-11-10	tool	current
+search-engines.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	14d3383ac794e9a6c9aca337ffec75664f8ec67dc6e63e61477c1214677532cd	2026-11-10	tool	current
 secrets.md	X	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	93d96bdc29508d29835f7d8915dec7bd0859502b437d8d38a8656006d44c38b7	2026-11-10	tool	current
 self-hosted-ci-runners.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	deda59ac3b648ae7b8bbf54b35fad7df2fa97113090411461090b3490e288256	2026-11-10	tool	current
 self-hosted-error-trackers.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	edbd055603171ef8b79e7910a038b4cff42d0f23f69870988b33241afe6e30cb	2026-11-10	tool	current
@@ -93,7 +93,7 @@ self-signed.md	X	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	d307c5ca800ee69648af5c81ad4
 server-admin-panels.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	bac493718a70fb97fcc2700e9b036adff9dd79c8632a4f386b22f18b53730855	2026-11-10	tool	current
 sqlite-http-frontends.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	893ec79c96bcba70cf469276c4c2b7e151ab05a12c9bbd1e510dd6a7c013e747	2026-11-10	tool	current
 sqlite.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	b6ccb2a04c73a95da0d7f7cc8892f7ba61b3111f19c0b831320687be136616b5	2026-11-10	tool	current
-streamlit.md	S	PARTIAL(M1)	?	?	?	GAP(D3)	?	?	PARTIAL(G1)	?	?	MINOR-GAPS	dc977979704ff4660fa4728ac8d96de75d4ecdb4ddfe6487d338e4084512c53d	2026-11-10	tool	current
+streamlit.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	66d482f42d915e419155d406e32e2278e54f6906649fb249d922d490595cf1ed	2026-11-10	tool	current
 supabase-self-hosted.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	1b0e7a4d049475d9b6fb4aec351af2367b39d70beb5e626220b86799fffa0bdf	2026-11-10	tool	current
 surrealdb.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	5c0f72010815d1ab578ade07942eb8f4467623763041fe979edae8ac99f25ffe	2026-11-10	tool	current
 tailscale.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	d8961ca1c8def372370d66b0622bba8500a0537f36581e1aea8494ebf3568c11	2026-11-10	tool	current
