@@ -36,7 +36,7 @@ gpu-clouds.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	dc56f7e2920fb41074b67339002a5d6ce91050
 gradio.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	bec410f284144a3442417675c3044b0b78c257c0540c3dce048c062de015dd39	2026-11-10	tool	current
 haproxy.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f2a3166a2210025bfc798afa2771130aab7be6dd4763267ee0e284daa0c6c0d7	2026-11-10	tool	current
 headers.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	2b3c5c04eb2f9bccd35253e993ec4d67d19462b61c4760561157cdafbc1ee266	2026-11-10	tool	current
-headless-browser-services.md	C	P	?	?	?	GAP(D3)	?	?	?	?	?	MINOR-GAPS	4b38f7220e6c2a0e7aa8a9ee9ecfe22912b8ec638b341ac21341a5e87a13675d	2026-11-10	tool	current
+headless-browser-services.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	5715cbbb5a8354c2b5e0ddb85bfd8f583f3766e98365d2a7f46da6a06ebc4507	2026-11-10	tool	current
 headless-cms-instant-api.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	9ce3ff0e8005057c062c0377dcddec222eb3b33d39b7da5cfbc4352b29df1ae3	2026-11-10	tool	current
 host.md	X	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	0b2e7aa46f2a12d5ee917c891240b6ef461dcdc0d1a07ed90115ced035440d15	2026-11-10	tool	current
 identity-providers.md	C	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	ea82a301fe879fd4b0e46aaebfd95e57557d801853c551189f4ea3d471467f9c	2026-11-10	tool	current
@@ -75,7 +75,7 @@ open-webui.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	084863ff8532b20bcfb32f428e44
 openclaw.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	ede9989e2c65682b198416522324be999c4969bb2fb2649f763ab779cad42c8a	2026-11-10	tool	current
 paas.md	C	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	c51cade0532e3d6c2f841858d27173b414b9592abf77016a769af61cc4e00907	2026-11-10	tool	current
 php.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	a8383b357b0a8facc60ddd0c55a80258e04bc8237434244c525401a8d845ead7	2026-11-10	tool	current
-pocketbase.md	C	P	?	?	?	GAP(D3)	?	?	PARTIAL(G1)	?	?	MINOR-GAPS	1eb4512c01f9bbbea12f6a70840509097048484520aa0c133e9040b4e92d0866	2026-11-10	tool	current
+pocketbase.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	107d244c62af66bd63dbcde4e6a790ba50f6e26a296e730ee2a661785bdb68c4	2026-11-10	tool	current
 postgresql.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	0f2e8bc4994aaf6cba548b3aa7d6ca988d0b977a0b5cef33c0bd2cf188413901	2026-11-10	tool	current
 python.md	S	PARTIAL(M1)	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	f245f70292dc45a27a68f660be052322d7d15889101e77d866267345684f63bf	2026-11-10	tool	current
 rabbitmq.md	S	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	3302113b933d3e62c7b2d97eed9a8bde5b170f9485c056be3d0473d7f9421de8	2026-11-10	tool	current

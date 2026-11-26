@@ -341,8 +341,8 @@ The month in this heading is the month of the whole-guide documentation pass, an
 - browserless 2.56.7 HTTP and WebSocket authentication rejection: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L103-L117
 - browserless 2.56.7 HTTP route authentication dispatch: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L264-L271
 - browserless 2.56.7 WebSocket route authentication dispatch: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L445-L454
-- browserless open-source Docker default and management endpoints (rolling documentation, checked September 2026): https://docs.browserless.io/enterprise/open-source
-- browserless pressure API request and response (rolling documentation, checked September 2026): https://docs.browserless.io/enterprise/utility-functions/pressure
+- browserless open-source Docker default and management endpoints (rolling documentation, checked November 2026): https://docs.browserless.io/enterprise/open-source
+- browserless pressure API request and response (rolling documentation, checked November 2026): https://docs.browserless.io/enterprise/utility-functions/pressure
 - Playwright BrowserType.launchServer and connect: https://playwright.dev/docs/api/class-browsertype
 - Playwright Docker (run-server remote connection): https://playwright.dev/docs/docker
 - Browserless ALLOW_FILE_PROTOCOL configuration and false default (pinned tag v2.51.0; version basis 2.51.0): https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/config.ts
@@ -417,7 +417,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "4b38f7220e6c2a0e7aa8a9ee9ecfe22912b8ec638b341ac21341a5e87a13675d",
+  "body_sha256": "5715cbbb5a8354c2b5e0ddb85bfd8f583f3766e98365d2a7f46da6a06ebc4507",
   "components": {
     "chromium": {
       "name": "Chromium",
