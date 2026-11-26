@@ -63,7 +63,7 @@ ray.md	M1	PARTIAL	no		1 deferred-work entries and waivers without a reason acros
 realtime-voice-infra.md	G1	PARTIAL	no		6 sentence(s) repeated, max 11 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 redis.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
 search-engines.md	M1	PARTIAL	no		2 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
-search-engines.md	G1	PARTIAL	no		8 sentence(s) repeated, max 7 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
+search-engines.md	G1	PARTIAL	no		9 sentence(s) repeated, max 5 times	state the shared limitation once at the top of Verify and reference it		2026-11-10		computed
 secrets.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
 self-hosted-error-trackers.md	F1	PARTIAL	no		the Verify declaration sits on the Verify H2	move the declaration to the Verify H2's first paragraph or its H3 children		2026-11-10		computed
 self-hosted-idp.md	M1	PARTIAL	no		6 deferred-work entries and waivers without a reason across the five baseline and allow files	finish the deferred work and remove its entry, or give each waiver its reason		2026-11-10		computed
