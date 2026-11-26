@@ -104,4 +104,4 @@ tunnels.md	C	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	f7fbd5b0e0f50a8ecb4c1ebe9a9dc2c
 vault.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	7f83cac927c8195eb871f571af24533b70fcf72ce65f5fb0351d24a48c5d84b6	2026-11-10	tool	current
 vector-databases.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	05b31845e5800e942df0b9a0c96535584ce589f2fb96cda7fc48ff702e834ca8	2026-11-10	tool	current
 web-exposure.md	X	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	d986fd30ab3dd83def744dac305fb33c33ab6dd8d312f321793331a3afe12ed6	2026-11-10	tool	current
-workflow-orchestrators.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	59923af45a49c1f1f70fa58959e3b7a32a3d9b9ad3200ca9e21d724209b42533	2026-11-10	tool	current
+workflow-orchestrators.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	6a0bebaa5d5a584816a8de8143119100fd8d16fb74224101c07b059a4ed04b0f	2026-11-10	tool	current
