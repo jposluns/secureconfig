@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Open WebUI (pinned to a commit) and Docker Engine localhost boundary 28.0.0; 1 further source carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 62 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against Open WebUI (pinned to a commit), Docker Engine localhost boundary 28.0.0, and Open WebUI plugin master switch v0.13.5; 1 further source carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 62 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -116,7 +116,7 @@ ENABLE_CODE_INTERPRETER=false                # default true
 
 Creating or importing Tools and Functions loads submitted Python through `exec`. Top-level code runs during loading, with the Open WebUI process's access to secrets, files, database, and network. Treat permission to submit that code as server access, not as an ordinary chat feature. Function creation is administrative; workspace Tool creation is controlled by `workspace.tools`. See the vendor's [plugin-loader explanation](https://docs.openwebui.com/features/extensibility/plugin/development/under-the-hood/).
 
-`ENABLE_PLUGINS=false` stops uploaded plugins loading and running. It is not a blanket authorization switch for every plugin-management endpoint, and it does **not** disable built-in tools, MCP/OpenAPI connections, or terminals. Review those connections and their access separately. The two code-execution switches are separate controls; their engines default to `pyodide`, and the code-execution reference describes the legacy execution path. Browser Pyodide execution is distinct from server-side Python plugins. See [plugin and code-execution controls](https://docs.openwebui.com/reference/env-configuration/).
+`ENABLE_PLUGINS=false` stops uploaded plugins loading and running. It is not a blanket authorization switch for every plugin-management endpoint, and at this pin it does **not** disable built-in tools, MCP/OpenAPI connections, or terminals. Review those connections and their access separately. From release v0.12.0, `ENABLE_PLUGINS=false` also turns off Tools, Functions and tool servers (OpenAPI, MCP and Open Terminal servers), because it forces the new `ENABLE_TOOLS`, `ENABLE_FUNCTIONS` and `ENABLE_TOOL_SERVERS` switches off. See the [v0.13.5 switch definitions](https://github.com/open-webui/open-webui/blob/v0.13.5/backend/open_webui/env.py#L1183-L1187) and the [v0.12.0 changelog entry](https://github.com/open-webui/open-webui/blob/v0.13.5/CHANGELOG.md#L1266). The two code-execution switches are separate controls; their engines default to `pyodide`, and the code-execution reference describes the legacy execution path. Browser Pyodide execution is distinct from server-side Python plugins. See [plugin and code-execution controls](https://docs.openwebui.com/reference/env-configuration/).
 
 Audit **every group**, including all memberships of each ordinary user. Group permissions are additive: a false default or a false permission in one group cannot cancel a true grant from another group. Remove unintended Tools Access and Import grants as well as setting the defaults above. Apply this audit to model-workspace access and API-key permissions too. See [group permission merging](https://docs.openwebui.com/features/authentication-access/rbac/groups/) and the [permission defaults](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/config.py).
 
@@ -423,7 +423,7 @@ The month in this heading is the month of the whole-guide documentation pass, an
 - [Open WebUI Dockerfile: backend working directory and production environment](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/Dockerfile).
 - [Open WebUI auth routes: first-admin signup, auto-disable, password-auth ordering, trusted-header provisioning, signin limiter, and API-key creation](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/auths.py).
 - [Open WebUI authentication helpers: HS256 signing, Redis revocation, API-key enforcement, path matching, and verified-user roles](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/utils/auth.py).
-- [Open WebUI application initialization: environment-based admin creation, API documentation, and OAuth routes](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/main.py).
+- [Open WebUI application initialization: environment-based admin creation, API documentation, OAuth routes, and tool and terminal server startup not gated by ENABLE_PLUGINS](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/main.py).
 - [Open WebUI Ollama router: model access and administrator-only management operations](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/ollama.py).
 - [Open WebUI chat router: administrative chat access and export checks](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/chats.py).
 - [Open WebUI file router: verified-user upload dependency and size enforcement](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/files.py).
@@ -437,6 +437,8 @@ The month in this heading is the month of the whole-guide documentation pass, an
 - [Open WebUI API keys: global enablement, group permissions, and inherited authority (rolling documentation, checked September 2026)](https://docs.openwebui.com/features/authentication-access/api-keys/).
 - [Open WebUI Direct Connections: browser-to-provider inference (rolling documentation, checked September 2026)](https://docs.openwebui.com/features/chat-conversations/direct-connections/).
 - [Open WebUI OpenAI-compatible connections: administrative provider configuration (rolling documentation, checked September 2026)](https://docs.openwebui.com/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible/).
+- [Open WebUI v0.13.5 environment switches: ENABLE_PLUGINS=false forces ENABLE_TOOLS, ENABLE_FUNCTIONS and ENABLE_TOOL_SERVERS off (checked November 2026)](https://github.com/open-webui/open-webui/blob/v0.13.5/backend/open_webui/env.py#L1183-L1187).
+- [Open WebUI v0.13.5 changelog, v0.12.0 entry: ENABLE_PLUGINS as master switch over Tools, Functions and OpenAPI, MCP and Open Terminal servers (checked November 2026)](https://github.com/open-webui/open-webui/blob/v0.13.5/CHANGELOG.md#L1266).
 - [Open WebUI API endpoints: model discovery, chat requests, ingestion, and development documentation (rolling documentation, checked September 2026)](https://docs.openwebui.com/reference/api-endpoints/).
 
 
@@ -456,6 +458,7 @@ Components (recorded basis):
 - webui: Open WebUI (0a7c15832fb30b1903753e83f81dc7d27e5b0944)
 - webui-docs: Open WebUI documentation (rolling) (unknown)
 - docker: Docker Engine localhost boundary (28.0.0)
+- webui-switches: Open WebUI plugin master switch (v0.13.5)
 
 Claims (full source mapping in the JSON block below):
 
@@ -487,7 +490,7 @@ Claims (full source mapping in the JSON block below):
 - oauth-persistence (REASONED; webui-docs): ENABLE_OAUTH_PERSISTENT_CONFIG defaults false with environment authority/read-only admin UI; enabling persistence permits stored precedence.
 - trusted-headers (REASONED; webui, webui-docs): Leave identity headers unset unless a sole trusted proxy strips client values and supplies authenticated identity; forged headers can impersonate/provision users.
 - plugins (REASONED; webui, webui-docs): ENABLE_PLUGINS defaults true; uploaded Tools/Functions execute server-side Python, including top-level code at load.
-- plugin-scope (REASONED; webui-docs): Disabling plugins blocks loading/execution, not every management endpoint, built-in tool, MCP/OpenAPI connection or terminal.
+- plugin-scope (REASONED; webui-docs, webui, webui-switches): At the pinned commit, disabling plugins blocks loading/execution, not every management endpoint, built-in tool, MCP/OpenAPI connection or terminal; from v0.12.0 it also forces ENABLE_TOOLS, ENABLE_FUNCTIONS and ENABLE_TOOL_SERVERS off.
 - tools-access (REASONED; webui, webui-docs): USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS defaults false; ordinary Tool creation depends on workspace.tools, Function creation is administrative.
 - tools-import (REASONED; webui, webui-docs): USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT defaults false; remove unintended import grants from every group.
 - code-execution (REASONED; webui, webui-docs): ENABLE_CODE_EXECUTION defaults true with pyodide engine; disable unused legacy execution independently of server plugins.
@@ -527,7 +530,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "084863ff8532b20bcfb32f428e44761ca92c5558e4a8967c40feee5a065a81a3",
+  "body_sha256": "2b03656fc51a2a909aa61bb0ce148976d822bbb21d1ce8ab221d9df26b9e64ef",
   "components": {
     "webui": {
       "name": "Open WebUI",
@@ -571,6 +574,14 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
       }
+    },
+    "webui-switches": {
+      "name": "Open WebUI plugin master switch",
+      "basis": "v0.13.5",
+      "sources": {
+        "s02458c02ddaa": "https://github.com/open-webui/open-webui/blob/v0.13.5/backend/open_webui/env.py#L1183-L1187",
+        "s3506273f673a": "https://github.com/open-webui/open-webui/blob/v0.13.5/CHANGELOG.md#L1266"
+      }
     }
   },
   "claims": {
@@ -602,7 +613,7 @@ Claims (full source mapping in the JSON block below):
     "oauth-persistence": {"text": "ENABLE_OAUTH_PERSISTENT_CONFIG defaults false with environment authority/read-only admin UI; enabling persistence permits stored precedence.", "components": ["webui-docs"], "sources": ["webui-docs:sddffd30a3b0f"], "status": "REASONED"},
     "trusted-headers": {"text": "Leave identity headers unset unless a sole trusted proxy strips client values and supplies authenticated identity; forged headers can impersonate/provision users.", "components": ["webui", "webui-docs"], "sources": ["webui:s7d025cba5af9", "webui:s9d6f5fb157de", "webui-docs:sddffd30a3b0f"], "status": "REASONED", "verify": [3]},
     "plugins": {"text": "ENABLE_PLUGINS defaults true; uploaded Tools/Functions execute server-side Python, including top-level code at load.", "components": ["webui", "webui-docs"], "sources": ["webui:s7d025cba5af9", "webui-docs:sf412328c22af"], "status": "REASONED"},
-    "plugin-scope": {"text": "Disabling plugins blocks loading/execution, not every management endpoint, built-in tool, MCP/OpenAPI connection or terminal.", "components": ["webui-docs"], "sources": ["webui-docs:sb5ac55b056ab", "webui-docs:sf412328c22af"], "status": "REASONED", "verify": [3]},
+    "plugin-scope": {"text": "At the pinned commit, disabling plugins blocks loading/execution, not every management endpoint, built-in tool, MCP/OpenAPI connection or terminal; from v0.12.0 it also forces ENABLE_TOOLS, ENABLE_FUNCTIONS and ENABLE_TOOL_SERVERS off.", "components": ["webui-docs", "webui", "webui-switches"], "sources": ["webui-docs:sb5ac55b056ab", "webui-docs:sf412328c22af", "webui:s7d025cba5af9", "webui:s8952330d0246", "webui-switches:s02458c02ddaa", "webui-switches:s3506273f673a"], "status": "REASONED", "verify": [3]},
     "tools-access": {"text": "USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS defaults false; ordinary Tool creation depends on workspace.tools, Function creation is administrative.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sf412328c22af"], "status": "REASONED", "verify": [3]},
     "tools-import": {"text": "USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT defaults false; remove unintended import grants from every group.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:seec6b2b9c299"], "status": "REASONED"},
     "code-execution": {"text": "ENABLE_CODE_EXECUTION defaults true with pyodide engine; disable unused legacy execution independently of server plugins.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sb5ac55b056ab"], "status": "REASONED", "verify": [3]},
