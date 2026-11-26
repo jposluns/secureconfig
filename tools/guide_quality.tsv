@@ -84,7 +84,7 @@ realtime-voice-infra.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	92fa5a1c8ef7eff295
 realtime-webhooks.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	feab3fa06fff6821c8fd0aa2c3a0e71546d33de73e5924f3380afc1df72347c8	2026-11-10	tool	current
 redis.md	S	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	d4e35ac5ce680db4fecafd1a47a98aed09e91943ac69fc7c0ff3a5ee4916356b	2026-11-10	tool	current
 ruby.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	2463e8ae935fb0c1c9f0225697e7053ffe29b47e4f534547ac98e2a9823bfa33	2026-11-10	tool	current
-search-engines.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	418be6a2ca3eb505c3d856bf0b213a1aa562e03026b18d5dda881816b15592a6	2026-11-10	tool	current
+search-engines.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	6589a3d6945645b32c07d21095a81299263764e7942f02cb31ca74fa43af86ae	2026-11-10	tool	current
 secrets.md	X	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	93d96bdc29508d29835f7d8915dec7bd0859502b437d8d38a8656006d44c38b7	2026-11-10	tool	current
 self-hosted-ci-runners.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	deda59ac3b648ae7b8bbf54b35fad7df2fa97113090411461090b3490e288256	2026-11-10	tool	current
 self-hosted-error-trackers.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	edbd055603171ef8b79e7910a038b4cff42d0f23f69870988b33241afe6e30cb	2026-11-10	tool	current
