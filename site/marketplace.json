@@ -10,8 +10,8 @@
       "description": "Vendor-sourced guides for setting the services, tools and platforms AI-assisted projects run to the most appropriate secure settings, including but not limited to network exposure, TLS, logins and MFA, secrets, limits, audit logging and outbound controls, each line traced to a vendor page.",
       "source": {
         "source": "archive",
-        "url": "https://secureconfig.ai/downloads/secureconfig-plugin-1.0.1395.zip",
-        "sha256": "e14435156e995a250f1dd52597297ead221cc16ad9dedf17712c5755c6f3cd79"
+        "url": "https://secureconfig.ai/downloads/secureconfig-plugin-1.0.1411.zip",
+        "sha256": "c359112bb0995b7c2df77117394f8d25706e37aa23cc9bb7c772803ab65b234a"
       }
     }
   ]
