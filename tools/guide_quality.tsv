@@ -91,7 +91,7 @@ self-hosted-error-trackers.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	edbd05560317
 self-hosted-idp.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	543d8a5b4557637b97fe616045836f6d407398a8cd3427420974f7b2ca51b4d0	2026-11-10	tool	current
 self-signed.md	X	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	d307c5ca800ee69648af5c81ad474b5575d07ab4949575fac57b7ba88c654555	2026-11-10	tool	current
 server-admin-panels.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	bac493718a70fb97fcc2700e9b036adff9dd79c8632a4f386b22f18b53730855	2026-11-10	tool	current
-sqlite-http-frontends.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	893ec79c96bcba70cf469276c4c2b7e151ab05a12c9bbd1e510dd6a7c013e747	2026-11-10	tool	current
+sqlite-http-frontends.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	8abf3c9497567d1ac8dfb4f8174ee9cf903d0f8fe216a20c19e54a0004351063	2026-11-10	tool	current
 sqlite.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	b6ccb2a04c73a95da0d7f7cc8892f7ba61b3111f19c0b831320687be136616b5	2026-11-10	tool	current
 streamlit.md	S	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	66d482f42d915e419155d406e32e2278e54f6906649fb249d922d490595cf1ed	2026-11-10	tool	current
 supabase-self-hosted.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	1b0e7a4d049475d9b6fb4aec351af2367b39d70beb5e626220b86799fffa0bdf	2026-11-10	tool	current

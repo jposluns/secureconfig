@@ -30,7 +30,7 @@ Use [sqlite.md](sqlite.md) for the files at rest and [web-exposure.md](web-expos
 
 ## Datasette
 
-At the time of writing, the stable documentation lists 0.65.5, including a fix for a table-permission bypass. Use a supported release containing the security fixes; check the changelog when deploying.
+The stable changelog, rechecked on 2026-11-26, lists 0.65.6 (2026-11-15), which "Fixed a security issue where a database registered using `add_database(db, name=..., route=...)` with a route that differs from its name could be downloaded from `/<route>.db` by actors who were denied access to it." Before it, 0.65.5 fixed a table-permission bypass. This guide's advice: deploy 0.65.6 or later, check whether any database is registered with a route that differs from its name, and check the changelog when deploying.
 
 **Bind privately and inspect the deployment path.** Bare `datasette` invokes `serve`, whose defaults are `127.0.0.1:8001`; `-h/--host` and `-p/--port` override them. The following baseline serves an unchanging snapshot on loopback, disables arbitrary SQL by default, and disables whole-file downloads. The pathname is an example. See the CLI reference and settings reference.
 
@@ -293,7 +293,7 @@ DEMONSTRATED: local guard limits on 2026-10-05 in private /dev/shm scratch with 
 
 The month in this heading is the month of the whole-guide documentation pass, and an item that carries its own later "checked" month was rechecked individually after that pass, so the later month applies to that item only.
 
-Applicability checked on 2026-09-18: Datasette stable documentation lists 0.65.5; the container-generator discussion here is scoped to commit `caf238aac86ebe370959b25384d6e05f6a1e2359`, not a tagged release or the separately pinned Cloud Run implementation. The sqlite-web source was inspected on moving `master`, identifying itself as 0.8.1; the released 0.8.1 package matched it for the flags and routes the loopback runs exercised. Runtime confirmation used Datasette 0.65.5, datasette-auth-passwords 1.1.1, datasette-write 0.4 and sqlite-web 0.8.1 from PyPI.
+Applicability checked on 2026-09-18: Datasette stable documentation then listed 0.65.5; the container-generator discussion here is scoped to commit `caf238aac86ebe370959b25384d6e05f6a1e2359`, not a tagged release or the separately pinned Cloud Run implementation. On 2026-11-26 the Datasette changelog was rechecked, and it now lists 0.65.6 (2026-11-15); the other Sources items keep their recorded check dates, and no run used 0.65.6. The sqlite-web source was inspected on moving `master`, identifying itself as 0.8.1; the released 0.8.1 package matched it for the flags and routes the loopback runs exercised. Runtime confirmation used Datasette 0.65.5, datasette-auth-passwords 1.1.1, datasette-write 0.4 and sqlite-web 0.8.1 from PyPI.
 
 Every URL listed below was fetched during authoring, except the sqlite-web 0.8.1 tag entries, which were checked against the locally extracted tag snapshot in October 2026, and the sudo sudoers manual entry, which was checked against the file at its tag on 2026-10-31. This list also records the source-fetch review.
 
@@ -320,7 +320,7 @@ Every URL listed below was fetched during authoring, except the sqlite-web 0.8.1
 - Datasette immutable mode and hashed URLs (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/performance.html
 - Datasette CSRF protection (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/internals.html#csrf-protection
 - Datasette plugin secret configuration (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/plugins.html#secret-configuration-values
-- Datasette changelog and security fixes (Datasette core hash_urls removed in 0.61; rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/changelog.html
+- Datasette changelog and security fixes (0.65.6 route download fix; 0.65.5 table-permission fix; Datasette core hash_urls removed in 0.61; rolling documentation, checked November 2026): https://docs.datasette.io/en/stable/changelog.html
 - Datasette password authentication plugin (datasette-auth-passwords 1.1.1 used in the loopback demonstrations): https://github.com/simonw/datasette-auth-passwords/blob/1.1.1/README.md
 - Datasette GitHub authentication plugin: https://github.com/simonw/datasette-auth-github
 - Datasette write plugin (datasette-write 0.4 used in the loopback demonstrations): https://github.com/simonw/datasette-write/blob/0.4/README.md
@@ -385,7 +385,7 @@ Components (recorded basis):
 
 Claims (full source mapping in the JSON block below):
 
-- release (REASONED; datasette-docs): The recorded stable Datasette documentation lists 0.65.5 with a table-permission bypass fix; deploy a supported release containing the security fixes.
+- release (REASONED; datasette-docs): The stable Datasette changelog, rechecked 2026-11-26, lists 0.65.6 (2026-11-15), fixing downloads, by actors denied access, of a database that add_database registered with a route differing from its name; 0.65.5 fixed a table-permission bypass. Guide advice: deploy 0.65.6 or later and check for such routes.
 - datasette-bind (DEMONSTRATED; datasette-docs): Bare datasette serve without host or port flags listened on 127.0.0.1:8001 in the recorded unprivileged local ss inventory.
 - immutable (REASONED; sqlite, datasette-docs): Use --immutable only for an unchanged snapshot; SQLite skips locking/change detection, so changing it can yield incorrect results or corruption errors.
 - datasette-docker (REASONED; datasette-docs): Documented Docker launch binds 0.0.0.0:8001 and publishes 8001:8001; container bind and host publication are separate.
@@ -446,7 +446,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "893ec79c96bcba70cf469276c4c2b7e151ab05a12c9bbd1e510dd6a7c013e747",
+  "body_sha256": "8abf3c9497567d1ac8dfb4f8174ee9cf903d0f8fe216a20c19e54a0004351063",
   "components": {
     "ds-container": {
       "name": "Datasette container generator",
@@ -623,7 +623,7 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "release": {"text": "The recorded stable Datasette documentation lists 0.65.5 with a table-permission bypass fix; deploy a supported release containing the security fixes.", "components": ["datasette-docs"], "sources": ["datasette-docs:s3e64933fe2e9"], "status": "REASONED"},
+    "release": {"text": "The stable Datasette changelog, rechecked 2026-11-26, lists 0.65.6 (2026-11-15), fixing downloads, by actors denied access, of a database that add_database registered with a route differing from its name; 0.65.5 fixed a table-permission bypass. Guide advice: deploy 0.65.6 or later and check for such routes.", "components": ["datasette-docs"], "sources": ["datasette-docs:s3e64933fe2e9"], "status": "REASONED"},
     "datasette-bind": {"text": "Bare datasette serve without host or port flags listened on 127.0.0.1:8001 in the recorded unprivileged local ss inventory.", "components": ["datasette-docs"], "sources": ["datasette-docs:sb0aae2446988"], "status": "DEMONSTRATED", "evidence": "bare `datasette serve` with no host or port flag listened on `127.0.0.1:8001`"},
     "immutable": {"text": "Use --immutable only for an unchanged snapshot; SQLite skips locking/change detection, so changing it can yield incorrect results or corruption errors.", "components": ["sqlite", "datasette-docs"], "sources": ["datasette-docs:sca59b58c5c84", "sqlite:s4e4e320abf5b"], "status": "REASONED"},
     "datasette-docker": {"text": "Documented Docker launch binds 0.0.0.0:8001 and publishes 8001:8001; container bind and host publication are separate.", "components": ["datasette-docs"], "sources": ["datasette-docs:s8f2fe7a13b3f"], "status": "REASONED"},
