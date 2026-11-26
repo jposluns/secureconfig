@@ -26,7 +26,7 @@ elasticsearch.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	2c60af4adbf8b9d1bce7063240887664aa5
 exposure-index.md	K	PARTIAL(M1)	n/a	?	n/a	n/a	n/a	?	?	n/a	?	SOLID	fc349a850673721a26cba080af4cf06e4233e0237b66ebf0dc2a2fdd3ace12ca	2026-11-10	tool	current
 firebase-supabase.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	be9b0fbebde497b68f19c476b05c9fb00f73296a9afcbe2a56a427ad3258c80d	2026-11-10	tool	current
 forgejo.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	5da010ea6fda3a22d4548e954eeff192a8aa5fbffe11dfe67d26c129855b056f	2026-11-10	tool	current
-free-certificates.md	X	P	PARTIAL(A2,A4)	PARTIAL(B2,B3) ?(B1)	PARTIAL(C2,C4) ?(C3)	?(D2)	PARTIAL(E1,E2)	PARTIAL(F2) ?(F1)	PARTIAL(G2,G3) ?(G1)	P	?	SOLID	b253df294ffc966f13200b1169bd7eaa70e58b2887715dae817df2d82cf0246d	2026-11-25	claude+agy-reconciled	current
+free-certificates.md	X	P	PARTIAL(A2,A4)	PARTIAL(B2,B3) ?(B1)	PARTIAL(C2,C4) ?(C3)	?(D2)	PARTIAL(E1,E2)	PARTIAL(F2) ?(F1)	PARTIAL(G2,G3) ?(G1)	P	?	SOLID	e4646e9c948f374956a7fcd640b232926c7e670c5cc087b3b18b2ae9266bc92b	2026-11-25	claude+agy-reconciled	current
 frontend-frameworks.md	C	P	PARTIAL(A1,A3,A4)	PARTIAL(B3,B4) ?(B1)	PARTIAL(C1,C4)	PARTIAL(D1) ?(D2)	PARTIAL(E1,E2)	PARTIAL(F2) ?(F1)	PARTIAL(G2) ?(G1)	PARTIAL(H2)	?	SOLID	2345eca53f04ae34f5cb5879fc90b3075e91c8e424a1c678812d14aeaac7c08b	2026-11-25	claude+agy-reconciled	current
 fronting-auth.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	00e8961767c7787bf8311ba1318d61670007ca963403c31e7a009c9aad1b664c	2026-11-10	tool	current
 gitlab.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f940bf02cb67cf71f64e70b7a8817e588782471d9c8dbca75ba6b1f726e5bae0	2026-11-10	tool	current
