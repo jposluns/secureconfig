@@ -48,7 +48,7 @@ kubernetes.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	bf36aa1e93a06600f0936c65e9a8a9e9787b11
 lighttpd.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	e1d75f558f3c35eb8bb4dbf76932635f11cc2479cc86c634b16495213cc21f72	2026-11-10	tool	current
 litellm.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	6cda551661000ac9781b7d5c4a611a26b5d173c0e2d09fc9101ac3d4eb3d69c1	2026-11-10	tool	current
 llm-observability.md	C	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	a963eae348f96d30654b8f4c826c4dea252de0a7f37dd4c8d4ee301d85f79f56	2026-11-10	tool	current
-low-code-builders.md	C	P	GAP(A3) PARTIAL(A1)	?(B1,B3)	PARTIAL(C1,C3,C4)	?(D2)	PARTIAL(E1,E2)	PARTIAL(F2) ?(F1)	PARTIAL(G1,G2,G3)	P	?	MINOR-GAPS	efc89c60bf63acdc63f161e59e21ca963e04a46e71473ba49898326282881011	2026-11-25	claude+agy-reconciled	current
+low-code-builders.md	C	P	GAP(A3) PARTIAL(A1)	?(B1,B3)	PARTIAL(C1,C3,C4)	?(D2)	PARTIAL(E1,E2)	PARTIAL(F2) ?(F1)	PARTIAL(G1,G2,G3)	P	?	MINOR-GAPS	24e71cb811e826118a0e867e851c60c51c54ea461c0e7141835eb6445a77e43d	2026-11-25	claude+agy-reconciled	current
 machine-auth.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	72f4488bdf4f1c9b0deec0c98b3f1f75a9c27b551fa2958ce7eaa0b8a2736b1c	2026-11-10	tool	current
 mcp-clients.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	76aa9e145ccd0264af74434f2441a6ddcb902c8a5b6a6b76fcd7d84f6b12dd2b	2026-11-10	tool	current
 mcp-servers.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	bcc4530157fde6e1c2ac632011a7aee0edc398450755278c52399171a8e9fcd9	2026-11-10	tool	current
