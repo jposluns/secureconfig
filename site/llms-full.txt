@@ -523,7 +523,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Let's Encrypt documentation (no recorded version), Certbot reconfigure minimum 2.3.0, Certbot user guide and source v2.3.0, Certbot Cloudflare DNS plugin v2.3.0, Caddy automatic HTTPS v2.11.4, certmagic ACME implementation v0.25.3, and Traefik ACME documentation v3.5, plus 5 more recorded bases; 3 further sources carry no recorded version. Metadata reviewed 2026-11-12; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against Let's Encrypt documentation (no recorded version), Certbot reconfigure minimum 2.3.0, acme.sh 3.1.7, Certbot user guide and source v2.3.0, Certbot Cloudflare DNS plugin v2.3.0, Caddy automatic HTTPS v2.11.4, certmagic ACME implementation v0.25.3, and Traefik ACME documentation v3.5, plus 5 more recorded bases; 2 further sources carry no recorded version. Metadata reviewed 2026-11-25; documentation checked September 2026. The guide records 36 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](https://github.com/jposluns/secureconfig/blob/main/requests/README.md), or reach the maintainer as [CONTRIBUTING.md](https://github.com/jposluns/secureconfig/blob/main/CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -583,16 +583,18 @@ Certificates land in stable paths that server configuration should reference dir
 /etc/letsencrypt/live/example.com/privkey.pem     # private key
 ```
 
+This guide advises keeping the private key on the server: do not copy it into a repository, image or ticket, and give read access only to the account that runs the server or the deploy hook. Certbot v2.3.0 creates the `live`, `archive` and `renewal` directories with mode `0700` when they do not exist, and writes each new private key under `archive` with mode `0600`, linked from `live` ([Certbot v2.3.0 storage.py](https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1064-L1105)). Its user guide says private keys for new certificates default to `0600` as of Certbot 0.29.0 and that changes to the key's group mode or group owner are kept on renewal; for a server that drops root before reading the key, it gives `chgrp` and `chmod 0640` ([Certbot v2.3.0 user guide](https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L891-L914)).
+
 ## Renewal
 
-Let's Encrypt certificates are valid for 90 days at the time of writing, so renewal must be automated. The Certbot v2.3.0 guide says most installations come with a scheduled `certbot renew` task and says that, on Linux and BSD, you can check cron or systemd timers if unsure. Confirm that your installation (package and snap installs included) has a working scheduled `certbot renew` task, and reload the server after each renewal:
+Let's Encrypt certificates are valid for 90 days at the time of writing, so renewal must be automated. The Certbot v2.3.0 guide says most installations come with a scheduled `certbot renew` task and says that, on Linux and BSD, you can check cron or systemd timers if unsure ([Certbot v2.3.0 user guide](https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L808-L825)). Confirm that your installation (package and snap installs included) has a working scheduled `certbot renew` task, and reload the server after each renewal:
 
 ```bash
 sudo systemctl list-timers | grep -i certbot       # a certbot timer must be listed; for cron, /etc/crontab or /etc/cron.*/* must contain certbot renew
 sudo certbot renew --dry-run --run-deploy-hooks    # test renewal and the reload hook together
 ```
 
-Install the reload hook durably: pass `--deploy-hook "systemctl reload nginx"` on the initial `certonly`/`run` (Certbot saves it to the renewal config only when a certificate is actually obtained or renewed), drop an executable script into `/etc/letsencrypt/renewal-hooks/deploy/` (it runs after every successful renewal), or add it later with `certbot reconfigure` (Certbot 2.3.0 and later). In Certbot v2.3.0, a bare `certbot renew --deploy-hook ...` skips renewal when no certificate is due and does not save that hook to a renewal configuration; use one of the durable methods above. This guide assesses a certificate that issues once and then expires in production as the most common ACME failure, so monitor the served certificate's expiry and alert on renewal failure rather than relying on CA reminder emails; the dry run belongs in your deployment checklist.
+Install the reload hook durably: pass `--deploy-hook "systemctl reload nginx"` on the initial `certonly`/`run` (Certbot saves it to the renewal config only when a certificate is actually obtained or renewed). Alternatively, drop an executable script into `/etc/letsencrypt/renewal-hooks/deploy/` (it runs after every successful renewal), or add it later with `certbot reconfigure` (Certbot 2.3.0 and later) ([Certbot v2.3.0 deploy hooks](https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L659-L684)). In Certbot v2.3.0, a bare `certbot renew --deploy-hook ...` skips renewal when no certificate is due and does not save that hook to a renewal configuration; use one of the durable methods above. This guide assesses a certificate that issues once and then expires in production as the most common ACME failure, so monitor the served certificate's expiry and alert on renewal failure rather than relying on CA reminder emails; the dry run belongs in your deployment checklist.
 
 Lifetimes are getting shorter. Per Let's Encrypt as of September 2026: 6-day short-lived certificates are available now to every subscriber; the default `classic` profile moves to 64-day certificates on 2027-02-10 and to 45-day certificates on 2028-02-16; and industry rules cap publicly trusted certificates at 47 days from 2029-03-15. This guide assesses that any renewal step involving a person will fail at those lifetimes and that the automation above is the only viable path. Let's Encrypt also switched off its OCSP service on 2025-08-06 and publishes revocation only through CRLs, so do not add OCSP stapling directives for Let's Encrypt certificates.
 
@@ -606,14 +608,14 @@ A CAA DNS record restricts which certificate authorities may issue for your doma
 
 ## Alternatives
 
-- **ZeroSSL**: free certificates over ACME. Some clients need External Account Binding (EAB) credentials from the ZeroSSL dashboard; the acme.sh client registers with ZeroSSL by default.
-- **acme.sh**: a dependency-light shell ACME client supporting many DNS providers, useful where certbot is unavailable. Install from the repository release rather than piping a downloaded script straight into a shell. https://github.com/acmesh-official/acme.sh
+- **ZeroSSL**: free certificates over ACME. ZeroSSL's ACME documentation says its ACME service needs External Account Binding (EAB) credentials, created in the ZeroSSL dashboard or through its API, and that they are not stored in your account, are reusable, and all remain functional when you generate more ([ZeroSSL ACME documentation](https://zerossl.com/documentation/acme/)). Its API returns them as `eab_kid` and `eab_hmac_key` ([ZeroSSL EAB credentials API](https://zerossl.com/documentation/acme/generate-eab-credentials/)). This guide treats both values as secrets: keep them out of shell history, repositories and tickets, and store them where only the account that registers can read them. ZeroSSL's ACME page says each click on "Generate" creates a new set of EAB credentials and that "all of them will remain functional"; the three cited pages describe no way to disable a set (this guide's reading), so treat a leaked set as still usable (this guide's reading). acme.sh 3.1.7 lists ZeroSSL as its default CA ([acme.sh 3.1.7 README](https://github.com/acmesh-official/acme.sh/blob/3.1.7/README.md#L149-L153)). When you register with `--eab-kid` and `--eab-hmac-key`, it saves the values as `CA_EAB_KEY_ID` and `CA_EAB_HMAC_KEY` in its CA configuration file, which it creates with mode `600` ([acme.sh 3.1.7](https://github.com/acmesh-official/acme.sh/blob/3.1.7/acme.sh#L4542-L4612)).
+- **acme.sh**: a dependency-light shell ACME client supporting many DNS providers, useful where certbot is unavailable ([acme.sh 3.1.7 README](https://github.com/acmesh-official/acme.sh/blob/3.1.7/README.md#L405-L411)). Install from the repository release rather than piping a downloaded script straight into a shell. This guide gives no acme.sh walk-through, because it has no verified acme.sh command for issuance, renewal or DNS credentials: follow the project's documentation for release 3.1.7, or use Certbot, Caddy or Traefik as this guide covers them.
 - **Caddy and Traefik**: obtain and renew certificates themselves with no external client; see [caddy.md](https://github.com/jposluns/secureconfig/blob/main/caddy.md) and [traefik.md](https://github.com/jposluns/secureconfig/blob/main/traefik.md). This guide assesses it as the lowest-effort correct option for new deployments.
 - **Cloudflare origin certificates**: at the time of writing, Cloudflare's Origin CA page (checked October 2026, cited in Sources) lists them as available on its Free plan, and plan features can change, so confirm there before relying on it; Cloudflare's page refers to long-lived origin CA certificates and says the validity period is chosen at creation. Cloudflare says they only encrypt traffic between Cloudflare and the origin server, not traffic from client browsers to the origin, and that visitors may see untrusted certificate errors if Cloudflare is paused or proxying is disabled; use them only for origins that receive traffic only through Cloudflare-proxied records; see [cloudflare.md](https://github.com/jposluns/secureconfig/blob/main/cloudflare.md).
 
 ## Verify
 
-REASONED: certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation. No deployment hostname or issued certificate was supplied for live checks, no live result is recorded, and no run of this block is recorded. The block takes your public host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and it exits once with one status for all of its checks. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](https://github.com/jposluns/secureconfig/blob/main/authentication.md).
+REASONED: certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation. No deployment hostname or issued certificate was supplied for live checks, no live result is recorded, and no run of this block is recorded. A demonstration was not run because it needs a public host name with a publicly issued certificate; a local listener with a self-made certificate would test a private CA, not the public trust this block checks. To see the exposed state, point the block at a host serving a Let's Encrypt staging certificate: the staging page says its roots are not in browser or client trust stores ([Let's Encrypt staging environment](https://letsencrypt.org/docs/staging-environment/)). Run the whole block on the server host that holds `/etc/letsencrypt`: `certbot certificates` lists the certificates Certbot knows about on the host it runs on ([Certbot v2.3.0 user guide](https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L356-L361)), so a run on a workstation does not show the server's certificates. Fixed: `certbot certificates` lists the certificate with days remaining, `curl` and `s_client` exit 0, and `x509` prints a public CA as the issuer and a `notAfter` date in the future. Exposed: `curl` exits 60, which libcurl names CURLE_PEER_FAILED_VERIFICATION ([curl curl-8_12_1 error codes](https://github.com/curl/curl/blob/curl-8_12_1/docs/libcurl/libcurl-errors.md#L319-L323)), or `s_client` fails verification. OpenSSL names such verification errors X509_V_ERR_CERT_HAS_EXPIRED, X509_V_ERR_HOSTNAME_MISMATCH and X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT, among others ([OpenSSL 3.0 verify errors](https://docs.openssl.org/3.0/man3/X509_STORE_CTX_get_error/)). This block does not classify these outcomes: it exits 3 (inconclusive) for each such failure, so read its output to tell the exposed state from the fixed one. The block takes your public host name on a guarded `set --` line that refuses example.com, example.net, example.org and their subdomains, and it exits once with one status for all of its checks. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](https://github.com/jposluns/secureconfig/blob/main/authentication.md).
 
 ```bash
 (                                       # the whole block in one subshell, so one exit status covers every part of it
@@ -778,8 +780,15 @@ The month in this heading is the month of the whole-guide documentation pass, an
 - Certbot reconfigure (2.3.0 and later; v2.3.0 user guide): https://raw.githubusercontent.com/certbot/certbot/v2.3.0/certbot/docs/using.rst
 - Certbot manual DNS-01 and renewal hooks (rolling documentation, checked September 2026): https://eff-certbot.readthedocs.io/en/stable/using.html#manual
 - Certbot DNS plugins (rolling documentation, checked September 2026): https://eff-certbot.readthedocs.io/en/stable/using.html#dns-plugins
-- ZeroSSL (rolling documentation, checked September 2026): https://zerossl.com/
-- acme.sh (rolling documentation, checked September 2026): https://github.com/acmesh-official/acme.sh
+- ZeroSSL ACME documentation, EAB credentials required, not stored in the account and reusable (rolling documentation, checked November 2026): https://zerossl.com/documentation/acme/
+- ZeroSSL EAB credentials API, `eab_kid` and `eab_hmac_key` fields (rolling documentation, checked November 2026): https://zerossl.com/documentation/acme/generate-eab-credentials/
+- acme.sh 3.1.7 README, ZeroSSL as the default CA (checked November 2026): https://github.com/acmesh-official/acme.sh/blob/3.1.7/README.md#L149-L153
+- acme.sh 3.1.7 README, DNS provider API support (checked November 2026): https://github.com/acmesh-official/acme.sh/blob/3.1.7/README.md#L405-L411
+- acme.sh 3.1.7 account registration saves EAB credentials to the CA configuration (checked November 2026): https://github.com/acmesh-official/acme.sh/blob/3.1.7/acme.sh#L4542-L4612
+- acme.sh 3.1.7 `_savecaconf` writes to the CA configuration file (checked November 2026): https://github.com/acmesh-official/acme.sh/blob/3.1.7/acme.sh#L3139-L3141
+- acme.sh 3.1.7 `_save_conf` writes through `_setopt` (checked November 2026): https://github.com/acmesh-official/acme.sh/blob/3.1.7/acme.sh#L2963-L2985
+- acme.sh 3.1.7 `_setopt` creates a missing configuration file with mode 600 (checked November 2026): https://github.com/acmesh-official/acme.sh/blob/3.1.7/acme.sh#L2900-L2914
+- Let's Encrypt staging environment, roots not in trust stores (rolling documentation, checked November 2026): https://letsencrypt.org/docs/staging-environment/
 - Let's Encrypt certificate lifetimes (rolling documentation, checked September 2026): https://letsencrypt.org/docs/cert-lifetimes/
 - Let's Encrypt lifetime reduction schedule (announcement dated 2025-12-02, checked September 2026): https://letsencrypt.org/2025/12/02/from-90-to-45
 - Let's Encrypt OCSP end of life (announcement dated 2025-08-06, checked September 2026): https://letsencrypt.org/2025/08/06/ocsp-service-has-reached-end-of-life
@@ -813,8 +822,11 @@ The month in this heading is the month of the whole-guide documentation pass, an
 - Traefik v3.5 ACME renewal and challenges (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/tls/certificate-resolvers/acme/
 - OpenSSL 3.0 `s_client` connection and certificate verification (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
 - OpenSSL 3.0 `x509` issuer and validity dates (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-x509/
+- OpenSSL 3.0 certificate verification error names (rolling documentation, checked November 2026): https://docs.openssl.org/3.0/man3/X509_STORE_CTX_get_error/
 - curl curl-8_12_1 HEAD requests (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/head.md#L21-L22
 - curl curl-8_12_1 normal certificate verification and `--insecure` (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/insecure.md#L21-L28
+- curl curl-8_12_1 exit code 60 (checked November 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/_EXITCODES.md#L125-L126
+- curl curl-8_12_1 CURLE_PEER_FAILED_VERIFICATION (60) (checked November 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/libcurl/libcurl-errors.md#L319-L323
 - Certbot v2.3.0 scheduled renewal guidance (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L808-L825
 - Certbot v2.3.0 renew selection (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L632-L640
 - Certbot v2.3.0 renewal option persistence (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L704-L710
@@ -827,6 +839,11 @@ The month in this heading is the month of the whole-guide documentation pass, an
 - Certbot v2.3.0 relevant saved values (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L295-L312
 - Certbot v2.3.0 initial renewal configuration (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1120-L1128
 - Certbot v2.3.0 renewed configuration (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1243-L1249
+- Certbot v2.3.0 private key mode constant (checked November 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L48-L48
+- Certbot v2.3.0 directory modes and first private key (checked November 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1064-L1105
+- Certbot v2.3.0 renewed private key mode (checked November 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1222-L1230
+- Certbot v2.3.0 key and directory permissions (checked November 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L891-L914
+- Certbot v2.3.0 `certificates` subcommand (checked November 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L356-L361
 - Certbot v2.3.0 Cloudflare DNS credentials (checked October 2026): <https://github.com/certbot/certbot/blob/v2.3.0/certbot-dns-cloudflare/certbot_dns_cloudflare/__init__.py#L24-L39>
 - Certbot v2.3.0 Cloudflare DNS credential permissions (checked October 2026): <https://github.com/certbot/certbot/blob/v2.3.0/certbot-dns-cloudflare/certbot_dns_cloudflare/__init__.py#L61-L78>
 - Cloudflare Origin CA (rolling documentation, checked October 2026): https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/
@@ -849,7 +866,7 @@ Components (recorded basis):
 - zerossl: ZeroSSL (unknown)
 - certbot: Certbot documentation (unknown)
 - reconfigure: Certbot reconfigure minimum (2.3.0)
-- acme: acme.sh (unknown)
+- acme: acme.sh (3.1.7)
 - certbot-v230: Certbot user guide and source (v2.3.0)
 - certbot-dns-cloudflare-v230: Certbot Cloudflare DNS plugin (v2.3.0)
 - caddy: Caddy automatic HTTPS (v2.11.4)
@@ -883,9 +900,10 @@ Claims (full source mapping in the JSON block below):
 - revocation (REASONED; le): Let's Encrypt ended OCSP on 2025-08-06 and publishes revocation through CRLs only; do not add OCSP stapling directives for its certificates.
 - staging (REASONED; le, certbot): Let's Encrypt limits per-domain issuance; test with certbot --staging or --test-cert before real issuance.
 - caa (REASONED; le, rfc8659): CAA restricts issuing CAs, using issue letsencrypt.org for Let's Encrypt; certificate-transparency monitoring detects mis-issuance afterwards and complements CAA. A CA uses the closest CAA set, following aliases and climbing from the requested name toward the root, so a registered-domain set covers subdomains without their own; issuewild, when present, controls wildcard issuance.
-- zerossl-eab (REASONED; zerossl): ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials.
-- acme-default (REASONED; acme): acme.sh registers with ZeroSSL by default.
-- acme-install (REASONED; acme): acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell.
+- zerossl-eab (REASONED; zerossl): ZeroSSL offers free ACME certificates; its ACME service needs EAB credentials, eab_kid and eab_hmac_key, from the dashboard or its API, which ZeroSSL says are not stored in the account, are reusable and all stay functional; this guide treats them as secrets kept out of shell history and repositories.
+- acme-default (REASONED; acme): acme.sh 3.1.7 lists ZeroSSL as its default CA.
+- acme-install (REASONED; acme): acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell, and gives no acme.sh walk-through because it has no verified acme.sh command.
+- acme-eab-storage (REASONED; acme): acme.sh 3.1.7 saves EAB credentials given at registration as CA_EAB_KEY_ID and CA_EAB_HMAC_KEY in its CA configuration file, which it creates with mode 600 when the file does not exist.
 - server-automation (REASONED; le, caddy, traefik): This guide advises Caddy or Traefik for built-in issuance and renewal without an external client; it assesses them as the lowest-effort correct option for new deployments.
 - origin-certificates (REASONED; le, cloudflare-origin-ca): At the guide's October 2026 check, Cloudflare listed Origin CA certificates on its Free plan, which can change; it says they only encrypt traffic between Cloudflare and the origin, and that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled. This guide restricts their use to origins that receive traffic only through Cloudflare-proxied records.
 - verify-inventory (REASONED; certbot): certbot certificates lists issued certificates and their expiry dates.
@@ -895,13 +913,16 @@ Claims (full source mapping in the JSON block below):
 - authentication (REASONED; le): A certificate alone is insufficient protection; continue with server controls and authentication.
 - dns-automation (REASONED; certbot, certbot-v230): For automated DNS-01 issuance and renewal, this guide advises using a provider DNS plugin and least-privilege API credentials; Certbot also documents manual TXT entry and authentication hooks that automate the challenge.
 - dns-manual (REASONED; certbot, certbot-v230): certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; the Certbot v2.3.0 guide says certificates created with --manual do not support automatic renewal without a --manual-auth-hook that automates the challenge.
+- private-key-at-rest (REASONED; certbot-v230): This guide advises keeping the private key on the server, readable only by the account that runs the server or deploy hook; Certbot v2.3.0 creates the live, archive and renewal directories with mode 0700, writes each new private key with mode 0600, and keeps a changed key group mode or group owner on renewal.
+- verify-outcomes (REASONED; certbot-v230, curl-source, openssl-cli): Run Verify block 1 on the Certbot host. Fixed: the certificate is listed, curl and s_client exit 0, and the issuer is a public CA with notAfter in the future. Exposed: curl exit 60 (CURLE_PEER_FAILED_VERIFICATION) or an OpenSSL verify error such as X509_V_ERR_CERT_HAS_EXPIRED; the block exits 3, not 1, for these.
+- verify-demonstration (REASONED; le): Verify block 1 was not demonstrated: it needs a public host name with a publicly issued certificate; a Let's Encrypt staging certificate, whose roots are not in browser or client trust stores, gives a reader the exposed state.
 
 ````json
 {
   "schema": 1,
-  "checked": "2026-11-12",
+  "checked": "2026-11-25",
   "documentation_checked": "2026-09",
-  "body_sha256": "90e3fb3884e8b2f149f4c07daabcc878e0e7bce557fb19da53790904db2b3f00",
+  "body_sha256": "b253df294ffc966f13200b1169bd7eaa70e58b2887715dae817df2d82cf0246d",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -911,14 +932,16 @@ Claims (full source mapping in the JSON block below):
         "s01388c85c5d6": "https://letsencrypt.org/docs/cert-lifetimes/",
         "s4406ef210fff": "https://letsencrypt.org/2025/12/02/from-90-to-45",
         "s21efa5995c48": "https://letsencrypt.org/2025/08/06/ocsp-service-has-reached-end-of-life",
-        "saf908bcd2143": "https://letsencrypt.org/docs/caa/"
+        "saf908bcd2143": "https://letsencrypt.org/docs/caa/",
+        "s82d02dd253fe": "https://letsencrypt.org/docs/staging-environment/"
       }
     },
     "zerossl": {
       "name": "ZeroSSL",
       "basis": "unknown",
       "sources": {
-        "sddca28a3381b": "https://zerossl.com/"
+        "s0504194a1b2c": "https://zerossl.com/documentation/acme/",
+        "s7a78f859618d": "https://zerossl.com/documentation/acme/generate-eab-credentials/"
       }
     },
     "certbot": {
@@ -939,9 +962,14 @@ Claims (full source mapping in the JSON block below):
     },
     "acme": {
       "name": "acme.sh",
-      "basis": "unknown",
+      "basis": "3.1.7",
       "sources": {
-        "sa635c50fc1f9": "https://github.com/acmesh-official/acme.sh"
+        "s30c55ec3e30b": "https://github.com/acmesh-official/acme.sh/blob/3.1.7/README.md#L149-L153",
+        "s1a766f6ce9c9": "https://github.com/acmesh-official/acme.sh/blob/3.1.7/README.md#L405-L411",
+        "sef7cd897299d": "https://github.com/acmesh-official/acme.sh/blob/3.1.7/acme.sh#L4542-L4612",
+        "s9e548be3349d": "https://github.com/acmesh-official/acme.sh/blob/3.1.7/acme.sh#L3139-L3141",
+        "s792201671284": "https://github.com/acmesh-official/acme.sh/blob/3.1.7/acme.sh#L2963-L2985",
+        "s40949c7c89ce": "https://github.com/acmesh-official/acme.sh/blob/3.1.7/acme.sh#L2900-L2914"
       }
     },
     "certbot-v230": {
@@ -959,7 +987,12 @@ Claims (full source mapping in the JSON block below):
         "s2e4bd79a7795": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/renewal.py#L509-L534",
         "s1910987bfd8c": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L295-L312",
         "s9c6118b72e0a": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1120-L1128",
-        "s3e22e32a2862": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1243-L1249"
+        "s3e22e32a2862": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1243-L1249",
+        "se50e0211aba4": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L48-L48",
+        "s95e395883c80": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1064-L1105",
+        "sf782a33eadba": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1222-L1230",
+        "sad2cb7416c28": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L891-L914",
+        "s2429d556b9d4": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L356-L361"
       }
     },
     "certbot-dns-cloudflare-v230": {
@@ -1012,7 +1045,8 @@ Claims (full source mapping in the JSON block below):
       "basis": "3.0",
       "sources": {
         "s00aaf106164f": "https://docs.openssl.org/3.0/man1/openssl-s_client/",
-        "s0856f4a58574": "https://docs.openssl.org/3.0/man1/openssl-x509/"
+        "s0856f4a58574": "https://docs.openssl.org/3.0/man1/openssl-x509/",
+        "s0eaac3f2fb2c": "https://docs.openssl.org/3.0/man3/X509_STORE_CTX_get_error/"
       }
     },
     "curl-source": {
@@ -1020,7 +1054,9 @@ Claims (full source mapping in the JSON block below):
       "basis": "curl-8_12_1",
       "sources": {
         "s76f69702c9d5": "https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/head.md#L21-L22",
-        "s60820cd231e1": "https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/insecure.md#L21-L28"
+        "s60820cd231e1": "https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/insecure.md#L21-L28",
+        "sa86ef00fb94b": "https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/_EXITCODES.md#L125-L126",
+        "s0ff92938550d": "https://github.com/curl/curl/blob/curl-8_12_1/docs/libcurl/libcurl-errors.md#L319-L323"
       }
     },
     "bind-dig": {
@@ -1052,7 +1088,7 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "public-trust": {"text": "ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; this guide advises preferring them for public DNS names, including private hosts using DNS-01.", "components": ["le", "zerossl"], "sources": ["le:s9ff2d787c618", "zerossl:sddca28a3381b"], "status": "REASONED"},
+    "public-trust": {"text": "ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; this guide advises preferring them for public DNS names, including private hosts using DNS-01.", "components": ["le", "zerossl"], "sources": ["le:s9ff2d787c618", "zerossl:s0504194a1b2c"], "status": "REASONED"},
     "http-challenge": {"text": "HTTP-01 needs a public A/AAAA or CNAME pointing to the server and inbound internet access to port 80.", "components": ["le"], "sources": ["le:s9ff2d787c618"], "status": "REASONED"},
     "alpn-challenge": {"text": "TLS-ALPN-01 needs a public DNS record and inbound port 443; Caddy's ACME issuer enables the TLS-ALPN-01 solver when DNS-01 is not configured and TLS-ALPN-01 is not disabled, and can use an alternate local port if port 443 forwards to it; Traefik also uses TLS-ALPN-01.", "components": ["le", "caddy", "certmagic", "traefik"], "sources": ["le:s9ff2d787c618", "caddy:s409f9221aec2", "caddy:s80dbf0751153", "caddy:s5216789c9341", "certmagic:s61e3cba719df", "certmagic:s8782e006523b", "certmagic:s465c4ddcc92f", "certmagic:sc1e2ddefe5ed", "certmagic:sd423f53faa1a", "certmagic:sf2fbc79f6542", "certmagic:s1c3236df58b9", "traefik:s418a6b1ad09b"], "status": "REASONED"},
     "dns-challenge": {"text": "DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards. Automated issuance and renewal need an automated way to update TXT records, and this guide advises a provider DNS plugin and scoped API credentials, while Certbot also supports manual DNS-01 and an authentication hook for automatic renewal.", "components": ["le", "certbot", "certbot-v230"], "sources": ["le:s9ff2d787c618", "certbot:s7b60a00cadf3", "certbot:s875be163b4c1", "certbot-v230:s55ec19f37395", "certbot-v230:s5bf4ff9fbe76"], "status": "REASONED"},
@@ -1072,9 +1108,10 @@ Claims (full source mapping in the JSON block below):
     "revocation": {"text": "Let's Encrypt ended OCSP on 2025-08-06 and publishes revocation through CRLs only; do not add OCSP stapling directives for its certificates.", "components": ["le"], "sources": ["le:s21efa5995c48"], "status": "REASONED"},
     "staging": {"text": "Let's Encrypt limits per-domain issuance; test with certbot --staging or --test-cert before real issuance.", "components": ["le", "certbot"], "sources": ["le:s9ff2d787c618", "certbot:s44faaf4eb7d7"], "status": "REASONED"},
     "caa": {"text": "CAA restricts issuing CAs, using issue letsencrypt.org for Let's Encrypt; certificate-transparency monitoring detects mis-issuance afterwards and complements CAA. A CA uses the closest CAA set, following aliases and climbing from the requested name toward the root, so a registered-domain set covers subdomains without their own; issuewild, when present, controls wildcard issuance.", "components": ["le", "rfc8659"], "sources": ["le:saf908bcd2143", "le:s9ff2d787c618", "rfc8659:s8aedfb08aff2"], "status": "REASONED"},
-    "zerossl-eab": {"text": "ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials.", "components": ["zerossl"], "sources": ["zerossl:sddca28a3381b"], "status": "REASONED"},
-    "acme-default": {"text": "acme.sh registers with ZeroSSL by default.", "components": ["acme"], "sources": ["acme:sa635c50fc1f9"], "status": "REASONED"},
-    "acme-install": {"text": "acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell.", "components": ["acme"], "sources": ["acme:sa635c50fc1f9"], "status": "REASONED"},
+    "zerossl-eab": {"text": "ZeroSSL offers free ACME certificates; its ACME service needs EAB credentials, eab_kid and eab_hmac_key, from the dashboard or its API, which ZeroSSL says are not stored in the account, are reusable and all stay functional; this guide treats them as secrets kept out of shell history and repositories.", "components": ["zerossl"], "sources": ["zerossl:s0504194a1b2c", "zerossl:s7a78f859618d"], "status": "REASONED"},
+    "acme-default": {"text": "acme.sh 3.1.7 lists ZeroSSL as its default CA.", "components": ["acme"], "sources": ["acme:s30c55ec3e30b"], "status": "REASONED"},
+    "acme-install": {"text": "acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell, and gives no acme.sh walk-through because it has no verified acme.sh command.", "components": ["acme"], "sources": ["acme:s1a766f6ce9c9"], "status": "REASONED"},
+    "acme-eab-storage": {"text": "acme.sh 3.1.7 saves EAB credentials given at registration as CA_EAB_KEY_ID and CA_EAB_HMAC_KEY in its CA configuration file, which it creates with mode 600 when the file does not exist.", "components": ["acme"], "sources": ["acme:sef7cd897299d", "acme:s9e548be3349d", "acme:s792201671284", "acme:s40949c7c89ce"], "status": "REASONED"},
     "server-automation": {"text": "This guide advises Caddy or Traefik for built-in issuance and renewal without an external client; it assesses them as the lowest-effort correct option for new deployments.", "components": ["le", "caddy", "traefik"], "sources": ["le:s9ff2d787c618", "caddy:s9683cb8d689f", "traefik:s418a6b1ad09b"], "status": "REASONED"},
     "origin-certificates": {"text": "At the guide's October 2026 check, Cloudflare listed Origin CA certificates on its Free plan, which can change; it says they only encrypt traffic between Cloudflare and the origin, and that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled. This guide restricts their use to origins that receive traffic only through Cloudflare-proxied records.", "components": ["le", "cloudflare-origin-ca"], "sources": ["le:s9ff2d787c618", "cloudflare-origin-ca:s1e15de5c9f36"], "status": "REASONED"},
     "verify-inventory": {"text": "certbot certificates lists issued certificates and their expiry dates.", "components": ["certbot"], "sources": ["certbot:s44faaf4eb7d7"], "status": "REASONED", "verify": [1]},
@@ -1083,7 +1120,10 @@ Claims (full source mapping in the JSON block below):
     "verify-caa": {"text": "dig -r +noall +comments +answer CAA for the host, then each parent to the TLD, until a reply has CAA lines. Exit 1 (exposed): no set, or only iodef or issuewild. Exit 0: a well-formed letsencrypt.org issue (fixed), or other issues only (not classified). Exit 3: dig exit not 0, no single NOERROR header, no ra flag, an unread form, a critical unknown tag, or an unknown tag and no issue or issuewild.", "components": ["le", "bind-dig", "rfc8659"], "sources": ["le:saf908bcd2143", "bind-dig:s4a49b2a8a61e", "bind-dig:s2d161ece08ff", "bind-dig:sda67db889c0e", "bind-dig:s9cd3fcf628fb", "bind-dig:s5d98e69756c9", "bind-dig:sac989d3132f5", "bind-dig:sf70f634493d1", "bind-dig:sfc53128fa456", "bind-dig:s57229d0dad3c", "bind-dig:s05438cee29a6", "rfc8659:s8aedfb08aff2", "rfc8659:s25ad17065812", "rfc8659:se86efc2c3dd3", "rfc8659:s547d1c56334d", "rfc8659:s27775a13cb28"], "status": "REASONED", "verify": [2]},
     "authentication": {"text": "A certificate alone is insufficient protection; continue with server controls and authentication.", "components": ["le"], "sources": ["le:s9ff2d787c618"], "status": "REASONED"},
     "dns-automation": {"text": "For automated DNS-01 issuance and renewal, this guide advises using a provider DNS plugin and least-privilege API credentials; Certbot also documents manual TXT entry and authentication hooks that automate the challenge.", "components": ["certbot", "certbot-v230"], "sources": ["certbot:s875be163b4c1", "certbot:s7b60a00cadf3", "certbot-v230:s55ec19f37395", "certbot-v230:s5bf4ff9fbe76"], "status": "REASONED"},
-    "dns-manual": {"text": "certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; the Certbot v2.3.0 guide says certificates created with --manual do not support automatic renewal without a --manual-auth-hook that automates the challenge.", "components": ["certbot", "certbot-v230"], "sources": ["certbot:s7b60a00cadf3", "certbot-v230:s5bf4ff9fbe76"], "status": "REASONED"}
+    "dns-manual": {"text": "certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; the Certbot v2.3.0 guide says certificates created with --manual do not support automatic renewal without a --manual-auth-hook that automates the challenge.", "components": ["certbot", "certbot-v230"], "sources": ["certbot:s7b60a00cadf3", "certbot-v230:s5bf4ff9fbe76"], "status": "REASONED"},
+    "private-key-at-rest": {"text": "This guide advises keeping the private key on the server, readable only by the account that runs the server or deploy hook; Certbot v2.3.0 creates the live, archive and renewal directories with mode 0700, writes each new private key with mode 0600, and keeps a changed key group mode or group owner on renewal.", "components": ["certbot-v230"], "sources": ["certbot-v230:se50e0211aba4", "certbot-v230:s95e395883c80", "certbot-v230:sf782a33eadba", "certbot-v230:sad2cb7416c28"], "status": "REASONED"},
+    "verify-outcomes": {"text": "Run Verify block 1 on the Certbot host. Fixed: the certificate is listed, curl and s_client exit 0, and the issuer is a public CA with notAfter in the future. Exposed: curl exit 60 (CURLE_PEER_FAILED_VERIFICATION) or an OpenSSL verify error such as X509_V_ERR_CERT_HAS_EXPIRED; the block exits 3, not 1, for these.", "components": ["certbot-v230", "curl-source", "openssl-cli"], "sources": ["certbot-v230:s2429d556b9d4", "curl-source:sa86ef00fb94b", "curl-source:s0ff92938550d", "openssl-cli:s0eaac3f2fb2c", "openssl-cli:s00aaf106164f", "openssl-cli:s0856f4a58574"], "status": "REASONED", "verify": [1]},
+    "verify-demonstration": {"text": "Verify block 1 was not demonstrated: it needs a public host name with a publicly issued certificate; a Let's Encrypt staging certificate, whose roots are not in browser or client trust stores, gives a reader the exposed state.", "components": ["le"], "sources": ["le:s82d02dd253fe"], "status": "REASONED", "verify": [1]}
   }
 }
 ````
