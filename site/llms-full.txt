@@ -77301,8 +77301,9 @@ The month in this heading is the month of the whole-guide documentation pass, an
 - browserless 2.56.7 HTTP and WebSocket authentication rejection: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L103-L117
 - browserless 2.56.7 HTTP route authentication dispatch: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L264-L271
 - browserless 2.56.7 WebSocket route authentication dispatch: https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L445-L454
+- browserless 2.56.7 open-source GET /pressure route and its 200 load JSON response (text/plain Accept returns 200 or 503 text instead): https://raw.githubusercontent.com/browserless/browserless/v2.56.7/src/routes/management/http/pressure.get.ts
 - browserless open-source Docker default and management endpoints (rolling documentation, checked November 2026): https://docs.browserless.io/enterprise/open-source
-- browserless pressure API request and response (rolling documentation, checked November 2026): https://docs.browserless.io/enterprise/utility-functions/pressure
+- browserless /pressure API page, written for Enterprise plans (Private Deployment and Enterprise Docker) and cited for the request and response example only (rolling documentation, checked November 2026): https://docs.browserless.io/enterprise/utility-functions/pressure
 - Playwright BrowserType.launchServer and connect: https://playwright.dev/docs/api/class-browsertype
 - Playwright Docker (run-server remote connection): https://playwright.dev/docs/docker
 - Browserless ALLOW_FILE_PROTOCOL configuration and false default (pinned tag v2.51.0; version basis 2.51.0): https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/config.ts
@@ -77377,7 +77378,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "5715cbbb5a8354c2b5e0ddb85bfd8f583f3766e98365d2a7f46da6a06ebc4507",
+  "body_sha256": "5457e03492755fd51bc1eaa45a198fdfb9d345eb6bc1159ae87ca38d6427b479",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -77403,7 +77404,8 @@ Claims (full source mapping in the JSON block below):
         "s87c144d59098": "https://github.com/browserless/browserless/blob/v2.56.7/src/config.ts#L250",
         "sdf3b808e8920": "https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L103-L117",
         "se8b696d56eda": "https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L264-L271",
-        "sc7973e3e21df": "https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L445-L454"
+        "sc7973e3e21df": "https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L445-L454",
+        "s6dc19b41bd0b": "https://raw.githubusercontent.com/browserless/browserless/v2.56.7/src/routes/management/http/pressure.get.ts"
       }
     },
     "browserless-file-fix": {
@@ -77523,7 +77525,7 @@ Claims (full source mapping in the JSON block below):
     "verify-listeners": {"text": "Inventory every listener, including distributed Grid and configured Playwright ports, and require intended loopback/private addresses.", "components": ["chromium", "selenium", "selenium-docker", "browserless", "playwright"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1", "selenium:sb304923778ab", "selenium:s0a0129b8dd37", "selenium-docker:s992336986b07", "browserless:sc0a7a8f6c093", "playwright:sc13c2e85f08c"], "status": "REASONED", "verify": [1]},
     "verify-cdp": {"text": "External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive.", "components": ["chromium", "curl-docs"], "sources": ["chromium:s804c1266fb81", "chromium:s66b210123ff8", "curl-docs:s5e1383feef7d"], "status": "REASONED", "verify": [2]},
     "verify-grid": {"text": "Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately.", "components": ["selenium", "curl-docs"], "sources": ["selenium:sb304923778ab", "selenium:s0a0129b8dd37", "curl-docs:s5e1383feef7d"], "status": "REASONED", "verify": [2]},
-    "verify-browserless": {"text": "For open-source 2.56.7, expect /pressure load JSON without a configured TOKEN; with a nonempty TOKEN, expect 401 for missing/wrong tokens and JSON for a correct-token control.", "components": ["browserless-token-default", "browserless-docs", "curl-docs"], "sources": ["browserless-token-default:s87c144d59098", "browserless-token-default:sdf3b808e8920", "browserless-token-default:se8b696d56eda", "browserless-token-default:sc7973e3e21df", "browserless-docs:sa189d41ee219", "browserless-docs:sf1ec52c41f54", "curl-docs:s5e1383feef7d", "curl-docs:s82a34ee18632"], "status": "REASONED", "verify": [2]},
+    "verify-browserless": {"text": "For open-source 2.56.7, expect /pressure load JSON without a configured TOKEN; with a nonempty TOKEN, expect 401 for missing/wrong tokens and JSON for a correct-token control.", "components": ["browserless-token-default", "browserless-docs", "curl-docs"], "sources": ["browserless-token-default:s87c144d59098", "browserless-token-default:sdf3b808e8920", "browserless-token-default:se8b696d56eda", "browserless-token-default:sc7973e3e21df", "browserless-token-default:s6dc19b41bd0b", "browserless-docs:sa189d41ee219", "browserless-docs:sf1ec52c41f54", "curl-docs:s5e1383feef7d", "curl-docs:s82a34ee18632"], "status": "REASONED", "verify": [2]},
     "verify-playwright": {"text": "Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port.", "components": ["playwright", "playwright-source"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286", "playwright-source:scb030dc29caf", "playwright-source:sbbcd84289455", "playwright-source:s5a6acbd08927"], "status": "REASONED", "verify": [2]},
     "browserless-file-cve": {"text": "CVE-2026-92811 describes authenticated Playwright file reads despite ALLOW_FILE_PROTOCOL=false; its affected range 1.44.0 through 2.56.7 conflicts with the vendor 2.51.0 fix.", "components": ["browserless-file-fix", "cve-record-source"], "sources": ["cve-record-source:sba82c9b5f230", "browserless-file-fix:s94f1d485c2b7", "browserless-file-fix:s90a20f6566c9"], "status": "REASONED"},
     "verify-browserless-file": {"text": "With a valid token on every enabled Playwright WebSocket route, confirm HTTP navigation first, then attempt a readable container canary: exposed returns contents; fixed refuses with a blocked-URL policy reason.", "components": ["browserless-file-fix", "cve-record-source"], "sources": ["cve-record-source:sba82c9b5f230", "browserless-file-fix:sf2642da1de49", "browserless-file-fix:s7ee912fa0a9a", "browserless-file-fix:sa985cbba01ad"], "status": "REASONED"}

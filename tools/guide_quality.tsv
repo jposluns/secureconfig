@@ -36,7 +36,7 @@ gpu-clouds.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	dc56f7e2920fb41074b67339002a5d6ce91050
 gradio.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	bec410f284144a3442417675c3044b0b78c257c0540c3dce048c062de015dd39	2026-11-10	tool	current
 haproxy.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f2a3166a2210025bfc798afa2771130aab7be6dd4763267ee0e284daa0c6c0d7	2026-11-10	tool	current
 headers.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	2b3c5c04eb2f9bccd35253e993ec4d67d19462b61c4760561157cdafbc1ee266	2026-11-10	tool	current
-headless-browser-services.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	5715cbbb5a8354c2b5e0ddb85bfd8f583f3766e98365d2a7f46da6a06ebc4507	2026-11-10	tool	current
+headless-browser-services.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	5457e03492755fd51bc1eaa45a198fdfb9d345eb6bc1159ae87ca38d6427b479	2026-11-10	tool	current
 headless-cms-instant-api.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	9ce3ff0e8005057c062c0377dcddec222eb3b33d39b7da5cfbc4352b29df1ae3	2026-11-10	tool	current
 host.md	X	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	0b2e7aa46f2a12d5ee917c891240b6ef461dcdc0d1a07ed90115ced035440d15	2026-11-10	tool	current
 identity-providers.md	C	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	ea82a301fe879fd4b0e46aaebfd95e57557d801853c551189f4ea3d471467f9c	2026-11-10	tool	current
