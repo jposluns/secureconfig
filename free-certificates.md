@@ -288,7 +288,7 @@ REASONED: following block; the credentials-file check for the DNS-01 step above,
   printf '%s\n' "-- stat -L -c '%a %U %n', exit $3:" "$2"
   [ "$3" = 0 ] || { echo "stat exit $3: the mode of /root/.secrets or of its cloudflare.ini could not be read (missing, kept at another path, or sudo refused); inconclusive"; exit 3; }
   { read -r dm du dn && read -r fm fu fn; } <<< "$2"   # mode, owner and name of the directory, then of the file
-  case "$dm $fm" in *[!01234567\ ]*|' '*|*' ') echo "a mode is not in the octal form this block reads; inconclusive"; exit 3 ;; esac
+  case "$dm $fm" in ' '*|*' ') echo "a mode is not in the octal form this block reads; inconclusive"; exit 3 ;; esac; case "${dm// }${fm// }" in *[!01234567]*) echo "a mode is not in the octal form this block reads; inconclusive"; exit 3 ;; esac
   [ "$dn" = /root/.secrets ] && [ "$fn" = /root/.secrets/cloudflare.ini ] && [ "${#dm}" -le 4 ] && [ "${#fm}" -le 4 ] || { echo "stat printed lines this block does not read; inconclusive"; exit 3; }
   [ "$du" = root ] || { echo "FINDING: /root/.secrets is owned by $du, not root"; set -- 1; }
   [ $((8#$dm & 8#077)) = 0 ] || { echo "FINDING: /root/.secrets has mode $dm, so its group or other users can list or enter it; this guide asks for 700 (Certbot does not check the directory)"; set -- 1; }
@@ -473,7 +473,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-25",
   "documentation_checked": "2026-09",
-  "body_sha256": "4f4e4c606b8c16469aa13df558379346ae31fedcebc92b8829a646cd4a1d44f8",
+  "body_sha256": "ab335c27143694dbf186975c8d6ce7a047e71306229618a172596f60815fdb15",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
