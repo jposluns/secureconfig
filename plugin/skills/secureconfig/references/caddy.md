@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Caddy admin source v2.11.9, Caddy prior-release admin source v2.11.4, systemd manual v262, and Let's Encrypt expiration-email notice 2025; 7 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 34 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against Caddy admin source v2.11.9, Caddy prior-release admin source v2.11.4, systemd manual v262, Let's Encrypt expiration-email notice 2025, and Caddy forward_auth source v2.5.1; 7 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 34 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -88,7 +88,7 @@ To protect only part of a site, wrap the directive in a matcher:
 
 Path matches are exact, and `/admin/*` alone does not match `/admin` itself, so list both forms; multiple paths in one matcher are OR'ed.
 
-`basic_auth` is single-factor. For human-facing sites, add MFA with the `forward_auth` directive (Caddy 2.5 and later) pointed at an [Authelia](https://www.authelia.com/) portal, or front the site with Cloudflare Access. Cloudflare docs at c896795b describe identity-provider MFA and independent Access MFA; the governing setting follows policy over application over organization, so configure it to require MFA ([MFA requirements](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85)). As this guide reasons, per [cloudflare.md](cloudflare.md), fronting with Cloudflare Access only helps if the origin is locked down. The same reasoning, again per `cloudflare.md`, is that Caddy still answers on 443, so a client that discovers the origin IP connects directly and bypasses Access unless you close direct ingress (a tunnel, or Authenticated Origin Pulls plus a Cloudflare-IP firewall) and validate the Access JWT at the origin ([JWT validation](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json.mdx#L15-L17); [tunnel `access` setting](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L196-L215)). Options in [mfa.md](mfa.md).
+`basic_auth` is single-factor. For human-facing sites, add MFA with the `forward_auth` directive (Caddy 2.5.1 and later: the [v2.5.1 source registers it](https://github.com/caddyserver/caddy/blob/v2.5.1/modules/caddyhttp/reverseproxy/forwardauth/caddyfile.go#L31) and the [v2.5.1 release notes](https://github.com/caddyserver/caddy/releases/tag/v2.5.1) introduce it) pointed at an [Authelia](https://www.authelia.com/) portal, or front the site with Cloudflare Access. Cloudflare docs at c896795b describe identity-provider MFA and independent Access MFA; the governing setting follows policy over application over organization, so configure it to require MFA ([MFA requirements](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85)). As this guide reasons, per [cloudflare.md](cloudflare.md), fronting with Cloudflare Access only helps if the origin is locked down. The same reasoning, again per `cloudflare.md`, is that Caddy still answers on 443, so a client that discovers the origin IP connects directly and bypasses Access unless you close direct ingress (a tunnel, or Authenticated Origin Pulls plus a Cloudflare-IP firewall) and validate the Access JWT at the origin ([JWT validation](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json.mdx#L15-L17); [tunnel `access` setting](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L196-L215)). Options in [mfa.md](mfa.md).
 
 ## 4. Bound the expensive endpoints
 
@@ -318,6 +318,7 @@ The month in this heading is the month of the whole-guide documentation pass, an
 - Caddy conventions (unix socket default mode 0200, `|<mode>` suffix; rolling documentation, checked September 2026): https://caddyserver.com/docs/conventions
 - header directive (HSTS; rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/directives/header
 - forward_auth directive (rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/directives/forward_auth
+- Caddy `forward_auth` directive introduced in v2.5.1: the directive registration and the release notes (pinned tag v2.5.1). Sources: https://github.com/caddyserver/caddy/blob/v2.5.1/modules/caddyhttp/reverseproxy/forwardauth/caddyfile.go#L31 and https://github.com/caddyserver/caddy/releases/tag/v2.5.1
 - Caddy command-line signals (SIGUSR1 reload conditions; rolling documentation, checked September 2026): https://caddyserver.com/docs/command-line#signals
 - Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails
 - Request matchers (path, wildcards, multiple paths; rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/matchers
@@ -356,6 +357,7 @@ Components (recorded basis):
 - systemd: systemd manual (v262)
 - cloudflare: Cloudflare docs (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
 - letsencrypt-notice: Let's Encrypt expiration-email notice (2025)
+- forwardauth-source: Caddy forward_auth source (v2.5.1)
 
 Claims (full source mapping in the JSON block below):
 
@@ -368,7 +370,7 @@ Claims (full source mapping in the JSON block below):
 - internal-tls (REASONED; docs-rolling): tls internal uses a local CA; clients must trust its root, with caddy trust for the local host. tls also accepts explicit cert/key files.
 - basic (REASONED; docs-rolling): basic_auth uses hashed passwords from caddy hash-password; it was named basicauth before v2.8.0 and remains single-factor.
 - path-auth (REASONED; docs-rolling): Protect /admin and /admin/* together: path matches are exact and multiple paths are OR'ed.
-- mfa (REASONED; docs-rolling, cloudflare): forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it.
+- mfa (REASONED; docs-rolling, cloudflare, forwardauth-source): forward_auth (Caddy 2.5.1+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it.
 - access-origin (REASONED; docs-rolling, cloudflare): Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's `access` setting has `cloudflared` do. Caddy still answers directly on 443.
 - body-limit (REASONED; docs-rolling): Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public.
 - rate-limit (REASONED; docs-rolling, ratelimit-source): The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer.
@@ -399,7 +401,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "3e330b1d1777b4a375fa39a2f3be1e857dbe6edd89ecaab3103efd0cb483c376",
+  "body_sha256": "519668d74ee801f3519259e77d65d3f50c4ef1e51ddc102413c4db2c28af0be2",
   "components": {
     "admin": {
       "name": "Caddy admin source",
@@ -514,6 +516,14 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "sc33d2e1f6703": "https://letsencrypt.org/2025/01/22/ending-expiration-emails"
       }
+    },
+    "forwardauth-source": {
+      "name": "Caddy forward_auth source",
+      "basis": "v2.5.1",
+      "sources": {
+        "s7d10e70ae1d1": "https://github.com/caddyserver/caddy/blob/v2.5.1/modules/caddyhttp/reverseproxy/forwardauth/caddyfile.go#L31",
+        "s0f1101e4e257": "https://github.com/caddyserver/caddy/releases/tag/v2.5.1"
+      }
     }
   },
   "claims": {
@@ -526,7 +536,7 @@ Claims (full source mapping in the JSON block below):
     "internal-tls": {"text": "tls internal uses a local CA; clients must trust its root, with caddy trust for the local host. tls also accepts explicit cert/key files.", "components": ["docs-rolling"], "sources": ["docs-rolling:s2e47c3139bd2", "docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
     "basic": {"text": "basic_auth uses hashed passwords from caddy hash-password; it was named basicauth before v2.8.0 and remains single-factor.", "components": ["docs-rolling"], "sources": ["docs-rolling:sbc2bd9599bd1"], "status": "REASONED"},
     "path-auth": {"text": "Protect /admin and /admin/* together: path matches are exact and multiple paths are OR'ed.", "components": ["docs-rolling"], "sources": ["docs-rolling:s38b1b78ce980", "docs-rolling:sbc2bd9599bd1"], "status": "REASONED"},
-    "mfa": {"text": "forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it.", "components": ["docs-rolling", "cloudflare"], "sources": ["docs-rolling:s8df93f3e3d4c", "cloudflare:s6f6104362214"], "status": "REASONED"},
+    "mfa": {"text": "forward_auth (Caddy 2.5.1+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it.", "components": ["docs-rolling", "cloudflare", "forwardauth-source"], "sources": ["docs-rolling:s8df93f3e3d4c", "cloudflare:s6f6104362214", "forwardauth-source:s7d10e70ae1d1", "forwardauth-source:s0f1101e4e257"], "status": "REASONED"},
     "access-origin": {"text": "Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's `access` setting has `cloudflared` do. Caddy still answers directly on 443.", "components": ["docs-rolling", "cloudflare"], "sources": ["docs-rolling:s3865a73ccda3", "cloudflare:s6f6104362214", "cloudflare:s81e5dd28d3e5", "cloudflare:sa7c8d635bfd5"], "status": "REASONED"},
     "body-limit": {"text": "Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public.", "components": ["docs-rolling"], "sources": ["docs-rolling:s31af5ed45a20", "docs-rolling:sbc2bd9599bd1"], "status": "REASONED"},
     "rate-limit": {"text": "The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer.", "components": ["docs-rolling", "ratelimit-source"], "sources": ["docs-rolling:sec59a61934c5", "ratelimit-source:s093420cd3d2f"], "status": "REASONED"},
