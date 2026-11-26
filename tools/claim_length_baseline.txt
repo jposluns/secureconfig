@@ -64,7 +64,6 @@ self-hosted-idp.md	keycloak-mfa	578
 self-hosted-idp.md	verify-direct-ports	590
 self-hosted-idp.md	verify-mfa-password	1062
 self-hosted-idp.md	worker-outpost-metrics	507
-streamlit.md	claims	457
 streamlit.md	oidc-config	418
 tunnels.md	verify-firewall	677
 vector-databases.md	milvus-kubernetes-service	404
