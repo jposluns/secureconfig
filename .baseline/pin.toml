@@ -7,18 +7,18 @@
 # copied file. A new baseline version is 1 pull request that reruns the copy script and commits
 # the copied files and this pin together.
 
-version = "1.15.1"
-upstream = "https://posluns.ca/baseline/1.15.1/"
-archive_sha256 = "324f447129e3ef6e1b5259f6ed88aaabdcf046ddf834c2178485511fc06837ed"
-sha256sums_sha256 = "defdc14415ae607b989fdf8307eb75d4df3a1104dbd0d803717d5f7d5fe282e7"
-copied = "2026-11-24"
+version = "1.15.2"
+upstream = "https://posluns.ca/baseline/1.15.2/"
+archive_sha256 = "ec3739f8f03605b808d7bc6b9fa582c7889de3f57014827a99eff288cb2ce7b8"
+sha256sums_sha256 = "a45757d901b690d1430f4cf139796e50f3d5dff299c09aab66b87e81e91b7f8e"
+copied = "2026-11-27"
 
 # Paths under assets/baseline/ are relative to site/; the build tools' paths are
 # relative to the repository root.
 [files]
 "assets/baseline/LICENSE" = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
 "assets/baseline/NOTICE.md" = "161ad1da47a6083558c90e407b0ddd37765827c7ec304b2584497faa2992b5eb"
-"assets/baseline/baseline.css" = "e5f10ef3df61eed666856c27a4303d01e18ef724f8014a7d9e79e1da0151982d"
+"assets/baseline/baseline.css" = "96b89c74eeafb04bbd53fbed4bb0bdadb0ac38c797a57ac5f3dd7f1449ed565d"
 "assets/baseline/copy.js" = "9bf99b50471889b768c795af5a4f84f526cecf7622a1f1265ca3d088b31339a4"
 "assets/baseline/fonts.css" = "b9573d444f52dc81cae6e2620aedfe819976858bd7224bfa721ec00b8880dfad"
 "assets/baseline/fonts/dancing-script-LICENSE.txt" = "c02c0002d3bbd41a16933c162888c400469c7029f1362ca9d60d5ed20ea7d157"
@@ -49,7 +49,7 @@ copied = "2026-11-24"
 "assets/baseline/palettes.css" = "d3e4326a5c694df7479241ce1a22dc70a2624c5d4457f30cf9ee67d233b5ac55"
 "assets/baseline/rail.js" = "83a27465fe49c60282e31306a64d3c19c98bd13dc8125fa75fb2a3c9c74d3bc2"
 "assets/baseline/scheme.js" = "39d035d986f53c987cbe92516b9a5fd499af5c7fcdda701ea896c63c45ef1634"
-".baseline/build_card.js" = "3aae0cf1b29b29fc5a4c9679bee4e0d1d4ae67d7d555c9312d519e37e2207ed2"
+".baseline/build_card.js" = "ba911dd4c51752f015916c1214abd378c167cfb837bee3b4b66721e5fbc98d00"
 ".baseline/card-fonts/Inter-Bold.otf" = "00fd6f4691ee8884a33b46bf45851b341927c37c30064f558e1befb242971c49"
 ".baseline/card-fonts/Inter-ExtraBold.otf" = "2012ceaf1470372c415f95c00495a1ad1ebdcd1cd6a6225808f011d459a9b12a"
 ".baseline/card-fonts/Inter-Regular.otf" = "be6d709dcb730ddaf050cbdae6fe89bd56d5d14dc66885639bbf6f06bd03521b"
