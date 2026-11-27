@@ -25,7 +25,7 @@ egress-metadata.md	X	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	33cbfff3d905ab77d308a00
 elasticsearch.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	2c60af4adbf8b9d1bce7063240887664aa51938cfb7b8c6d09b74ac0eaaa4826	2026-11-10	tool	current
 exposure-index.md	K	PARTIAL(M1)	n/a	?	n/a	n/a	n/a	?	?	n/a	?	SOLID	fc349a850673721a26cba080af4cf06e4233e0237b66ebf0dc2a2fdd3ace12ca	2026-11-10	tool	current
 firebase-supabase.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	be9b0fbebde497b68f19c476b05c9fb00f73296a9afcbe2a56a427ad3258c80d	2026-11-10	tool	current
-forgejo.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	5da010ea6fda3a22d4548e954eeff192a8aa5fbffe11dfe67d26c129855b056f	2026-11-10	tool	current
+forgejo.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	86482ffc965ef84ae4c6aee797f0082e78da6684d8607b790c4d8f1b1de4f8c1	2026-11-10	tool	current
 free-certificates.md	X	P	PARTIAL(A2,A4)	PARTIAL(B2,B3) ?(B1)	PARTIAL(C2,C4) ?(C3)	?(D2)	PARTIAL(E1,E2)	PARTIAL(F2) ?(F1)	PARTIAL(G2,G3) ?(G1)	P	?	SOLID	e4646e9c948f374956a7fcd640b232926c7e670c5cc087b3b18b2ae9266bc92b	2026-11-25	claude+agy-reconciled	current
 frontend-frameworks.md	C	P	PARTIAL(A1,A3,A4)	PARTIAL(B3,B4) ?(B1)	PARTIAL(C1,C4)	PARTIAL(D1) ?(D2)	PARTIAL(E1,E2)	PARTIAL(F2) ?(F1)	PARTIAL(G2) ?(G1)	PARTIAL(H2)	?	SOLID	2345eca53f04ae34f5cb5879fc90b3075e91c8e424a1c678812d14aeaac7c08b	2026-11-25	claude+agy-reconciled	current
 fronting-auth.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	00e8961767c7787bf8311ba1318d61670007ca963403c31e7a009c9aad1b664c	2026-11-10	tool	current
@@ -72,7 +72,7 @@ observability-components.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	32e14f1a79d27336795cf4b6
 oidc-integration.md	X	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	7fc54417bb0bbef8447597333cbde653bbbcccfe784d0701d89d64892c2f0547	2026-11-10	tool	current
 ollama.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f8ec3b79013bcc954292b960b176b94e11b0a50c857ee5d92ea4d75860fc7d59	2026-11-10	tool	current
 open-webui.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	01e752ca7a5750e58c27872d424fc702e8b38ebe160209ac3a636dd9385b685c	2026-11-10	tool	current
-openclaw.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	ede9989e2c65682b198416522324be999c4969bb2fb2649f763ab779cad42c8a	2026-11-10	tool	current
+openclaw.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	104b488df3f27e73893a88da1f17271cd84118a05db48bec3a8c574de4c50dbc	2026-11-10	tool	current
 paas.md	C	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	c51cade0532e3d6c2f841858d27173b414b9592abf77016a769af61cc4e00907	2026-11-10	tool	current
 php.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	a8383b357b0a8facc60ddd0c55a80258e04bc8237434244c525401a8d845ead7	2026-11-10	tool	current
 pocketbase.md	C	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	107d244c62af66bd63dbcde4e6a790ba50f6e26a296e730ee2a661785bdb68c4	2026-11-10	tool	current
