@@ -199,7 +199,7 @@ The state code enforces directory mode `0700` and file mode `0600` for the state
 
 ## 11. Run with least privilege
 
-Run the Gateway under a dedicated, unprivileged operating-system account, one Gateway per trust boundary (one host or OS user per person). A token holder already has host-operator authority through the agent's tools, so the account the Gateway runs as bounds the blast radius of a leaked secret or a successful prompt injection. In a container, run as the non-root `node` user with `--read-only` and `--cap-drop=ALL`, and see [container-hardening.md](container-hardening.md) and [docker.md](docker.md); under systemd, apply the usual service hardening. Grant the account only the filesystem and network access the agent genuinely needs, and remember that loopback binding limits inbound reach, not the agent's outbound access from its tools. [Threat model and least privilege](https://docs.openclaw.ai/gateway/security/network-exposure).
+The network-exposure page says of Gateway credentials: "prefer separate gateways per trust boundary". A token holder already has host-operator authority through the agent's tools, and loopback binding limits inbound reach, not the agent's outbound access from its tools. [Threat model and least privilege](https://docs.openclaw.ai/gateway/security/network-exposure). Guide advice: run the Gateway under a dedicated, unprivileged operating-system account, one host or OS user per person, so that the account bounds the blast radius of a leaked secret or a successful prompt injection. In a container, run as the non-root `node` user with `--read-only` and `--cap-drop=ALL`, and see [container-hardening.md](container-hardening.md) and [docker.md](docker.md); under systemd, apply the usual service hardening. Grant the account only the filesystem and network access the agent genuinely needs.
 
 ## Exposure rules
 
@@ -459,6 +459,7 @@ Repository sources are the OpenClaw repository at annotated tag `v2026.11.2` (co
 - OpenClaw WhatsApp channel (WhatsApp Web via Baileys) (v2026.11.2): https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/whatsapp.md
 - OpenClaw Signal channel (loopback signal-cli daemon) (v2026.11.2): https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/signal.md
 - OpenClaw iMessage channel (JSON-RPC over stdio) (v2026.11.2): https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/imessage.md
+- OpenClaw MIT license (v2026.11.2): https://github.com/openclaw/openclaw/blob/v2026.11.2/LICENSE
 - OpenClaw gateway configuration reference (rolling documentation, checked November 2026): https://docs.openclaw.ai/gateway/config-gateway
 - OpenClaw gateway network-exposure and security guidance (rolling documentation, checked November 2026): https://docs.openclaw.ai/gateway/security/network-exposure
 - OpenClaw remote-access model (rolling documentation, checked November 2026): https://docs.openclaw.ai/gateway/remote
@@ -515,7 +516,7 @@ Claims (full source mapping in the JSON block below):
 - secrets-store (REASONED; openclaw, openclaw-docs): The shared secret store and the Gateway token (when not exported) live in the unencrypted SQLite ~/.openclaw/state/openclaw.sqlite; state dir is 0700 and files 0600 and chmod failures throw.
 - secrets-agent (REASONED; openclaw): Provider and model OAuth/API keys live in the auth-profile store, the state DB or a per-agent openclaw-agent.sqlite under ~/.openclaw/agents.
 - secrets-refs (REASONED; openclaw-docs): For stronger isolation than filesystem permissions use opt-in exec SecretRefs (1Password/Vault); the config then holds only a reference; protect the state dir and backups.
-- least-privilege (REASONED; openclaw-docs): Run the Gateway as a dedicated non-root account, one Gateway per trust boundary; loopback limits inbound reach, not the agent's outbound tool access; harden the container/systemd unit.
+- least-privilege (REASONED; openclaw-docs): The cited page says to prefer separate gateways per trust boundary; loopback limits inbound reach, not the agent's outbound tool access. Guide advice: run the Gateway as a dedicated non-root account and harden the container/systemd unit.
 - verify-listeners (REASONED; openclaw): ss inventories local binds in this namespace only; expect 127.0.0.1:18789 for a loopback bind and treat 0.0.0.0:18789 as all-interfaces exposure; a failed inventory proves no absence.
 - verify-tls-anon (REASONED; openclaw, openclaw-docs): Validated HTTPS must complete with exit=0; anonymous POST /tools/invoke must return 401/403 on a fixed Gateway and a 2xx on an exposed one.
 - verify-exec-deny (REASONED; openclaw): An authenticated exec invoke must be refused with a 4xx because exec is on the default HTTP deny list; a 2xx means gateway.tools.allow re-enabled exec.
@@ -527,7 +528,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-09",
   "documentation_checked": "2026-11",
-  "body_sha256": "ede9989e2c65682b198416522324be999c4969bb2fb2649f763ab779cad42c8a",
+  "body_sha256": "104b488df3f27e73893a88da1f17271cd84118a05db48bec3a8c574de4c50dbc",
   "components": {
     "openclaw": {
       "name": "OpenClaw",
@@ -560,7 +561,8 @@ Claims (full source mapping in the JSON block below):
         "sc484f9208dc6": "https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/discord.md",
         "sf9ae91fb4925": "https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/whatsapp.md",
         "saf2ebd9d8abd": "https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/signal.md",
-        "s0c92dbd75cbe": "https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/imessage.md"
+        "s0c92dbd75cbe": "https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/imessage.md",
+        "s048753967dbd": "https://github.com/openclaw/openclaw/blob/v2026.11.2/LICENSE"
       }
     },
     "openclaw-docs": {
@@ -582,7 +584,7 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "product": {"text": "OpenClaw is a self-hosted MIT AI assistant whose Gateway runs host tools; an exposed authenticated Gateway is host RCE; config is ~/.openclaw/openclaw.json (JSON5) and the default port is 18789.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:s6dd72b6a5226", "openclaw-docs:sabc5c1fcbcc1", "openclaw-docs:s9e649e9bbd24", "openclaw-docs:s4ddc0690c335"], "status": "REASONED"},
+    "product": {"text": "OpenClaw is a self-hosted MIT AI assistant whose Gateway runs host tools; an exposed authenticated Gateway is host RCE; config is ~/.openclaw/openclaw.json (JSON5) and the default port is 18789.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:s6dd72b6a5226", "openclaw:s048753967dbd", "openclaw-docs:sabc5c1fcbcc1", "openclaw-docs:s9e649e9bbd24", "openclaw-docs:s4ddc0690c335"], "status": "REASONED"},
     "bind": {"text": "gateway.bind modes are auto|loopback|lan|tailnet|custom, default loopback on a host, but unset auto resolves to 0.0.0.0 inside a detected container; set bind:\"loopback\" explicitly.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:s19fa57e613dd", "openclaw:s7d682527d730", "openclaw:s0ad6a13b229d", "openclaw:s7f909bc2f9ef", "openclaw-docs:sfd021eada97d"], "status": "REASONED"},
     "port": {"text": "The Gateway default port is 18789 (DEFAULT_GATEWAY_PORT) and the config filename is openclaw.json.", "components": ["openclaw"], "sources": ["openclaw:s6dd72b6a5226"], "status": "REASONED"},
     "fail-closed": {"text": "A non-loopback bind with no shared secret and not trusted-proxy refuses to start; the error is classified non-restartable, and related guards cover Control UI origins and trusted-proxy.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:s7f909bc2f9ef", "openclaw-docs:sabc5c1fcbcc1"], "status": "REASONED"},
@@ -607,7 +609,7 @@ Claims (full source mapping in the JSON block below):
     "secrets-store": {"text": "The shared secret store and the Gateway token (when not exported) live in the unencrypted SQLite ~/.openclaw/state/openclaw.sqlite; state dir is 0700 and files 0600 and chmod failures throw.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:s50f6fcb0cdbf", "openclaw:s93afaf65e6e5", "openclaw-docs:sbb76d16c68a5"], "status": "REASONED"},
     "secrets-agent": {"text": "Provider and model OAuth/API keys live in the auth-profile store, the state DB or a per-agent openclaw-agent.sqlite under ~/.openclaw/agents.", "components": ["openclaw"], "sources": ["openclaw:s117ed23e1616"], "status": "REASONED"},
     "secrets-refs": {"text": "For stronger isolation than filesystem permissions use opt-in exec SecretRefs (1Password/Vault); the config then holds only a reference; protect the state dir and backups.", "components": ["openclaw-docs"], "sources": ["openclaw-docs:sbb76d16c68a5"], "status": "REASONED"},
-    "least-privilege": {"text": "Run the Gateway as a dedicated non-root account, one Gateway per trust boundary; loopback limits inbound reach, not the agent's outbound tool access; harden the container/systemd unit.", "components": ["openclaw-docs"], "sources": ["openclaw-docs:sabc5c1fcbcc1"], "status": "REASONED"},
+    "least-privilege": {"text": "The cited page says to prefer separate gateways per trust boundary; loopback limits inbound reach, not the agent's outbound tool access. Guide advice: run the Gateway as a dedicated non-root account and harden the container/systemd unit.", "components": ["openclaw-docs"], "sources": ["openclaw-docs:sabc5c1fcbcc1"], "status": "REASONED"},
     "verify-listeners": {"text": "ss inventories local binds in this namespace only; expect 127.0.0.1:18789 for a loopback bind and treat 0.0.0.0:18789 as all-interfaces exposure; a failed inventory proves no absence.", "components": ["openclaw"], "sources": ["openclaw:s19fa57e613dd", "openclaw:s6dd72b6a5226"], "status": "REASONED", "verify": [1]},
     "verify-tls-anon": {"text": "Validated HTTPS must complete with exit=0; anonymous POST /tools/invoke must return 401/403 on a fixed Gateway and a 2xx on an exposed one.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:sd85cbe517038", "openclaw-docs:s9e649e9bbd24"], "status": "REASONED", "verify": [2]},
     "verify-exec-deny": {"text": "An authenticated exec invoke must be refused with a 4xx because exec is on the default HTTP deny list; a 2xx means gateway.tools.allow re-enabled exec.", "components": ["openclaw"], "sources": ["openclaw:s04b0bb697adb"], "status": "REASONED", "verify": [3]},
