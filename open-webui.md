@@ -46,7 +46,7 @@ The first account created becomes the administrator, whatever `DEFAULT_USER_ROLE
 
 **An empty database is exposed even with `ENABLE_SIGNUP=false` when the login form is enabled.** `/api/v1/auths/signup` does not apply that switch to the first account. `ENABLE_LOGIN_FORM` defaults to `true`. With the form disabled, `ENABLE_INITIAL_ADMIN_SIGNUP=true` permits first-admin bootstrap; its default is `false`, and it should remain off outside private bootstrap. See the [signup handler](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/auths.py).
 
-For SSO, the reference documents OAuth/OIDC settings plus `ENABLE_PASSWORD_AUTH=false` to turn off password login once SSO works; enforcing MFA then happens at the identity provider ([mfa.md](mfa.md)).
+For SSO, the reference documents OAuth/OIDC settings plus `ENABLE_PASSWORD_AUTH=false` to turn off password login once SSO works; this guide's advice is then to enforce MFA at the identity provider ([mfa.md](mfa.md)), since neither pinned configuration file defines an MFA setting. Built-in two-factor sign-in (`ENABLE_MFA`) arrived in v0.12.0, after this guide's pin, so recheck this advice on a later release; see the [v0.12.0 changelog entry](https://github.com/open-webui/open-webui/blob/v0.13.5/CHANGELOG.md#L920-L926).
 
 That recommendation applies to **OAuth/OIDC-only login**. `/signin` checks `ENABLE_PASSWORD_AUTH` before trusted-header authentication, so setting it to `false` also blocks trusted-header signin. Ordinary signup refusal does not close OAuth or trusted-header provisioning; configure those separately in step 4. See the [signin handler](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/auths.py).
 
@@ -81,7 +81,7 @@ The container launcher otherwise generates `.webui_secret_key` **once when the f
 
 `WEBUI_SECRET_KEY` signs HS256 login tokens. Disclosure enables token forgery for existing users, including administrators. Without Redis, signout clears the browser session but does not revoke a copied JWT; it remains usable until expiry. Choose a finite lifetime suited to the deployment and use shared Redis when revocation must propagate across workers and replicas. See the [token signing and revocation implementation](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/utils/auth.py).
 
-Direct backend startup rejects an empty signing key when authentication is enabled. Do not work around that refusal by disabling authentication. `WEBUI_JWT_SECRET_KEY` is the deprecated alias; use `WEBUI_SECRET_KEY`. Plan rotation deliberately: it invalidates existing login tokens, and the key also supplies defaults for OAuth encryption keys. See the [startup requirement](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/env.py) and [OAuth key configuration](https://docs.openwebui.com/features/authentication-access/auth/sso/).
+Direct backend startup rejects an empty signing key when authentication is enabled. Do not work around that refusal by disabling authentication. `WEBUI_JWT_SECRET_KEY` is the deprecated alias; use `WEBUI_SECRET_KEY`. Plan rotation deliberately: at this pin the same key signs and verifies login tokens, so changing it invalidates existing ones, and it is the default for `OAUTH_CLIENT_INFO_ENCRYPTION_KEY` and `OAUTH_SESSION_TOKEN_ENCRYPTION_KEY`. See the [startup requirement and OAuth key defaults](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/env.py), the [token signing implementation](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/utils/auth.py), the [secret-key reference](https://docs.openwebui.com/reference/env-configuration/) and [OAuth key configuration](https://docs.openwebui.com/features/authentication-access/auth/sso/).
 
 ## 4. Close alternative registration paths and protect trusted headers
 
@@ -132,7 +132,7 @@ ENABLE_COMMUNITY_SHARING=false                # default true
 ENV=prod                                     # backend default dev; official Docker default prod
 ```
 
-Set each restricted model's **Access Control to Private**, then grant only the intended users or groups access. Workspace Models Access governs creation and editing, not which existing models a user may invoke. Inspect existing grants after changing visibility. Current resource payloads use `access_grants`; do not copy an older `access_control` JSON example into current configuration. See [resource access](https://docs.openwebui.com/features/authentication-access/rbac/groups/), [workspace permissions](https://docs.openwebui.com/features/authentication-access/rbac/permissions/), and the [access-grant schema](https://docs.openwebui.com/reference/database-schema/).
+Set each restricted model's **Access Control to Private**, then grant only the intended users or groups access. Workspace Models Access governs creation and editing, not which existing models a user may invoke. Inspect existing grants after changing visibility. At this pin the model create and update form takes `access_grants` and ignores unknown fields, so an older `access_control` field is ignored rather than applied; do not copy such an example into current configuration. See [resource access](https://docs.openwebui.com/features/authentication-access/rbac/groups/), [workspace permissions](https://docs.openwebui.com/features/authentication-access/rbac/permissions/), the [access-grant schema](https://docs.openwebui.com/reference/database-schema/), and the [pinned model form](https://github.com/open-webui/open-webui/blob/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/models/models.py#L175-L184).
 
 Ollama pull, create, copy, and delete routes already require an administrator. There is no `ENABLE_MODEL_*` switch for those operations: the boundary is the caller's role. Restrict admin membership and keep the Ollama service itself private so callers cannot bypass Open WebUI. See the [Ollama route dependencies](https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/ollama.py).
 
@@ -441,6 +441,8 @@ The month in this heading is the month of the whole-guide documentation pass, an
 - [Open WebUI Direct Connections: browser-to-provider inference (rolling documentation, checked September 2026)](https://docs.openwebui.com/features/chat-conversations/direct-connections/).
 - [Open WebUI OpenAI-compatible connections: administrative provider configuration (rolling documentation, checked September 2026)](https://docs.openwebui.com/getting-started/quick-start/connect-a-provider/starting-with-openai-compatible/).
 - [Open WebUI API endpoints: model discovery, chat requests, ingestion, and development documentation (rolling documentation, checked September 2026)](https://docs.openwebui.com/reference/api-endpoints/).
+- [Open WebUI model form at the pin: access_grants field and ignored extra fields](https://github.com/open-webui/open-webui/blob/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/models/models.py#L175-L184).
+- [Open WebUI changelog at v0.13.5: the 0.12.0 entry adding two-factor sign-in (checked November 2026)](https://github.com/open-webui/open-webui/blob/v0.13.5/CHANGELOG.md#L920-L926).
 
 
 <!-- version-basis:start -->
@@ -470,7 +472,7 @@ Claims (full source mapping in the JSON block below):
 - signup-auto-disable (REASONED; webui, webui-docs): First normal registration and successful environment admin creation disable signup under normal persisted configuration.
 - bootstrap-exception (REASONED; webui): Empty-database signup bypasses ENABLE_SIGNUP with ENABLE_LOGIN_FORM=true, its default; disabled-form bootstrap needs ENABLE_INITIAL_ADMIN_SIGNUP=true, default false.
 - password-auth (REASONED; webui): ENABLE_PASSWORD_AUTH=false blocks password and trusted-header signin because its check runs first; use for OAuth/OIDC-only login.
-- sso-mfa (REASONED; webui-docs): OAuth/OIDC MFA belongs at the identity provider; ordinary signup refusal does not close alternative provisioning.
+- sso-mfa (REASONED; webui, webui-docs): Enforcing OAuth/OIDC MFA at the identity provider is this guide's advice for its pin, whose config files define no MFA setting; current documentation describes built-in MFA. Ordinary signup refusal does not close alternative provisioning.
 - publication (REASONED; webui, docker): Publish host 127.0.0.1:3000 to container 8080 with Engine 28.0+; inspect NAT and external reachability as well as ss.
 - data-volume (REASONED; webui): Retain /app/backend/data for accounts/config; lost data reopens first-admin bootstrap, so keep ingress closed until claimed.
 - transport (REASONED; webui-docs): Open WebUI has no native TLS; use a TLS fronting layer and keep authentication enabled behind public access paths.
@@ -482,7 +484,7 @@ Claims (full source mapping in the JSON block below):
 - signing-key (REASONED; webui): Inject the same persistent WEBUI_SECRET_KEY into every replica; HS256 signing-key disclosure permits existing-user impersonation.
 - key-file (REASONED; webui): Launcher generates .webui_secret_key only when absent; default /app/backend location is outside the data volume and can be lost on replacement.
 - revocation (REASONED; webui): Without Redis signout does not revoke a copied JWT before expiry; shared revocation needs Redis across workers.
-- rotation (REASONED; webui, webui-docs): WEBUI_JWT_SECRET_KEY is deprecated; signing-key rotation invalidates tokens and affects default OAuth encryption keys.
+- rotation (REASONED; webui, webui-docs): WEBUI_JWT_SECRET_KEY is deprecated; the signing key also verifies login tokens, so rotation invalidates them, and it is the default for both OAuth encryption keys.
 - key-persistence-test (REASONED; webui): Unexpired JWT should survive recreation with retained key/data and work across replicas; a changed key rejects it.
 - oauth-signup (REASONED; webui, webui-docs): ENABLE_OAUTH_SIGNUP defaults false and independently controls OAuth provisioning; test new and already-linked identities.
 - oauth-domains (REASONED; webui, webui-docs): OAUTH_ALLOWED_DOMAINS defaults *; set approved domains and test excluded-domain refusal.
@@ -500,7 +502,7 @@ Claims (full source mapping in the JSON block below):
 - groups (REASONED; webui-docs): Group permissions add grants; a false default or another false membership cannot cancel a true grant.
 - model-bypass (REASONED; webui): BYPASS_MODEL_ACCESS_CONTROL defaults false; keep bypass disabled.
 - model-workspace (REASONED; webui, webui-docs): USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS defaults false and controls creation/editing, not invocation of existing models.
-- model-grants (REASONED; webui-docs): Private models need user/group grants; current payloads use access_grants; permitted completion is the positive control for excluded-user refusal.
+- model-grants (REASONED; webui, webui-docs): Private models need user/group grants; the pinned model form takes access_grants and ignores unknown fields such as access_control; permitted completion is the positive control for excluded-user refusal.
 - ollama-admin (REASONED; webui): Pull/create/copy/delete require admin role, not ENABLE_MODEL_* switches; test ordinary-user refusal, including DELETE /ollama/api/delete, against valid admin controls.
 - connections (REASONED; webui, webui-docs): Pin every backend; initial OpenAI destination is https://api.openai.com/v1, and connection URLs do not enforce network egress.
 - direct-connections (REASONED; webui, webui-docs): ENABLE_DIRECT_CONNECTIONS defaults false; enabling it sends browser-to-provider inference, not server-side SSRF protection.
@@ -532,7 +534,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "01e752ca7a5750e58c27872d424fc702e8b38ebe160209ac3a636dd9385b685c",
+  "body_sha256": "bf1e3b7021b049b94b56b6c3d378bc0df4bd6cb33b34db4bb3f537050ef4341d",
   "components": {
     "webui": {
       "name": "Open WebUI",
@@ -550,7 +552,8 @@ Claims (full source mapping in the JSON block below):
         "s416fdb7c65df": "https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/chats.py",
         "s377a6a5e9f43": "https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/files.py",
         "sbd0096118f9c": "https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/routers/retrieval.py",
-        "s26981e2dc6de": "https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/package.json"
+        "s26981e2dc6de": "https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/package.json",
+        "s3ef77f53526c": "https://github.com/open-webui/open-webui/blob/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/models/models.py#L175-L184"
       }
     },
     "webui-docs": {
@@ -595,7 +598,7 @@ Claims (full source mapping in the JSON block below):
     "signup-auto-disable": {"text": "First normal registration and successful environment admin creation disable signup under normal persisted configuration.", "components": ["webui", "webui-docs"], "sources": ["webui:s9d6f5fb157de", "webui:s8952330d0246", "webui-docs:s4618b483c060"], "status": "REASONED"},
     "bootstrap-exception": {"text": "Empty-database signup bypasses ENABLE_SIGNUP with ENABLE_LOGIN_FORM=true, its default; disabled-form bootstrap needs ENABLE_INITIAL_ADMIN_SIGNUP=true, default false.", "components": ["webui"], "sources": ["webui:s9d6f5fb157de", "webui:s94d055784840"], "status": "REASONED", "verify": [3]},
     "password-auth": {"text": "ENABLE_PASSWORD_AUTH=false blocks password and trusted-header signin because its check runs first; use for OAuth/OIDC-only login.", "components": ["webui"], "sources": ["webui:s9d6f5fb157de"], "status": "REASONED", "verify": [3]},
-    "sso-mfa": {"text": "OAuth/OIDC MFA belongs at the identity provider; ordinary signup refusal does not close alternative provisioning.", "components": ["webui-docs"], "sources": ["webui-docs:sddffd30a3b0f"], "status": "REASONED"},
+    "sso-mfa": {"text": "Enforcing OAuth/OIDC MFA at the identity provider is this guide's advice for its pin, whose config files define no MFA setting; current documentation describes built-in MFA. Ordinary signup refusal does not close alternative provisioning.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui:s7d025cba5af9", "webui-docs:sddffd30a3b0f"], "status": "REASONED"},
     "publication": {"text": "Publish host 127.0.0.1:3000 to container 8080 with Engine 28.0+; inspect NAT and external reachability as well as ss.", "components": ["webui", "docker"], "sources": ["webui:s241050fbe377", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1, 2]},
     "data-volume": {"text": "Retain /app/backend/data for accounts/config; lost data reopens first-admin bootstrap, so keep ingress closed until claimed.", "components": ["webui"], "sources": ["webui:s241050fbe377", "webui:s9d6f5fb157de"], "status": "REASONED"},
     "transport": {"text": "Open WebUI has no native TLS; use a TLS fronting layer and keep authentication enabled behind public access paths.", "components": ["webui-docs"], "sources": ["webui-docs:sb5ac55b056ab", "webui-docs:s4618b483c060"], "status": "REASONED"},
@@ -607,7 +610,7 @@ Claims (full source mapping in the JSON block below):
     "signing-key": {"text": "Inject the same persistent WEBUI_SECRET_KEY into every replica; HS256 signing-key disclosure permits existing-user impersonation.", "components": ["webui"], "sources": ["webui:s7d025cba5af9", "webui:seb3e13955745"], "status": "REASONED"},
     "key-file": {"text": "Launcher generates .webui_secret_key only when absent; default /app/backend location is outside the data volume and can be lost on replacement.", "components": ["webui"], "sources": ["webui:s4fed797e27ab", "webui:s0a3440b8f305"], "status": "REASONED"},
     "revocation": {"text": "Without Redis signout does not revoke a copied JWT before expiry; shared revocation needs Redis across workers.", "components": ["webui"], "sources": ["webui:seb3e13955745"], "status": "REASONED", "verify": [3]},
-    "rotation": {"text": "WEBUI_JWT_SECRET_KEY is deprecated; signing-key rotation invalidates tokens and affects default OAuth encryption keys.", "components": ["webui", "webui-docs"], "sources": ["webui:s7d025cba5af9", "webui-docs:sddffd30a3b0f"], "status": "REASONED"},
+    "rotation": {"text": "WEBUI_JWT_SECRET_KEY is deprecated; the signing key also verifies login tokens, so rotation invalidates them, and it is the default for both OAuth encryption keys.", "components": ["webui", "webui-docs"], "sources": ["webui:s7d025cba5af9", "webui:seb3e13955745", "webui-docs:sb5ac55b056ab", "webui-docs:sddffd30a3b0f"], "status": "REASONED"},
     "key-persistence-test": {"text": "Unexpired JWT should survive recreation with retained key/data and work across replicas; a changed key rejects it.", "components": ["webui"], "sources": ["webui:seb3e13955745", "webui:s4fed797e27ab"], "status": "REASONED", "verify": [3]},
     "oauth-signup": {"text": "ENABLE_OAUTH_SIGNUP defaults false and independently controls OAuth provisioning; test new and already-linked identities.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sddffd30a3b0f"], "status": "REASONED", "verify": [3]},
     "oauth-domains": {"text": "OAUTH_ALLOWED_DOMAINS defaults *; set approved domains and test excluded-domain refusal.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sddffd30a3b0f"], "status": "REASONED", "verify": [3]},
@@ -625,7 +628,7 @@ Claims (full source mapping in the JSON block below):
     "groups": {"text": "Group permissions add grants; a false default or another false membership cannot cancel a true grant.", "components": ["webui-docs"], "sources": ["webui-docs:seec6b2b9c299"], "status": "REASONED", "verify": [3]},
     "model-bypass": {"text": "BYPASS_MODEL_ACCESS_CONTROL defaults false; keep bypass disabled.", "components": ["webui"], "sources": ["webui:s7d025cba5af9"], "status": "REASONED"},
     "model-workspace": {"text": "USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS defaults false and controls creation/editing, not invocation of existing models.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sab6706f74917"], "status": "REASONED", "verify": [3]},
-    "model-grants": {"text": "Private models need user/group grants; current payloads use access_grants; permitted completion is the positive control for excluded-user refusal.", "components": ["webui-docs"], "sources": ["webui-docs:seec6b2b9c299", "webui-docs:s724ec4249003", "webui-docs:s3d61ecad0833"], "status": "REASONED", "verify": [3]},
+    "model-grants": {"text": "Private models need user/group grants; the pinned model form takes access_grants and ignores unknown fields such as access_control; permitted completion is the positive control for excluded-user refusal.", "components": ["webui", "webui-docs"], "sources": ["webui:s3ef77f53526c", "webui-docs:seec6b2b9c299", "webui-docs:s724ec4249003", "webui-docs:s3d61ecad0833"], "status": "REASONED", "verify": [3]},
     "ollama-admin": {"text": "Pull/create/copy/delete require admin role, not ENABLE_MODEL_* switches; test ordinary-user refusal, including DELETE /ollama/api/delete, against valid admin controls.", "components": ["webui"], "sources": ["webui:s0b1139eccad8"], "status": "REASONED", "verify": [3]},
     "connections": {"text": "Pin every backend; initial OpenAI destination is https://api.openai.com/v1, and connection URLs do not enforce network egress.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sf11ac1428acb"], "status": "REASONED", "verify": [3]},
     "direct-connections": {"text": "ENABLE_DIRECT_CONNECTIONS defaults false; enabling it sends browser-to-provider inference, not server-side SSRF protection.", "components": ["webui", "webui-docs"], "sources": ["webui:s94d055784840", "webui-docs:sbebbd1dda5c6"], "status": "REASONED", "verify": [3]},

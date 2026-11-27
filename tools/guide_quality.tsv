@@ -71,7 +71,7 @@ object-storage.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	1505c140826055
 observability-components.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	32e14f1a79d27336795cf4b6f82bf674e7591e2364b8b08677159a5b7d49603d	2026-11-10	tool	current
 oidc-integration.md	X	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	7fc54417bb0bbef8447597333cbde653bbbcccfe784d0701d89d64892c2f0547	2026-11-10	tool	current
 ollama.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f8ec3b79013bcc954292b960b176b94e11b0a50c857ee5d92ea4d75860fc7d59	2026-11-10	tool	current
-open-webui.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	01e752ca7a5750e58c27872d424fc702e8b38ebe160209ac3a636dd9385b685c	2026-11-10	tool	current
+open-webui.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	bf1e3b7021b049b94b56b6c3d378bc0df4bd6cb33b34db4bb3f537050ef4341d	2026-11-10	tool	current
 openclaw.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	ede9989e2c65682b198416522324be999c4969bb2fb2649f763ab779cad42c8a	2026-11-10	tool	current
 paas.md	C	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	c51cade0532e3d6c2f841858d27173b414b9592abf77016a769af61cc4e00907	2026-11-10	tool	current
 php.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	a8383b357b0a8facc60ddd0c55a80258e04bc8237434244c525401a8d845ead7	2026-11-10	tool	current
