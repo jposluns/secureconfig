@@ -199,7 +199,7 @@ The state code enforces directory mode `0700` and file mode `0600` for the state
 
 ## 11. Run with least privilege
 
-Guide advice: run the Gateway under a dedicated, unprivileged operating-system account, one Gateway per trust boundary (one host or OS user per person). A token holder already has host-operator authority through the agent's tools, so the account the Gateway runs as bounds the blast radius of a leaked secret or a successful prompt injection. In a container, run as the non-root `node` user with `--read-only` and `--cap-drop=ALL`, and see [container-hardening.md](container-hardening.md) and [docker.md](docker.md); under systemd, apply the usual service hardening. Grant the account only the filesystem and network access the agent genuinely needs, and remember that loopback binding limits inbound reach, not the agent's outbound access from its tools. [Threat model and least privilege](https://docs.openclaw.ai/gateway/security/network-exposure).
+The network-exposure page says of Gateway credentials: "prefer separate gateways per trust boundary". A token holder already has host-operator authority through the agent's tools, and loopback binding limits inbound reach, not the agent's outbound access from its tools. [Threat model and least privilege](https://docs.openclaw.ai/gateway/security/network-exposure). Guide advice: run the Gateway under a dedicated, unprivileged operating-system account, one host or OS user per person, so that the account bounds the blast radius of a leaked secret or a successful prompt injection. In a container, run as the non-root `node` user with `--read-only` and `--cap-drop=ALL`, and see [container-hardening.md](container-hardening.md) and [docker.md](docker.md); under systemd, apply the usual service hardening. Grant the account only the filesystem and network access the agent genuinely needs.
 
 ## Exposure rules
 
@@ -516,7 +516,7 @@ Claims (full source mapping in the JSON block below):
 - secrets-store (REASONED; openclaw, openclaw-docs): The shared secret store and the Gateway token (when not exported) live in the unencrypted SQLite ~/.openclaw/state/openclaw.sqlite; state dir is 0700 and files 0600 and chmod failures throw.
 - secrets-agent (REASONED; openclaw): Provider and model OAuth/API keys live in the auth-profile store, the state DB or a per-agent openclaw-agent.sqlite under ~/.openclaw/agents.
 - secrets-refs (REASONED; openclaw-docs): For stronger isolation than filesystem permissions use opt-in exec SecretRefs (1Password/Vault); the config then holds only a reference; protect the state dir and backups.
-- least-privilege (REASONED; openclaw-docs): Guide advice: run the Gateway as a dedicated non-root account, one Gateway per trust boundary, and harden the container/systemd unit; loopback limits inbound reach, not the agent's outbound tool access.
+- least-privilege (REASONED; openclaw-docs): The cited page says to prefer separate gateways per trust boundary; loopback limits inbound reach, not the agent's outbound tool access. Guide advice: run the Gateway as a dedicated non-root account and harden the container/systemd unit.
 - verify-listeners (REASONED; openclaw): ss inventories local binds in this namespace only; expect 127.0.0.1:18789 for a loopback bind and treat 0.0.0.0:18789 as all-interfaces exposure; a failed inventory proves no absence.
 - verify-tls-anon (REASONED; openclaw, openclaw-docs): Validated HTTPS must complete with exit=0; anonymous POST /tools/invoke must return 401/403 on a fixed Gateway and a 2xx on an exposed one.
 - verify-exec-deny (REASONED; openclaw): An authenticated exec invoke must be refused with a 4xx because exec is on the default HTTP deny list; a 2xx means gateway.tools.allow re-enabled exec.
@@ -528,7 +528,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-09",
   "documentation_checked": "2026-11",
-  "body_sha256": "2596c8ddceaf6501b65a7aea614aed7a25fd2db13d374cb5620e594c11cf6a48",
+  "body_sha256": "104b488df3f27e73893a88da1f17271cd84118a05db48bec3a8c574de4c50dbc",
   "components": {
     "openclaw": {
       "name": "OpenClaw",
@@ -609,7 +609,7 @@ Claims (full source mapping in the JSON block below):
     "secrets-store": {"text": "The shared secret store and the Gateway token (when not exported) live in the unencrypted SQLite ~/.openclaw/state/openclaw.sqlite; state dir is 0700 and files 0600 and chmod failures throw.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:s50f6fcb0cdbf", "openclaw:s93afaf65e6e5", "openclaw-docs:sbb76d16c68a5"], "status": "REASONED"},
     "secrets-agent": {"text": "Provider and model OAuth/API keys live in the auth-profile store, the state DB or a per-agent openclaw-agent.sqlite under ~/.openclaw/agents.", "components": ["openclaw"], "sources": ["openclaw:s117ed23e1616"], "status": "REASONED"},
     "secrets-refs": {"text": "For stronger isolation than filesystem permissions use opt-in exec SecretRefs (1Password/Vault); the config then holds only a reference; protect the state dir and backups.", "components": ["openclaw-docs"], "sources": ["openclaw-docs:sbb76d16c68a5"], "status": "REASONED"},
-    "least-privilege": {"text": "Guide advice: run the Gateway as a dedicated non-root account, one Gateway per trust boundary, and harden the container/systemd unit; loopback limits inbound reach, not the agent's outbound tool access.", "components": ["openclaw-docs"], "sources": ["openclaw-docs:sabc5c1fcbcc1"], "status": "REASONED"},
+    "least-privilege": {"text": "The cited page says to prefer separate gateways per trust boundary; loopback limits inbound reach, not the agent's outbound tool access. Guide advice: run the Gateway as a dedicated non-root account and harden the container/systemd unit.", "components": ["openclaw-docs"], "sources": ["openclaw-docs:sabc5c1fcbcc1"], "status": "REASONED"},
     "verify-listeners": {"text": "ss inventories local binds in this namespace only; expect 127.0.0.1:18789 for a loopback bind and treat 0.0.0.0:18789 as all-interfaces exposure; a failed inventory proves no absence.", "components": ["openclaw"], "sources": ["openclaw:s19fa57e613dd", "openclaw:s6dd72b6a5226"], "status": "REASONED", "verify": [1]},
     "verify-tls-anon": {"text": "Validated HTTPS must complete with exit=0; anonymous POST /tools/invoke must return 401/403 on a fixed Gateway and a 2xx on an exposed one.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:sd85cbe517038", "openclaw-docs:s9e649e9bbd24"], "status": "REASONED", "verify": [2]},
     "verify-exec-deny": {"text": "An authenticated exec invoke must be refused with a 4xx because exec is on the default HTTP deny list; a 2xx means gateway.tools.allow re-enabled exec.", "components": ["openclaw"], "sources": ["openclaw:s04b0bb697adb"], "status": "REASONED", "verify": [3]},
