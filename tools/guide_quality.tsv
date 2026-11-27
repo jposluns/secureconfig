@@ -48,7 +48,7 @@ kubernetes.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	bf36aa1e93a06600f0936c65e9a8a9e9787b11
 lighttpd.md	S	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	e1d75f558f3c35eb8bb4dbf76932635f11cc2479cc86c634b16495213cc21f72	2026-11-10	tool	current
 litellm.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	6cda551661000ac9781b7d5c4a611a26b5d173c0e2d09fc9101ac3d4eb3d69c1	2026-11-10	tool	current
 llm-observability.md	C	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	a963eae348f96d30654b8f4c826c4dea252de0a7f37dd4c8d4ee301d85f79f56	2026-11-10	tool	current
-low-code-builders.md	C	P	GAP(A3) PARTIAL(A1)	?(B1,B3)	PARTIAL(C1,C3,C4)	?(D2)	PARTIAL(E1,E2)	PARTIAL(F2) ?(F1)	PARTIAL(G1,G2,G3)	P	?	MINOR-GAPS	d19e149af98e38f305d12c493bb359fefb92969f1858bef389bd7228653a5425	2026-11-25	claude+agy-reconciled	current
+low-code-builders.md	C	P	GAP(A3) PARTIAL(A1)	?(B1,B3)	PARTIAL(C1,C3,C4)	?(D2)	PARTIAL(E1,E2)	PARTIAL(F2) ?(F1)	PARTIAL(G1,G2,G3)	P	?	MINOR-GAPS	def26dda41e112fc7ecb86edaeae591a48853e62712e4557a8421dd0f7f59698	2026-11-25	claude+agy-reconciled	current
 machine-auth.md	X	P	?	?	?	P	?	?	?	?	?	SOLID	72f4488bdf4f1c9b0deec0c98b3f1f75a9c27b551fa2958ce7eaa0b8a2736b1c	2026-11-10	tool	current
 mcp-clients.md	C	P	?	?	?	P	?	PARTIAL(F1)	?	?	?	SOLID	76aa9e145ccd0264af74434f2441a6ddcb902c8a5b6a6b76fcd7d84f6b12dd2b	2026-11-10	tool	current
 mcp-servers.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	bcc4530157fde6e1c2ac632011a7aee0edc398450755278c52399171a8e9fcd9	2026-11-10	tool	current
@@ -71,7 +71,7 @@ object-storage.md	C	PARTIAL(M1)	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	1505c140826055
 observability-components.md	C	P	?	?	?	P	?	?	?	?	?	SOLID	32e14f1a79d27336795cf4b6f82bf674e7591e2364b8b08677159a5b7d49603d	2026-11-10	tool	current
 oidc-integration.md	X	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	7fc54417bb0bbef8447597333cbde653bbbcccfe784d0701d89d64892c2f0547	2026-11-10	tool	current
 ollama.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	f8ec3b79013bcc954292b960b176b94e11b0a50c857ee5d92ea4d75860fc7d59	2026-11-10	tool	current
-open-webui.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	084863ff8532b20bcfb32f428e44761ca92c5558e4a8967c40feee5a065a81a3	2026-11-10	tool	current
+open-webui.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	01e752ca7a5750e58c27872d424fc702e8b38ebe160209ac3a636dd9385b685c	2026-11-10	tool	current
 openclaw.md	S	P	?	?	?	P	?	?	?	?	?	SOLID	ede9989e2c65682b198416522324be999c4969bb2fb2649f763ab779cad42c8a	2026-11-10	tool	current
 paas.md	C	PARTIAL(M1)	?	?	?	P	?	?	?	?	?	SOLID	c51cade0532e3d6c2f841858d27173b414b9592abf77016a769af61cc4e00907	2026-11-10	tool	current
 php.md	S	P	?	?	?	P	?	?	PARTIAL(G1)	?	?	SOLID	a8383b357b0a8facc60ddd0c55a80258e04bc8237434244c525401a8d845ead7	2026-11-10	tool	current
