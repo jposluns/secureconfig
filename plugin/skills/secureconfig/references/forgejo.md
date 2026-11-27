@@ -390,6 +390,7 @@ Repository sources are the Forgejo repository at tag `v17.0.1` (commit `363f3dc3
 - Forgejo Git LFS server default and auth expiry (v17.0.1): https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/modules/setting/lfs.go
 - Forgejo OAuth2 provider enabled by default (v17.0.1): https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/modules/setting/oauth2.go
 - Forgejo rootless container SSH port default (v17.0.1): https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/docker/rootless/usr/local/bin/docker-setup.sh
+- Forgejo runner settings routes (v17.0.1): https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/routers/web/web.go
 - Forgejo configuration cheat sheet (rolling documentation, checked November 2026): https://forgejo.org/docs/latest/admin/config-cheat-sheet/
 - Forgejo Actions administrator guide (rolling documentation, checked November 2026): https://forgejo.org/docs/latest/admin/actions/
 
@@ -449,7 +450,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-10",
   "documentation_checked": "2026-11",
-  "body_sha256": "5da010ea6fda3a22d4548e954eeff192a8aa5fbffe11dfe67d26c129855b056f",
+  "body_sha256": "ee0e35d40e0ec97c87e5dbd2b02f1ce7fe801320aa5f99fea59e9bde2a853553",
   "components": {
     "forgejo": {
       "name": "Forgejo",
@@ -474,7 +475,8 @@ Claims (full source mapping in the JSON block below):
         "s66a4c73c950f": "https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/modules/setting/packages.go",
         "sc87c932fe2c6": "https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/modules/setting/lfs.go",
         "sd83514a65420": "https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/modules/setting/oauth2.go",
-        "sdeb88077f18a": "https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/docker/rootless/usr/local/bin/docker-setup.sh"
+        "sdeb88077f18a": "https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/docker/rootless/usr/local/bin/docker-setup.sh",
+        "s7aebf0572d51": "https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/routers/web/web.go"
       }
     },
     "forgejo-docs": {
@@ -505,7 +507,7 @@ Claims (full source mapping in the JSON block below):
     "reg-2fa": {"text": "No global 2FA requirement by default: GLOBAL_TWO_FACTOR_REQUIREMENT is empty and resolves to none, ENABLE_CAPTCHA is false, MIN_PASSWORD_LENGTH is 8, PASSWORD_COMPLEXITY defaults to off, and PASSWORD_CHECK_PWN is false.", "components": ["forgejo"], "sources": ["forgejo:sf3ba5b6a7894", "forgejo:sf2d6a425a0b4"], "status": "REASONED"},
     "reg-visibility": {"text": "New accounts and repos lean public: DEFAULT_USER_VISIBILITY resolves to the first allowed mode public, DEFAULT_KEEP_EMAIL_PRIVATE is false, DEFAULT_PRIVATE is last with FORCE_PRIVATE false, and HTTP git is enabled with DISABLE_HTTP_GIT false.", "components": ["forgejo"], "sources": ["forgejo:sf2d6a425a0b4", "forgejo:sfdd4142a2b6a"], "status": "REASONED"},
     "act-enabled": {"text": "Forgejo Actions is globally enabled by default: the Actions settings struct initializes Enabled: true with DefaultActionsURL https://data.forgejo.org.", "components": ["forgejo", "forgejo-docs"], "sources": ["forgejo:sfefa21c72676", "forgejo-docs:s579b9b8dfc12"], "status": "REASONED"},
-    "act-runner": {"text": "Enabled is not executing: no runner ships or auto-registers, so no workflow runs until an operator registers an act_runner with a token from the admin, org or repo settings; a registered runner running a workflow is arbitrary code execution on the runner host, not the Forgejo host.", "components": ["forgejo", "forgejo-docs"], "sources": ["forgejo:sfefa21c72676", "forgejo-docs:s579b9b8dfc12"], "status": "REASONED"},
+    "act-runner": {"text": "Enabled is not executing: no runner ships or auto-registers, so no workflow runs until an operator registers an act_runner with a token from the admin, org or repo settings; a registered runner running a workflow is arbitrary code execution on the runner host, not the Forgejo host.", "components": ["forgejo", "forgejo-docs"], "sources": ["forgejo:sfefa21c72676", "forgejo:s7aebf0572d51", "forgejo-docs:s579b9b8dfc12"], "status": "REASONED"},
     "ssrf-webhook": {"text": "Webhook delivery is not an open SSRF by default: when webhook.ALLOWED_HOST_LIST is empty it becomes the built-in external matcher, which excludes loopback (127.0.0.0/8, ::1) and private and LAN ranges (RFC 1918, 4193, 6598), and SKIP_TLS_VERIFY is false.", "components": ["forgejo"], "sources": ["forgejo:s9f205aa9ed3c", "forgejo:sa77a69b1c999"], "status": "REASONED"},
     "ssrf-migration": {"text": "Repo migration and mirror SSRF is fail-closed too: migrations.ALLOW_LOCALNETWORKS defaults false, SKIP_TLS_VERIFY false and ALLOW_UNENCRYPTED false, and local-path import via IMPORT_LOCAL_PATHS defaults false.", "components": ["forgejo"], "sources": ["forgejo:se9943f8c2bf6", "forgejo:sf3ba5b6a7894"], "status": "REASONED"},
     "ssh-builtin": {"text": "SSH is enabled but the built-in SSH server is off by default: DISABLE_SSH false and START_SSH_SERVER false, so Forgejo uses the host sshd and authorized_keys unless the built-in server is turned on; when on, SSH_PORT and SSH_LISTEN_PORT default to 22.", "components": ["forgejo", "forgejo-docs"], "sources": ["forgejo:sa46cfd6747a9", "forgejo:s29d7d7200de4", "forgejo-docs:s1483cc6ab1d4"], "status": "REASONED"},
