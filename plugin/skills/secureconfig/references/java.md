@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Spring Boot 4.1.2, Spring Boot starter migration 4.0, Spring Security HSTS 6.5, JDK keytool documentation 21, Tomcat HTTP connector 10.1, curl minimum diagnostics version 7.75.0, OpenJDK jdk21u javax.net.ssl sources jdk-21.0.12.1-ga, and Authelia source v4.39.28; 2 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
+Written against Spring Boot 4.1.2, Spring Boot starter migration 4.0, Spring Security HSTS 6.5, JDK keytool documentation 21, Tomcat HTTP connector 10.1, curl minimum diagnostics version 7.75.0, OpenJDK jdk21u javax.net.ssl sources jdk-21.0.12.1-ga, and Authelia source v4.39.28, plus 1 more recorded basis; 2 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources and any earlier-form run, not a live demonstration of the shipped form.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -220,11 +220,11 @@ server.max-http-request-header-size=8KB
 | Property | Scope |
 | --- | --- |
 | `spring.servlet.multipart.max-file-size` | Each uploaded file handled by servlet multipart support. |
-| `spring.servlet.multipart.max-request-size` | The complete multipart request, including its parts and multipart overhead. |
+| `spring.servlet.multipart.max-request-size` | Each `multipart/form-data` request, as Boot 4.1.2 describes the property. This guide reads Boot 4.1.2 and Tomcat 11.0.27, the Tomcat release it manages, as making it the upload parser's limit for the complete request; the Tomcat release that Boot 3.5.16 manages was not checked. |
 | `server.tomcat.max-http-form-post-size` | Tomcat's processing of form request bodies into parameters; not arbitrary request bodies. |
 | `server.max-http-request-header-size` | HTTP request headers, with details dependent on the embedded server. Tomcat counts the request line and all header names and values together. |
 
-The defaults and header qualifications appear in the [3.5.16 property reference](https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html) and [4.1.2 property reference](https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html). Tomcat explicitly documents that its [form parsing limit](https://tomcat.apache.org/tomcat-10.1-doc/config/http.html) is not a general request-body limit.
+The defaults and header qualifications appear in the [3.5.16 property reference](https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html) and [4.1.2 property reference](https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html). Tomcat explicitly documents that its [form parsing limit](https://tomcat.apache.org/tomcat-10.1-doc/config/http.html) is not a general request-body limit. Boot 4.1.2 [describes `max-request-size`](https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.2/module/spring-boot-servlet/src/main/java/org/springframework/boot/servlet/autoconfigure/MultipartProperties.java) as the maximum size allowed for `multipart/form-data` requests and maps it to the servlet multipart configuration. It [manages Tomcat 11.0.27](https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.2/gradle.properties), whose [request parser](https://raw.githubusercontent.com/apache/tomcat/11.0.27/java/org/apache/catalina/connector/Request.java) passes that configuration's maximum request size to the [upload limit](https://raw.githubusercontent.com/apache/tomcat/11.0.27/java/org/apache/tomcat/util/http/fileupload/FileUploadBase.java) that Tomcat documents as the maximum size permitted for the complete request. As this guide reads them, Boot's value reaches that parser through the servlet registration, which these files do not show.
 
 None of these properties establishes a universal JSON body limit. Bound other request bodies at the reverse proxy and, where necessary, in the application's request processing. Test the actual content type and route; an authentication failure does not demonstrate a size limit.
 
@@ -548,6 +548,8 @@ The month in this heading is the month of the whole-guide documentation pass, an
 - Spring Boot servlet error handling (rolling documentation, checked September 2026): https://docs.spring.io/spring-boot/3.5/reference/web/servlet.html
 - Spring Boot RestClientSsl API (rolling documentation, checked September 2026): https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/client/RestClientSsl.html
 - Spring Boot 4.1.2 RestClientSsl source, moved package (checked October 2026): https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.2/module/spring-boot-restclient/src/main/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.java
+- Spring Boot 4.1.2 MultipartProperties source, `max-request-size` description and mapping to `MultipartConfigElement` (checked November 2026): https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.2/module/spring-boot-servlet/src/main/java/org/springframework/boot/servlet/autoconfigure/MultipartProperties.java
+- Spring Boot 4.1.2 build properties, managed `tomcatVersion` (checked November 2026): https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.2/gradle.properties
 - Spring Boot REST clients and SSL helper imports (rolling documentation, checked September 2026): https://docs.spring.io/spring-boot/3.5/reference/io/rest-client.html
 - Spring Boot REST clients and moved SSL helper imports (rolling documentation, checked October 2026): https://docs.spring.io/spring-boot/4.1/reference/io/rest-client.html
 - Spring Framework ForwardedHeaderFilter, proxy trust boundary: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/filter/ForwardedHeaderFilter.html
@@ -557,6 +559,7 @@ The month in this heading is the month of the whole-guide documentation pass, an
 - Spring Security CSRF and stateless browser applications: https://docs.spring.io/spring-security/reference/features/exploits/csrf.html
 - Spring Security session fixation protection and changeSessionId: https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html
 - Apache Tomcat HTTP connector, form parsing and request-header limits: https://tomcat.apache.org/tomcat-10.1-doc/config/http.html
+- Apache Tomcat 11.0.27 multipart parsing: `Request.java` sets the upload limit from the servlet's maximum request size, which `FileUploadBase` documents as the limit for the complete request (checked November 2026). Sources: https://raw.githubusercontent.com/apache/tomcat/11.0.27/java/org/apache/catalina/connector/Request.java and https://raw.githubusercontent.com/apache/tomcat/11.0.27/java/org/apache/tomcat/util/http/fileupload/FileUploadBase.java
 - curl manual, header input, multipart files, protocol restrictions, and transfer diagnostics (curl 7.75.0 or newer for `exitcode` and `errormsg`): https://curl.se/docs/manpage.html
 
 
@@ -587,6 +590,7 @@ Components (recorded basis):
 - entra-docs: Microsoft Entra documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
 - cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
 - authelia-source: Authelia source (v4.39.28)
+- tomcat11: Tomcat multipart upload source (11.0.27)
 
 Claims (full source mapping in the JSON block below):
 
@@ -631,7 +635,7 @@ Claims (full source mapping in the JSON block below):
 - h2 (REASONED; boot-docs): H2 console defaults disabled in checked releases; explicitly set spring.h2.console.enabled=false.
 - devtools (REASONED; boot-docs): Exclude production devtools; active development defaults enable H2 when components exist and set message/trace/binding errors to always.
 - multipart-file (REASONED; boot-docs): Servlet multipart max-file-size defaults to 1MB per file in checked releases.
-- multipart-request (REASONED; boot-docs): Servlet multipart max-request-size defaults to 10MB including parts and overhead in checked releases.
+- multipart-request (REASONED; boot-docs, boot41, tomcat11): Servlet multipart max-request-size defaults to 10MB in checked releases and covers multipart/form-data requests; this guide reads Boot 4.1.2 and Tomcat 11.0.27 source as making it the upload limit for the complete request.
 - form-limit (REASONED; boot-docs, tomcat): Tomcat max-http-form-post-size defaults to 2MB for form-to-parameter processing, not arbitrary request bodies.
 - header-limit (REASONED; boot-docs, tomcat): max-http-request-header-size defaults to 8KB; Tomcat counts request line and all header names/values together.
 - json-limit (REASONED; boot-docs, tomcat): These properties do not establish a universal JSON body limit; bound other bodies at the proxy/application and test the actual route and content type.
@@ -653,13 +657,15 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "be5f7b23df8da2dbc94aeb5ba211fca31f76c6bc9ebf1e00d8907d5e760ff883",
+  "body_sha256": "bd4a63ab6d27db2e7216df9def391858506e70919fb16e9cc18e095f54e696c5",
   "components": {
     "boot41": {
       "name": "Spring Boot",
       "basis": "4.1.2",
       "sources": {
-        "sd774fe80f56e": "https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.2/module/spring-boot-restclient/src/main/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.java"
+        "sd774fe80f56e": "https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.2/module/spring-boot-restclient/src/main/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.java",
+        "s3f3796450d81": "https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.2/module/spring-boot-servlet/src/main/java/org/springframework/boot/servlet/autoconfigure/MultipartProperties.java",
+        "s2d07d67349e8": "https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.2/gradle.properties"
       }
     },
     "boot40": {
@@ -786,6 +792,14 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "sfeb54a05c30d": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/introduction.md#L21-L31"
       }
+    },
+    "tomcat11": {
+      "name": "Tomcat multipart upload source",
+      "basis": "11.0.27",
+      "sources": {
+        "sc1e9c7c87cdf": "https://raw.githubusercontent.com/apache/tomcat/11.0.27/java/org/apache/catalina/connector/Request.java",
+        "se2008c54b109": "https://raw.githubusercontent.com/apache/tomcat/11.0.27/java/org/apache/tomcat/util/http/fileupload/FileUploadBase.java"
+      }
     }
   },
   "claims": {
@@ -830,7 +844,7 @@ Claims (full source mapping in the JSON block below):
     "h2": {"text": "H2 console defaults disabled in checked releases; explicitly set spring.h2.console.enabled=false.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
     "devtools": {"text": "Exclude production devtools; active development defaults enable H2 when components exist and set message/trace/binding errors to always.", "components": ["boot-docs"], "sources": ["boot-docs:se8918714c2c8", "boot-docs:s88d377c93f63"], "status": "REASONED"},
     "multipart-file": {"text": "Servlet multipart max-file-size defaults to 1MB per file in checked releases.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
-    "multipart-request": {"text": "Servlet multipart max-request-size defaults to 10MB including parts and overhead in checked releases.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
+    "multipart-request": {"text": "Servlet multipart max-request-size defaults to 10MB in checked releases and covers multipart/form-data requests; this guide reads Boot 4.1.2 and Tomcat 11.0.27 source as making it the upload limit for the complete request.", "components": ["boot-docs", "boot41", "tomcat11"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot41:s3f3796450d81", "boot41:s2d07d67349e8", "tomcat11:sc1e9c7c87cdf", "tomcat11:se2008c54b109"], "status": "REASONED"},
     "form-limit": {"text": "Tomcat max-http-form-post-size defaults to 2MB for form-to-parameter processing, not arbitrary request bodies.", "components": ["boot-docs", "tomcat"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "tomcat:s20a557a45f7a"], "status": "REASONED"},
     "header-limit": {"text": "max-http-request-header-size defaults to 8KB; Tomcat counts request line and all header names/values together.", "components": ["boot-docs", "tomcat"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "tomcat:s20a557a45f7a"], "status": "REASONED"},
     "json-limit": {"text": "These properties do not establish a universal JSON body limit; bound other bodies at the proxy/application and test the actual route and content type.", "components": ["boot-docs", "tomcat"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "tomcat:s20a557a45f7a"], "status": "REASONED"},
