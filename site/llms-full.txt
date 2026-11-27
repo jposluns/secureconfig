@@ -61527,7 +61527,7 @@ The state code enforces directory mode `0700` and file mode `0600` for the state
 
 ## 11. Run with least privilege
 
-Run the Gateway under a dedicated, unprivileged operating-system account, one Gateway per trust boundary (one host or OS user per person). A token holder already has host-operator authority through the agent's tools, so the account the Gateway runs as bounds the blast radius of a leaked secret or a successful prompt injection. In a container, run as the non-root `node` user with `--read-only` and `--cap-drop=ALL`, and see [container-hardening.md](https://github.com/jposluns/secureconfig/blob/main/container-hardening.md) and [docker.md](https://github.com/jposluns/secureconfig/blob/main/docker.md); under systemd, apply the usual service hardening. Grant the account only the filesystem and network access the agent genuinely needs, and remember that loopback binding limits inbound reach, not the agent's outbound access from its tools. [Threat model and least privilege](https://docs.openclaw.ai/gateway/security/network-exposure).
+The network-exposure page says of Gateway credentials: "prefer separate gateways per trust boundary". A token holder already has host-operator authority through the agent's tools, and loopback binding limits inbound reach, not the agent's outbound access from its tools. [Threat model and least privilege](https://docs.openclaw.ai/gateway/security/network-exposure). Guide advice: run the Gateway under a dedicated, unprivileged operating-system account, one host or OS user per person, so that the account bounds the blast radius of a leaked secret or a successful prompt injection. In a container, run as the non-root `node` user with `--read-only` and `--cap-drop=ALL`, and see [container-hardening.md](https://github.com/jposluns/secureconfig/blob/main/container-hardening.md) and [docker.md](https://github.com/jposluns/secureconfig/blob/main/docker.md); under systemd, apply the usual service hardening. Grant the account only the filesystem and network access the agent genuinely needs.
 
 ## Exposure rules
 
@@ -61787,6 +61787,7 @@ Repository sources are the OpenClaw repository at annotated tag `v2026.11.2` (co
 - OpenClaw WhatsApp channel (WhatsApp Web via Baileys) (v2026.11.2): https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/whatsapp.md
 - OpenClaw Signal channel (loopback signal-cli daemon) (v2026.11.2): https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/signal.md
 - OpenClaw iMessage channel (JSON-RPC over stdio) (v2026.11.2): https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/imessage.md
+- OpenClaw MIT license (v2026.11.2): https://github.com/openclaw/openclaw/blob/v2026.11.2/LICENSE
 - OpenClaw gateway configuration reference (rolling documentation, checked November 2026): https://docs.openclaw.ai/gateway/config-gateway
 - OpenClaw gateway network-exposure and security guidance (rolling documentation, checked November 2026): https://docs.openclaw.ai/gateway/security/network-exposure
 - OpenClaw remote-access model (rolling documentation, checked November 2026): https://docs.openclaw.ai/gateway/remote
@@ -61843,7 +61844,7 @@ Claims (full source mapping in the JSON block below):
 - secrets-store (REASONED; openclaw, openclaw-docs): The shared secret store and the Gateway token (when not exported) live in the unencrypted SQLite ~/.openclaw/state/openclaw.sqlite; state dir is 0700 and files 0600 and chmod failures throw.
 - secrets-agent (REASONED; openclaw): Provider and model OAuth/API keys live in the auth-profile store, the state DB or a per-agent openclaw-agent.sqlite under ~/.openclaw/agents.
 - secrets-refs (REASONED; openclaw-docs): For stronger isolation than filesystem permissions use opt-in exec SecretRefs (1Password/Vault); the config then holds only a reference; protect the state dir and backups.
-- least-privilege (REASONED; openclaw-docs): Run the Gateway as a dedicated non-root account, one Gateway per trust boundary; loopback limits inbound reach, not the agent's outbound tool access; harden the container/systemd unit.
+- least-privilege (REASONED; openclaw-docs): The cited page says to prefer separate gateways per trust boundary; loopback limits inbound reach, not the agent's outbound tool access. Guide advice: run the Gateway as a dedicated non-root account and harden the container/systemd unit.
 - verify-listeners (REASONED; openclaw): ss inventories local binds in this namespace only; expect 127.0.0.1:18789 for a loopback bind and treat 0.0.0.0:18789 as all-interfaces exposure; a failed inventory proves no absence.
 - verify-tls-anon (REASONED; openclaw, openclaw-docs): Validated HTTPS must complete with exit=0; anonymous POST /tools/invoke must return 401/403 on a fixed Gateway and a 2xx on an exposed one.
 - verify-exec-deny (REASONED; openclaw): An authenticated exec invoke must be refused with a 4xx because exec is on the default HTTP deny list; a 2xx means gateway.tools.allow re-enabled exec.
@@ -61855,7 +61856,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-09",
   "documentation_checked": "2026-11",
-  "body_sha256": "ede9989e2c65682b198416522324be999c4969bb2fb2649f763ab779cad42c8a",
+  "body_sha256": "104b488df3f27e73893a88da1f17271cd84118a05db48bec3a8c574de4c50dbc",
   "components": {
     "openclaw": {
       "name": "OpenClaw",
@@ -61888,7 +61889,8 @@ Claims (full source mapping in the JSON block below):
         "sc484f9208dc6": "https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/discord.md",
         "sf9ae91fb4925": "https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/whatsapp.md",
         "saf2ebd9d8abd": "https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/signal.md",
-        "s0c92dbd75cbe": "https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/imessage.md"
+        "s0c92dbd75cbe": "https://github.com/openclaw/openclaw/blob/v2026.11.2/docs/channels/imessage.md",
+        "s048753967dbd": "https://github.com/openclaw/openclaw/blob/v2026.11.2/LICENSE"
       }
     },
     "openclaw-docs": {
@@ -61910,7 +61912,7 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "product": {"text": "OpenClaw is a self-hosted MIT AI assistant whose Gateway runs host tools; an exposed authenticated Gateway is host RCE; config is ~/.openclaw/openclaw.json (JSON5) and the default port is 18789.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:s6dd72b6a5226", "openclaw-docs:sabc5c1fcbcc1", "openclaw-docs:s9e649e9bbd24", "openclaw-docs:s4ddc0690c335"], "status": "REASONED"},
+    "product": {"text": "OpenClaw is a self-hosted MIT AI assistant whose Gateway runs host tools; an exposed authenticated Gateway is host RCE; config is ~/.openclaw/openclaw.json (JSON5) and the default port is 18789.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:s6dd72b6a5226", "openclaw:s048753967dbd", "openclaw-docs:sabc5c1fcbcc1", "openclaw-docs:s9e649e9bbd24", "openclaw-docs:s4ddc0690c335"], "status": "REASONED"},
     "bind": {"text": "gateway.bind modes are auto|loopback|lan|tailnet|custom, default loopback on a host, but unset auto resolves to 0.0.0.0 inside a detected container; set bind:\"loopback\" explicitly.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:s19fa57e613dd", "openclaw:s7d682527d730", "openclaw:s0ad6a13b229d", "openclaw:s7f909bc2f9ef", "openclaw-docs:sfd021eada97d"], "status": "REASONED"},
     "port": {"text": "The Gateway default port is 18789 (DEFAULT_GATEWAY_PORT) and the config filename is openclaw.json.", "components": ["openclaw"], "sources": ["openclaw:s6dd72b6a5226"], "status": "REASONED"},
     "fail-closed": {"text": "A non-loopback bind with no shared secret and not trusted-proxy refuses to start; the error is classified non-restartable, and related guards cover Control UI origins and trusted-proxy.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:s7f909bc2f9ef", "openclaw-docs:sabc5c1fcbcc1"], "status": "REASONED"},
@@ -61935,7 +61937,7 @@ Claims (full source mapping in the JSON block below):
     "secrets-store": {"text": "The shared secret store and the Gateway token (when not exported) live in the unencrypted SQLite ~/.openclaw/state/openclaw.sqlite; state dir is 0700 and files 0600 and chmod failures throw.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:s50f6fcb0cdbf", "openclaw:s93afaf65e6e5", "openclaw-docs:sbb76d16c68a5"], "status": "REASONED"},
     "secrets-agent": {"text": "Provider and model OAuth/API keys live in the auth-profile store, the state DB or a per-agent openclaw-agent.sqlite under ~/.openclaw/agents.", "components": ["openclaw"], "sources": ["openclaw:s117ed23e1616"], "status": "REASONED"},
     "secrets-refs": {"text": "For stronger isolation than filesystem permissions use opt-in exec SecretRefs (1Password/Vault); the config then holds only a reference; protect the state dir and backups.", "components": ["openclaw-docs"], "sources": ["openclaw-docs:sbb76d16c68a5"], "status": "REASONED"},
-    "least-privilege": {"text": "Run the Gateway as a dedicated non-root account, one Gateway per trust boundary; loopback limits inbound reach, not the agent's outbound tool access; harden the container/systemd unit.", "components": ["openclaw-docs"], "sources": ["openclaw-docs:sabc5c1fcbcc1"], "status": "REASONED"},
+    "least-privilege": {"text": "The cited page says to prefer separate gateways per trust boundary; loopback limits inbound reach, not the agent's outbound tool access. Guide advice: run the Gateway as a dedicated non-root account and harden the container/systemd unit.", "components": ["openclaw-docs"], "sources": ["openclaw-docs:sabc5c1fcbcc1"], "status": "REASONED"},
     "verify-listeners": {"text": "ss inventories local binds in this namespace only; expect 127.0.0.1:18789 for a loopback bind and treat 0.0.0.0:18789 as all-interfaces exposure; a failed inventory proves no absence.", "components": ["openclaw"], "sources": ["openclaw:s19fa57e613dd", "openclaw:s6dd72b6a5226"], "status": "REASONED", "verify": [1]},
     "verify-tls-anon": {"text": "Validated HTTPS must complete with exit=0; anonymous POST /tools/invoke must return 401/403 on a fixed Gateway and a 2xx on an exposed one.", "components": ["openclaw", "openclaw-docs"], "sources": ["openclaw:sd85cbe517038", "openclaw-docs:s9e649e9bbd24"], "status": "REASONED", "verify": [2]},
     "verify-exec-deny": {"text": "An authenticated exec invoke must be refused with a 4xx because exec is on the default HTTP deny list; a 2xx means gateway.tools.allow re-enabled exec.", "components": ["openclaw"], "sources": ["openclaw:s04b0bb697adb"], "status": "REASONED", "verify": [3]},
@@ -62069,7 +62071,7 @@ FORCE_PRIVATE   = true
 
 ## 8. Govern Forgejo Actions: treat every runner as a code-execution host
 
-Forgejo Actions is globally enabled by default: the `Actions` settings struct initializes `Enabled: true`. Enabled is not the same as executing, though. No runner ships or auto-registers, so no workflow runs until an operator installs an `act_runner` and registers it with a registration token from the admin, organization or repository settings. The security point is what a registered runner is: a runner executing a workflow runs arbitrary code from that workflow on the runner host or container, not on the Forgejo host. If you do not use Actions, disable it; if you do, isolate runners and never attach a privileged runner to repositories that accept contributions from untrusted accounts. In `app.ini`:
+Forgejo Actions is globally enabled by default: the `Actions` settings struct initializes `Enabled: true`. Enabled is not the same as executing, though. No runner ships or auto-registers, so no workflow runs until an operator installs an `act_runner` and registers it with a registration token from the admin, user, organization or repository settings. The security point is what a registered runner is: a runner executing a workflow runs arbitrary code from that workflow on the runner host or container, not on the Forgejo host. If you do not use Actions, disable it; if you do, isolate runners and never attach a privileged runner to repositories that accept contributions from untrusted accounts. In `app.ini`:
 
 ```ini
 [actions]
@@ -62342,6 +62344,7 @@ Repository sources are the Forgejo repository at tag `v17.0.1` (commit `363f3dc3
 - Forgejo Git LFS server default and auth expiry (v17.0.1): https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/modules/setting/lfs.go
 - Forgejo OAuth2 provider enabled by default (v17.0.1): https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/modules/setting/oauth2.go
 - Forgejo rootless container SSH port default (v17.0.1): https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/docker/rootless/usr/local/bin/docker-setup.sh
+- Forgejo runner settings routes (v17.0.1): https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/routers/web/web.go
 - Forgejo configuration cheat sheet (rolling documentation, checked November 2026): https://forgejo.org/docs/latest/admin/config-cheat-sheet/
 - Forgejo Actions administrator guide (rolling documentation, checked November 2026): https://forgejo.org/docs/latest/admin/actions/
 
@@ -62381,7 +62384,7 @@ Claims (full source mapping in the JSON block below):
 - reg-2fa (REASONED; forgejo): No global 2FA requirement by default: GLOBAL_TWO_FACTOR_REQUIREMENT is empty and resolves to none, ENABLE_CAPTCHA is false, MIN_PASSWORD_LENGTH is 8, PASSWORD_COMPLEXITY defaults to off, and PASSWORD_CHECK_PWN is false.
 - reg-visibility (REASONED; forgejo): New accounts and repos lean public: DEFAULT_USER_VISIBILITY resolves to the first allowed mode public, DEFAULT_KEEP_EMAIL_PRIVATE is false, DEFAULT_PRIVATE is last with FORCE_PRIVATE false, and HTTP git is enabled with DISABLE_HTTP_GIT false.
 - act-enabled (REASONED; forgejo, forgejo-docs): Forgejo Actions is globally enabled by default: the Actions settings struct initializes Enabled: true with DefaultActionsURL https://data.forgejo.org.
-- act-runner (REASONED; forgejo, forgejo-docs): Enabled is not executing: no runner ships or auto-registers, so no workflow runs until an operator registers an act_runner with a token from the admin, org or repo settings; a registered runner running a workflow is arbitrary code execution on the runner host, not the Forgejo host.
+- act-runner (REASONED; forgejo, forgejo-docs): Enabled is not executing: no runner ships or auto-registers, so no workflow runs until an operator registers an act_runner with a token from the admin, user, org or repo settings; a registered runner running a workflow is arbitrary code execution on the runner host, not the Forgejo host.
 - ssrf-webhook (REASONED; forgejo): Webhook delivery is not an open SSRF by default: when webhook.ALLOWED_HOST_LIST is empty it becomes the built-in external matcher, which excludes loopback (127.0.0.0/8, ::1) and private and LAN ranges (RFC 1918, 4193, 6598), and SKIP_TLS_VERIFY is false.
 - ssrf-migration (REASONED; forgejo): Repo migration and mirror SSRF is fail-closed too: migrations.ALLOW_LOCALNETWORKS defaults false, SKIP_TLS_VERIFY false and ALLOW_UNENCRYPTED false, and local-path import via IMPORT_LOCAL_PATHS defaults false.
 - ssh-builtin (REASONED; forgejo, forgejo-docs): SSH is enabled but the built-in SSH server is off by default: DISABLE_SSH false and START_SSH_SERVER false, so Forgejo uses the host sshd and authorized_keys unless the built-in server is turned on; when on, SSH_PORT and SSH_LISTEN_PORT default to 22.
@@ -62401,7 +62404,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-11-10",
   "documentation_checked": "2026-11",
-  "body_sha256": "5da010ea6fda3a22d4548e954eeff192a8aa5fbffe11dfe67d26c129855b056f",
+  "body_sha256": "86482ffc965ef84ae4c6aee797f0082e78da6684d8607b790c4d8f1b1de4f8c1",
   "components": {
     "forgejo": {
       "name": "Forgejo",
@@ -62426,7 +62429,8 @@ Claims (full source mapping in the JSON block below):
         "s66a4c73c950f": "https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/modules/setting/packages.go",
         "sc87c932fe2c6": "https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/modules/setting/lfs.go",
         "sd83514a65420": "https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/modules/setting/oauth2.go",
-        "sdeb88077f18a": "https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/docker/rootless/usr/local/bin/docker-setup.sh"
+        "sdeb88077f18a": "https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/docker/rootless/usr/local/bin/docker-setup.sh",
+        "s7aebf0572d51": "https://codeberg.org/forgejo/forgejo/src/tag/v17.0.1/routers/web/web.go"
       }
     },
     "forgejo-docs": {
@@ -62457,7 +62461,7 @@ Claims (full source mapping in the JSON block below):
     "reg-2fa": {"text": "No global 2FA requirement by default: GLOBAL_TWO_FACTOR_REQUIREMENT is empty and resolves to none, ENABLE_CAPTCHA is false, MIN_PASSWORD_LENGTH is 8, PASSWORD_COMPLEXITY defaults to off, and PASSWORD_CHECK_PWN is false.", "components": ["forgejo"], "sources": ["forgejo:sf3ba5b6a7894", "forgejo:sf2d6a425a0b4"], "status": "REASONED"},
     "reg-visibility": {"text": "New accounts and repos lean public: DEFAULT_USER_VISIBILITY resolves to the first allowed mode public, DEFAULT_KEEP_EMAIL_PRIVATE is false, DEFAULT_PRIVATE is last with FORCE_PRIVATE false, and HTTP git is enabled with DISABLE_HTTP_GIT false.", "components": ["forgejo"], "sources": ["forgejo:sf2d6a425a0b4", "forgejo:sfdd4142a2b6a"], "status": "REASONED"},
     "act-enabled": {"text": "Forgejo Actions is globally enabled by default: the Actions settings struct initializes Enabled: true with DefaultActionsURL https://data.forgejo.org.", "components": ["forgejo", "forgejo-docs"], "sources": ["forgejo:sfefa21c72676", "forgejo-docs:s579b9b8dfc12"], "status": "REASONED"},
-    "act-runner": {"text": "Enabled is not executing: no runner ships or auto-registers, so no workflow runs until an operator registers an act_runner with a token from the admin, org or repo settings; a registered runner running a workflow is arbitrary code execution on the runner host, not the Forgejo host.", "components": ["forgejo", "forgejo-docs"], "sources": ["forgejo:sfefa21c72676", "forgejo-docs:s579b9b8dfc12"], "status": "REASONED"},
+    "act-runner": {"text": "Enabled is not executing: no runner ships or auto-registers, so no workflow runs until an operator registers an act_runner with a token from the admin, user, org or repo settings; a registered runner running a workflow is arbitrary code execution on the runner host, not the Forgejo host.", "components": ["forgejo", "forgejo-docs"], "sources": ["forgejo:sfefa21c72676", "forgejo:s7aebf0572d51", "forgejo-docs:s579b9b8dfc12"], "status": "REASONED"},
     "ssrf-webhook": {"text": "Webhook delivery is not an open SSRF by default: when webhook.ALLOWED_HOST_LIST is empty it becomes the built-in external matcher, which excludes loopback (127.0.0.0/8, ::1) and private and LAN ranges (RFC 1918, 4193, 6598), and SKIP_TLS_VERIFY is false.", "components": ["forgejo"], "sources": ["forgejo:s9f205aa9ed3c", "forgejo:sa77a69b1c999"], "status": "REASONED"},
     "ssrf-migration": {"text": "Repo migration and mirror SSRF is fail-closed too: migrations.ALLOW_LOCALNETWORKS defaults false, SKIP_TLS_VERIFY false and ALLOW_UNENCRYPTED false, and local-path import via IMPORT_LOCAL_PATHS defaults false.", "components": ["forgejo"], "sources": ["forgejo:se9943f8c2bf6", "forgejo:sf3ba5b6a7894"], "status": "REASONED"},
     "ssh-builtin": {"text": "SSH is enabled but the built-in SSH server is off by default: DISABLE_SSH false and START_SSH_SERVER false, so Forgejo uses the host sshd and authorized_keys unless the built-in server is turned on; when on, SSH_PORT and SSH_LISTEN_PORT default to 22.", "components": ["forgejo", "forgejo-docs"], "sources": ["forgejo:sa46cfd6747a9", "forgejo:s29d7d7200de4", "forgejo-docs:s1483cc6ab1d4"], "status": "REASONED"},
