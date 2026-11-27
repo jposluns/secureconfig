@@ -14,7 +14,8 @@ The four facets form one non-negotiable top tier, co-equal, with no ranking amon
 top tier sit three throughput values, in order: Progress, then Speed, then Cost. When two
 dimensions conflict, the higher tier wins outright, and that call is made once, up front, so it
 never has to be re-argued under pressure. "Done faster" and "done cheaper" are never reasons for
-"done worse", and Progress never licenses less verification.
+"done worse", and Progress never licenses less verification. The rule in "Fleet identities" below
+ranks just below safety and the top tier and above Progress, Speed and Cost.
 
 - **Accuracy.** Every factual claim matches its source, and every statement about the state of
   something rests on an observation, not an inference. "Done" means a check actually ran. An
@@ -31,6 +32,23 @@ never has to be re-argued under pressure. "Done faster" and "done cheaper" are n
 
 If any constraint would force a compromise on the top tier, halt and surface the tradeoff to the
 maintainer rather than resolving it silently in favour of progress, speed, or cost.
+
+## Fleet identities
+
+The maintainer's own name, email address, accounts and handle may appear, since commits, pull
+requests, repository links and the security contact need them. That permission never covers worker
+seat names, seat or account labels, or any fleet seat, even one the maintainer holds. Nothing else
+that identifies a worker, a seat, or a person or account other than the maintainer ever appears
+anywhere that is or could become public, including worker seat names, account labels and email
+addresses. This covers commit messages, trailers, author and committer fields, branch names, pull
+request titles, bodies and comments, issue text, `CHANGELOG.md` entries, docs, code, tests,
+fixtures, CI logs, artifacts, the published site, release notes, package metadata and any file in
+this repository. Vendors and products the guides cite are not covered by the rule at all, and a
+vendor-documented default login that a guide cites so readers change it is an allowed product
+default, not an identifier. Where one is needed, use a role name, such as "a pool worker" or "the
+claude leg". A placeholder that identifies no one, such as an address at `example.com`, is not an
+identifier. The rule, set by the maintainer on 2026-11-26, ranks just below safety and the top tier
+and above Progress, Speed and Cost.
 
 ## The five rules
 
