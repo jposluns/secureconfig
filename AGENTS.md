@@ -32,6 +32,20 @@ never has to be re-argued under pressure. "Done faster" and "done cheaper" are n
 If any constraint would force a compromise on the top tier, halt and surface the tradeoff to the
 maintainer rather than resolving it silently in favour of progress, speed, or cost.
 
+## Fleet identities
+
+The maintainer's own name and email address may appear, since commits and pull requests carry them.
+Nothing else that identifies a worker, a seat or a third party ever appears anywhere that is or
+could become public, including worker email addresses, account identifiers, seat labels and any
+identifier belonging to a third party. This covers commit messages and trailers, pull request
+titles, bodies and comments, issue text, `CHANGELOG.md` entries, docs, code, tests and fixtures, CI
+logs and artifacts, the published site, release notes, package metadata, and any file in this
+repository.
+Where one is needed, use a role name, such as "a pool worker" or "the claude leg". The rule, set
+by the maintainer on 2026-11-26, ranks just below safety and the top tier and above Progress,
+Speed and Cost. The published project contacts (`SECURITY.md`, `security.txt`) and documentation
+placeholders are not covered.
+
 ## The five rules
 
 1. **Surface what a guardrail catches.** When a guardrail blocks, flags, or refuses an action, say
