@@ -35,19 +35,20 @@ maintainer rather than resolving it silently in favour of progress, speed, or co
 
 ## Fleet identities
 
-The maintainer's own name, email address, accounts and handle may appear, since commits and pull
-requests carry them. Nothing else identifying ever appears anywhere that is or could become public:
-no worker seat name, seat label, account label, account identifier or email address, and no
-identifier of a third party, meaning a person or account other than the maintainer. This includes
-commit messages, trailers, author and committer fields, branch names, pull request titles, bodies
-and comments, issue text, `CHANGELOG.md` entries, docs, code, tests, fixtures, CI logs, artifacts,
-the published site, release notes, package metadata and any file in this repository.
-Vendors and products the guides cite are not third parties, and a vendor-documented default login
-that a guide cites so readers change it is an allowed product default, not an identifier. Where
-one is needed, use a role name, such as "a pool worker" or "the claude leg". A placeholder that
-identifies no one, such as an address at `example.com`, is not an identifier. The rule, set by the
-maintainer on 2026-11-26, ranks just below safety and the top tier and above Progress, Speed and
-Cost.
+The maintainer's own name, email address, accounts and handle may appear, since commits, pull
+requests, repository links and the security contact need them. That permission never covers worker
+seat names, seat or account labels, or any fleet seat, even one the maintainer holds. Nothing else
+that identifies a worker, a seat, or a person or account other than the maintainer ever appears
+anywhere that is or could become public, including worker seat names, account labels and email
+addresses. This covers commit messages, trailers, author and committer fields, branch names, pull
+request titles, bodies and comments, issue text, `CHANGELOG.md` entries, docs, code, tests,
+fixtures, CI logs, artifacts, the published site, release notes, package metadata and any file in
+this repository. Vendors and products the guides cite are not covered by the rule at all, and a
+vendor-documented default login that a guide cites so readers change it is an allowed product
+default, not an identifier. Where one is needed, use a role name, such as "a pool worker" or "the
+claude leg". A placeholder that identifies no one, such as an address at `example.com`, is not an
+identifier. The rule, set by the maintainer on 2026-11-26, ranks just below safety and the top tier
+and above Progress, Speed and Cost.
 
 ## The five rules
 
