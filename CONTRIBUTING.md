@@ -500,13 +500,26 @@ gate existed. A second gate, `tools/check_changelog_format.py`, requires an empt
 A third, `tools/check_changelog_bullets.py`, holds each new or changed bullet to at most 3
 sentences of at most 25 words each, as the maintainer ruled on 2026-11-27 (`DECISIONS.md`). It
 splits sentences with `tools/sentence_split.py` and drops a trailing `(#N)`. It counts a code span
-as one word, unless the span's content is over 60 characters or holds more than 8 spaces. A
-bullet does not restate the version, which `VERSION` holds; the gate rejects the old fixed-form
-version sentence. Every entry under a dated heading is a `- ` bullet: other text, fence lines and
-two bullets with the same text fail. The bullets that broke the rule when the gate was added are
-listed by hash in `tools/changelog_bullets_legacy.txt` until a batch rewrites them. The list must
-hold exactly `LEGACY_MAX` entries, a constant in the gate. A batch deletes its lines and lowers
-`LEGACY_MAX` by the same number, and nothing raises it.
+as one word, unless the span's content, with its leading and trailing spaces stripped, is over 60
+characters or holds more than 8 spaces. Zero-width and other invisible characters (Unicode
+categories Cf, Zs, Zl and Zp) separate words, and a new or changed bullet holding a Cf character
+fails. A bullet does not restate the version, which `VERSION` holds: the gate rejects `VERSION`
+listed with `plugin.json`, with or without `SKILL.md`, then go to, move to, stay at, remain at,
+are bumped, updated or set, carry the or this, or are and a digit. #1429 deleted 91 standalone
+sentences of that kind: 71 "`VERSION`, `plugin/plugin.json` and
+`plugin/skills/secureconfig/SKILL.md` go to <version>.", 1 "... go to the pull request's
+version." (#1348) and 19 "... stay at main's value, <version>, because main is higher."; longer
+legacy sentences that also name other files wait for their batch. Every entry under a dated
+heading is a `- ` bullet: other text, fence lines (one opened on a bullet's own first line
+included) and two bullets with the same text fail. The bullets that broke the rule when the gate
+was added are listed by hash in `tools/changelog_bullets_legacy.txt` until a batch rewrites them,
+and an entry dated after 2026-11-27 fails. The list must hold exactly `LEGACY_MAX` entries, a
+constant in the gate. A batch deletes its lines and lowers `LEGACY_MAX` by the same number, and
+nothing raises it. Every entry must also be in the list as committed at the merge base of `HEAD`
+and `$BASE_SHA`, which CI sets on a pull request, or else `origin/main`, so an edited legacy
+bullet cannot be relisted under its new hash. The gate reads that copy with local git only. A
+base without the list, as for #1429, skips the comparison with a SKIP line, and so does a local
+run outside a git work tree or without `origin/main`; under GitHub Actions those two fail.
 
 Before merging, replace draft PR, backlog-id and version placeholders with their assigned
 values. The offline gate `tools/check_no_placeholders.py` checks tracked Markdown and

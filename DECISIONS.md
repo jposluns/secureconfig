@@ -27,7 +27,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     An unclosed backtick is counted as plain words.
   - Effect. Pull request #1429 adds `tools/check_changelog_bullets.py`, its self-test and the changelog-bullets
     suite section. It lists the bullets that break the rule in `tools/changelog_bullets_legacy.txt`, capped by the
-    gate's `LEGACY_MAX`, and deletes the fixed-form version sentences. TODO row 3.129 tracks the batches.
+    gate's `LEGACY_MAX`, dated no later than 2026-11-27 and held to the list at the merge base. It deletes 91
+    standalone version sentences naming `VERSION`, `plugin/plugin.json` and `plugin/skills/secureconfig/SKILL.md`:
+    71 "... go to <version>.", 1 "... go to the pull request's version." (#1348) and 19 "... stay at main's value,
+    <version>, because main is higher.". It also deletes the #1369 sentence that described that bullet's version
+    sentence. TODO row 3.129 tracks the batches.
   - Revert. The revert path is a later maintainer ruling that replaces this one.
 
 - **Maintainer ruling of 2026-11-25 re-marking `windmill-loopback` and `windmill-sandbox-run` REASONED (#1399).**

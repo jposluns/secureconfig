@@ -14,8 +14,9 @@ joined with one space, and a nested item's `- ` marker is dropped. The preamble 
 first dated heading and the ATX heading lines are not bullets. Any other non-blank line
 under a dated heading (a `*` or `+` item, an indented item or a paragraph after a blank
 line, a line of text right under a heading) is a finding, and so is any fence line (one
-that starts with three backticks or tildes after optional indentation), inside a bullet
-or not: the gate does not model them, so it fails closed.
+that starts with three backticks or tildes after optional indentation and an optional
+`- ` marker, so a fence opened on a bullet's own first line counts), inside a bullet or
+not: the gate does not model them, so it fails closed.
 
 WHAT IS COUNTED:
 
@@ -25,42 +26,69 @@ WHAT IS COUNTED:
   400-character rules use, with its documented limits: no split inside a code span or an
   open quotation, after e.g., i.e., vs. or cf., at a dot with no space after it (as in a
   version number), or at a semicolon or colon; a boundary inside parentheses still splits.
-- Words are the whitespace-separated tokens of a sentence, as rendered (a link counts as
-  its text), that hold at least one letter or digit. A code span counts as ONE word, glued
-  punctuation included, unless its content is over 60 characters or holds more than 8
-  spaces after its edge spaces are stripped; then it is counted by its words. A backtick
-  that no run closes is plain text, so its words count (a D-1096 vote of 2026-11-27,
-  confirmed by the maintainer on 2026-11-28).
+- Words are the tokens of a sentence, as rendered (a link counts as its text), that hold
+  at least one letter or digit. Tokens are separated by whitespace and by every character
+  in BLANK_CATEGORIES of tools/_reason.py (Unicode categories Cf, Zs, Zl and Zp), so a
+  zero-width space such as U+200B, U+2060 or U+FEFF, or a soft hyphen, separates words;
+  a blank-looking letter such as U+3164 still counts as a letter. A code span counts as
+  ONE word, glued punctuation included, unless its content, with every leading and
+  trailing space stripped, is over 60 characters or holds more than 8 spaces; then it is
+  counted by its words. A backtick that no run closes is plain text, so its words count
+  (a D-1096 vote of 2026-11-27, confirmed by the maintainer on 2026-11-28).
 
 ALSO FINDINGS: two bullets with the same joined text, wherever they are, and, in a bullet
-that is not listed, the fixed-form version sentence that the ruling dropped ("`VERSION`,
-`plugin/plugin.json` and `plugin/skills/secureconfig/SKILL.md` go to ..." or "... stay
-at ...").
+that is not listed, a Cf character (it still separates words, but it is invisible, so
+delete it) and a version sentence that the ruling dropped: `VERSION` listed with
+`plugin.json` (as `plugin/plugin.json` or `plugin.json`), optionally followed by `and`
+and `SKILL.md` (as `plugin/skills/secureconfig/SKILL.md`, `SKILL.md`, "the plugin's" or
+"the plugin" form, code span or not), then "go to", "move to", "stay at", "remain at",
+"are bumped", "are updated", "are set", "carry the" or "carry this", "are" or "is"
+before a digit, in any of their tenses VERSION_SENTENCE names. "are unchanged" and a
+mention such as "`VERSION` to `plugin/plugin.json`'s version" are not findings.
 
 THE LEGACY LIST: one line per exempt bullet, `<sha256> <date> <reference>`, sorted by
 hash, where the hash is of the joined bullet text above, as UTF-8, and the reference is
 the trailing reference without its brackets, or `-`. Lines starting `#` are comments.
 The gate fails when a non-compliant bullet is not listed, a listed hash matches no bullet
 (so editing a listed bullet fails twice), a listed bullet now complies, a hash repeats,
-a line's date or reference no longer matches its bullet, the list is out of order or a
-line is malformed. The list must hold exactly LEGACY_MAX entries. LEGACY_MAX was set to
-the length of the list generated when the gate was added; a batch deletes its lines and
-lowers LEGACY_MAX by the same number, and nothing may raise it. `--list-legacy` prints
-the list for the current file; rerunning it to exempt a new bullet grows the list past
-LEGACY_MAX and fails.
+a line's date or reference no longer matches its bullet, a line is dated after CUTOFF
+(2026-11-27, the ruling's date), the list is out of order or a line is malformed. The
+list must hold exactly LEGACY_MAX entries. LEGACY_MAX was set to the length of the list
+generated when the gate was added; a batch deletes its lines and lowers LEGACY_MAX by the
+same number, and nothing may raise it. `--list-legacy` prints the list for the current
+file; rerunning it to exempt a new bullet grows the list past LEGACY_MAX and fails.
+
+THE BASE COPY: an edited legacy bullet has a new hash, and swapping its old line for the
+new one would keep the count. So every listed hash must also be in the list as committed
+at the base commit: the merge base of HEAD and $BASE_SHA when that variable is set and not
+empty (the CI `gates` step sets it to the pull request's base), else of HEAD and
+refs/remotes/origin/main. The gate reads that copy with local git only (`git rev-parse`,
+`git merge-base`, `git cat-file`), and sets GIT_NO_LAZY_FETCH=1 against lazy fetching in a
+partial clone (not tested on one; CI's checkout is a full clone). A $BASE_SHA that git
+cannot resolve, a failed `git merge-base` or `git cat-file blob`, or a base copy that is
+not UTF-8 is a finding. The comparison is skipped, with a SKIP line, when the base commit
+has no list (the pull request that adds the gate), and, outside GitHub Actions, when the
+root is not the top of a git work tree, git is missing, or no base ref exists; under
+GitHub Actions (GITHUB_ACTIONS=true) those three are findings. A local answer depends on
+how fresh the local origin/main is.
 
 Fails closed: a missing or non-UTF-8 file is an error (exit 2), and a carriage return
 or a changelog with no bullet is a finding (exit 1).
 
-Deterministic and offline: it reads CHANGELOG.md and the legacy list only.
+Deterministic and offline: it reads CHANGELOG.md, the legacy list and, through local git,
+the base commit's copy of the list.
 """
 import argparse
 import hashlib
+import os
 import re
+import subprocess
 import sys
+import unicodedata
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _reason import BLANK_CATEGORIES  # noqa: E402
 from sentence_split import render, split_rendered  # noqa: E402
 
 CHANGELOG = "CHANGELOG.md"
@@ -71,16 +99,28 @@ SPAN_CHARS = 60
 SPAN_SPACES = 8
 # The number of entries in LEGACY. Set once, from the generated list; batches only lower it.
 LEGACY_MAX = 1403
+# The ruling's date: a bullet dated later is new and must comply, never be listed.
+CUTOFF = "2026-11-27"
 
 DATED = re.compile(r"## ([0-9]{4}-[0-9]{2}-[0-9]{2})[ \t]*")
 ATX = re.compile(r" {0,3}#{1,6}(?:[ \t]|$)")
-FENCE = re.compile(r"[ \t]*(?:```|~~~)")
+FENCE = re.compile(r"[ \t]*(?:- )?[ \t]*(?:```|~~~)")
 TRAILING_REF = re.compile(r"\s*\((#[0-9]+(?:,\s*#[0-9]+)*)\)\.?\Z")
-VERSION_SENTENCE = re.compile(r"`VERSION`, `plugin/plugin\.json` and "
-                              r"`plugin/skills/secureconfig/SKILL\.md` (?:go|stay)\b")
+VERSION_SENTENCE = re.compile(
+    r"`VERSION`,?\s+(?:and\s+)?`?(?:plugin/)?plugin\.json`?"
+    r"(?:,?\s+and\s+(?:the\s+plugin(?:'s)?\s+)?`?(?:plugin/skills/secureconfig/)?SKILL\.md`?)?"
+    r",?\s+(?:go(?:es)?\s+to|went\s+to|gone\s+to|mov(?:e|es|ed|ing)\s+to"
+    r"|stay(?:s|ed|ing)?\s+at|remain(?:s|ed|ing)?\s+at"
+    r"|(?:are|were|is|was)\s+(?:bumped|updated|set)\b|(?:carry|carries|carried)\s+(?:the|this)\b"
+    r"|(?:are|were|is|was)\s+`?[0-9])")
 LEGACY_LINE = re.compile(r"([0-9a-f]{64}) ([0-9]{4}-[0-9]{2}-[0-9]{2}) (#[0-9]+(?:, #[0-9]+)*|-)")
 HEADER = ("# CHANGELOG.md bullets exempt from tools/check_changelog_bullets.py until their batch.\n"
           "# Generated by its --list-legacy option; each batch only deletes lines.\n")
+
+
+def separators(text):
+    """text with every BLANK_CATEGORIES character replaced by a space."""
+    return "".join(" " if unicodedata.category(ch) in BLANK_CATEGORIES else ch for ch in text)
 
 
 def count_words(rendered, start, end):
@@ -91,10 +131,11 @@ def count_words(rendered, start, end):
             continue
         span = rendered.text[a:b]
         ticks = len(span) - len(span.lstrip("`"))
-        content = span[ticks:len(span) - ticks]
-        if len(content) <= SPAN_CHARS and content.strip(" ").count(" ") <= SPAN_SPACES:
+        content = span[ticks:len(span) - ticks].strip(" ")
+        if len(content) <= SPAN_CHARS and content.count(" ") <= SPAN_SPACES:
             text[a - start:b - start] = ["W"]
-    return sum(1 for token in "".join(text).split() if any(ch.isalnum() for ch in token))
+    return sum(1 for token in separators("".join(text)).split()
+               if any(ch.isalnum() for ch in token))
 
 
 class Bullet:
@@ -162,29 +203,32 @@ def bullets(lines):
     return found, findings
 
 
-def read_legacy(text):
-    """(entries as {digest: (line number, date, ref)}, findings) for the legacy list."""
+def read_legacy(text, name=LEGACY):
+    """(entries as {digest: (line number, date, ref)}, findings) for a legacy list."""
     entries, findings, previous = {}, [], None
     for number, line in enumerate(text.split("\n"), 1):
         if not line or line.startswith("#"):
             continue
         match = LEGACY_LINE.fullmatch(line)
         if not match:
-            findings.append((LEGACY, number, f"malformed line {line[:80]!r}"))
+            findings.append((name, number, f"malformed line {line[:80]!r}"))
             continue
         digest, date, ref = match.groups()
         if digest in entries:
-            findings.append((LEGACY, number, f"{digest[:12]} repeats line {entries[digest][0]}"))
+            findings.append((name, number, f"{digest[:12]} repeats line {entries[digest][0]}"))
             continue
         if previous is not None and digest < previous:
-            findings.append((LEGACY, number, f"{digest[:12]} is out of order; sort by hash"))
+            findings.append((name, number, f"{digest[:12]} is out of order; sort by hash"))
         previous = digest
         entries[digest] = (number, date, ref)
     return entries, findings
 
 
-def check(lines, legacy_text, legacy_max=LEGACY_MAX):
-    """(findings as (file, line, message), bullets) for the changelog and legacy list."""
+def check(lines, legacy_text, legacy_max=LEGACY_MAX, base=None):
+    """(findings as (file, line, message), bullets) for the changelog and legacy list.
+
+    base is None (no comparison) or (commit, text of the list at that commit).
+    """
     found, findings = bullets(lines)
     first_cr = next((n for n, line in enumerate(lines, 1) if "\r" in line), None)
     if first_cr:
@@ -202,12 +246,26 @@ def check(lines, legacy_text, legacy_max=LEGACY_MAX):
         findings.append((LEGACY, None, f"{len(entries)} entries, but LEGACY_MAX is "
                                        f"{legacy_max}; lower LEGACY_MAX in "
                                        f"tools/check_changelog_bullets.py to {len(entries)}"))
+    for digest, (number, date, _) in entries.items():
+        if date > CUTOFF:
+            findings.append((LEGACY, number, f"{digest[:12]} is dated {date}, after the cut-off "
+                                             f"{CUTOFF}; a later bullet must comply, never be "
+                                             "listed"))
+    if base is not None:
+        commit, base_text = base
+        base_entries = read_legacy(base_text, f"{LEGACY} at {commit[:12]}")[0]
+        for digest, (number, _, _) in entries.items():
+            if digest not in base_entries:
+                findings.append((LEGACY, number, f"{digest[:12]} is not in the list at the base "
+                                                 f"commit {commit[:12]}; the list only loses "
+                                                 "lines (an edited legacy bullet must comply)"))
     by_digest = {}
     for bullet in found:
         first = by_digest.setdefault(bullet.digest, bullet)
         if first is not bullet:
             findings.append((CHANGELOG, bullet.line, f"bullet repeats the text of the bullet at "
                                                      f"{CHANGELOG}:{first.line}"))
+        blank = next((ch for ch in bullet.text if unicodedata.category(ch) == "Cf"), None)
         listed = entries.get(bullet.digest)
         if listed:
             if (listed[1], listed[2]) != (bullet.date, bullet.ref):
@@ -216,6 +274,10 @@ def check(lines, legacy_text, legacy_max=LEGACY_MAX):
                                  f"{bullet.ref}"))
             continue
         where = f"bullet ({bullet.date} {bullet.ref}), not in {LEGACY},"
+        if blank:
+            findings.append((CHANGELOG, bullet.line, f"{where} holds U+{ord(blank):04X}, an "
+                                                     "invisible format character; it separates "
+                                                     "words here, but delete it"))
         if VERSION_SENTENCE.search(bullet.text):
             findings.append((CHANGELOG, bullet.line, f"{where} restates the version; the "
                                                      "fixed-form version sentence was dropped"))
@@ -235,6 +297,50 @@ def check(lines, legacy_text, legacy_max=LEGACY_MAX):
             findings.append((LEGACY, number, f"{digest[:12]} ({CHANGELOG}:{bullet.line}) now "
                                              "complies; delete the line"))
     return findings, found
+
+
+def git(root, *args):
+    """Run local git in root; (exit status, stdout bytes, stderr text). Never fetches."""
+    env = dict(os.environ, GIT_NO_LAZY_FETCH="1", GIT_TERMINAL_PROMPT="0")
+    try:
+        result = subprocess.run(["git", "-C", str(root), *args], capture_output=True,
+                                env=env, timeout=60, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        return None, b"", str(exc)
+    return result.returncode, result.stdout, result.stderr.decode("utf-8", "replace").strip()
+
+
+def base_copy(root):
+    """(("found", (commit, text)) | ("skip", reason) | ("fail", reason)) for the base list."""
+    status, out, err = git(root, "rev-parse", "--show-toplevel")
+    if status is None:
+        return "skip", f"git cannot run ({err})"
+    if status != 0 or Path(out.decode("utf-8", "replace").strip()).resolve() != root:
+        return "skip", "the root is not the top of a git work tree"
+    ref = os.environ.get("BASE_SHA", "")
+    if ref:
+        status, out, err = (1, b"", "") if ref.startswith("-") else git(
+            root, "rev-parse", "--verify", "--quiet", ref + "^{commit}")
+        if status != 0:
+            return "fail", f"BASE_SHA {ref[:40]!r} does not name a local commit"
+    else:
+        ref = "refs/remotes/origin/main"
+        status, out, err = git(root, "rev-parse", "--verify", "--quiet", ref + "^{commit}")
+        if status != 0:
+            return "skip", "BASE_SHA is unset and refs/remotes/origin/main does not exist"
+    status, out, err = git(root, "merge-base", out.decode("ascii", "replace").strip(), "HEAD")
+    if status != 0:
+        return "fail", f"git merge-base {ref[:40]} HEAD failed: {err[:120]}"
+    commit = out.decode("ascii", "replace").strip()
+    if git(root, "cat-file", "-e", f"{commit}:{LEGACY}")[0] != 0:
+        return "absent", f"the base commit {commit[:12]} has no {LEGACY}"
+    status, out, err = git(root, "cat-file", "blob", f"{commit}:{LEGACY}")
+    if status != 0:
+        return "fail", f"cannot read {LEGACY} at {commit[:12]}: {err[:120]}"
+    try:
+        return "found", (commit, out.decode("utf-8"))
+    except UnicodeError as exc:
+        return "fail", f"{LEGACY} at {commit[:12]} is not UTF-8: {exc}"
 
 
 def main(argv=None, legacy_max=LEGACY_MAX):
@@ -261,18 +367,29 @@ def main(argv=None, legacy_max=LEGACY_MAX):
     except (OSError, UnicodeError) as exc:
         print(f"  FAIL  cannot check {LEGACY}: {exc}")
         return 2
-    findings, found = check(lines, legacy_text, legacy_max)
+    state, detail = base_copy(root)
+    in_ci = os.environ.get("GITHUB_ACTIONS") == "true"
+    findings, found = check(lines, legacy_text, legacy_max,
+                            detail if state == "found" else None)
+    notes = []
+    if state == "fail" or (state == "skip" and in_ci):
+        findings.append((LEGACY, None, f"cannot compare with the base copy: {detail}"))
+    elif state in ("skip", "absent"):
+        notes.append(f"  SKIP  {LEGACY}: not compared with the base copy: {detail}")
     if not found:
         findings.append((CHANGELOG, None, "no bullet under a dated `## YYYY-MM-DD` heading "
                                           "was found"))
+    for note in notes:
+        print(note)
     if findings:
         for name, number, message in findings:
             print(f"  FAIL  {name}:{number}: {message}" if number else f"  FAIL  {name}: {message}")
         return 1
     comply = sum(1 for b in found if b.complies())
+    based = f", every entry in the list at {detail[0][:12]}" if state == "found" else ""
     print(f"  ok    {CHANGELOG}: {len(found)} bullets, {comply} within {MAX_SENTENCES} "
           f"sentences of {MAX_WORDS} words, {len(found) - comply} listed in {LEGACY} "
-          f"(LEGACY_MAX {legacy_max})")
+          f"(LEGACY_MAX {legacy_max}{based})")
     return 0
 
 
