@@ -20,6 +20,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-11-28
 
+- Advice-label audit B03 under the source-credit ruling, `firebase-supabase.md` 30 labelled only, 1 split, 5 credited, 19 flagged, 15 unchanged. `llm-observability.md` has 15 labelled only, 1 split, 2 credited, 17 flagged and 13 unchanged. `authentication.md` has 5 labelled only, 4 split, 11 credited, 18 flagged and 20 unchanged; flagged ids and wording changes are listed in the pull request. (#1426)
 - Advice-label audit B04 under the source-credit ruling, `model-servers.md` 0 credited, 28 labelled, 2 split, 0 flagged, 2 unchanged. For `elasticsearch.md` 0 credited, 20 labelled, 3 split, 5 flagged, 0 unchanged, and `php.md` 4 credited, 20 labelled, 9 split, 2 flagged, 1 unchanged. Flagged ids and wording changes are listed in the pull request. (#1427)
 
 ## 2026-11-27
