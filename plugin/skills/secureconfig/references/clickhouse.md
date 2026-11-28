@@ -782,7 +782,7 @@ Claims (full source mapping in the JSON block below):
 - ports (REASONED; docs): 8123 HTTP, 9000 native, 9004 MySQL, 9005 PostgreSQL and 9009 interserver are documented, not necessarily active.
 - interserver-bind (REASONED; docs): interserver_listen_host defaults to listen_host but can independently widen replica exposure.
 - xml-merge (REASONED; docs): config.d/users.d retain clickhouse roots; remove/replace inherited entries explicitly and inspect merged configuration.
-- passwords (REASONED; docs): Guide advice: replace inherited password with protected SHA-256 hash and loopback origins. SQL bcrypt has a 72-character limit.
+- passwords (REASONED; docs): The ClickHouse documentation does not recommend plaintext passwords and suggests sha256_password instead. Guide advice: replace inherited password with protected SHA-256 hash and loopback origins. SQL bcrypt has a 72-character limit.
 - bootstrap (REASONED; docs): Complete administrator bootstrap needs access_management, named_collection_control and show_named_collections_secrets.
 - access-storage (REASONED; docs): Guide advice: persist SQL access storage. Configured user_directories takes precedence over access_control_path.
 - admin (REASONED; docs): Separate SQL administrator gets global grants and restricted HOST IP; host restrictions do not enforce TLS.
@@ -952,7 +952,7 @@ Claims (full source mapping in the JSON block below):
     "ports": {"text": "8123 HTTP, 9000 native, 9004 MySQL, 9005 PostgreSQL and 9009 interserver are documented, not necessarily active.", "components": ["docs"], "sources": ["docs:sd891987369e6", "docs:sd156261650ee"], "status": "REASONED"},
     "interserver-bind": {"text": "interserver_listen_host defaults to listen_host but can independently widen replica exposure.", "components": ["docs"], "sources": ["docs:sd156261650ee"], "status": "REASONED"},
     "xml-merge": {"text": "config.d/users.d retain clickhouse roots; remove/replace inherited entries explicitly and inspect merged configuration.", "components": ["docs"], "sources": ["docs:sfd95effa4d9b"], "status": "REASONED"},
-    "passwords": {"text": "Guide advice: replace inherited password with protected SHA-256 hash and loopback origins. SQL bcrypt has a 72-character limit.", "components": ["docs"], "sources": ["docs:s2ee7469699a5", "docs:sc7a527d82e50"], "status": "REASONED"},
+    "passwords": {"text": "The ClickHouse documentation does not recommend plaintext passwords and suggests sha256_password instead. Guide advice: replace inherited password with protected SHA-256 hash and loopback origins. SQL bcrypt has a 72-character limit.", "components": ["docs"], "sources": ["docs:s2ee7469699a5", "docs:sc7a527d82e50"], "status": "REASONED"},
     "bootstrap": {"text": "Complete administrator bootstrap needs access_management, named_collection_control and show_named_collections_secrets.", "components": ["docs"], "sources": ["docs:s2ee7469699a5", "docs:s324525fe685e"], "status": "REASONED"},
     "access-storage": {"text": "Guide advice: persist SQL access storage. Configured user_directories takes precedence over access_control_path.", "components": ["docs"], "sources": ["docs:sa133286c107f", "docs:s38015aaf3159"], "status": "REASONED"},
     "admin": {"text": "Separate SQL administrator gets global grants and restricted HOST IP; host restrictions do not enforce TLS.", "components": ["docs"], "sources": ["docs:s324525fe685e", "docs:sc7a527d82e50", "docs:s6b90e2c1092e"], "status": "REASONED"},
