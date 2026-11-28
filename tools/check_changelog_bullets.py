@@ -29,12 +29,17 @@ WHAT IS COUNTED:
 - Words are the tokens of a sentence, as rendered (a link counts as its text), that hold
   at least one letter or digit. Tokens are separated by whitespace and by every character
   in BLANK_CATEGORIES of tools/_reason.py (Unicode categories Cf, Zs, Zl and Zp), so a
-  zero-width space such as U+200B, U+2060 or U+FEFF, or a soft hyphen, separates words;
-  a blank-looking letter such as U+3164 still counts as a letter. A code span counts as
-  ONE word, glued punctuation included, unless its content, with every leading and
-  trailing space stripped, is over 60 characters or holds more than 8 spaces; then it is
-  counted by its words. A backtick that no run closes is plain text, so its words count
-  (a D-1096 vote of 2026-11-27, confirmed by the maintainer on 2026-11-28).
+  zero-width space such as U+200B, U+2060 or U+FEFF, or a soft hyphen, separates words.
+  Known limit: a blank-looking character outside those categories, such as U+3164 (a
+  letter, Lo) or U+2800 (a braille blank, So), does not separate words, so it glues the
+  words on either side into one. A code span counts as ONE word, glued punctuation
+  included, unless its content is over 60 characters or holds more than 8 internal spaces;
+  then it is counted by its words. The 60-character test counts the content as CommonMark
+  renders it: when the content both begins and ends with a space and is not all spaces,
+  one space is stripped from each side, and no more. Internal spaces are those left after
+  every leading and trailing space is stripped. A backtick that no run closes is plain
+  text, so its words count (a D-1096 vote of 2026-11-27, confirmed by the maintainer on
+  2026-11-28).
 
 ALSO FINDINGS: two bullets with the same joined text, wherever they are, and, in a bullet
 that is not listed, a Cf character (it still separates words, but it is invisible, so
@@ -63,14 +68,20 @@ new one would keep the count. So every listed hash must also be in the list as c
 at the base commit: the merge base of HEAD and $BASE_SHA when that variable is set and not
 empty (the CI `gates` step sets it to the pull request's base), else of HEAD and
 refs/remotes/origin/main. The gate reads that copy with local git only (`git rev-parse`,
-`git merge-base`, `git cat-file`), and sets GIT_NO_LAZY_FETCH=1 against lazy fetching in a
-partial clone (not tested on one; CI's checkout is a full clone). A $BASE_SHA that git
-cannot resolve, a failed `git merge-base` or `git cat-file blob`, or a base copy that is
-not UTF-8 is a finding. The comparison is skipped, with a SKIP line, when the base commit
-has no list (the pull request that adds the gate), and, outside GitHub Actions, when the
-root is not the top of a git work tree, git is missing, or no base ref exists; under
-GitHub Actions (GITHUB_ACTIONS=true) those three are findings. A local answer depends on
-how fresh the local origin/main is.
+`git merge-base`, `git ls-tree`, `git cat-file`), and sets GIT_NO_LAZY_FETCH=1 against
+lazy fetching in a partial clone (not tested on one; CI's checkout is a full clone). A
+$BASE_SHA that git cannot resolve, a failed `git merge-base`, `git ls-tree` or
+`git cat-file blob`, or a base copy that is not UTF-8 is a finding. `git ls-tree` tells a
+missing list apart from a git error, which is a finding. The comparison is skipped, with
+a SKIP line, when the base commit has neither the list nor this gate: that base predates
+the gate, so the change is the one that adds it. Any commit at or after the merge of the
+pull request that adds the gate holds this file, so a base that holds the gate but not
+the list cannot be that pull request; it is a finding under GitHub Actions. That test
+reads only the base commit's tree, so it is deterministic and needs no constant to
+change after the merge. Outside GitHub Actions, a base with the gate but no list, a root
+that is not the top of a git work tree, git that cannot run, or no base ref is a SKIP;
+under GitHub Actions (GITHUB_ACTIONS=true) those four are findings. A local answer
+depends on how fresh the local origin/main is.
 
 Fails closed: a missing or non-UTF-8 file is an error (exit 2), and a carriage return
 or a changelog with no bullet is a finding (exit 1).
@@ -93,6 +104,7 @@ from sentence_split import render, split_rendered  # noqa: E402
 
 CHANGELOG = "CHANGELOG.md"
 LEGACY = "tools/changelog_bullets_legacy.txt"
+GATE = "tools/check_changelog_bullets.py"
 MAX_SENTENCES = 3
 MAX_WORDS = 25
 SPAN_CHARS = 60
@@ -131,8 +143,10 @@ def count_words(rendered, start, end):
             continue
         span = rendered.text[a:b]
         ticks = len(span) - len(span.lstrip("`"))
-        content = span[ticks:len(span) - ticks].strip(" ")
-        if len(content) <= SPAN_CHARS and content.count(" ") <= SPAN_SPACES:
+        content = span[ticks:len(span) - ticks]
+        if len(content) > 1 and content[0] == content[-1] == " " and content.strip(" "):
+            content = content[1:-1]
+        if len(content) <= SPAN_CHARS and content.strip(" ").count(" ") <= SPAN_SPACES:
             text[a - start:b - start] = ["W"]
     return sum(1 for token in separators("".join(text)).split()
                if any(ch.isalnum() for ch in token))
@@ -311,7 +325,8 @@ def git(root, *args):
 
 
 def base_copy(root):
-    """(("found", (commit, text)) | ("skip", reason) | ("fail", reason)) for the base list."""
+    """(state, detail) for the base list: ("found", (commit, text)), ("absent", reason) when
+    the base predates the gate, ("skip", reason) or ("fail", reason)."""
     status, out, err = git(root, "rev-parse", "--show-toplevel")
     if status is None:
         return "skip", f"git cannot run ({err})"
@@ -330,10 +345,17 @@ def base_copy(root):
             return "skip", "BASE_SHA is unset and refs/remotes/origin/main does not exist"
     status, out, err = git(root, "merge-base", out.decode("ascii", "replace").strip(), "HEAD")
     if status != 0:
-        return "fail", f"git merge-base {ref[:40]} HEAD failed: {err[:120]}"
+        return "fail", f"git merge-base {ref[:40]} HEAD failed: {err[:120] or status}"
     commit = out.decode("ascii", "replace").strip()
-    if git(root, "cat-file", "-e", f"{commit}:{LEGACY}")[0] != 0:
-        return "absent", f"the base commit {commit[:12]} has no {LEGACY}"
+    status, out, err = git(root, "ls-tree", "--full-tree", "--name-only", "-z", commit, "--",
+                           LEGACY, GATE)
+    if status != 0:
+        return "fail", f"git ls-tree {commit[:12]} failed: {err[:120] or status}"
+    names = out.decode("utf-8", "replace").split("\0")
+    if LEGACY not in names:
+        if GATE not in names:
+            return "absent", f"the base commit {commit[:12]} predates the gate (no {LEGACY})"
+        return "skip", f"the base commit {commit[:12]} has {GATE} but no {LEGACY}"
     status, out, err = git(root, "cat-file", "blob", f"{commit}:{LEGACY}")
     if status != 0:
         return "fail", f"cannot read {LEGACY} at {commit[:12]}: {err[:120]}"

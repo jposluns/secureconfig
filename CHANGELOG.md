@@ -25,7 +25,7 @@ drops is not archived; it stays in git history and pull request bodies.
 
 ## 2026-11-28
 
-- `tools/check_changelog_bullets.py` holds each new or changed bullet to at most 3 sentences of at most 25 words, as the maintainer ruled on 2026-11-27 (`DECISIONS.md`). Non-compliant bullets dated up to 2026-11-27 stay exempt, listed by hash in `tools/changelog_bullets_legacy.txt`, until `TODO.md` row 3.129's batches rewrite them. It deletes 91 fixed-form version sentences, 72 "go to" and 19 "stay at main's value" forms, and the #1369 sentence describing one. (#1429)
+- `tools/check_changelog_bullets.py` holds each new or changed bullet to at most 3 sentences of at most 25 words, as the maintainer ruled on 2026-11-27 (`DECISIONS.md`). Non-compliant bullets dated up to 2026-11-27 stay exempt, listed by hash in `tools/changelog_bullets_legacy.txt`, until `TODO.md` row 3.129's batches rewrite them. This pull request deletes 91 fixed-form version sentences, 72 "go to" and 19 "stay at main's value" forms, and the #1369 sentence describing one. (#1429)
 
 ## 2026-11-27
 

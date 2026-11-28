@@ -184,14 +184,17 @@ def main():
         count += case(log(bullet(words(23, "") + link)))
         count += case(log(bullet(words(24, "") + link)), expected=1,
                       needle="sentence 1 has 26 words")
-        # D-1096 vote: content over 60 characters, or with more than 8 spaces, is counted by
-        # its words. Both tests strip every leading and trailing space first.
+        # D-1096 vote: content over 60 characters, or with more than 8 internal spaces, is
+        # counted by its words. The 60-character test strips one space from each side, as
+        # CommonMark renders the span, only when both sides have one, and no more.
         sixty = " ".join(["abcdefghi"] * 6) + "j"
         count += case(log(bullet(words(20, "") + f" `{sixty}`.")))
         count += case(log(bullet(words(20, "") + f" `{sixty}k`.")), expected=1,
                       needle="sentence 1 has 26 words")
-        count += case(log(bullet(words(20, "") + f" `  {sixty}  `.")))
-        count += case(log(bullet(words(20, "") + f" `  {sixty}k  `.")), expected=1,
+        count += case(log(bullet(words(20, "") + f" ` {sixty} `.")))
+        count += case(log(bullet(words(20, "") + f" `  {sixty}  `.")), expected=1,
+                      needle="sentence 1 has 26 words")
+        count += case(log(bullet(words(20, "") + f" ` {sixty}`.")), expected=1,
                       needle="sentence 1 has 26 words")
         count += case(log(bullet(words(20, "") + " `a b c d e f g h i`.")))
         count += case(log(bullet(words(20, "") + " ` a b c d e f g h i `.")))
@@ -334,10 +337,19 @@ def main():
                                  "BASE_SHA '0000")
         count += git_case(same, same, env={"BASE_SHA": "--all"}, expected=1,
                           needle="does not name a local commit")
-        # A base with no list (the pull request that adds the gate) is skipped, not failed.
-        count += git_case({"CHANGELOG.md": log(four)}, same,
-                          needle=f"  SKIP  {LEGACY}: not compared with the base copy: the base "
-                                 "commit ", also=(OK,))
+        # A base with neither the list nor the gate (the pull request that adds the gate) is
+        # skipped, even under GitHub Actions. A base with the gate but no list is a SKIP
+        # locally and a finding under GitHub Actions.
+        for env in (None, {"GITHUB_ACTIONS": "true"}):
+            count += git_case({"CHANGELOG.md": log(four)}, same, env=env,
+                              needle=f"  SKIP  {LEGACY}: not compared with the base copy: the "
+                                     "base commit ", also=("predates the gate", OK))
+        gated = {"CHANGELOG.md": log(four), "tools/check_changelog_bullets.py": "# gate\n"}
+        count += git_case(gated, same, needle="has tools/check_changelog_bullets.py but no "
+                                              + LEGACY, also=("  SKIP  ", OK))
+        count += git_case(gated, same, env={"GITHUB_ACTIONS": "true"}, expected=1,
+                          needle=f"  FAIL  {LEGACY}: cannot compare with the base copy: the "
+                                 "base commit ", also=("but no " + LEGACY,))
         # No base ref: a SKIP locally, a finding under GitHub Actions; the same holds outside
         # a work tree, as in every fixture case above.
         count += git_case(same, same, origin=False,
@@ -351,6 +363,19 @@ def main():
             write(root, same)
             code, output = run(root, legacy_max=1, env={"GITHUB_ACTIONS": "true"})
             count += verify(code, output, 1, "not the top of a git work tree", (), ())
+        # git that cannot run (an empty PATH): a SKIP locally, a finding under GitHub Actions.
+        with tempfile.TemporaryDirectory() as directory:
+            root, empty = Path(directory) / "tree", Path(directory) / "empty"
+            root.mkdir()
+            empty.mkdir()
+            write(root, same)
+            code, output = run(root, legacy_max=1, env={"PATH": str(empty)})
+            count += verify(code, output, 0, f"  SKIP  {LEGACY}: not compared with the base "
+                            "copy: git cannot run (", (OK,), ())
+            code, output = run(root, legacy_max=1,
+                               env={"PATH": str(empty), "GITHUB_ACTIONS": "true"})
+            count += verify(code, output, 1, f"  FAIL  {LEGACY}: cannot compare with the base "
+                            "copy: git cannot run (", (), ())
         # --list-legacy prints exactly the non-compliant bullets, sorted, after a header.
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -374,10 +399,11 @@ def main():
         count += case(log(three), legacy=b"\xff\n", expected=2,
                       needle=f"  FAIL  cannot check {LEGACY}: 'utf-8' codec can't decode")
         # Known limits: a boundary inside parentheses still splits, and a blank-looking
-        # letter (U+3164) is a letter, so it glues words.
+        # letter (U+3164, Lo) or symbol (U+2800, So) is not a separator, so it glues words.
         count += case(log(bullet(words(3), words(3), "Word (see a. Word) end.")), expected=1,
                       needle="has 4 sentences")
-        count += case(log(bullet(words(24, "") + " a\u3164b.")))
+        for glue in ("\u3164", "\u2800"):
+            count += case(log(bullet(words(24, "") + f" a{glue}b.")))
         # The shipped gate, unchanged, on the real CHANGELOG.md: regenerating the list
         # passes as it stands, and fails once it would exempt a new non-compliant bullet.
         code, output = regenerated("")
