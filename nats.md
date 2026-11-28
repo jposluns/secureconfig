@@ -1256,7 +1256,7 @@ Claims (full source mapping in the JSON block below):
 - image-route (REASONED; image): Bundled route 6222 uses published ruser/T0pS3cr3t and my_cluster. Guide advice: remove or replace with private credentials.
 - image-bind (REASONED; image-server, go): At v2.15.2, bundled listeners without hosts use 0.0.0.0, dual-stack where IPv4-mapped IPv6 is supported (Go go1.26.8 source). Guide advice: restrict publication.
 - static-auth (REASONED; server-docs): Separate password/NKey users may coexist; a user's NKey replaces its password pair, without requiring JWT mode.
-- passwords (REASONED; cli, server-docs): Guide advice: generate bcrypt interactively; protect seeds and password inputs. Hashes do not replace TLS.
+- passwords (REASONED; cli, server-docs): Generate bcrypt interactively; protect seeds and password inputs; hashes do not replace TLS.
 - anonymous (REASONED; server, server-docs): no_auth_user admits anonymous clients as a named identity; omit unless deliberate, as the NATS authentication basics page advises.
 - operator (REASONED; server-docs): Operator signs account JWTs, accounts sign users; preload resolver accounts and protect signing seeds off the broker.
 - jwt-proof (REASONED; server-docs): Non-bearer users prove seed possession by nonce signature; bearer JWT possession is sufficient.
@@ -1280,7 +1280,7 @@ Claims (full source mapping in the JSON block below):
 - connection-default (REASONED; server-docs): Documented client-connection default is 65,536; configured limits are capacities, not attempt-rate limits.
 - payload-default (REASONED; server-docs): Documented payload default is 1 MiB; max_payload must not exceed max_pending.
 - runtime-budgets (REASONED; server-docs): Guide advice: set per-server/account connections, per-client subscriptions, control-line/pending limits and TLS/auth/write deadlines for workload.
-- accounts (REASONED; server-docs): Top-level users share $G. Guide advice: separate account spaces and restrict exports to intended importing accounts.
+- accounts (REASONED; server-docs): Top-level users share $G; separate account spaces and restrict exports to intended importing accounts.
 - system-account (REASONED; server, server-docs): Default system name is $SYS; selected SYS contains administrative identities, not application users.
 - jetstream-server (REASONED; server-docs): Conditional store_dir and memory/file budgets bound storage, not all process memory or filesystem use.
 - jetstream-queue (REASONED; server-docs): request_queue_limit bounds pending JetStream API work, not connection attempts.
@@ -1473,7 +1473,7 @@ Claims (full source mapping in the JSON block below):
     "image-route": {"text": "Bundled route 6222 uses published ruser/T0pS3cr3t and my_cluster. Guide advice: remove or replace with private credentials.", "components": ["image"], "sources": ["image:s219e3e7946d2", "image:s4049c60c5d9a"], "status": "REASONED"},
     "image-bind": {"text": "At v2.15.2, bundled listeners without hosts use 0.0.0.0, dual-stack where IPv4-mapped IPv6 is supported (Go go1.26.8 source). Guide advice: restrict publication.", "components": ["image-server", "go"], "sources": ["image-server:s407797bc3f61", "image-server:s86671012cc3b", "image-server:s990eae4b21b3", "image-server:sa1595211a165", "image-server:scaad1e9e2032", "image-server:s315f5b80f23d", "go:s172a98468ce6"], "status": "REASONED"},
     "static-auth": {"text": "Separate password/NKey users may coexist; a user's NKey replaces its password pair, without requiring JWT mode.", "components": ["server-docs"], "sources": ["server-docs:se640dd73f45d"], "status": "REASONED"},
-    "passwords": {"text": "Guide advice: generate bcrypt interactively; protect seeds and password inputs. Hashes do not replace TLS.", "components": ["cli", "server-docs"], "sources": ["server-docs:se640dd73f45d", "cli:s068dbbd154ce"], "status": "REASONED"},
+    "passwords": {"text": "Generate bcrypt interactively; protect seeds and password inputs; hashes do not replace TLS.", "components": ["cli", "server-docs"], "sources": ["server-docs:se640dd73f45d", "cli:s068dbbd154ce"], "status": "REASONED"},
     "anonymous": {"text": "no_auth_user admits anonymous clients as a named identity; omit unless deliberate, as the NATS authentication basics page advises.", "components": ["server", "server-docs"], "sources": ["server-docs:se640dd73f45d", "server:s7c8496104a83"], "status": "REASONED"},
     "operator": {"text": "Operator signs account JWTs, accounts sign users; preload resolver accounts and protect signing seeds off the broker.", "components": ["server-docs"], "sources": ["server-docs:s468e604fd22d", "server-docs:s5f9b8e5012ec"], "status": "REASONED"},
     "jwt-proof": {"text": "Non-bearer users prove seed possession by nonce signature; bearer JWT possession is sufficient.", "components": ["server-docs"], "sources": ["server-docs:s5f9b8e5012ec"], "status": "REASONED"},
@@ -1497,7 +1497,7 @@ Claims (full source mapping in the JSON block below):
     "connection-default": {"text": "Documented client-connection default is 65,536; configured limits are capacities, not attempt-rate limits.", "components": ["server-docs"], "sources": ["server-docs:s4532e40c78ec"], "status": "REASONED"},
     "payload-default": {"text": "Documented payload default is 1 MiB; max_payload must not exceed max_pending.", "components": ["server-docs"], "sources": ["server-docs:s4532e40c78ec"], "status": "REASONED"},
     "runtime-budgets": {"text": "Guide advice: set per-server/account connections, per-client subscriptions, control-line/pending limits and TLS/auth/write deadlines for workload.", "components": ["server-docs"], "sources": ["server-docs:se5f31c6269c9", "server-docs:s4532e40c78ec", "server-docs:s077fb5dcad29"], "status": "REASONED"},
-    "accounts": {"text": "Top-level users share $G. Guide advice: separate account spaces and restrict exports to intended importing accounts.", "components": ["server-docs"], "sources": ["server-docs:s8cba9edd33b5", "server-docs:sb07c45120b77"], "status": "REASONED"},
+    "accounts": {"text": "Top-level users share $G; separate account spaces and restrict exports to intended importing accounts.", "components": ["server-docs"], "sources": ["server-docs:s8cba9edd33b5", "server-docs:sb07c45120b77"], "status": "REASONED"},
     "system-account": {"text": "Default system name is $SYS; selected SYS contains administrative identities, not application users.", "components": ["server", "server-docs"], "sources": ["server-docs:s8cba9edd33b5", "server:s7c8496104a83"], "status": "REASONED"},
     "jetstream-server": {"text": "Conditional store_dir and memory/file budgets bound storage, not all process memory or filesystem use.", "components": ["server-docs"], "sources": ["server-docs:s2aa6be0b95f3"], "status": "REASONED"},
     "jetstream-queue": {"text": "request_queue_limit bounds pending JetStream API work, not connection attempts.", "components": ["server-docs"], "sources": ["server-docs:sb0a95cb44e8c"], "status": "REASONED"},
