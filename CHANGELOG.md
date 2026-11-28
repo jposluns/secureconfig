@@ -25,6 +25,7 @@ drops is not archived; it stays in git history and pull request bodies.
 
 ## 2026-11-28
 
+- Advice labels under the source-credit rule, counted as credited, labelled, split, flagged and unchanged: `nats.md` 3, 17, 0, 4, 3. `open-webui.md` 0, 12, 3, 11, 0; `workflow-orchestrators.md` 0, 12, 2, 11, 0. Category definitions, flagged ids and wording changes are listed in the pull request. (#1430)
 - Legacy-rewrite batch 01 rewrites the 52 oldest legacy bullets, dated 2026-09-09 to 2026-09-12, to the 3-sentence rule and removes their entries from `tools/changelog_bullets_legacy.txt`. `LEGACY_MAX` in `tools/check_changelog_bullets.py` goes from 1402 to 1350. (#1431)
 - `tools/check_changelog_bullets.py` holds each new or changed bullet to at most 3 sentences of at most 25 words, as the maintainer ruled on 2026-11-27 (`DECISIONS.md`). Non-compliant bullets dated up to 2026-11-27 stay exempt, listed by hash in `tools/changelog_bullets_legacy.txt`, until `TODO.md` row 3.129's batches rewrite them. This pull request deletes 91 fixed-form version sentences, 72 "go to" and 19 "stay at main's value" forms, and the #1369 sentence describing one. (#1429)
 - Advice-label audit B05: `agent-builders.md`: 2 credited, 10 labelled, 4 split, 9 flagged. `self-hosted-ci-runners.md`: 2 credited, 16 labelled, 3 split, 3 flagged. `clickhouse.md`: 0 credited, 18 labelled, 2 split, 3 flagged; flagged ids and wording changes are listed in the pull request. (#1428)
