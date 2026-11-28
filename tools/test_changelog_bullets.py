@@ -113,10 +113,12 @@ def git(root, *args):
     return result.stdout.strip()
 
 
-def git_case(base, work, expected=0, needle=OK, *, origin=True, env=None, also=(), absent=()):
+def git_case(base, work, expected=0, needle=OK, *, origin=True, env=None, also=(), absent=(),
+             drop_tree=False):
     """Commit base (a file map) as the base, point origin/main at it unless origin is false,
-    write work over it uncommitted, and run the gate with env ({"BASE_SHA": None} sets
-    BASE_SHA to the base commit)."""
+    delete the base commit's root tree object if drop_tree is true, write work over it
+    uncommitted, and run the gate with env ({"BASE_SHA": None} sets BASE_SHA to the base
+    commit)."""
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
         git(root, "init", "-q")
@@ -124,6 +126,9 @@ def git_case(base, work, expected=0, needle=OK, *, origin=True, env=None, also=(
         git(root, "add", "-A")
         git(root, "commit", "-q", "-m", "base")
         commit = git(root, "rev-parse", "HEAD")
+        if drop_tree:
+            tree = git(root, "rev-parse", "HEAD^{tree}")
+            (root / ".git" / "objects" / tree[:2] / tree[2:]).unlink()
         if origin:
             git(root, "update-ref", "refs/remotes/origin/main", commit)
         for name in base:
@@ -350,6 +355,13 @@ def main():
         count += git_case(gated, same, env={"GITHUB_ACTIONS": "true"}, expected=1,
                           needle=f"  FAIL  {LEGACY}: cannot compare with the base copy: the "
                                  "base commit ", also=("but no " + LEGACY,))
+        # A git error at the base is a finding, locally and under GitHub Actions: with the
+        # base commit's root tree object deleted, git merge-base succeeds and git ls-tree
+        # fails, which must not read as a base that predates the gate.
+        for env in (None, {"GITHUB_ACTIONS": "true"}):
+            count += git_case(same, same, env=env, drop_tree=True, expected=1,
+                              needle=f"  FAIL  {LEGACY}: cannot compare with the base copy: "
+                                     "git ls-tree ", also=(" failed: ",), absent=("  SKIP  ",))
         # No base ref: a SKIP locally, a finding under GitHub Actions; the same holds outside
         # a work tree, as in every fixture case above.
         count += git_case(same, same, origin=False,
