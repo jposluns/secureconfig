@@ -70,8 +70,9 @@ MARKDOWN = ("bare-urls", "verify-tls", "guard-conventions", "unfiltered-ss", "pr
             "aiqt-baseline") + ANY
 # CHANGELOG.md also feeds version-basis, which reads its newest dated heading, the two bundle
 # builds that run it, and generated-committed.
-CHANGELOG = MARKDOWN + ("changelog-prs", "changelog-format", "version-basis", "llms-full",
-                        "plugin", "instructions", "generated-committed")
+CHANGELOG = MARKDOWN + ("changelog-prs", "changelog-format", "changelog-bullets",
+                        "version-basis", "llms-full", "plugin", "instructions",
+                        "generated-committed")
 # The directories whose every file is code, checks or a bundle, and so selects every section.
 EVERY_DIRS = ("plugin", "tools", "scripts", ".baseline", ".aiqt", ".github")
 # The only endings, in any case, that make a file under site/ or site-src/ content.

@@ -1833,6 +1833,24 @@ for changelog_check in test_changelog_format.py check_changelog_format.py; do
   fi
 done
 
+# section: changelog-bullets
+echo "== CHANGELOG bullets: at most 3 sentences, each at most 25 words =="
+# The maintainer's 2026-11-27 ruling and a D-1096 vote of 2026-11-27, confirmed by the maintainer
+# on 2026-11-28 (DECISIONS.md). New and changed bullets must comply; the older ones listed by hash
+# in tools/changelog_bullets_legacy.txt are exempt until their batch rewrites them. The self-test
+# runs first, so what runs against the changelog is the shipped gate.
+for bullets_check in test_changelog_bullets.py check_changelog_bullets.py; do
+  if changelog_bullets=$(python3 -I -B "tools/$bullets_check" 2>&1); then
+    printf '%s\n' "$changelog_bullets"
+    if grep -q '^  FAIL  ' <<< "$changelog_bullets" || ! grep -q '^  ok    ' <<< "$changelog_bullets"; then
+      bad "$bullets_check exited 0 without a clean ok result"
+    fi
+  else
+    printf '%s\n' "$changelog_bullets"
+    bad "$bullets_check failed"
+  fi
+done
+
 # section: release-tests
 echo "== the release check still refuses what it claims =="
 # tools/check_release.py runs in the release procedure (CONTRIBUTING.md "Releasing"), not here:

@@ -99,8 +99,8 @@ MAP = (
     # The root project records. Every other path, code and guides included, matches nothing here
     # and runs every section. tools/version_basis.py reads CHANGELOG.md's newest dated heading,
     # and the llms-full and plugin builds run it.
-    ("CHANGELOG.md", MARKDOWN + ("changelog-prs", "changelog-format", "version-basis",
-                                 "llms-full", "plugin", "generated-committed")),
+    ("CHANGELOG.md", MARKDOWN + ("changelog-prs", "changelog-format", "changelog-bullets",
+                                 "version-basis", "llms-full", "plugin", "generated-committed")),
     ("TODO.md", MARKDOWN + ("todo-rows",)),
     ("DONE.md", MARKDOWN),
     ("DECISIONS.md", MARKDOWN),

@@ -497,6 +497,37 @@ demand, so a second unrecorded merge turns the next such run red. Eight pull req
 unrecorded before that
 gate existed. A second gate, `tools/check_changelog_format.py`, requires an empty line after each
 `## YYYY-MM-DD` heading, strictly descending dated headings and no date with two headings.
+A third, `tools/check_changelog_bullets.py`, holds each new or changed bullet to at most 3
+sentences of at most 25 words each, as the maintainer ruled on 2026-11-27 (`DECISIONS.md`). It
+splits sentences with `tools/sentence_split.py` and drops a trailing `(#N)`. It counts a code span
+as one word, unless the span's content is over 60 characters or holds more than 8 internal spaces.
+The 60-character test counts the content as CommonMark renders it: one space is stripped from each
+side only when the content both begins and ends with a space and is not all spaces. A backtick
+that no run closes is plain text, so its words count.
+Zero-width and other invisible characters (Unicode categories Cf,
+Zs, Zl and Zp) separate words, and a new or changed bullet holding a Cf character fails. A bullet
+does not restate the version, which `VERSION` holds: the gate rejects `VERSION` listed with
+`plugin.json`, with or without `SKILL.md`, then go to, move to, stay at, remain at, are bumped,
+updated or set, carry the or this, or are and a digit. #1429 deleted the 91 standalone sentences
+that name the three full paths, `VERSION`, `plugin/plugin.json` and
+`plugin/skills/secureconfig/SKILL.md`: 71 "... go to <version>", 1 "... go to the pull request's
+version" (#1348) and 19 "... stay at main's value, <version>, because main is higher", each with
+or without a final full stop. The other forms, and 6 longer sentences that name the three full
+paths and other files, are in 38 listed bullets and wait for their batch. Every entry under a dated
+heading is a `- ` bullet: other text, fence lines (one opened on a bullet's own first line
+included) and two bullets with the same text fail. The bullets that broke the rule when the gate
+was added are listed by hash in `tools/changelog_bullets_legacy.txt` until a batch rewrites them,
+and an entry dated after 2026-11-27 fails. The list must hold exactly `LEGACY_MAX` entries, a
+constant in the gate. A batch deletes its lines and lowers `LEGACY_MAX` by the same number, and
+nothing raises it. Every entry must also be in the list as committed at the merge base of `HEAD`
+and `$BASE_SHA`, which CI sets on a pull request, or else `origin/main`, so an edited legacy
+bullet cannot be relisted under its new hash. The gate reads that copy with local git only. A
+`$BASE_SHA` that git cannot resolve, a failed `git merge-base`, `git ls-tree` or `git cat-file`,
+or a base copy that is not UTF-8 fails, locally and under GitHub Actions. A base that has neither
+the list nor the gate, as for #1429, skips the comparison with a SKIP line. A local run also skips
+it when the base has the gate but no list, when the root is not the top of a git work tree (any
+failed `git rev-parse --show-toplevel` included), when git cannot run, or when `$BASE_SHA` is
+unset or empty and `origin/main` does not name a commit; under GitHub Actions those four fail.
 
 Before merging, replace draft PR, backlog-id and version placeholders with their assigned
 values. The offline gate `tools/check_no_placeholders.py` checks tracked Markdown and
@@ -643,7 +674,8 @@ list of pull requests and a link to `CHANGELOG.md` at the tag.
 9. Record the release in a records pull request through the normal flow: one `CHANGELOG.md`
    bullet naming the tag, its target commit and the UTC dates it covers, saying that the
    target's date is covered only up to the target commit, and also saying whether the
-   release covers the previous release's date after that previous target. The next release
+   release covers the previous release's date after that previous target, within the bullet
+   rule in "Record the change" (at most 3 sentences of at most 25 words). The next release
    passes this tag as `--previous`. The same pull request publishes the release on the site.
    Download the published assets again with `gh release download v1.0.<N>` into a new
    directory and run `sha256sum -c SHA256SUMS` there. Copy the two zips byte for byte into

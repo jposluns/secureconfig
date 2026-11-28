@@ -17,6 +17,25 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer ruling of 2026-11-27 that every `CHANGELOG.md` bullet has at most 3 sentences of at most 25 words (#1429).**
+  The maintainer gave this ruling on 2026-11-27 at about 23:15Z, through the decision dialog. Every bullet has at
+  most 3 sentences, each of at most 25 words. All earlier bullets are rewritten to the rule in batches, and a gate
+  holds it. The sentence saying where `VERSION`, `plugin/plugin.json` and `plugin/skills/secureconfig/SKILL.md` go
+  is dropped. Removed detail is not archived; it stays in git history and pull request bodies.
+  - Word count. A D-1096 vote of 2026-11-27, confirmed by the maintainer on 2026-11-28, settled code spans: a span
+    counts as one word, but a span over 60 characters or with more than 8 internal spaces is counted by its words.
+    An unclosed backtick is counted as plain words. The gate counts the 60 characters as CommonMark renders the
+    span's content: one space is stripped from each side only when the content both begins and ends with a space
+    and is not all spaces. Internal spaces are those left after every edge space is stripped.
+  - Effect. Pull request #1429 adds `tools/check_changelog_bullets.py`, its self-test and the changelog-bullets
+    suite section. It lists the bullets that break the rule in `tools/changelog_bullets_legacy.txt`, capped by the
+    gate's `LEGACY_MAX`, dated no later than 2026-11-27 and held to the list at the merge base. It deletes 91
+    standalone version sentences naming `VERSION`, `plugin/plugin.json` and `plugin/skills/secureconfig/SKILL.md`:
+    71 "... go to <version>", 1 "... go to the pull request's version" (#1348) and 19 "... stay at main's value,
+    <version>, because main is higher", each with or without a final full stop. It also deletes the #1369
+    sentence that described that bullet's version sentence. TODO row 3.129 tracks the batches.
+  - Revert. The revert path is a later maintainer ruling that replaces this one.
+
 - **Maintainer ruling of 2026-11-25 re-marking `windmill-loopback` and `windmill-sandbox-run` REASONED (#1399).**
   The maintainer gave this ruling, attended, through AskUserQuestion, 2026-11-25 about 13:36Z, choosing the option
   "Re-mark REASONED (Recommended)". No reasoning was recorded beyond the choice. The ruling
