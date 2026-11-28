@@ -41,7 +41,8 @@ history error cannot hide a format finding, or the reverse.
 WHAT IT DOES NOT CHECK: fenced code blocks are not modelled, so a dated heading line inside
 one is checked as a heading; that over-flags rather than under-flags, and CHANGELOG.md had
 no fenced block when this gate was added. It does not check the bullets under a heading,
-their order, the older `###` subheadings, whether a date is the UTC date its changes landed
+whose length tools/check_changelog_bullets.py checks, or their order, the older `###`
+subheadings, whether a date is the UTC date its changes landed
 (the changelog's preamble says headings before 2026-09-27 were not held to one timezone),
 or whether a date is in the future, which would need a clock this gate does not read.
 A heading dated in another shape, such as `## 20260914` or `## 2026/09/14`, does not open

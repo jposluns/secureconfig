@@ -497,6 +497,16 @@ demand, so a second unrecorded merge turns the next such run red. Eight pull req
 unrecorded before that
 gate existed. A second gate, `tools/check_changelog_format.py`, requires an empty line after each
 `## YYYY-MM-DD` heading, strictly descending dated headings and no date with two headings.
+A third, `tools/check_changelog_bullets.py`, holds each new or changed bullet to at most 3
+sentences of at most 25 words each, as the maintainer ruled on 2026-11-27 (`DECISIONS.md`). It
+splits sentences with `tools/sentence_split.py` and drops a trailing `(#N)`. It counts a code span
+as one word, unless the span's content is over 60 characters or holds more than 8 spaces. A
+bullet does not restate the version, which `VERSION` holds; the gate rejects the old fixed-form
+version sentence. Every entry under a dated heading is a `- ` bullet: other text, fence lines and
+two bullets with the same text fail. The bullets that broke the rule when the gate was added are
+listed by hash in `tools/changelog_bullets_legacy.txt` until a batch rewrites them. The list must
+hold exactly `LEGACY_MAX` entries, a constant in the gate. A batch deletes its lines and lowers
+`LEGACY_MAX` by the same number, and nothing raises it.
 
 Before merging, replace draft PR, backlog-id and version placeholders with their assigned
 values. The offline gate `tools/check_no_placeholders.py` checks tracked Markdown and
@@ -643,7 +653,8 @@ list of pull requests and a link to `CHANGELOG.md` at the tag.
 9. Record the release in a records pull request through the normal flow: one `CHANGELOG.md`
    bullet naming the tag, its target commit and the UTC dates it covers, saying that the
    target's date is covered only up to the target commit, and also saying whether the
-   release covers the previous release's date after that previous target. The next release
+   release covers the previous release's date after that previous target, within the bullet
+   rule in "Record the change" (at most 3 sentences of at most 25 words). The next release
    passes this tag as `--previous`. The same pull request publishes the release on the site.
    Download the published assets again with `gh release download v1.0.<N>` into a new
    directory and run `sha256sum -c SHA256SUMS` there. Copy the two zips byte for byte into
