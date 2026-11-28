@@ -25,6 +25,8 @@ drops is not archived; it stays in git history and pull request bodies.
 
 ## 2026-11-28
 
+- Advice-label audit: `gitlab.md` 1 credited, 2 labelled, 2 split, 20 flagged, 0 unchanged; `mysql.md` 0 credited, 4 labelled, 0 split, 22 flagged, 1 unchanged. `neo4j.md` 0 credited, 8 labelled, 0 split, 12 flagged, 4 unchanged; unchanged counts candidates judged not to be advice. Flagged claims keep their original text, and flagged ids and wording changes are listed in the pull request. (#1433)
+
 - Advice labels under the source-credit rule, counted as credited, labelled, split, flagged and unchanged: `nats.md` 3, 17, 0, 4, 3. `open-webui.md` 0, 12, 3, 11, 0; `workflow-orchestrators.md` 0, 12, 2, 11, 0. Category definitions, flagged ids and wording changes are listed in the pull request. (#1430)
 - Legacy-rewrite batch 01 rewrites the 52 oldest legacy bullets, dated 2026-09-09 to 2026-09-12, to the 3-sentence rule and removes their entries from `tools/changelog_bullets_legacy.txt`. `LEGACY_MAX` in `tools/check_changelog_bullets.py` goes from 1402 to 1350. (#1431)
 - `tools/check_changelog_bullets.py` holds each new or changed bullet to at most 3 sentences of at most 25 words, as the maintainer ruled on 2026-11-27 (`DECISIONS.md`). Non-compliant bullets dated up to 2026-11-27 stay exempt, listed by hash in `tools/changelog_bullets_legacy.txt`, until `TODO.md` row 3.129's batches rewrite them. This pull request deletes 91 fixed-form version sentences, 72 "go to" and 19 "stay at main's value" forms, and the #1369 sentence describing one. (#1429)
