@@ -25,6 +25,7 @@ drops is not archived; it stays in git history and pull request bodies.
 
 ## 2026-11-28
 
+- Legacy-rewrite batch 01 rewrites the 52 oldest legacy bullets, dated 2026-09-09 to 2026-09-12, to the 3-sentence rule and removes their entries from `tools/changelog_bullets_legacy.txt`. `LEGACY_MAX` in `tools/check_changelog_bullets.py` goes from 1402 to 1350. (#1431)
 - `tools/check_changelog_bullets.py` holds each new or changed bullet to at most 3 sentences of at most 25 words, as the maintainer ruled on 2026-11-27 (`DECISIONS.md`). Non-compliant bullets dated up to 2026-11-27 stay exempt, listed by hash in `tools/changelog_bullets_legacy.txt`, until `TODO.md` row 3.129's batches rewrite them. This pull request deletes 91 fixed-form version sentences, 72 "go to" and 19 "stay at main's value" forms, and the #1369 sentence describing one. (#1429)
 - Advice-label audit B05: `agent-builders.md`: 2 credited, 10 labelled, 4 split, 9 flagged. `self-hosted-ci-runners.md`: 2 credited, 16 labelled, 3 split, 3 flagged. `clickhouse.md`: 0 credited, 18 labelled, 2 split, 3 flagged; flagged ids and wording changes are listed in the pull request. (#1428)
 - Advice-label audit B03 under the source-credit ruling, `firebase-supabase.md` 30 labelled only, 1 split, 5 credited, 19 flagged, 15 unchanged. `llm-observability.md` has 15 labelled only, 1 split, 2 credited, 17 flagged and 13 unchanged. `authentication.md` has 5 labelled only, 4 split, 11 credited, 18 flagged and 20 unchanged; flagged ids and wording changes are listed in the pull request. (#1426)
@@ -1812,201 +1813,51 @@ drops is not archived; it stays in git history and pull request bodies.
 
 ### Added
 
-- `TODO.md` and `DONE.md` at the repository root (#38, #41). The backlog lived only in a private
-  working store, so a question about it could not be answered without a summary, and writing it
-  down exposed that the September audit's eighteen ranked coverage gaps were never recorded: five
-  had shipped and thirteen are unrecoverable. A three-family audit replaced them, with codex and
-  claude reading all 85 guides and gemini 16, producing sixteen gap rows and thirty enhancement
-  rows, each naming what specifically to do. `DONE.md` records two terminal states, done and
-  dropped, because a declined item that simply disappears gets proposed again.
-- An Agent Plugin package (#39). `plugin.json` and one skill validated against the Agent Plugins
-  and Agent Skills specifications, with the 86 guides bundled as `references/` so an adopter with
-  no egress still has them, and `scripts/update-guides.sh` to refresh them and re-pin the version
-  when there is network. The updater verifies every fetched guide against a published digest and
-  replaces the bundle only once all of them match, so an interrupted run leaves the working bundle
-  intact. Recording the bundle exposed two defects in the generated-file record gate: `kind` sat
-  unused so a generated directory could not be recorded at all, and the build script did not
-  declare the script it calls.
-- `connection-poolers.md`, covering PgBouncer and pgpool-II (#30). A pooler becomes the thing
-  clients connect to, so the database's own `hostssl` rules and TLS settings stop governing the
-  client and start governing the pooler. Two PgBouncer defaults fail open: `client_tls_sslmode`
-  is documented as "TLS connections are disabled by default", so a carefully TLS'd database
-  gains nothing once a pooler fronts it, and `server_tls_sslmode` defaults to `prefer`, which
-  "If refused, the connection will be established over plain TCP" and validates no certificate;
-  `require` and `verify-ca` each close only half of that. A forced `user=` in a `[databases]`
-  entry makes every client the same PostgreSQL role, so every `GRANT` and every per-user
-  `pg_hba.conf` line stops discriminating. `exposure-index.md` gained 6432, 9898 and 9999.
-- A shell-block gate (#27). Every fenced bash block is linted by shellcheck and parsed by
-  `bash -n`, with the version reported rather than pinned, and a canary block whose finding has
-  to come back: a reviewer silenced the real shellcheck through an environment variable so that
-  it exited 1 with empty output, and the gate had read that as 156 blocks passing. It found five
-  real defects in the corpus on its first run. A placeholder check shipped alongside it was
-  deleted after five successive rules were each beaten by legal shell, the last by an ordinary
-  `sed` substitution; CONTRIBUTING rule 6 now names that hazard as a review obligation and says
-  plainly that no gate catches it reliably.
-- A category gate covering `site/llms.txt` (#36). The README's guide index, the site menu and
-  `llms.txt` are three hand-maintained copies of one category list, and nothing compared the
-  third: it carried ten sections of its own against the README's twelve. The gate now checks all
-  three, and checks `llms.txt`'s guide membership per category as well as its headings.
-- A control-plane section in `kubernetes.md` (#23). A managed cluster's API server is reachable from
-  the internet the moment the cluster is created, so a control plane nobody exposed on purpose is
-  exposed; a kubeconfig may be a credential in itself or only a pointer to one, which decides what
-  its disclosure costs; a self-managed control plane answers on 6443, 2379, 2380, 10250, 10255,
-  10256, 10257 and 10259; the kubelet's flag and file defaults are opposites, so a reader who checks
-  one learns nothing about the other; and GKE's DNS-based endpoint is not governed by authorized
-  networks, so an allowlist that looks complete does not cover it. `exposure-index.md` gained rows
-  for those ports.
-- `self-hosted-idp.md`, covering Keycloak and authentik (#24). `hostname-admin` does not restrict
-  the Administration REST API, so an operator who sets it can believe the administrative surface is
-  closed while it answers; the administrative realm's login paths have to be restricted by source
-  rather than refused; authentik's Compose install has a first-boot window in which whoever loads
-  the page first becomes the administrator; and the management and metrics ports answer without
-  asking who you are.
-- `tools/check_gensrc.py` and `tools/test_gensrc_gate.py`, which gate `.aiqt/gensrc.json` against
-  the build script it describes (#25). A new guide touches five wiring surfaces, and this was the
-  fifth and the only one nothing checked, so the record of what generates `site/llms-full.txt`
-  could fall out of step with the script that generates it while every other surface stayed green.
+- `TODO.md` and `DONE.md` at the repository root (#38, #41). Writing the backlog down exposed that the September audit's eighteen ranked coverage gaps were never recorded: five had shipped and thirteen are unrecoverable. A three-family audit replaced them with sixteen gap rows and thirty enhancement rows, and `DONE.md` records two terminal states, done and dropped.
+- An Agent Plugin package (#39). `plugin.json` and one skill validated against the Agent Plugins and Agent Skills specifications, with the 86 guides bundled as `references/`. `scripts/update-guides.sh` refreshes them, verifying every fetched guide against a published digest and replacing the bundle only once all of them match.
+- `connection-poolers.md`, covering PgBouncer and pgpool-II (#30). Two PgBouncer defaults fail open: `client_tls_sslmode` is documented as "TLS connections are disabled by default", and `server_tls_sslmode` defaults to `prefer`, which validates no certificate. A forced `user=` in a `[databases]` entry makes every client the same PostgreSQL role, and `exposure-index.md` gained 6432, 9898 and 9999.
+- A shell-block gate (#27). Every fenced bash block is linted by shellcheck and parsed by `bash -n`, with a canary block whose finding has to come back. A placeholder check was deleted after five rules were each beaten by legal shell; CONTRIBUTING rule 6 now names that hazard as a review obligation.
+- A category gate covering `site/llms.txt` (#36). The README's guide index, the site menu and `llms.txt` are three hand-maintained copies of one category list, and nothing compared the third. The gate now checks all three, and checks `llms.txt`'s guide membership per category as well as its headings.
+- A control-plane section in `kubernetes.md` (#23). A managed cluster's API server is reachable from the internet the moment the cluster is created. A self-managed control plane answers on 6443, 2379, 2380, 10250, 10255, 10256, 10257 and 10259, and `exposure-index.md` gained rows for those ports.
+- `self-hosted-idp.md`, covering Keycloak and authentik (#24). `hostname-admin` does not restrict the Administration REST API, and the management and metrics ports answer without asking who you are. In authentik's Compose install, whoever loads the page first during a first-boot window becomes the administrator.
+- `tools/check_gensrc.py` and `tools/test_gensrc_gate.py`, which gate `.aiqt/gensrc.json` against the build script it describes (#25). A new guide touches five wiring surfaces, and this was the fifth and the only one nothing checked.
 
 ### Changed
 
-- The backlog is banded and ordered by AIQT (#41, #42). Errors are band 1 and worked to empty
-  before anything else, because a reader acting on a wrong guide is worse off than a reader with
-  no guide; eight of the thirty rows against existing guides turned out to be errors rather than
-  gaps. Band ids are decoupled from bands, so the reordering changed no identities.
-- `site/_headers` pins the inline stylesheet by hash and drops `'unsafe-inline'` from
-  `style-src`, with a gate that keeps the pin honest (#28). The gate refuses what it cannot
-  model rather than modelling HTML: exactly one bare `<style>` and one bare `<script>`, every
-  literal opener accounted for, no script-data escape states, no NUL byte, and one declared
-  charset. Four review rounds of parser detail preceded that decision, and the round that
-  settled it found the gate handing an author the hash of the empty string for a self-closing
-  `<style/>` and going green once it was pinned.
-- The weekly citation sweep reports where a cited page has moved, and fails the run when it has
-  (#29). The link sweep accepts 301 and 302, so a moved citation passes it forever; #16 and #17
-  were spent on that drift once it had spread across 82 citations. A green scheduled run
-  notifies nobody, so a host or path move now reds the weekly workflow, which is not a required
-  check and blocks no merge.
+- The backlog is banded and ordered by AIQT (#41, #42). Errors are band 1 and worked to empty before anything else. Eight of the thirty rows against existing guides turned out to be errors rather than gaps, and band ids are decoupled from bands.
+- `site/_headers` pins the inline stylesheet by hash and drops `'unsafe-inline'` from `style-src`, with a gate that keeps the pin honest (#28). The gate refuses what it cannot model rather than modelling HTML.
+- The weekly citation sweep reports where a cited page has moved, and fails the run when it has (#29). The link sweep accepts 301 and 302, so a moved citation passes it forever; #16 and #17 were spent on that drift. A host or path move now reds the weekly workflow, which is not a required check and blocks no merge.
 - `site/llms.txt` uses the README guide index's twelve categories, in the same order, with the
   same guides in each (#36). Seventeen entries that carried no description now have one, and two
   guides that were listed twice are listed once.
 
 ### Fixed
 
-- `cors.md` and `host.md` cite the tools whose syntax they show (#35). `cors.md` demonstrated
-  Express and FastAPI middleware while citing only MDN's protocol guide, and `host.md` showed five
-  `ufw` and `firewall-cmd` invocations and cited neither tool, so rule 1 could not be exercised on
-  either. A sweep for the same shape found ten more candidates, all false positives: this corpus's
-  convention is for a source line to name the settings it covers, and they do.
-- The DevProcess / OPF adoption is deferred and the reason recorded (#40). Its tooling ships in a
-  later release, so adopting by hand would mean maintaining a TOML store and rendering its views
-  by hand with no validator to catch drift between them, which is the defect class this repository
-  already runs three freshness gates against.
-- `chat-uis.md` no longer reproduces Chainlit's own login example (#31). The vendor's snippet
-  compares a literal `"admin"` against a literal `"admin"`; the guide had swapped the literal
-  for a house placeholder and kept both real defects underneath, a credential in application
-  source compared with `==`. It reads both values from the environment and compares them with
-  `hmac.compare_digest`, and the paragraph beside it no longer claims constant time the function
-  does not promise, nor that rotating the password ends existing sessions, which
-  `CHAINLIT_AUTH_SECRET` does.
-- `kubernetes.md` no longer passes a password as a command-line argument (#33). Apache's own
-  page says of `htpasswd -b` that "the password is clearly visible on the command line. For
-  script use see the -i option", and the guide had copied Envoy Gateway's example. `-s` stays,
-  because Envoy Gateway's basic auth documentation says "only SHA hash algorithm is supported
-  for now", and the guide now says that rather than leaving SHA-1 looking like a free choice.
-  `secrets.md` gained the rule that was missing, with the reason a probe for it is not offered:
-  `grep` for the words password, token and secret finds only commands that spell them out, and
-  a check that reads clean while the exposure is running is worse than none.
-- `cloudflare.md` no longer publishes an application before authenticating it (#34). The guide
-  said "The app is now reachable" at the end of step 2 and added Access in step 4, so a reader
-  following the numbered order had a public, unauthenticated application in between, which
-  `deployment-lifecycle.md` already warns against.
-- `apache.md` and `lighttpd.md` probe more than the front door (#32). Four of the six
-  fronting-proxy guides had been fixed and these two were missed, because neither proxies to an
-  origin so the check the others use did not transfer. Apache's bypass is documented: an
-  unmatched name falls through to "the first listed virtual host that matches" the address and
-  port. Over TLS that name is the SNI one, so the probe sets both it and the Host header.
-- `cors.md` and `host.md` cite the tools whose syntax they show (#35). `cors.md` showed Express
-  and FastAPI middleware while citing only MDN's protocol guide, and `host.md` showed five
-  `ufw` and `firewall-cmd` invocations and cited neither tool, so rule 1 could not be exercised
-  on either.
+- `cors.md` and `host.md` cite the tools whose syntax they show (#35). `cors.md` demonstrated Express and FastAPI middleware while citing only MDN's protocol guide, and `host.md` showed five `ufw` and `firewall-cmd` invocations and cited neither tool. A sweep for the same shape found ten more candidates, all false positives.
+- The DevProcess / OPF adoption is deferred and the reason recorded (#40). Its tooling ships in a later release, so adopting by hand would mean maintaining a TOML store and rendering its views by hand. No validator would catch drift between them, the defect class this repository already runs three freshness gates against.
+- `chat-uis.md` no longer reproduces Chainlit's own login example (#31). The vendor's snippet compares a literal `"admin"` against a literal `"admin"`, and the guide had kept a credential in application source compared with `==`. It reads both values from the environment and compares them with `hmac.compare_digest`.
+- `kubernetes.md` no longer passes a password as a command-line argument, and `secrets.md` gained the rule that was missing (#33). Apache's own page says of `htpasswd -b` that "the password is clearly visible on the command line. For script use see the -i option". `-s` stays, because Envoy Gateway's basic auth documentation says "only SHA hash algorithm is supported for now".
+- `cloudflare.md` no longer publishes an application before authenticating it (#34). The guide said "The app is now reachable" at the end of step 2 and added Access in step 4. A reader following the numbered order had a public, unauthenticated application in between.
+- `apache.md` and `lighttpd.md` probe more than the front door (#32). Apache's bypass is documented: an unmatched name falls through to "the first listed virtual host that matches" the address and port. Over TLS that name is the SNI one, so the probe sets both it and the Host header.
+- `cors.md` and `host.md` cite the tools whose syntax they show (#35). `cors.md` showed Express and FastAPI middleware while citing only MDN's protocol guide. `host.md` showed five `ufw` and `firewall-cmd` invocations and cited neither tool.
 - `kubernetes.md` and `memcached.md` gained Verify steps that discriminate (#26), and the
   changelog was brought up to date through #25.
 
 ### Records
 
-- Changelog and version bookkeeping: #37 recorded #26 through #36 and set the version to match;
-  #43 did the same for #35 and #38 through #42; #44 rotated rows 3.4 and 3.5 into `DONE.md`.
+- Changelog and version bookkeeping: #37 recorded #26 through #36 and set the version to match. Also, #43 did the same for #35 and #38 through #42; #44 rotated rows 3.4 and 3.5 into `DONE.md`.
 
 ## 2026-09-11
 
 ### Added
 
-- Two gates for conventions this repository stated and never checked (#21).
-  `tools/check_verify_safety.py` fails when a command inside a Verify block skips TLS certificate
-  verification, a rule stated in `common-mistakes.md`, `self-signed.md` and `README.sources.md` and
-  broken in three Verify blocks before anything checked. `tools/check_prose_conventions.py` fails on
-  British `-ise` spellings and on placeholders outside the house set. Both found defects live on `main`
-  the first time they ran: `ray.md` carried `randomised`, which the corpus-wide conversion in #18 missed
-  because its word list omitted that stem, and `pocketbase.md` carried `yourdomain.com`, a real
-  registered domain that an audit had identified and no change had fixed.
-- Three Verify steps that asserted a certificate check they did not perform (#21). `kafka.md`,
-  `neo4j.md` and `memcached.md` each ran a bare `openssl s_client -connect` in a Verify block, two of
-  them commented "TLS handshake with your certificate". Without `-CAfile`, `-verify_hostname` or
-  `-verify_return_error` the handshake succeeds against any certificate, so the comment asserted what
-  the command did not check, and `self-signed.md` and `rabbitmq.md` already carried the correct form.
-  These surfaced only because the first version of the new gate got the openssl case backwards: it
-  matched `-verify_return_error 0`, a syntax OpenSSL does not have, for a flag whose presence is the
-  safe state. Cross-family review found the dead pattern, and fixing it exposed the guides behind it.
-  The exemption for certificate inspection was removed after review showed it was a laundering pipe,
-  since appending `| openssl x509` to an unverified handshake made the line pass, and the two guides
-  that inspect a publicly trusted certificate, `deployment-lifecycle.md` and `free-certificates.md`,
-  now pass because their commands carry `-verify_hostname` and `-verify_return_error`, not because an
-  exemption covers them.
-- `tools/test_convention_gates.py`, the regression suite for the two new gates (#21). It records one case
-  per input a reviewer demonstrated against them, so every way past a gate that review found is a
-  standing check rather than a one-off fix, and the inputs the gates still get wrong are asserted as the
-  gates' current answer rather than dropped: quote state is per physical line, so a quotation spanning a
-  line break hides what follows it, and inside a fence only a shell-style trailing comment is read as
-  prose, so a hash inside a Python triple-quoted string is read as one. Both limits are named in the
-  gates' docstrings as well.
-- A "Bound the expensive endpoints" section in each of the four proxy guides (#20).
-  `realtime-webhooks.md` and `authentication.md` both require request-size, concurrency and timeout
-  limits on inference, upload and job-submission endpoints, naming denial of wallet as the failure
-  mode, and `realtime-webhooks.md` recorded that the proxy guides did not carry those directives.
-  They do now, and that sentence is rewritten to state what each proxy actually enforces rather than
-  implying parity: nginx carries all four controls, Traefik body size, concurrency and rate but no
-  timeout, HAProxy timeouts with an aggregate connection cap and a Content-Length body check, and
-  Caddy body size only, with no rate limiting in its standard build. Two of those are CONTRIBUTING
-  rule 3 statements rather than directives, since the control does not exist to configure. The change
-  took four cross-family review rounds, three of them returning DO NOT SHIP from both families: the
-  directives were correct throughout, while the snippets and the verification claims were not. Two
-  snippets would have dropped a security directive if pasted over an existing block, so every snippet
-  is now an explicit fragment, and the Verify steps report what they observe rather than asserting
-  which limiter fired, because a backend returning the same status explains the result with no proxy
-  limit present.
-- `exposure-index.md`, a lookup from an observed listening port to the guides worth reading (#19). The
-  corpus routes from a known mistake to its fix in `common-mistakes.md`; this routes from an observed
-  symptom, which is the direction a reader arrives from. It claims deliberately little. A port does not
-  identify a service here: 23 guides mention 3000, 21 mention 443, and six mention 8443, so the table says
-  what may be listening and sends the reader to the owning process. Its Verify section is stated as a
-  baseline inventory that cannot establish completeness, because a container on a bridge network
-  publishes no host port and one on routed IPv6 answers on its own address whatever the host publishes.
-  It took four cross-family review rounds: the first two returned DO NOT SHIP from both families, one
-  for the false premise and one for a Verify section that certified an exposed application through an
-  outbound tunnel and through endpoints no linked guide enumerates.
-- A gate, `tools/check_guide_shape.py`, requiring every guide to carry a Verify section with a
-  non-empty body and a `Sources (checked <month year>)` heading whose date names a real month, is not
-  in the future, and cites at least one absolute URL with a hostname. It is deterministic and offline
-  like the rest of the suite, and monotonic in time: its only date comparison can turn a failing guide
-  into a passing one as the clock advances, never the reverse, so no build can go red from the
-  calendar alone. The gate covers only the structural floor of `CONTRIBUTING.md` rule 5: it cannot
-  prove that a Verify body holds a runnable command, that a Verify step fails while the service is
-  still exposed, or that a cited page contains the line it is cited for, and it says so rather than
-  implying wider coverage. `common-mistakes.md` is the one documented exemption. (#9)
-- `README.sources.md`, holding the citations for the README verification checklist. The checklist
-  names tools, status codes and services without citing them inline, so the sources now sit in a
-  companion file and the front page stays readable. `README.md` is held to the same Verify and Sources
-  contract as any guide, resolving its Sources through that file. Nothing mechanically ties a numbered
-  check to its citation, so that correspondence is kept by reading. (#9)
+- Two gates for conventions this repository stated and never checked (#21): `tools/check_verify_safety.py` fails when a command inside a Verify block skips TLS certificate verification. `tools/check_prose_conventions.py` fails on British `-ise` spellings and on placeholders outside the house set. Both found defects live on `main` on their first run: `randomised` in `ray.md`, which #18 missed, and `yourdomain.com`, a real registered domain, in `pocketbase.md`.
+- Three Verify steps that asserted a certificate check they did not perform (#21). `kafka.md`, `neo4j.md` and `memcached.md` each ran a bare `openssl s_client -connect`, which succeeds against any certificate without `-CAfile`, `-verify_hostname` or `-verify_return_error`. The exemption for certificate inspection was removed, and `deployment-lifecycle.md` and `free-certificates.md` now pass because their commands carry `-verify_hostname` and `-verify_return_error`.
+- `tools/test_convention_gates.py`, the regression suite for the two new gates (#21). It records one case per input a reviewer demonstrated against them, and asserts the inputs the gates still get wrong as their current answer. Quote state is per physical line, and inside a fence only a shell-style trailing comment is read as prose; the gates' docstrings name both limits.
+- A "Bound the expensive endpoints" section in each of the four proxy guides (#20). `realtime-webhooks.md` now states what each proxy actually enforces: nginx carries all four controls, and Traefik body size, concurrency and rate but no timeout. HAProxy, timeouts with an aggregate connection cap and a Content-Length body check; Caddy, body size only, with no rate limiting in its standard build.
+- `exposure-index.md`, a lookup from an observed listening port to the guides worth reading (#19). A port does not identify a service here, so the table says what may be listening and sends the reader to the owning process. Its Verify section is stated as a baseline inventory that cannot establish completeness.
+- A gate, `tools/check_guide_shape.py`, requiring every guide to carry a Verify section with a non-empty body and a `Sources (checked <month year>)` heading. The date must name a real month, not in the future, and the Sources section must cite at least one absolute URL with a hostname. It covers only the structural floor of `CONTRIBUTING.md` rule 5, and `common-mistakes.md` is the one documented exemption. (#9)
+- `README.sources.md`, holding the citations for the README verification checklist. `README.md` is held to the same Verify and Sources contract as any guide, resolving its Sources through that file. Nothing mechanically ties a numbered check to its citation, so that correspondence is kept by reading. (#9)
 - A fifth copy-ready prompt on the site that audits the AI and agent stack. (#6)
 - A gate in `tools/run_all_checks.sh` that fails if the README guide-index category headings and the
   site menu category headings drift apart. (#6)
@@ -2017,154 +1868,41 @@ drops is not archived; it stays in git history and pull request bodies.
   (#21). `tools/check_prose_conventions.py` enforces both, and rule 2 stated neither, so the gate
   was citing a rule as its source for something that rule did not say.
 
-- Prose now uses Oxford `-ize` spellings throughout (#18). The corpus mixed British `-ise` and Oxford
-  `-ize`, with the `-ise` forms holding the recurring line "login is not authorisation" in `README.md`,
-  `authentication.md`, the `oidc-integration.md` heading and the site's front page. 27 instances were
-  converted across 12 files. Technical identifiers were already `-ize` and are untouched: the
-  `Authorization` header, `authorization_endpoint`, `authorizationEnabled`, AWS `authorizer`, and the
-  term of art "authorization code flow". The case worth naming is `oidc-integration.md` lines 24 and 35,
-  where prose `organisation` sat on the same line as the Microsoft Entra authority name `organizations`
-  in backticks; both lines now carry the converted prose word and the identifier unchanged.
+- Prose now uses Oxford `-ize` spellings throughout (#18). The `-ise` forms held the recurring line "login is not authorisation" in `README.md`, `authentication.md`, the `oidc-integration.md` heading and the site's front page. 27 instances were converted across 12 files; technical identifiers such as the `Authorization` header and `authorization_endpoint` were already `-ize` and are untouched.
 
-- The project was renamed from `sslconfig` to `secureconfig`. The GitHub repository is now
-  `jposluns/secureconfig` and the site is served at `secureconfig.ai`; GitHub redirects the old
-  repository path. Every
-  absolute repository and site URL in `site/index.html`, `site/llms.txt`, `site/robots.txt`,
-  `README.md` and `scripts/build-llms-full.sh` was updated, along with the `AIQT_SITE_HOST` gate
-  variable in `tools/run_all_checks.sh` and the patch notes in `.aiqt/PIN`; `site/llms-full.txt` was
-  regenerated. Earlier entries in this changelog keep the old name: they record what shipped under
-  it. (#8)
+- The project was renamed from `sslconfig` to `secureconfig`. The GitHub repository is now `jposluns/secureconfig` and the site is served at `secureconfig.ai`; GitHub redirects the old repository path. Every absolute repository and site URL in `site/index.html`, `site/llms.txt`, `site/robots.txt`, `README.md` and `scripts/build-llms-full.sh` was updated, and earlier changelog entries keep the old name. (#8)
 
-- The `sslconfig.ai` domain was retired. Its DNS record was removed on 2026-09-11, so the old
-  hostname no longer resolves and `secureconfig.ai` is now the only site hostname. GitHub continues
-  to redirect the old `jposluns/sslconfig` repository path, but there is no redirect for the old
-  domain: URLs in the wild that point at `sslconfig.ai` fail to resolve rather than forwarding. (#9)
+- The `sslconfig.ai` domain was retired. Its DNS record was removed on 2026-09-11, so the old hostname no longer resolves and `secureconfig.ai` is now the only site hostname. There is no redirect for the old domain: URLs in the wild that point at `sslconfig.ai` fail to resolve rather than forwarding. (#9)
 
-- Three items in the README verification checklist were rewritten so that they discriminate. Each
-  could previously be recorded as verified while the exposure it exists to catch was still standing.
-  Item 4 now asks the reader to establish whether a failed `openssl s_client -tls1_1` came from the
-  server or from a local client that never offered TLS 1.1, since the two are indistinguishable from
-  the error alone. Item 7 now requires confirming that something is scheduled to invoke
-  `certbot renew`, because a passing dry run proves the command works and nothing about whether it
-  will ever be run. Item 10 no longer accepts a Shodan or Censys lookup in place of a live probe from
-  a second host, because those services report what they last observed rather than what is listening
-  now. (#10)
+- Three items in the README verification checklist were rewritten so that they discriminate: item 7 now requires confirming that something is scheduled to invoke `certbot renew`. Item 4 now asks the reader to establish whether a failed `openssl s_client -tls1_1` came from the server or from a local client. Item 10 no longer accepts a Shodan or Censys lookup in place of a live probe from a second host. (#10)
 
 - The "Jump to" line was removed from the top of `site/index.html`. The left-hand menu and the
   in-page anchors it pointed at are unchanged. (#9)
 
-- The README and the site front page (`site/index.html`) were realigned with the current corpus.
-  One canonical description now appears in the README title, the site tagline, and both the meta and
-  Open Graph descriptions. The AI-assistant rules, the decision guide, and the verification checklist
-  were rewritten to cover identity and the allowlist, machine credentials, secrets, egress and
-  metadata, exposed files, and the AI stack, and the README and site rule lists were reconciled. The
-  flat guide index and the site menu were regrouped into the same twelve categories. No guide content
-  changed. (#6)
+- The README and the site front page (`site/index.html`) were realigned with the current corpus. The AI-assistant rules, the decision guide and verification checklist were rewritten, and the guide index and site menu were regrouped into the same twelve categories. No guide content changed. (#6)
 
 ### Fixed
 
-- Seven accuracy defects, each re-checked against the vendor's own page or source before the edit, found
-  by a tri-family QA scan of the whole corpus (#12). `model-servers.md` recommended a vLLM API key and
-  verified only `/v1/models`; vLLM authenticates only the `/v1`, `/v2` and `/inference` prefixes and
-  leaves `/invocations` open to the same inference capability, so a reader whose Verify step passed still
-  had an unauthenticated inference endpoint. `workflow-orchestrators.md` named `[fab] auth_backends` to
-  select Airflow's auth manager, which is `[core] auth_manager`; the FAB setting selects API
-  authentication backends and is independent of it. `llm-observability.md` called the all-interfaces
-  listener the OpenTelemetry Collector default, which has been `localhost` since v0.110.0.
-  `nextjs.md` and `paas.md` still required Pro or Enterprise to protect a Vercel production domain,
-  contradicting `cloud-identity-proxies.md`, which already carried the 9 September 2026 change making it
-  free on every plan.
-- Four Verify steps that could not discriminate (#12). The Prefect check expected a 401 on `/api/health`,
-  which the server exempts on GET so container probes keep working, so it would have failed a correctly
-  configured server; it now probes `POST /api/flows/filter`. The Langfuse check treated
-  `/api/public/health` as an access-control test although it returns health status by design. The MinIO
-  check tested the service root, which does not prove any bucket is private, because anonymous policies
-  are set per bucket. The OTLP probe sent `{}` with curl's default form encoding, which the Collector
-  rejects with 415 on content type before reaching authentication, so the rejection proved nothing.
-- Nine Verify steps that could pass, or fail, for reasons unrelated to what they claim to prove (#13).
-  `container-hardening.md` spliced the database address into a `kubectl --overrides` JSON array unquoted,
-  so the override was not valid JSON, kubectl rejected it, and the guide's only proof that the default-deny
-  NetworkPolicy blocks anything never ran; the same override named its container `probe` while `kubectl
-  run` names the container after the pod, so a strategic merge would have added a container rather than
-  replaced the command. Its read-only filesystem probe wrote to `/x`, which the configured non-root user
-  cannot create on a writable filesystem either. `web-exposure.md` sent grep's errors to `/dev/null` and
-  read empty output as clean, although grep exits 2 and prints nothing against a directory that does not
-  exist, so a reader whose framework built elsewhere was told an unscanned bundle was clean; its ACME
-  check also forbade a 404 on a challenge token it never created, which a correctly exempted directory
-  returns anyway. `devops-uis.md` tested Docker client certificates with a command that does not enable
-  TLS and could inherit a certificate from an export earlier in the same guide. `n8n.md` and `php.md`
-  inferred route protection from a HEAD response and from cookie flags.
+- Seven accuracy defects found by a tri-family QA scan of the whole corpus, each re-checked against the vendor's own page or source (#12). `model-servers.md` verified only `/v1/models` although vLLM leaves `/invocations` unauthenticated, and `workflow-orchestrators.md` named `[fab] auth_backends` instead of `[core] auth_manager` to select Airflow's auth manager. `llm-observability.md` called the all-interfaces listener the OpenTelemetry Collector default, which has been `localhost` since v0.110.0.
+- Four Verify steps that could not discriminate (#12). The Prefect check expected a 401 on `/api/health`, which the server exempts on GET, and now probes `POST /api/flows/filter`. The Langfuse check used `/api/public/health`, the MinIO check the service root, and the OTLP probe was rejected with 415 on content type before authentication.
+- Nine Verify steps that could pass, or fail, for reasons unrelated to what they claim to prove (#13). `container-hardening.md` spliced the database address into a `kubectl --overrides` JSON array unquoted, so the default-deny NetworkPolicy proof never ran. `web-exposure.md` read grep's empty output as clean, and `n8n.md` and `php.md` inferred route protection from a HEAD response and from cookie flags.
 - `egress-metadata.md` verified the metadata services' header requirement rather than the network block
   the guide itself recommends as the control (#13). Added a probe of the block, sending the header the
   service requires, which must time out or be refused.
-- Three Verify steps that disabled TLS certificate verification, which the corpus forbids in
-  `common-mistakes.md`, `self-signed.md` and `README.sources.md` (#14). `elasticsearch.md` sent
-  credentials over a connection whose certificate was never checked, and claimed in a comment that
-  plaintext does not answer while making no plaintext request; `jupyter.md` and `devops-uis.md` probed
-  with `curl -skI`. A `-k` probe passes against a substituted certificate as readily as against the real
-  one, so the TLS half of each check proved nothing. All three now verify, and the plaintext refusal is
-  its own check.
+- Three Verify steps that disabled TLS certificate verification, which the corpus forbids in `common-mistakes.md`, `self-signed.md` and `README.sources.md` (#14). `elasticsearch.md` sent credentials over a connection whose certificate was never checked, and `jupyter.md` and `devops-uis.md` probed with `curl -skI`. All three now verify, and the plaintext refusal is its own check.
 - A citation in `elasticsearch.md` that still returned 200 but redirected to a generic install page
   carrying no security configuration (#14). The weekly link sweep treats a redirect as passing, so a
   stale citation of this shape stays green indefinitely. Replaced with the current documentation home,
   and the page documenting the generated `http_ca.crt` is now cited beside it.
-- The four fronting-proxy guides never checked the backend's bind address (#15).
-  `common-mistakes.md` opens the corpus-wide list with "Binding to `0.0.0.0` to fix a connection
-  problem and never binding back", and `nginx.md` repeats it as its own first common mistake, yet
-  the Verify blocks in `nginx.md`, `caddy.md`, `haproxy.md` and `traefik.md` probed only the front
-  door. All of those checks pass while the application also answers directly on port 3000, bypassing
-  the proxy's TLS and authentication, so a reader in exactly the state this project ranks first
-  collected four passes. Each Verify block now ends with the `ss -tlnp` check already used in
-  `model-servers.md`, `vector-databases.md`, `docker.md` and the database guides; `traefik.md` also
-  checks published container ports. `apache.md` and `lighttpd.md` serve content directly and front
-  no backend, so the check does not apply to them and they were left alone.
-- 82 citations that had silently moved (#16). An audit of all 767 URLs cited in the corpus found no
-  broken links and 84 redirects to a different path. The weekly link sweep counts a redirect as
-  passing, so a citation whose vendor reorganized its documentation stays green while pointing away
-  from the syntax it supports. ClickHouse, Coolify, NATS, the GitHub Actions OIDC pages, Gateway API
-  and Google Cloud all restructured; `encode/uvicorn` moved to `Kludex/uvicorn` and
-  `kubernetes/dashboard` to `kubernetes-retired/dashboard`. Every replacement target was fetched and
-  confirmed to resolve to itself, and where a redirect collapsed to a bare documentation root the
-  real successor page was found instead. Two of the refreshed citations had been added earlier the
-  same day, in #12 and #13. This also settles the disagreement between `README.md` and
-  `README.sources.md` over the testssl.sh URL.
-- Two URLs were deliberately left pointing at what looks like a stale target, because neither is a
-  citation (#16). `cloud-identity-proxies.md` keeps `https://cloud.google.com/iap` as the JWT `iss`
-  claim a reader validates Google IAP tokens against, and `egress-metadata.md` keeps
-  `https://sts.amazonaws.com/` as the positive-control probe in its Verify block, which is the
-  endpoint a workload calls for role credentials rather than a page to read.
-- Four citations from #16 whose refreshed target stopped matching its own description (#17).
-  `machine-auth.md` promised RFC 6749 section 4.4 while the new URL dropped the `#section-4.4` fragment,
-  and now cites the IETF datatracker copy, which serves anchors. `python.md` promised a settings
-  reference while the new URL landed on Gunicorn's home page; Gunicorn restructured its documentation and
-  the reference is now at `/reference/settings/`, confirmed to carry `bind`, `certfile`, `keyfile` and
-  `ca_certs`. Helicone and NATS each merged two pages into one, so `llm-observability.md` cited the same
-  URL twice in a single bullet and `nats.md` cited one page from two bullets; both are now cited once.
-  The detection gap worth recording: the audit flagged redirects that lost path depth, which catches a
-  page collapsing to a documentation root, but not `docs.gunicorn.org/` redirecting to `gunicorn.org/`,
-  where the depth is unchanged and only the host differs.
-- The `rabbitmq.md` Verify step could not complete the mutually authenticated connection the guide's own
-  configuration requires (#21). `ssl_options.fail_if_no_peer_cert = true` makes the broker demand a
-  client certificate and the command supplied neither `-cert` nor `-key`, so the run that failed to
-  connect still printed "Verification: OK", which reports the server certificate rather than the
-  client's, and the comment named that line as the pass condition. It is now a pair: one invocation
-  carrying client credentials that must reach a session, one without them that the broker must refuse,
-  with the pass condition stated as the shape of the outcome rather than a message to match on. The
-  negative run holds stdin open with `sleep 2` rather than closing it with `</dev/null`, because on TLS
-  1.3 the server can only refuse an empty client certificate after the client's flight and s_client
-  otherwise reaches end of input and exits before the rejection arrives; measured against a server
-  requiring a client certificate, the `</dev/null` form exited 0 and printed a full session block in four
-  trials of five, indistinguishable from the positive run.
+- The four fronting-proxy guides never checked the backend's bind address (#15). The Verify blocks probed only the front door, and all of those checks pass while the application also answers directly on port 3000. Each Verify block in `nginx.md`, `caddy.md`, `haproxy.md` and `traefik.md` now ends with the `ss -tlnp` check, and `traefik.md` also checks published container ports.
+- 82 citations that had silently moved (#16), two of them added earlier the same day in #12 and #13. An audit of all 767 URLs cited in the corpus found no broken links and 84 redirects to a different path. Every replacement target was fetched and confirmed to resolve to itself, and `README.md` and `README.sources.md` now agree on the testssl.sh URL.
+- Two URLs were deliberately left pointing at what looks like a stale target, because neither is a citation (#16). `cloud-identity-proxies.md` keeps `https://cloud.google.com/iap` as the JWT `iss` claim a reader validates Google IAP tokens against. `egress-metadata.md` keeps `https://sts.amazonaws.com/` as the positive-control probe in its Verify block.
+- Four citations from #16 whose refreshed target stopped matching its own description (#17). `machine-auth.md` now cites the IETF datatracker copy of RFC 6749 section 4.4; `python.md` promised a settings reference, and the reference is now at `/reference/settings/`. Helicone and NATS each merged two pages into one, so `llm-observability.md` and `nats.md` now cite each page once.
+- The `rabbitmq.md` Verify step could not complete the mutually authenticated connection the guide's own configuration requires (#21). It is now a pair: one invocation carrying client credentials that must reach a session, and one without them that the broker must refuse. The negative run holds stdin open with `sleep 2` rather than closing it with `</dev/null`.
 - `deserialises` in `ray.md`, a second `-ise` spelling in the same file (#21). It sits in the opening
   risk statement, describing what cloudpickle does to arbitrary Python objects, and now reads
   `deserializes`.
-- `kafka.md` named the unprefixed `ssl.client.auth=required` as the way to require client certificates
-  (#21). The guide configures a SASL_SSL listener, and its own section 5 already states that the
-  unprefixed setting applies to SSL listeners only and that Kafka logs a warning when it is set without
-  the prefix on a SASL_SSL broker, so the advice was inert: a reader who followed it would have believed
-  client certificates were required while they were not. It now names
-  `listener.name.sasl_ssl.ssl.client.auth=required`, which is what the rest of the guide already says.
-  The clause was added earlier in this branch and corrected within it.
+- `kafka.md` named the unprefixed `ssl.client.auth=required` as the way to require client certificates (#21). On the guide's SASL_SSL listener the advice was inert: a reader who followed it would have believed client certificates were required while they were not. It now names `listener.name.sasl_ssl.ssl.client.auth=required`, which is what the rest of the guide already says.
 - `ollama.md`'s bearer-token variant silently dropped two directives its `location /` variant
   carries (#22). `proxy_set_header Host localhost:11434` and `proxy_read_timeout 300s` are restored,
   so a reader who chose the authenticated variant gets the same upstream settings as the other one.
@@ -2179,32 +1917,11 @@ drops is not archived; it stays in git history and pull request bodies.
 
 ### Added
 
-- Nineteen guides from a three-family forward-looking gap review: `fronting-auth.md` (oauth2-proxy,
-  Authelia, Pomerium wiring, which six existing guides already referenced), `web-exposure.md`,
-  `egress-metadata.md`, `realtime-webhooks.md`, `container-hardening.md`, `deployment-lifecycle.md`,
-  `image-gen-uis.md`, `chat-uis.md`, `llm-observability.md`, `workflow-orchestrators.md`,
-  `gpu-clouds.md`, `nats.md`, `search-engines.md`, `bi-dashboards.md`, `pocketbase.md`,
-  `frontend-frameworks.md`, `sqlite.md`, `tunnels.md`, and `surrealdb.md` (#5). Each cites vendor pages
-  fetched in September 2026; unconfirmable details were left out.
-- Sections folded into existing guides: a shared-cache disclosure section in `headers.md`, a
-  fail-closed rule in `cloud-identity-proxies.md`, CAA records in `free-certificates.md`, an
-  expensive-endpoint limit note and an offboarding rule in `authentication.md`, an offboarding check
-  in `mfa.md`, Dozzle, Docker Registry, Filebrowser, and Node-RED in `devops-uis.md`, Hugging Face
-  Spaces in `paas.md`, a Redpanda note in `kafka.md`, and a Valkey note in `redis.md` (#5).
-- README gained an outside-in verification checklist item, a fronting-auth pointer in the
-  authentication rule and decision guide, and index rows for every new guide; the site menu,
-  `site/llms.txt`, the build script, and `.aiqt/gensrc.json` were updated to match (#5).
-- Twenty-one guides: `identity-providers.md`, `oidc-integration.md`, `cloud-identity-proxies.md`,
-  `machine-auth.md`, `nextjs.md`, `go.md`, `dotnet.md`, `java.md`, `php.md`, `ruby.md`, `kafka.md`,
-  `clickhouse.md`, `neo4j.md`, `memcached.md`, `object-storage.md`, `vector-databases.md`,
-  `mcp-servers.md`, `ray.md`, `mlflow.md`, `agent-builders.md`, and `devops-uis.md` (#4). Configuration
-  syntax in each was checked against vendor documentation fetched in September 2026, and each
-  guide's Sources section lists the pages. A three-family review (Claude, Codex, Gemini) of the
-  whole branch then found and corrected further defects, listed under Fixed; details that no page
-  confirmed were left out.
-- `authentication.md` rules 11 to 15: federated login is not authorization, OIDC and OAuth hygiene,
-  MFA enforced where access is granted, control-plane MFA, and authentication on every transport;
-  plus a negative-test quick check (#4).
+- Nineteen guides from a three-family forward-looking gap review (#5). They are `fronting-auth.md`, `web-exposure.md`, `egress-metadata.md`, `realtime-webhooks.md`, `container-hardening.md`, `deployment-lifecycle.md`, `image-gen-uis.md`, `chat-uis.md`, `llm-observability.md`, `workflow-orchestrators.md`, `gpu-clouds.md`, `nats.md`, `search-engines.md`, `bi-dashboards.md`, `pocketbase.md`, `frontend-frameworks.md`, `sqlite.md`, `tunnels.md`, and `surrealdb.md`. Each cites vendor pages fetched in September 2026; unconfirmable details were left out.
+- Sections folded into existing guides: `headers.md` (shared-cache disclosure), `cloud-identity-proxies.md` (fail-closed rule), `free-certificates.md` (CAA records), and `authentication.md` (expensive-endpoint limit note, offboarding rule). Also an offboarding check in `mfa.md`, Dozzle, Docker Registry, Filebrowser, and Node-RED in `devops-uis.md`, and Hugging Face Spaces in `paas.md`. `kafka.md` gained a Redpanda note and `redis.md` a Valkey note (#5).
+- README gained an outside-in verification checklist item, a fronting-auth pointer in the authentication rule and decision guide, and index rows for every new guide. The site menu, `site/llms.txt`, the build script, and `.aiqt/gensrc.json` were updated to match (#5).
+- Twenty-one guides: `identity-providers.md`, `oidc-integration.md`, `cloud-identity-proxies.md`, `machine-auth.md`, `nextjs.md`, `go.md`, `dotnet.md`, `java.md`, `php.md`, `ruby.md`, `kafka.md`, `clickhouse.md`, `neo4j.md`, `memcached.md`, `object-storage.md`, `vector-databases.md`, `mcp-servers.md`, `ray.md`, `mlflow.md`, `agent-builders.md`, and `devops-uis.md` (#4). Configuration syntax in each was checked against vendor documentation fetched in September 2026, and each guide's Sources section lists the pages. A three-family review of the whole branch then found and corrected further defects, listed under Fixed; details that no page confirmed were left out.
+- `authentication.md` gains rules 11 to 15 and a negative-test quick check. The rules: federated login is not authorization, OIDC and OAuth hygiene, MFA enforced where access is granted, control-plane MFA, and authentication on every transport (#4).
 - `mfa.md`: a phishing-resistant factor for administrators, enrolment is not enforcement, a pointer
   to hosted providers, and a section on passkeys and hardware keys (#4).
 - `common-mistakes.md` items 15 to 19, including federated login treated as authorization and MCP
@@ -2217,13 +1934,8 @@ drops is not archived; it stays in git history and pull request bodies.
 
 ### Changed
 
-- `kubernetes.md` rewritten on the Gateway API (Envoy Gateway, cert-manager Gateway support,
-  SecurityPolicy for basic auth and OIDC) because the Kubernetes project retired ingress-nginx in
-  March 2026 with no further releases or security patches. The guide tells readers how to detect
-  ingress-nginx and that migration is required.
-- `free-certificates.md` carries Let's Encrypt's announced lifetime schedule (64-day certificates
-  from 2027-02-10, 45-day from 2028-02-16, an industry cap of 47 days from 2029-03-15) and notes
-  that Let's Encrypt ended OCSP on 2025-08-06, so no stapling directives for its certificates.
+- `kubernetes.md` rewritten on the Gateway API (Envoy Gateway, cert-manager Gateway support, SecurityPolicy for basic auth and OIDC). This is because the Kubernetes project retired ingress-nginx in March 2026, with no further releases or security patches. The guide tells readers how to detect ingress-nginx and that migration is required.
+- `free-certificates.md` carries Let's Encrypt's announced lifetime schedule: 64-day certificates from 2027-02-10, 45-day from 2028-02-16, and an industry cap of 47 days from 2029-03-15. It notes that Let's Encrypt ended OCSP on 2025-08-06, so no stapling directives for its certificates.
 - `paas.md` distinguishes platform deployment protection (Vercel) from application user
   authentication instead of saying the platform authenticates nobody.
 - `redis.md` describes mutual TLS as a possession factor for machine clients, not MFA for a person.
@@ -2237,33 +1949,15 @@ drops is not archived; it stays in git history and pull request bodies.
   patch in `.aiqt/PIN`.
 - `CLAUDE.md` and `AGENTS.md` now describe the wiring gate's real coverage, and `.aiqt/gensrc.json`
   lists every source of `site/llms-full.txt`.
-- Pre-existing guide defects found by the review: Redis inline comments that its parser rejects;
-  PostgreSQL `listen_addresses` needing a restart rather than a reload; MongoDB client examples
-  lacking the certificate the server configuration demanded; Caddy `/admin/*` not matching
-  `/admin`; lighttpd `mod_redirect` not loaded; SSH MFA advice that conflicted with
-  `KbdInteractiveAuthentication no`; Open WebUI's persisted `ENABLE_SIGNUP`; the Streamlit login
-  example admitting any Google account; the multi-port `nc` check in `cloud-firewalls.md`; and
-  several inline comments inside properties and INI values in the new guides.
-- A gate that recomputes the sha256 of every inline script in `site/index.html` and requires it in
-  the effective CSP line of `site/_headers`; the wiring gate now matches real index rows and menu
-  links rather than any text; same-page anchors are validated.
+- Pre-existing guide defects found by the review: Redis inline comments that its parser rejects, and PostgreSQL `listen_addresses` needing a restart rather than a reload. MongoDB client examples lacking the certificate the server configuration demanded, Caddy `/admin/*` not matching `/admin`, and SSH MFA advice that conflicted with `KbdInteractiveAuthentication no`. Also lighttpd `mod_redirect` not loaded, Open WebUI's persisted `ENABLE_SIGNUP`, the Streamlit login example admitting any Google account, and the multi-port `nc` check in `cloud-firewalls.md`.
+- A gate that recomputes the sha256 of every inline script in `site/index.html` and requires it in the effective CSP line of `site/_headers`. The wiring gate now matches real index rows and menu links rather than any text, and same-page anchors are validated.
 
 ## 2026-09-09
 
 ### Added
 
-- An offline gate suite, `tools/run_all_checks.sh`, run on every pull request and on every push to
-  `main` as the check `gates`. Four checks to start: `site/llms-full.txt` matches a fresh build,
-  every guide is listed in the build script and linked from `site/llms.txt`, every local link target
-  and heading anchor resolves, and no private keys or provider tokens appear in tracked files. Every
-  check is deterministic and offline, so nothing outside this repository can turn the build red.
-  (#1)
-- An AIQT Guardrails baseline, vendored and pinned to guardrails
-  `8ab5b9ae37cdf4f8bcdb0a73934cb5a58b2aea87`. `CLAUDE.md` and a byte-identical `AGENTS.md` carry the
-  AIQT priority ordering and the five rules. The pack's hooks are vendored under `.aiqt/` but are
-  deliberately not activated. Three upstream gates joined the suite: `check_site`, `check_no_dashes`,
-  and `check_newtab`. The pin and the local patches to re-apply on upgrade are recorded in
-  `.aiqt/PIN`. (#2)
+- An offline gate suite, `tools/run_all_checks.sh`, runs on every pull request and every push to `main` as the check `gates`. Four checks to start: `site/llms-full.txt` matches a fresh build, and every guide is listed in the build script and linked from `site/llms.txt`. The others: every local link target and heading anchor resolves, and no private keys or provider tokens appear in tracked files. (#1)
+- An AIQT Guardrails baseline, vendored and pinned to guardrails `8ab5b9ae37cdf4f8bcdb0a73934cb5a58b2aea87`, with the pin and local patches recorded in `.aiqt/PIN`. `CLAUDE.md` and a byte-identical `AGENTS.md` carry the AIQT priority ordering and the five rules. The pack's hooks are vendored under `.aiqt/` but deliberately not activated, and three upstream gates joined the suite: `check_site`, `check_no_dashes` and `check_newtab`. (#2)
 
 ### Changed
 
