@@ -110,7 +110,7 @@ MAX_WORDS = 25
 SPAN_CHARS = 60
 SPAN_SPACES = 8
 # The number of entries in LEGACY. Set once, from the generated list; batches only lower it.
-LEGACY_MAX = 1254
+LEGACY_MAX = 1152
 # The ruling's date: a bullet dated later is new and must comply, never be listed.
 CUTOFF = "2026-11-27"
 
